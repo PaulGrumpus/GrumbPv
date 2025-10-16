@@ -16,7 +16,7 @@ contract EscrowScript is Script {
         address arbiter = address(0x3);  // Replace with actual arbiter address or address(0)
         uint64 deadline = uint64(block.timestamp + 30 days);
 
-        Escrow escrow = new Escrow(buyer, vendor, arbiter, deadline);
+        new Escrow(buyer, vendor, arbiter, deadline);
 
         vm.stopBroadcast();
     }
