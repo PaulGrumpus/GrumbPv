@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 import {Escrow} from "../src/Escrow.sol";
+import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 
 contract EscrowTest is Test {
     Escrow public escrow;
@@ -65,6 +66,83 @@ contract EscrowTest is Test {
         assertEq(vendor.balance, vendorBalanceBefore + 0.995 ether);
         // FeeRecipient gets 0.5% (buyer) + 0.5% (vendor) = 1% = 0.01 ETH
         assertEq(feeRecipient.balance, feeRecipientBalanceBefore + 0.01 ether);
+    }
+
+    function test_RewardPaidOnNormalWithdraw() public {
+        // Deploy mock GRMPS token and fund escrow with rewards
+        ERC20Mock grmps = new ERC20Mock();
+
+        // Configure reward: 1 wei native => 1 wei GRMPS
+        vm.prank(arbiter);
+        escrow.setRewardToken(address(grmps));
+        vm.prank(arbiter);
+        escrow.setRewardRatePer1e18(1e18);
+
+        // Fund
+        vm.deal(buyer, 1.005 ether);
+        vm.prank(buyer);
+        escrow.fund{value: 1.005 ether}();
+
+        // Deliver and approve
+        vm.prank(vendor);
+        escrow.deliver("QmCID", bytes32(0));
+        vm.prank(buyer);
+        escrow.approve("QmCID");
+
+        // Compute expected rewards: 0.25% per side of projectAmount (1 ether)
+        uint256 expectedPerSide = (1 ether * 25) / 10000; // 0.0025 ether units => 0.0025 GRMPS
+        uint256 totalRewards = expectedPerSide * 2;
+
+        // Mint enough GRMPS to escrow for rewards
+        grmps.mint(address(escrow), totalRewards);
+
+        // Record balances
+        uint256 buyerGRBefore = grmps.balanceOf(buyer);
+        uint256 vendorGRBefore = grmps.balanceOf(vendor);
+
+        // Withdraw triggers rewards
+        vm.prank(vendor);
+        escrow.withdraw();
+
+        // Check rewards distributed
+        assertEq(grmps.balanceOf(buyer), buyerGRBefore + expectedPerSide);
+        assertEq(grmps.balanceOf(vendor), vendorGRBefore + expectedPerSide);
+    }
+
+    function test_NoRewardOnDisputePaths() public {
+        // Deploy mock GRMPS token and fund escrow with rewards
+        ERC20Mock grmps = new ERC20Mock();
+        vm.prank(arbiter);
+        escrow.setRewardToken(address(grmps));
+        vm.prank(arbiter);
+        escrow.setRewardRatePer1e18(1e18);
+
+        // Fund
+        vm.deal(buyer, 1.005 ether);
+        vm.prank(buyer);
+        escrow.fund{value: 1.005 ether}();
+
+        // Deliver
+        vm.prank(vendor);
+        escrow.deliver("QmCID", bytes32(0));
+
+        // Buyer initiates dispute, vendor pays, arbiter resolves to vendor
+        vm.prank(buyer);
+        escrow.initiateDispute();
+        vm.deal(vendor, 0.005 ether);
+        vm.prank(vendor);
+        escrow.payDisputeFee{value: 0.005 ether}();
+
+        uint256 buyerGRBefore = grmps.balanceOf(buyer);
+        uint256 vendorGRBefore = grmps.balanceOf(vendor);
+
+        // Resolve to vendor
+        vm.prank(arbiter);
+        escrow.resolveToVendor();
+
+        // No GRMPS rewards should be paid in dispute resolution
+        assertEq(grmps.balanceOf(buyer), buyerGRBefore);
+        assertEq(grmps.balanceOf(vendor), vendorGRBefore);
     }
 
     function test_Cancel() public {

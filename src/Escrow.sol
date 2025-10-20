@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title FreelanceEscrow
@@ -34,6 +35,8 @@ contract Escrow is Ownable, ReentrancyGuard {
         address vendor;
         address arbiter;
         address feeRecipient;
+        address rewardToken;            // GRMPS token (ERC20/BEP20)
+        uint256 rewardRatePer1e18;      // GRMPS paid per 1e18 wei of project amount
         uint256 amount;
         uint256 buyerFeeReserve;  // 0.5% buyer fee reserved for potential dispute
         uint256 disputeFeeAmount; // Fee amount each party must pay for dispute
@@ -66,6 +69,8 @@ contract Escrow is Ownable, ReentrancyGuard {
     event ResolvedToBuyer(address indexed arbiter, uint256 amount);
     event ResolvedToVendor(address indexed arbiter, uint256 amount);
     event FeePaid(address indexed to, uint256 amount, string reason);
+    event RewardPaid(address indexed to, uint256 amount, string reason);
+    event RewardSkipped(address indexed to, string reason);
 
     error OnlyBuyer();
     error OnlyVendor();
@@ -110,6 +115,17 @@ contract Escrow is Ownable, ReentrancyGuard {
         escrowInfo.feeRecipient = _feeRecipient;
         escrowInfo.deadline = _deadline;
         escrowInfo.state = State.Unfunded;
+    }
+
+    /// @notice Set the reward token (GRMPS) address.
+    function setRewardToken(address _rewardToken) external onlyOwner {
+        escrowInfo.rewardToken = _rewardToken;
+    }
+
+    /// @notice Set the reward payout rate in GRMPS per 1e18 wei of project amount.
+    /// @dev Example: if 1e18 wei should reward 1e18 GRMPS, set to 1e18.
+    function setRewardRatePer1e18(uint256 _rate) external onlyOwner {
+        escrowInfo.rewardRatePer1e18 = _rate;
     }
 
     /// @notice Buyer funds the escrow with native BNB.
@@ -361,6 +377,8 @@ contract Escrow is Ownable, ReentrancyGuard {
 
     /// @notice After both parties approved, vendor pulls the payment (safer than push).
     /// @dev Vendor gets project amount. Buyer's 0.5% fee + vendor's 0.5% fee (1% total) go to feeRecipient.
+    ///      Additionally, on non-dispute completion, both buyer and vendor receive GRMPS rewards
+    ///      worth 0.25% of project amount per side, using a configured native->GRMPS rate.
     function withdraw() external onlyVendor nonReentrant {
         if (escrowInfo.state != State.Releasable) revert BadState();
 
@@ -384,6 +402,31 @@ contract Escrow is Ownable, ReentrancyGuard {
         require(ok2, "withdraw failed");
 
         emit Withdrawn(escrowInfo.vendor, vendorAmount);
+
+        // --- GRMPS reward (only in non-dispute normal completion) ---
+        address rewardToken = escrowInfo.rewardToken;
+        uint256 rate = escrowInfo.rewardRatePer1e18;
+        if (rewardToken != address(0) && rate > 0) {
+            // 0.25% per side, computed in native then converted to GRMPS using rate
+            uint256 sideNative = (projectAmount * 25) / 10000; // 0.25%
+            uint256 rewardPerSide = (sideNative * rate) / 1e18;
+            if (rewardPerSide > 0) {
+                uint256 totalReward = rewardPerSide * 2;
+                uint256 balance = IERC20(rewardToken).balanceOf(address(this));
+                if (balance >= totalReward) {
+                    // Pay buyer reward
+                    bool ok3 = IERC20(rewardToken).transfer(escrowInfo.buyer, rewardPerSide);
+                    if (ok3) emit RewardPaid(escrowInfo.buyer, rewardPerSide, "buyer_reward");
+                    else emit RewardSkipped(escrowInfo.buyer, "transfer_failed");
+                    // Pay vendor reward
+                    bool ok4 = IERC20(rewardToken).transfer(escrowInfo.vendor, rewardPerSide);
+                    if (ok4) emit RewardPaid(escrowInfo.vendor, rewardPerSide, "vendor_reward");
+                    else emit RewardSkipped(escrowInfo.vendor, "transfer_failed");
+                } else {
+                    emit RewardSkipped(address(0), "insufficient_reward_balance");
+                }
+            }
+        }
     }
 
     /// @notice If not approved by deadline, buyer can get a refund.
