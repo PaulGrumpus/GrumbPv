@@ -6,17 +6,22 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 /// @title EscrowFactory
 /// @notice Factory contract that deploys minimal proxy clones of the Escrow implementation
 /// @dev Uses OpenZeppelin Clones (EIP-1167) for gas-efficient escrow deployment
-interface IEscrow {
-    function initialize(
-        address buyer,
-        address seller,
-        address arbiter,
-        address feeRecipient,
-        uint256 feeBps,
-        address paymentToken,
-        uint256 amountWei
-    ) external;
-}
+    interface IEscrow {
+        function initialize(
+            address buyer,
+            address seller,
+            address arbiter,
+            address feeRecipient,
+            uint256 feeBps,
+            address paymentToken,
+            uint256 amountWei,
+            uint64 deadline,
+            uint256 buyerFeeBps,
+            uint256 vendorFeeBps,
+            uint256 disputeFeeBps,
+            uint256 rewardRateBps
+        ) external;
+    }
 
 contract EscrowFactory {
     /// @notice Address of the Escrow implementation contract
@@ -36,6 +41,11 @@ contract EscrowFactory {
     /// @param paymentToken Token address (address(0) for native BNB)
     /// @param amountWei Amount in wei or token decimals
     /// @param deterministic Whether this was a deterministic deployment
+    /// @param deadline Project deadline timestamp
+    /// @param buyerFeeBps Buyer fee in basis points
+    /// @param vendorFeeBps Vendor fee in basis points
+    /// @param disputeFeeBps Dispute fee in basis points
+    /// @param rewardRateBps Reward rate in basis points
     event EscrowCreated(
         bytes32 indexed jobId,
         address indexed escrow,
@@ -46,7 +56,12 @@ contract EscrowFactory {
         uint256 feeBps,
         address paymentToken,
         uint256 amountWei,
-        bool deterministic
+        bool deterministic,
+        uint64 deadline,
+        uint256 buyerFeeBps,
+        uint256 vendorFeeBps,
+        uint256 disputeFeeBps,
+        uint256 rewardRateBps
     );
 
     error NotOwner();
@@ -81,6 +96,11 @@ contract EscrowFactory {
     /// @param feeBps Fee in basis points (e.g., 100 = 1%)
     /// @param paymentToken Address of payment token (address(0) for native BNB)
     /// @param amountWei Amount in wei (for BNB) or token decimals (for ERC20)
+    /// @param deadline Unix timestamp deadline for the escrow
+    /// @param buyerFeeBps Buyer fee in basis points (e.g., 50 = 0.5%)
+    /// @param vendorFeeBps Vendor fee in basis points (e.g., 50 = 0.5%)
+    /// @param disputeFeeBps Dispute fee in basis points (e.g., 50 = 0.5%)
+    /// @param rewardRateBps Reward rate in basis points (e.g., 25 = 0.25%)
     /// @return escrow Address of the newly created escrow clone
     function createEscrow(
         bytes32 jobId,
@@ -90,7 +110,12 @@ contract EscrowFactory {
         address feeRecipient,
         uint256 feeBps,
         address paymentToken,
-        uint256 amountWei
+        uint256 amountWei,
+        uint64 deadline,
+        uint256 buyerFeeBps,
+        uint256 vendorFeeBps,
+        uint256 disputeFeeBps,
+        uint256 rewardRateBps
     ) external returns (address escrow) {
         // Clone the implementation
         escrow = Clones.clone(implementation);
@@ -103,7 +128,12 @@ contract EscrowFactory {
             feeRecipient,
             feeBps,
             paymentToken,
-            amountWei
+            amountWei,
+            deadline,
+            buyerFeeBps,
+            vendorFeeBps,
+            disputeFeeBps,
+            rewardRateBps
         );
         
         emit EscrowCreated(
@@ -116,7 +146,12 @@ contract EscrowFactory {
             feeBps,
             paymentToken,
             amountWei,
-            false
+            false,
+            deadline,
+            buyerFeeBps,
+            vendorFeeBps,
+            disputeFeeBps,
+            rewardRateBps
         );
     }
 
@@ -130,6 +165,11 @@ contract EscrowFactory {
     /// @param feeBps Fee in basis points (e.g., 100 = 1%)
     /// @param paymentToken Address of payment token (address(0) for native BNB)
     /// @param amountWei Amount in wei (for BNB) or token decimals (for ERC20)
+    /// @param deadline Unix timestamp deadline for the escrow
+    /// @param buyerFeeBps Buyer fee in basis points (e.g., 50 = 0.5%)
+    /// @param vendorFeeBps Vendor fee in basis points (e.g., 50 = 0.5%)
+    /// @param disputeFeeBps Dispute fee in basis points (e.g., 50 = 0.5%)
+    /// @param rewardRateBps Reward rate in basis points (e.g., 25 = 0.25%)
     /// @param salt Unique salt for CREATE2 (can be derived from jobId + parties)
     /// @return escrow Address of the newly created escrow clone
     function createEscrowDeterministic(
@@ -141,6 +181,11 @@ contract EscrowFactory {
         uint256 feeBps,
         address paymentToken,
         uint256 amountWei,
+        uint64 deadline,
+        uint256 buyerFeeBps,
+        uint256 vendorFeeBps,
+        uint256 disputeFeeBps,
+        uint256 rewardRateBps,
         bytes32 salt
     ) external returns (address escrow) {
         // Clone the implementation using CREATE2
@@ -154,7 +199,12 @@ contract EscrowFactory {
             feeRecipient,
             feeBps,
             paymentToken,
-            amountWei
+            amountWei,
+            deadline,
+            buyerFeeBps,
+            vendorFeeBps,
+            disputeFeeBps,
+            rewardRateBps
         );
         
         emit EscrowCreated(
@@ -167,7 +217,12 @@ contract EscrowFactory {
             feeBps,
             paymentToken,
             amountWei,
-            true
+            true,
+            deadline,
+            buyerFeeBps,
+            vendorFeeBps,
+            disputeFeeBps,
+            rewardRateBps
         );
     }
 

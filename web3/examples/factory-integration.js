@@ -49,6 +49,7 @@ async function main() {
   
   const jobId = ethers.id(`JOB-${Date.now()}`);
   const projectAmount = ethers.parseEther('1.0');
+  const deadline = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60); // 30 days from now
   
   console.log('Creating escrow...');
   const createTx = await factory.createEscrow(
@@ -57,9 +58,14 @@ async function main() {
     await seller.getAddress(),
     await arbiter.getAddress(),
     CONFIG.feeRecipient || await buyer.getAddress(),
-    100, // 1%
+    100, // 1% total fee
     ethers.ZeroAddress, // Native BNB
-    projectAmount
+    projectAmount,
+    deadline,
+    50, // 0.5% buyer fee
+    50, // 0.5% vendor fee
+    50, // 0.5% dispute fee
+    25  // 0.25% reward rate
   );
   
   const createReceipt = await createTx.wait();
@@ -215,15 +221,21 @@ async function deterministicExample() {
   
   // Create escrow
   console.log('⏳ Creating escrow...');
+  const deadline2 = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60); // 30 days from now
   const tx = await factory.createEscrowDeterministic(
     jobId,
     buyer,
     seller,
     ethers.ZeroAddress, // No arbiter
     buyer, // Fee recipient
-    100,
+    100, // 1% total fee
     ethers.ZeroAddress,
     ethers.parseEther('1.0'),
+    deadline2,
+    50, // 0.5% buyer fee
+    50, // 0.5% vendor fee
+    50, // 0.5% dispute fee
+    25, // 0.25% reward rate
     salt
   );
   

@@ -41,6 +41,11 @@ async function createEscrow(params = {}) {
   const feeBps = params.feeBps || 100; // 1%
   const paymentToken = params.paymentToken || ethers.ZeroAddress; // Native BNB
   const amountWei = params.amountWei || ethers.parseEther(params.amount || '1.0');
+  const deadline = params.deadline || Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60); // 30 days from now
+  const buyerFeeBps = params.buyerFeeBps || 50; // 0.5% default
+  const vendorFeeBps = params.vendorFeeBps || 50; // 0.5% default
+  const disputeFeeBps = params.disputeFeeBps || 50; // 0.5% default
+  const rewardRateBps = params.rewardRateBps || 25; // 0.25% default
   const deterministic = params.deterministic || false;
 
   if (!buyer || !seller || !feeRecipient) {
@@ -56,7 +61,12 @@ async function createEscrow(params = {}) {
   console.log('  Fee Recipient:', feeRecipient);
   console.log('  Fee:', feeBps / 100, '%');
   console.log('  Payment Token:', paymentToken === ethers.ZeroAddress ? 'Native BNB' : paymentToken);
-  console.log('  Amount:', ethers.formatEther(amountWei), 'BNB\n');
+  console.log('  Amount:', ethers.formatEther(amountWei), 'BNB');
+  console.log('  Deadline:', new Date(deadline * 1000).toISOString());
+  console.log('  Buyer Fee:', buyerFeeBps / 100, '%');
+  console.log('  Vendor Fee:', vendorFeeBps / 100, '%');
+  console.log('  Dispute Fee:', disputeFeeBps / 100, '%');
+  console.log('  Reward Rate:', rewardRateBps / 100, '%\n');
 
   try {
     let tx, receipt, escrowAddress;
@@ -82,6 +92,11 @@ async function createEscrow(params = {}) {
         feeBps,
         paymentToken,
         amountWei,
+        deadline,
+        buyerFeeBps,
+        vendorFeeBps,
+        disputeFeeBps,
+        rewardRateBps,
         salt
       );
 
@@ -112,7 +127,12 @@ async function createEscrow(params = {}) {
         feeRecipient,
         feeBps,
         paymentToken,
-        amountWei
+        amountWei,
+        deadline,
+        buyerFeeBps,
+        vendorFeeBps,
+        disputeFeeBps,
+        rewardRateBps
       );
 
       receipt = await tx.wait();

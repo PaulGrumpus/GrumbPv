@@ -23,9 +23,14 @@ contract EscrowTest is Test {
             vendor,
             arbiter,
             feeRecipient,
-            100, // 1% fee
+            100, // 1% total fee
             address(0), // Native BNB
-            1 ether // Amount
+            1 ether, // Amount
+            deadline, // Custom deadline
+            50, // 0.5% buyer fee
+            50, // 0.5% vendor fee
+            50, // 0.5% dispute fee
+            25  // 0.25% reward rate
         );
     }
 

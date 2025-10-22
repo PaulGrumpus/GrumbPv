@@ -38,8 +38,13 @@ contract Escrow is Ownable, ReentrancyGuard {
         address rewardToken;            // GRMPS token (ERC20/BEP20)
         uint256 rewardRatePer1e18;      // GRMPS paid per 1e18 wei of project amount
         uint256 amount;
-        uint256 buyerFeeReserve;  // 0.5% buyer fee reserved for potential dispute
-        uint256 disputeFeeAmount; // Fee amount each party must pay for dispute
+        uint256 buyerFeeReserve;        // Buyer fee reserved for potential dispute
+        uint256 disputeFeeAmount;       // Fee amount each party must pay for dispute
+        uint256 buyerFeeBps;            // Buyer fee in basis points (e.g., 50 = 0.5%)
+        uint256 vendorFeeBps;           // Vendor fee in basis points (e.g., 50 = 0.5%)
+        uint256 disputeFeeBps;          // Dispute fee in basis points (e.g., 50 = 0.5%)
+        uint256 rewardRateBps;          // Reward rate in basis points (e.g., 25 = 0.25%)
+        uint64 createdAt;               // Escrow creation timestamp (initialize time)
         uint64 deadline;
         uint64 disputeFeeDeadline;
         address disputeInitiator;
@@ -97,6 +102,7 @@ contract Escrow is Ownable, ReentrancyGuard {
     error DisputeFeeDeadlineNotPassed();
     error BothPartiesNotPaid();
     error AlreadyInitialized();
+    error CancelWindowPassed();
 
     modifier onlyBuyer() {
         if (msg.sender != escrowInfo.buyer) revert OnlyBuyer();
@@ -123,9 +129,14 @@ contract Escrow is Ownable, ReentrancyGuard {
     /// @param _seller Address of the seller (vendor)
     /// @param _arbiter Address of the arbiter (set to address(0) to disable arbitration)
     /// @param _feeRecipient Address that receives platform fees
-    /// @param _feeBps Fee in basis points (100 = 1%, currently fixed at 100 for 1% total)
+    /// @param _feeBps Total fee in basis points (100 = 1%, split between buyer and vendor)
     /// @param _paymentToken Address of payment token (address(0) for native BNB, otherwise ERC20)
     /// @param _amountWei Amount in wei (for BNB) or token decimals (for ERC20)
+    /// @param _deadline Project deadline timestamp
+    /// @param _buyerFeeBps Buyer fee in basis points (e.g., 50 = 0.5%)
+    /// @param _vendorFeeBps Vendor fee in basis points (e.g., 50 = 0.5%)
+    /// @param _disputeFeeBps Dispute fee in basis points (e.g., 50 = 0.5%)
+    /// @param _rewardRateBps Reward rate in basis points (e.g., 25 = 0.25%)
     function initialize(
         address _buyer,
         address _seller,
@@ -133,13 +144,23 @@ contract Escrow is Ownable, ReentrancyGuard {
         address _feeRecipient,
         uint256 _feeBps,
         address _paymentToken,
-        uint256 _amountWei
+        uint256 _amountWei,
+        uint64 _deadline,
+        uint256 _buyerFeeBps,
+        uint256 _vendorFeeBps,
+        uint256 _disputeFeeBps,
+        uint256 _rewardRateBps
     ) external {
         if (_initialized) revert AlreadyInitialized();
         _initialized = true;
 
         require(_buyer != address(0) && _seller != address(0), "zero addr");
         require(_feeRecipient != address(0), "zero fee recipient");
+        require(_deadline > block.timestamp, "bad deadline");
+        require(_buyerFeeBps + _vendorFeeBps == _feeBps, "fee mismatch");
+        require(_buyerFeeBps <= 1000 && _vendorFeeBps <= 1000, "fee too high"); // Max 10%
+        require(_disputeFeeBps <= 1000, "dispute fee too high"); // Max 10%
+        require(_rewardRateBps <= 1000, "reward rate too high"); // Max 10%
 
         // Set owner to arbiter (or deployer if no arbiter)
         _transferOwnership(_arbiter != address(0) ? _arbiter : msg.sender);
@@ -148,7 +169,12 @@ contract Escrow is Ownable, ReentrancyGuard {
         escrowInfo.vendor = _seller;
         escrowInfo.arbiter = _arbiter;
         escrowInfo.feeRecipient = _feeRecipient;
-        escrowInfo.deadline = uint64(block.timestamp + 30 days); // Default 30 day deadline
+        escrowInfo.buyerFeeBps = _buyerFeeBps;
+        escrowInfo.vendorFeeBps = _vendorFeeBps;
+        escrowInfo.disputeFeeBps = _disputeFeeBps;
+        escrowInfo.rewardRateBps = _rewardRateBps;
+        escrowInfo.createdAt = uint64(block.timestamp);
+        escrowInfo.deadline = _deadline;
         escrowInfo.state = State.Unfunded;
 
         emit Initialized(
@@ -175,21 +201,22 @@ contract Escrow is Ownable, ReentrancyGuard {
     }
 
     /// @notice Buyer funds the escrow with native BNB.
-    /// @dev Buyer must include 0.5% extra as their fee (reserved for potential dispute).
-    ///      If buyer sends X, project amount = X / 1.005, buyer fee = X - projectAmount
+    /// @dev Buyer must include their fee as extra (reserved for potential dispute).
+    ///      If buyer sends X, project amount = X * 10000 / (10000 + buyerFeeBps), buyer fee = X - projectAmount
     function fund() external payable onlyBuyer {
         if (escrowInfo.state != State.Unfunded) revert BadState();
         if (msg.value == 0) revert BadValue();
         
-        // Calculate actual project amount: X / 1.005 = X * 10000 / 10050
-        uint256 projectAmount = (msg.value * 10000) / 10050;
+        uint256 buyerFeeBps = escrowInfo.buyerFeeBps;
+        // Calculate actual project amount: X * 10000 / (10000 + buyerFeeBps)
+        uint256 projectAmount = (msg.value * 10000) / (10000 + buyerFeeBps);
         uint256 buyerFee = msg.value - projectAmount; // Remainder is the fee
         
         escrowInfo.amount = projectAmount;
         escrowInfo.buyerFeeReserve = buyerFee;
         
-        // Set dispute fee amount (0.5% of project amount for each party)
-        escrowInfo.disputeFeeAmount = (projectAmount * 50) / 10000;
+        // Set dispute fee amount (disputeFeeBps% of project amount for each party)
+        escrowInfo.disputeFeeAmount = (projectAmount * escrowInfo.disputeFeeBps) / 10000;
         
         escrowInfo.state = State.Funded;
         emit Funded(escrowInfo.buyer, projectAmount, buyerFee);
@@ -199,6 +226,14 @@ contract Escrow is Ownable, ReentrancyGuard {
     /// @dev Only works in Funded state. Once vendor delivers, must use dispute system.
     function cancel() external onlyBuyer nonReentrant {
         if (escrowInfo.state != State.Funded) revert BadState();
+        // Allow cancel only within the first 20% of the total period (from createdAt to deadline)
+        uint64 start = escrowInfo.createdAt;
+        uint64 end = escrowInfo.deadline;
+        // Protect against potential underflow if misconfigured
+        if (end > start) {
+            uint64 window = (end - start) / 5; // 20%
+            if (uint64(block.timestamp) > start + window) revert CancelWindowPassed();
+        }
         
         uint256 projectAmount = escrowInfo.amount;
         uint256 buyerFee = escrowInfo.buyerFeeReserve;
@@ -422,16 +457,16 @@ contract Escrow is Ownable, ReentrancyGuard {
     }
 
     /// @notice After both parties approved, vendor pulls the payment (safer than push).
-    /// @dev Vendor gets project amount. Buyer's 0.5% fee + vendor's 0.5% fee (1% total) go to feeRecipient.
+    /// @dev Vendor gets project amount minus their fee. Buyer's fee + vendor's fee go to feeRecipient.
     ///      Additionally, on non-dispute completion, both buyer and vendor receive GRMPS rewards
-    ///      worth 0.25% of project amount per side, using a configured native->GRMPS rate.
+    ///      worth rewardRateBps% of project amount per side, using a configured native->GRMPS rate.
     function withdraw() external onlyVendor nonReentrant {
         if (escrowInfo.state != State.Releasable) revert BadState();
 
         uint256 projectAmount = escrowInfo.amount;
-        uint256 buyerFee = escrowInfo.buyerFeeReserve; // 0.5%
-        uint256 vendorFee = (projectAmount * 50) / 10000; // 0.5%
-        uint256 totalFee = buyerFee + vendorFee; // 1%
+        uint256 buyerFee = escrowInfo.buyerFeeReserve;
+        uint256 vendorFee = (projectAmount * escrowInfo.vendorFeeBps) / 10000;
+        uint256 totalFee = buyerFee + vendorFee;
         uint256 vendorAmount = projectAmount - vendorFee;
         
         escrowInfo.amount = 0;
@@ -453,8 +488,8 @@ contract Escrow is Ownable, ReentrancyGuard {
         address rewardToken = escrowInfo.rewardToken;
         uint256 rate = escrowInfo.rewardRatePer1e18;
         if (rewardToken != address(0) && rate > 0) {
-            // 0.25% per side, computed in native then converted to GRMPS using rate
-            uint256 sideNative = (projectAmount * 25) / 10000; // 0.25%
+            // rewardRateBps% per side, computed in native then converted to GRMPS using rate
+            uint256 sideNative = (projectAmount * escrowInfo.rewardRateBps) / 10000;
             uint256 rewardPerSide = (sideNative * rate) / 1e18;
             if (rewardPerSide > 0) {
                 uint256 totalReward = rewardPerSide * 2;
@@ -478,7 +513,9 @@ contract Escrow is Ownable, ReentrancyGuard {
     /// @notice If not approved by deadline, buyer can get a refund.
     /// @dev No fees charged - buyer gets full amount back (project + their 0.5% fee).
     function refundAfterDeadline() external onlyBuyer nonReentrant {
-        if (escrowInfo.state != State.Funded && escrowInfo.state != State.Delivered) revert BadState();
+        // Restrict refunds after deadline to cases where work has not been delivered
+        // i.e., only allowed from Funded state (not after delivery)
+        if (escrowInfo.state != State.Funded) revert BadState();
         if (block.timestamp < escrowInfo.deadline) revert DeadlineNotReached();
 
         uint256 projectAmount = escrowInfo.amount;
