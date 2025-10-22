@@ -34,7 +34,12 @@ contract DeployScript is Script {
             feeRecipient,
             feeBps,
             address(0), // Native BNB
-            amount
+            amount,
+            uint64(block.timestamp + 30 days), // 30 day deadline
+            50, // 0.5% buyer fee
+            50, // 0.5% vendor fee
+            50, // 0.5% dispute fee
+            25  // 0.25% reward rate
         );
         
         console.log("Escrow deployed at:", address(escrow));

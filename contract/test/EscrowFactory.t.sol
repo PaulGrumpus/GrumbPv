@@ -70,7 +70,12 @@ contract EscrowFactoryTest is Test {
             feeRecipient,
             FEE_BPS,
             address(0), // Native BNB
-            PROJECT_AMOUNT
+            PROJECT_AMOUNT,
+            uint64(block.timestamp + 30 days), // 30 day deadline
+            50, // 0.5% buyer fee
+            50, // 0.5% vendor fee
+            50, // 0.5% dispute fee
+            25  // 0.25% reward rate
         );
         
         assertTrue(escrow != address(0), "Escrow should be deployed");
@@ -98,7 +103,9 @@ contract EscrowFactoryTest is Test {
             feeRecipient,
             FEE_BPS,
             address(0),
-            PROJECT_AMOUNT
+            PROJECT_AMOUNT,
+            uint64(block.timestamp + 30 days),
+            50, 50, 50, 25
         );
         
         address escrow2 = factory.createEscrow(
@@ -109,7 +116,9 @@ contract EscrowFactoryTest is Test {
             feeRecipient,
             FEE_BPS,
             address(0),
-            PROJECT_AMOUNT
+            PROJECT_AMOUNT,
+            uint64(block.timestamp + 30 days),
+            50, 50, 50, 25
         );
         
         assertTrue(escrow1 != escrow2, "Escrows should have different addresses");
@@ -133,6 +142,8 @@ contract EscrowFactoryTest is Test {
             FEE_BPS,
             address(0),
             PROJECT_AMOUNT,
+            uint64(block.timestamp + 30 days),
+            50, 50, 50, 25,
             salt
         );
         
@@ -169,7 +180,9 @@ contract EscrowFactoryTest is Test {
             feeRecipient,
             FEE_BPS,
             address(0),
-            PROJECT_AMOUNT
+            PROJECT_AMOUNT,
+            uint64(block.timestamp + 30 days),
+            50, 50, 50, 25
         );
         
         // Try to initialize again
@@ -181,7 +194,9 @@ contract EscrowFactoryTest is Test {
             feeRecipient,
             FEE_BPS,
             address(0),
-            PROJECT_AMOUNT
+            PROJECT_AMOUNT,
+            uint64(block.timestamp + 30 days),
+            50, 50, 50, 25
         );
     }
     
@@ -198,7 +213,9 @@ contract EscrowFactoryTest is Test {
             feeRecipient,
             FEE_BPS,
             address(0),
-            PROJECT_AMOUNT
+            PROJECT_AMOUNT,
+            uint64(block.timestamp + 30 days),
+            50, 50, 50, 25
         );
         
         Escrow escrow = Escrow(payable(escrowAddr));
@@ -257,7 +274,9 @@ contract EscrowFactoryTest is Test {
             feeRecipient,
             FEE_BPS,
             address(0),
-            PROJECT_AMOUNT
+            PROJECT_AMOUNT,
+            uint64(block.timestamp + 30 days),
+            50, 50, 50, 25
         );
         
         Escrow escrow = Escrow(payable(escrowAddr));
@@ -291,7 +310,9 @@ contract EscrowFactoryTest is Test {
             feeRecipient,
             FEE_BPS,
             address(0),
-            PROJECT_AMOUNT
+            PROJECT_AMOUNT,
+            uint64(block.timestamp + 30 days),
+            50, 50, 50, 25
         );
         
         Escrow escrow = Escrow(payable(escrowAddr));
@@ -370,7 +391,9 @@ contract EscrowFactoryTest is Test {
             feeRecipient,
             FEE_BPS,
             address(0),
-            PROJECT_AMOUNT
+            PROJECT_AMOUNT,
+            uint64(block.timestamp + 30 days),
+            50, 50, 50, 25
         );
         
         Escrow escrow = Escrow(payable(escrowAddr));
@@ -396,7 +419,9 @@ contract EscrowFactoryTest is Test {
                 feeRecipient,
                 FEE_BPS,
                 address(0),
-                PROJECT_AMOUNT
+                PROJECT_AMOUNT,
+                uint64(block.timestamp + 30 days),
+                50, 50, 50, 25
             );
             
             assertTrue(escrows[i] != address(0), "Escrow should be deployed");
