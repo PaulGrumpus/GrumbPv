@@ -9,9 +9,13 @@ const __dirname = dirname(__filename);
 // Load environment variables
 config();
 
-// Load ABI
+// Load ABIs
 const escrowABI = JSON.parse(
   readFileSync(join(__dirname, 'abi', 'Escrow.json'), 'utf8')
+);
+
+const factoryABI = JSON.parse(
+  readFileSync(join(__dirname, 'abi', 'EscrowFactory.json'), 'utf8')
 );
 
 const erc20ABI = [
@@ -26,11 +30,14 @@ export const CONFIG = {
   rpcUrl: process.env.BSC_TESTNET_RPC_URL || 'https://bsc-testnet-rpc.publicnode.com/',
   chainId: parseInt(process.env.CHAIN_ID || '97'),
   
-  // Contract
+  // Contracts
   escrowAddress: process.env.ESCROW_ADDRESS || '0x4035920Dee6bb6DF73e68ED06b5666ca28BD247B',
+  factoryAddress: process.env.FACTORY_ADDRESS,
+  implementationAddress: process.env.ESCROW_IMPLEMENTATION_ADDRESS,
   
   // ABIs
   escrowABI,
+  factoryABI,
   erc20ABI,
   
   // Addresses

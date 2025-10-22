@@ -1,33 +1,7 @@
 [
   {
     "type": "constructor",
-    "inputs": [
-      {
-        "name": "_buyer",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_vendor",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_arbiter",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_feeRecipient",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_deadline",
-        "type": "uint64",
-        "internalType": "uint64"
-      }
-    ],
+    "inputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -320,6 +294,49 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "initialize",
+    "inputs": [
+      {
+        "name": "_buyer",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_seller",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_arbiter",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_feeRecipient",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_feeBps",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_paymentToken",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_amountWei",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -648,6 +665,61 @@
   },
   {
     "type": "event",
+    "name": "Initialized",
+    "inputs": [
+      {
+        "name": "buyer",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "seller",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "arbiter",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "feeRecipient",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "feeBps",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "paymentToken",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "amountWei",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "OwnershipTransferred",
     "inputs": [
       {
@@ -803,6 +875,11 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
   },
   {
     "type": "error",
