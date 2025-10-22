@@ -55,6 +55,18 @@ contract Escrow is Ownable, ReentrancyGuard {
     }
 
     EscrowInfo public escrowInfo;
+    bool private _initialized;
+
+    event Initialized(
+        address indexed buyer,
+        address indexed seller,
+        address indexed arbiter,
+        address feeRecipient,
+        uint256 feeBps,
+        address paymentToken,
+        uint256 amountWei,
+        uint64 deadline
+    );
 
     event Funded(address indexed buyer, uint256 amount, uint256 buyerFee);
     event Cancelled(address indexed buyer, uint256 amount);
@@ -84,6 +96,7 @@ contract Escrow is Ownable, ReentrancyGuard {
     error DisputeFeeAlreadyPaid();
     error DisputeFeeDeadlineNotPassed();
     error BothPartiesNotPaid();
+    error AlreadyInitialized();
 
     modifier onlyBuyer() {
         if (msg.sender != escrowInfo.buyer) revert OnlyBuyer();
@@ -100,21 +113,54 @@ contract Escrow is Ownable, ReentrancyGuard {
         _;
     }
 
-    constructor(
+    /// @notice Dummy constructor for proxy pattern - actual initialization happens in initialize()
+    /// @dev Implementation contract sets owner to address(1) as placeholder (never used directly)
+    constructor() Ownable(address(1)) {}
+
+    /// @notice Initialize the escrow clone with job-specific parameters
+    /// @dev Can only be called once. Sets up buyer, seller (vendor), arbiter, fees, and deadline.
+    /// @param _buyer Address of the buyer
+    /// @param _seller Address of the seller (vendor)
+    /// @param _arbiter Address of the arbiter (set to address(0) to disable arbitration)
+    /// @param _feeRecipient Address that receives platform fees
+    /// @param _feeBps Fee in basis points (100 = 1%, currently fixed at 100 for 1% total)
+    /// @param _paymentToken Address of payment token (address(0) for native BNB, otherwise ERC20)
+    /// @param _amountWei Amount in wei (for BNB) or token decimals (for ERC20)
+    function initialize(
         address _buyer,
-        address _vendor,
-        address _arbiter, // set 0x0 to disable arbitration
+        address _seller,
+        address _arbiter,
         address _feeRecipient,
-        uint64 _deadline
-    ) Ownable(_arbiter != address(0) ? _arbiter : msg.sender) {
-        require(_buyer != address(0) && _vendor != address(0), "zero addr");
+        uint256 _feeBps,
+        address _paymentToken,
+        uint256 _amountWei
+    ) external {
+        if (_initialized) revert AlreadyInitialized();
+        _initialized = true;
+
+        require(_buyer != address(0) && _seller != address(0), "zero addr");
         require(_feeRecipient != address(0), "zero fee recipient");
+
+        // Set owner to arbiter (or deployer if no arbiter)
+        _transferOwnership(_arbiter != address(0) ? _arbiter : msg.sender);
+
         escrowInfo.buyer = _buyer;
-        escrowInfo.vendor = _vendor;
+        escrowInfo.vendor = _seller;
         escrowInfo.arbiter = _arbiter;
         escrowInfo.feeRecipient = _feeRecipient;
-        escrowInfo.deadline = _deadline;
+        escrowInfo.deadline = uint64(block.timestamp + 30 days); // Default 30 day deadline
         escrowInfo.state = State.Unfunded;
+
+        emit Initialized(
+            _buyer,
+            _seller,
+            _arbiter,
+            _feeRecipient,
+            _feeBps,
+            _paymentToken,
+            _amountWei,
+            escrowInfo.deadline
+        );
     }
 
     /// @notice Set the reward token (GRMPS) address.

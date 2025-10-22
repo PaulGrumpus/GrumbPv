@@ -16,7 +16,17 @@ contract EscrowTest is Test {
 
     function setUp() public {
         deadline = uint64(block.timestamp + 30 days);
-        escrow = new Escrow(buyer, vendor, arbiter, feeRecipient, deadline);
+        // Deploy implementation and initialize with parameters
+        escrow = new Escrow();
+        escrow.initialize(
+            buyer,
+            vendor,
+            arbiter,
+            feeRecipient,
+            100, // 1% fee
+            address(0), // Native BNB
+            1 ether // Amount
+        );
     }
 
     function test_Deployment() public view {
