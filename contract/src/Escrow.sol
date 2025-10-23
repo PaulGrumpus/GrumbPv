@@ -99,6 +99,7 @@ contract Escrow is Ownable, ReentrancyGuard {
     error NoArbiter();
     error InsufficientDisputeFee();
     error DisputeFeeAlreadyPaid();
+    error DisputeFeeDeadlinePassed();
     error DisputeFeeDeadlineNotPassed();
     error BothPartiesNotPaid();
     error AlreadyInitialized();
@@ -321,7 +322,7 @@ contract Escrow is Ownable, ReentrancyGuard {
     function payDisputeFee() external payable onlyParticipant {
         if (escrowInfo.state != State.Disputed) revert BadState();
         if (msg.sender == escrowInfo.disputeInitiator) revert DisputeFeeAlreadyPaid();
-        if (block.timestamp > escrowInfo.disputeFeeDeadline) revert DeadlineNotReached(); // Deadline passed, use resolveDisputeByDefault
+        if (block.timestamp > escrowInfo.disputeFeeDeadline) revert DisputeFeeDeadlinePassed(); // Deadline passed, use resolveDisputeByDefault
         
         if (msg.sender == escrowInfo.buyer) {
             if (escrowInfo.buyerPaidDisputeFee) revert DisputeFeeAlreadyPaid();

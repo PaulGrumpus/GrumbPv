@@ -83,8 +83,9 @@ contract EscrowFactory {
     /// @param newOwner Address of the new owner (can be a Gnosis Safe multisig)
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "zero address");
+        address old = owner;
         owner = newOwner;
-        emit OwnershipTransferred(owner, newOwner);
+        emit OwnershipTransferred(old, newOwner);
     }
 
     /// @notice Emitted when ownership is transferred
