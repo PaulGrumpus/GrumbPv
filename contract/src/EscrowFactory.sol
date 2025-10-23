@@ -80,11 +80,15 @@ contract EscrowFactory {
     }
 
     /// @notice Transfer ownership of the factory
-    /// @param newOwner Address of the new owner
+    /// @param newOwner Address of the new owner (can be a Gnosis Safe multisig)
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "zero address");
         owner = newOwner;
+        emit OwnershipTransferred(owner, newOwner);
     }
+
+    /// @notice Emitted when ownership is transferred
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     /// @notice Create a new non-deterministic escrow clone
     /// @dev Uses Clones.clone() which is cheaper than deploying the full contract
