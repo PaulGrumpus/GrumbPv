@@ -8,6 +8,7 @@
 
 import { ethers } from 'ethers';
 import { CONFIG } from '../config.js';
+import { decodeError } from '../utils/escrowUtils.js';
 
 async function main() {
   if (!CONFIG.buyerPrivateKey) {
@@ -43,36 +44,43 @@ async function main() {
     throw new Error('Insufficient balance');
   }
   
-  // Estimate gas
-  const gasEstimate = await escrow.fund.estimateGas({ value: fundAmount });
-  console.log('Estimated gas:', gasEstimate.toString());
-  
-  // Send transaction
-  console.log('\nSending transaction...');
-  const tx = await escrow.fund({ value: fundAmount });
-  console.log('Transaction hash:', tx.hash);
-  
-  // Wait for confirmation
-  console.log('Waiting for confirmation...');
-  const receipt = await tx.wait();
-  
-  console.log('\n✅ Escrow funded successfully!');
-  console.log('Block:', receipt.blockNumber);
-  console.log('Gas used:', receipt.gasUsed.toString());
-  console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
-  
-  // Get updated info
-  const info = await escrow.getAllInfo();
-  console.log('\n--- Updated Info ---');
-  console.log('Project Amount:', ethers.formatEther(info.amount), 'BNB');
-  console.log('Buyer Fee Reserve:', ethers.formatEther(info.buyerFeeReserve), 'BNB');
-  console.log('State:', info.state.toString(), '(1 = Funded)');
+  try {
+    // Estimate gas
+    const gasEstimate = await escrow.fund.estimateGas({ value: fundAmount });
+    console.log('Estimated gas:', gasEstimate.toString());
+    
+    // Send transaction
+    console.log('\nSending transaction...');
+    const tx = await escrow.fund({ value: fundAmount });
+    console.log('Transaction hash:', tx.hash);
+    
+    // Wait for confirmation
+    console.log('Waiting for confirmation...');
+    const receipt = await tx.wait();
+    
+    console.log('\n✅ Escrow funded successfully!');
+    console.log('Block:', receipt.blockNumber);
+    console.log('Gas used:', receipt.gasUsed.toString());
+    console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
+    
+    // Get updated info
+    const info = await escrow.getAllInfo();
+    console.log('\n--- Updated Info ---');
+    console.log('Project Amount:', ethers.formatEther(info.amount), 'BNB');
+    console.log('Buyer Fee Reserve:', ethers.formatEther(info.buyerFeeReserve), 'BNB');
+    console.log('State:', info.state.toString(), '(1 = Funded)');
+  } catch (error) {
+    // Decode contract error to show user-friendly message
+    const errorMsg = decodeError(error, escrow.interface);
+    console.error('\n' + errorMsg);
+    throw error;
+  }
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error('\n❌ Error:', error.message);
+    // Error already displayed above
     process.exit(1);
   });
 

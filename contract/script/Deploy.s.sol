@@ -39,7 +39,8 @@ contract DeployScript is Script {
             50, // 0.5% buyer fee
             50, // 0.5% vendor fee
             50, // 0.5% dispute fee
-            25  // 0.25% reward rate
+            25,  // 0.25% reward rate
+            address(0)  // No reward distributor (deprecated script)
         );
         
         console.log("Escrow deployed at:", address(escrow));

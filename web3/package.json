@@ -15,14 +15,14 @@
     "dispute-resolve": "node scripts/disputeResolve.js",
     "info": "node scripts/getInfo.js",
     "setup-rewards": "node scripts/setupRewards.js",
-    "fund-grmps": "node scripts/fundGRMPS.js",
     "deploy:implementation": "node scripts/factory/deployImplementation.js",
     "deploy:factory": "node scripts/factory/deployFactory.js",
     "create:escrow": "node scripts/factory/createEscrow.js",
     "list:escrows": "node scripts/factory/listEscrows.js",
     "predict:address": "node scripts/factory/predictAddress.js",
     "transfer:ownership": "node scripts/transfer-ownership-to-gnosis.js",
-    "check:ownership": "node scripts/transfer-ownership-to-gnosis.js check"
+    "check:ownership": "node scripts/transfer-ownership-to-gnosis.js check",
+    "approve:rewards": "node scripts/gnosis-approve-rewards.js"
   },
   "dependencies": {
     "ethers": "^6.9.0",

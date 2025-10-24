@@ -61,6 +61,10 @@ contract Escrow is Ownable, ReentrancyGuard {
 
     EscrowInfo public escrowInfo;
     bool private _initialized;
+    
+    /// @notice Optional RewardDistributor contract for centralized reward distribution
+    /// @dev If set, rewards are distributed through this contract instead of direct transfer
+    address public rewardDistributor;
 
     event Initialized(
         address indexed buyer,
@@ -138,6 +142,7 @@ contract Escrow is Ownable, ReentrancyGuard {
     /// @param _vendorFeeBps Vendor fee in basis points (e.g., 50 = 0.5%)
     /// @param _disputeFeeBps Dispute fee in basis points (e.g., 50 = 0.5%)
     /// @param _rewardRateBps Reward rate in basis points (e.g., 25 = 0.25%)
+    /// @param _rewardDistributor Address of RewardDistributor contract (or address(0) if not using)
     function initialize(
         address _buyer,
         address _seller,
@@ -150,7 +155,8 @@ contract Escrow is Ownable, ReentrancyGuard {
         uint256 _buyerFeeBps,
         uint256 _vendorFeeBps,
         uint256 _disputeFeeBps,
-        uint256 _rewardRateBps
+        uint256 _rewardRateBps,
+        address _rewardDistributor
     ) external {
         if (_initialized) revert AlreadyInitialized();
         _initialized = true;
@@ -177,6 +183,9 @@ contract Escrow is Ownable, ReentrancyGuard {
         escrowInfo.createdAt = uint64(block.timestamp);
         escrowInfo.deadline = _deadline;
         escrowInfo.state = State.Unfunded;
+        
+        // Set reward distributor during initialization (before ownership transfer)
+        rewardDistributor = _rewardDistributor;
 
         emit Initialized(
             _buyer,
@@ -200,6 +209,13 @@ contract Escrow is Ownable, ReentrancyGuard {
     /// @dev Example: if 1e18 wei should reward 1e18 GRMPS, set to 1e18.
     function setRewardRatePer1e18(uint256 _rate) external onlyOwner {
         escrowInfo.rewardRatePer1e18 = _rate;
+    }
+    
+    /// @notice Set the RewardDistributor contract address.
+    /// @dev If set, rewards are distributed through this contract instead of direct transfer.
+    ///      This allows owner to approve once instead of approving each escrow individually.
+    function setRewardDistributor(address _distributor) external onlyOwner {
+        rewardDistributor = _distributor;
     }
 
     /// @notice Buyer funds the escrow with native BNB.
@@ -488,7 +504,6 @@ contract Escrow is Ownable, ReentrancyGuard {
 
         // --- GRMPS reward (only in non-dispute normal completion) ---
         address rewardToken = escrowInfo.rewardToken;
-        address rewardSource = owner(); // Owner (arbiter or Gnosis Safe) is the reward source
         uint256 rate = escrowInfo.rewardRatePer1e18;
         
         if (rewardToken != address(0) && rate > 0) {
@@ -498,23 +513,12 @@ contract Escrow is Ownable, ReentrancyGuard {
             uint256 rewardPerSide = (sideNative * rate) / 1e18;
             
             if (rewardPerSide > 0) {
-                uint256 totalReward = rewardPerSide * 2;
-                
-                // Check if owner has approved sufficient allowance
-                uint256 allowance = IERC20(rewardToken).allowance(rewardSource, address(this));
-                
-                if (allowance >= totalReward) {
-                    // Transfer from owner's wallet to buyer (using allowance)
-                    bool ok3 = IERC20(rewardToken).transferFrom(rewardSource, escrowInfo.buyer, rewardPerSide);
-                    if (ok3) emit RewardPaid(escrowInfo.buyer, rewardPerSide, "buyer_reward");
-                    else emit RewardSkipped(escrowInfo.buyer, "transfer_failed");
-                    
-                    // Transfer from owner's wallet to vendor (using allowance)
-                    bool ok4 = IERC20(rewardToken).transferFrom(rewardSource, escrowInfo.vendor, rewardPerSide);
-                    if (ok4) emit RewardPaid(escrowInfo.vendor, rewardPerSide, "vendor_reward");
-                    else emit RewardSkipped(escrowInfo.vendor, "transfer_failed");
+                if (rewardDistributor != address(0)) {
+                    // Use RewardDistributor (centralized, scalable approach)
+                    _distributeRewardsThroughDistributor(rewardPerSide);
                 } else {
-                    emit RewardSkipped(address(0), "insufficient_allowance");
+                    // Fallback: Direct transfer from owner (legacy approach)
+                    _distributeRewardsDirect(rewardToken, rewardPerSide);
                 }
             }
         }
@@ -540,6 +544,66 @@ contract Escrow is Ownable, ReentrancyGuard {
         require(ok, "refund failed");
 
         emit Refunded(escrowInfo.buyer, totalRefund);
+    }
+
+    // ------- Internal reward distribution helpers -------
+    
+    /// @dev Distribute rewards through RewardDistributor contract
+    function _distributeRewardsThroughDistributor(uint256 rewardPerSide) internal {
+        // Prepare arrays for batch distribution
+        address[] memory recipients = new address[](2);
+        uint256[] memory amounts = new uint256[](2);
+        
+        recipients[0] = escrowInfo.buyer;
+        recipients[1] = escrowInfo.vendor;
+        amounts[0] = rewardPerSide;
+        amounts[1] = rewardPerSide;
+        
+        // Call distributor
+        (bool success, bytes memory data) = rewardDistributor.call(
+            abi.encodeWithSignature(
+                "distributeRewards(address[],uint256[],string)",
+                recipients,
+                amounts,
+                "escrow_completion"
+            )
+        );
+        
+        if (success) {
+            // Check return value
+            bool distributed = abi.decode(data, (bool));
+            if (distributed) {
+                emit RewardPaid(escrowInfo.buyer, rewardPerSide, "buyer_reward");
+                emit RewardPaid(escrowInfo.vendor, rewardPerSide, "vendor_reward");
+            } else {
+                emit RewardSkipped(address(0), "distributor_failed");
+            }
+        } else {
+            emit RewardSkipped(address(0), "distributor_call_failed");
+        }
+    }
+    
+    /// @dev Distribute rewards directly from owner wallet (legacy method)
+    function _distributeRewardsDirect(address rewardToken, uint256 rewardPerSide) internal {
+        address rewardSource = owner();
+        uint256 totalReward = rewardPerSide * 2;
+        
+        // Check if owner has approved sufficient allowance
+        uint256 allowance = IERC20(rewardToken).allowance(rewardSource, address(this));
+        
+        if (allowance >= totalReward) {
+            // Transfer from owner's wallet to buyer (using allowance)
+            bool ok3 = IERC20(rewardToken).transferFrom(rewardSource, escrowInfo.buyer, rewardPerSide);
+            if (ok3) emit RewardPaid(escrowInfo.buyer, rewardPerSide, "buyer_reward");
+            else emit RewardSkipped(escrowInfo.buyer, "transfer_failed");
+            
+            // Transfer from owner's wallet to vendor (using allowance)
+            bool ok4 = IERC20(rewardToken).transferFrom(rewardSource, escrowInfo.vendor, rewardPerSide);
+            if (ok4) emit RewardPaid(escrowInfo.vendor, rewardPerSide, "vendor_reward");
+            else emit RewardSkipped(escrowInfo.vendor, "transfer_failed");
+        } else {
+            emit RewardSkipped(address(0), "insufficient_allowance");
+        }
     }
 
     // ------- View helpers -------

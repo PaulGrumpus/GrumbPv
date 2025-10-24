@@ -12,11 +12,11 @@ config();
 // Load ABIs
 const escrowABI = JSON.parse(
   readFileSync(join(__dirname, 'abi', 'Escrow.json'), 'utf8')
-);
+).abi;
 
 const factoryABI = JSON.parse(
   readFileSync(join(__dirname, 'abi', 'EscrowFactory.json'), 'utf8')
-);
+).abi;
 
 const erc20ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -31,7 +31,7 @@ export const CONFIG = {
   chainId: parseInt(process.env.CHAIN_ID || '97'),
   
   // Contracts
-  escrowAddress: process.env.ESCROW_ADDRESS || '0x4035920Dee6bb6DF73e68ED06b5666ca28BD247B',
+  escrowAddress: process.env.ESCROW_ADDRESS,
   factoryAddress: process.env.FACTORY_ADDRESS,
   implementationAddress: process.env.ESCROW_IMPLEMENTATION_ADDRESS,
   
@@ -53,8 +53,8 @@ export const CONFIG = {
   arbiterPrivateKey: process.env.ARBITER_PRIVATE_KEY,
   
   // Parameters
-  fundAmount: process.env.FUND_AMOUNT || '1.005',
-  rewardRate: process.env.REWARD_RATE || '60000000000000000000000',
+  fundAmount: process.env.FUND_AMOUNT || '0.1',
+  rewardRate: process.env.REWARD_RATE || '30000000000000000000000',
 };
 
 export const STATES = {
