@@ -202,6 +202,57 @@ export function getSigner(privateKey) {
 }
 
 /**
+ * Decode custom error from contract
+ * @param {Error} error - Error object from contract call
+ * @param {ethers.Interface} contractInterface - Contract interface
+ * @returns {string} Human-readable error message
+ */
+export function decodeError(error, contractInterface) {
+  if (!error.data) return error.message;
+  
+  try {
+    // Try to decode the error
+    const decodedError = contractInterface.parseError(error.data);
+    
+    if (!decodedError) return error.message;
+    
+    // Map errors to user-friendly messages
+    const errorMessages = {
+      'OnlyBuyer': '❌ Only the buyer can perform this action',
+      'OnlyVendor': '❌ Only the vendor can perform this action',
+      'OnlyParticipant': '❌ Only buyer or vendor can perform this action',
+      'BadState': '❌ Invalid state for this operation. Check escrow state with: npm run info',
+      'BadValue': '❌ Invalid payment amount',
+      'DeadlineNotReached': '❌ Project deadline has not been reached yet',
+      'CIDMismatch': '❌ CID does not match the proposed CID',
+      'NoArbiter': '❌ This escrow has no arbiter for dispute resolution',
+      'InsufficientDisputeFee': '❌ Insufficient dispute fee payment',
+      'DisputeFeeAlreadyPaid': '❌ Dispute fee already paid',
+      'DisputeFeeDeadlinePassed': '❌ Dispute fee deadline has passed. Use resolveDisputeByDefault instead',
+      'DisputeFeeDeadlineNotPassed': '❌ Dispute fee deadline has not passed yet',
+      'BothPartiesNotPaid': '❌ Both parties have not paid dispute fees',
+      'AlreadyInitialized': '❌ Escrow already initialized',
+      'CancelWindowPassed': '❌ Cancel window has passed (only available in first 20% of deadline)',
+    };
+    
+    const friendlyMessage = errorMessages[decodedError.name];
+    
+    if (friendlyMessage) {
+      // Add additional context for BadState
+      if (decodedError.name === 'BadState') {
+        return `${friendlyMessage}\n\n💡 Common reasons:\n  - Escrow already completed (Paid/Refunded)\n  - Wrong operation for current state\n  - Create a new escrow: npm run create:escrow`;
+      }
+      return friendlyMessage;
+    }
+    
+    return `❌ ${decodedError.name}: ${decodedError.args.join(', ')}`;
+  } catch (e) {
+    // If we can't decode, return original error
+    return error.message;
+  }
+}
+
+/**
  * Check wallet balance
  * @param {string} address - Wallet address
  * @returns {Promise<string>} Balance in ETH
@@ -273,10 +324,30 @@ export function listenForEscrowCreation(callback) {
  */
 export async function getCreatedEscrows(fromBlock = 0, toBlock = 'latest') {
   const factory = getFactoryContract();
-  const filter = factory.filters.EscrowCreated();
-  const events = await factory.queryFilter(filter, fromBlock, toBlock);
+  const provider = factory.runner.provider;
   
-  return events.map(event => ({
+  // Get current block if toBlock is 'latest'
+  const endBlock = toBlock === 'latest' ? await provider.getBlockNumber() : parseInt(toBlock);
+  const startBlock = parseInt(fromBlock);
+  
+  // BSC RPC limits: 5000 blocks per query to be safe
+  const CHUNK_SIZE = 5000;
+  const allEvents = [];
+  
+  // Query in chunks
+  for (let from = startBlock; from <= endBlock; from += CHUNK_SIZE) {
+    const to = Math.min(from + CHUNK_SIZE - 1, endBlock);
+    
+    try {
+      const filter = factory.filters.EscrowCreated();
+      const events = await factory.queryFilter(filter, from, to);
+      allEvents.push(...events);
+    } catch (error) {
+      console.log(`⚠️  Error querying blocks ${from}-${to}:`, error.message);
+    }
+  }
+  
+  return allEvents.map(event => ({
     jobId: event.args.jobId,
     escrow: event.args.escrow,
     buyer: event.args.buyer,
