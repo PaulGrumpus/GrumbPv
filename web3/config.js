@@ -48,6 +48,7 @@ export const CONFIG = {
   grmpsToken: process.env.GRMPS_TOKEN_ADDRESS,
   
   // Private Keys (use carefully!)
+  deployerPrivateKey: process.env.DEPLOYER_PRIVATE_KEY || process.env.PRIVATE_KEY,
   buyerPrivateKey: process.env.BUYER_PRIVATE_KEY,
   vendorPrivateKey: process.env.VENDOR_PRIVATE_KEY,
   arbiterPrivateKey: process.env.ARBITER_PRIVATE_KEY,
