@@ -191,6 +191,7 @@ contract Escrow is Ownable, ReentrancyGuard {
     }
 
     /// @notice Set the reward token (GRMPS) address.
+    /// @dev Owner (arbiter or Gnosis Safe) sets this once. The reward token will be pulled from owner's wallet.
     function setRewardToken(address _rewardToken) external onlyOwner {
         escrowInfo.rewardToken = _rewardToken;
     }
@@ -487,25 +488,33 @@ contract Escrow is Ownable, ReentrancyGuard {
 
         // --- GRMPS reward (only in non-dispute normal completion) ---
         address rewardToken = escrowInfo.rewardToken;
+        address rewardSource = owner(); // Owner (arbiter or Gnosis Safe) is the reward source
         uint256 rate = escrowInfo.rewardRatePer1e18;
+        
         if (rewardToken != address(0) && rate > 0) {
-            // rewardRateBps% per side, computed in native then converted to GRMPS using rate
+            // Calculate reward using dynamic rate provided at withdrawal time
+            // rewardRateBps% per side, computed in native then converted to GRMPS using dynamic rate
             uint256 sideNative = (projectAmount * escrowInfo.rewardRateBps) / 10000;
             uint256 rewardPerSide = (sideNative * rate) / 1e18;
+            
             if (rewardPerSide > 0) {
                 uint256 totalReward = rewardPerSide * 2;
-                uint256 balance = IERC20(rewardToken).balanceOf(address(this));
-                if (balance >= totalReward) {
-                    // Pay buyer reward
-                    bool ok3 = IERC20(rewardToken).transfer(escrowInfo.buyer, rewardPerSide);
+                
+                // Check if owner has approved sufficient allowance
+                uint256 allowance = IERC20(rewardToken).allowance(rewardSource, address(this));
+                
+                if (allowance >= totalReward) {
+                    // Transfer from owner's wallet to buyer (using allowance)
+                    bool ok3 = IERC20(rewardToken).transferFrom(rewardSource, escrowInfo.buyer, rewardPerSide);
                     if (ok3) emit RewardPaid(escrowInfo.buyer, rewardPerSide, "buyer_reward");
                     else emit RewardSkipped(escrowInfo.buyer, "transfer_failed");
-                    // Pay vendor reward
-                    bool ok4 = IERC20(rewardToken).transfer(escrowInfo.vendor, rewardPerSide);
+                    
+                    // Transfer from owner's wallet to vendor (using allowance)
+                    bool ok4 = IERC20(rewardToken).transferFrom(rewardSource, escrowInfo.vendor, rewardPerSide);
                     if (ok4) emit RewardPaid(escrowInfo.vendor, rewardPerSide, "vendor_reward");
                     else emit RewardSkipped(escrowInfo.vendor, "transfer_failed");
                 } else {
-                    emit RewardSkipped(address(0), "insufficient_reward_balance");
+                    emit RewardSkipped(address(0), "insufficient_allowance");
                 }
             }
         }
