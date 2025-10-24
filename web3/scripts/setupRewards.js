@@ -51,8 +51,18 @@ async function main() {
   
   console.log('\n✅ Rewards configured successfully!');
   console.log('\nNext steps:');
-  console.log('1. GRMPS owner must exclude escrow from fees:');
-  console.log(`   GRMPS.excludeFromFees(${CONFIG.escrowAddress}, true)`);
+  
+  // Get owner address (arbiter or Gnosis Safe)
+  const escrowContract = new ethers.Contract(
+    CONFIG.escrowAddress,
+    CONFIG.escrowABI,
+    wallet
+  );
+  const ownerAddress = await escrowContract.owner();
+  
+  console.log('1. GRMPS owner must exclude the escrow OWNER from fees:');
+  console.log(`   GRMPS.excludeFromFees(${ownerAddress}, true)`);
+  console.log('   (Because GRMPS transfers FROM owner wallet using allowance)');
   console.log('2. Owner (Gnosis Safe) must approve GRMPS allowance:');
   console.log(`   grmpsToken.approve(${CONFIG.escrowAddress}, largeAmount)`);
   console.log('3. Update rate periodically as market prices change');

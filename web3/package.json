@@ -21,7 +21,8 @@
     "list:escrows": "node scripts/factory/listEscrows.js",
     "predict:address": "node scripts/factory/predictAddress.js",
     "transfer:ownership": "node scripts/transfer-ownership-to-gnosis.js",
-    "check:ownership": "node scripts/transfer-ownership-to-gnosis.js check"
+    "check:ownership": "node scripts/transfer-ownership-to-gnosis.js check",
+    "approve:rewards": "node scripts/gnosis-approve-rewards.js"
   },
   "dependencies": {
     "ethers": "^6.9.0",
