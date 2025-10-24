@@ -53,7 +53,9 @@ async function main() {
   console.log('\nNext steps:');
   console.log('1. GRMPS owner must exclude escrow from fees:');
   console.log(`   GRMPS.excludeFromFees(${CONFIG.escrowAddress}, true)`);
-  console.log('2. Fund escrow with GRMPS tokens (npm run fund-grmps)');
+  console.log('2. Owner (Gnosis Safe) must approve GRMPS allowance:');
+  console.log(`   grmpsToken.approve(${CONFIG.escrowAddress}, largeAmount)`);
+  console.log('3. Update rate periodically as market prices change');
 }
 
 main()

@@ -61,13 +61,30 @@ async function main() {
   console.log('Reward Rate:', info.rewardRatePer1e18.toString());
   
   if (info.rewardToken !== ethers.ZeroAddress) {
-    const grmps = new ethers.Contract(
-      info.rewardToken,
-      CONFIG.erc20ABI,
-      provider
-    );
-    const balance = await grmps.balanceOf(CONFIG.escrowAddress);
-    console.log('GRMPS Balance:', ethers.formatEther(balance), 'GRMPS');
+    try {
+      // Check if token contract exists
+      const code = await provider.getCode(info.rewardToken);
+      
+      if (code !== '0x') {
+        const grmps = new ethers.Contract(
+          info.rewardToken,
+          CONFIG.erc20ABI,
+          provider
+        );
+        
+        // Note: With allowance pattern, GRMPS stays in owner's wallet
+        const ownerAddress = await escrow.owner();
+        const ownerBalance = await grmps.balanceOf(ownerAddress);
+        const allowance = await grmps.allowance(ownerAddress, CONFIG.escrowAddress);
+        
+        console.log('Owner GRMPS Balance:', ethers.formatEther(ownerBalance), 'GRMPS');
+        console.log('Escrow Allowance:', ethers.formatEther(allowance), 'GRMPS');
+      } else {
+        console.log('⚠️  GRMPS token not deployed at this address');
+      }
+    } catch (error) {
+      console.log('⚠️  Could not fetch GRMPS info:', error.message);
+    }
   }
   
   console.log('\n--- Contract Balance ---');
