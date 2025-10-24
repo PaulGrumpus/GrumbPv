@@ -108,8 +108,10 @@ contract EscrowTest is Test {
         uint256 expectedPerSide = (1 ether * 25) / 10000; // 0.0025 ether units => 0.0025 GRMPS
         uint256 totalRewards = expectedPerSide * 2;
 
-        // Mint enough GRMPS to escrow for rewards
-        grmps.mint(address(escrow), totalRewards);
+        // Mint GRMPS to arbiter (owner) and approve escrow to spend
+        grmps.mint(arbiter, totalRewards);
+        vm.prank(arbiter);
+        grmps.approve(address(escrow), totalRewards);
 
         // Record balances
         uint256 buyerGRBefore = grmps.balanceOf(buyer);
