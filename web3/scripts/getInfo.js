@@ -60,6 +60,18 @@ async function main() {
   console.log('Reward Token:', info.rewardToken);
   console.log('Reward Rate:', info.rewardRatePer1e18.toString());
   
+  // Check if RewardDistributor is set
+  let rewardDistributor;
+  try {
+    rewardDistributor = await escrow.rewardDistributor();
+  } catch (error) {
+    rewardDistributor = ethers.ZeroAddress;
+  }
+  
+  if (rewardDistributor && rewardDistributor !== ethers.ZeroAddress) {
+    console.log('✅ RewardDistributor:', rewardDistributor);
+  }
+  
   if (info.rewardToken !== ethers.ZeroAddress) {
     try {
       // Check if token contract exists
@@ -72,13 +84,33 @@ async function main() {
           provider
         );
         
-        // Note: With allowance pattern, GRMPS stays in owner's wallet
+        // Check owner balance
         const ownerAddress = await escrow.owner();
         const ownerBalance = await grmps.balanceOf(ownerAddress);
-        const allowance = await grmps.allowance(ownerAddress, CONFIG.escrowAddress);
-        
         console.log('Owner GRMPS Balance:', ethers.formatEther(ownerBalance), 'GRMPS');
-        console.log('Escrow Allowance:', ethers.formatEther(allowance), 'GRMPS');
+        
+        // Check allowance based on reward method
+        if (rewardDistributor && rewardDistributor !== ethers.ZeroAddress) {
+          // NEW: Using RewardDistributor
+          // Check allowance from owner to RewardDistributor (or reward source)
+          const distributorContract = new ethers.Contract(
+            rewardDistributor,
+            ['function rewardSource() view returns (address)'],
+            provider
+          );
+          
+          try {
+            const rewardSource = await distributorContract.rewardSource();
+            const allowance = await grmps.allowance(rewardSource, rewardDistributor);
+            console.log('RewardSource → Distributor Allowance:', ethers.formatEther(allowance), 'GRMPS');
+          } catch (error) {
+            console.log('⚠️  Could not fetch RewardDistributor allowance');
+          }
+        } else {
+          // LEGACY: Direct transfer from owner
+          const allowance = await grmps.allowance(ownerAddress, CONFIG.escrowAddress);
+          console.log('Owner → Escrow Allowance:', ethers.formatEther(allowance), 'GRMPS');
+        }
       } else {
         console.log('⚠️  GRMPS token not deployed at this address');
       }

@@ -17,12 +17,14 @@
     "setup-rewards": "node scripts/setupRewards.js",
     "deploy:implementation": "node scripts/factory/deployImplementation.js",
     "deploy:factory": "node scripts/factory/deployFactory.js",
+    "deploy:reward-distributor": "node scripts/factory/deployRewardDistributor.js",
     "create:escrow": "node scripts/factory/createEscrow.js",
     "list:escrows": "node scripts/factory/listEscrows.js",
     "predict:address": "node scripts/factory/predictAddress.js",
     "transfer:ownership": "node scripts/transfer-ownership-to-gnosis.js",
     "check:ownership": "node scripts/transfer-ownership-to-gnosis.js check",
-    "approve:rewards": "node scripts/gnosis-approve-rewards.js"
+    "approve:rewards": "node scripts/gnosis-approve-rewards.js",
+    "approve:distributor": "node scripts/approveDistributor.js"
   },
   "dependencies": {
     "ethers": "^6.9.0",

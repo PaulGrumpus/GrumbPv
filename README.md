@@ -51,8 +51,21 @@ bsc-escrow/
 - ✅ 0.25% per side on successful completion
 - ✅ Configurable BNB→GRMPS conversion rate
 - ✅ No rewards on dispute paths
+- ✅ **RewardDistributor:** Scalable architecture (approve once for all escrows)
+- ✅ Works with EOA and Gnosis Safe multisig
 
 ## Getting Started
+
+### Quick Deployment (Recommended 🚀)
+
+**Using Foundry scripts (fastest):**
+```bash
+cd contract
+chmod +x deploy-all.sh
+./deploy-all.sh
+```
+
+See `DEPLOY_QUICK_START.md` for details.
 
 ### For Smart Contract Development
 
@@ -62,7 +75,7 @@ forge build
 forge test
 ```
 
-See `contract/QUICKSTART.md` for deployment guide.
+See `DEPLOYMENT_WITH_FOUNDRY.md` for complete deployment guide.
 
 ### For Web3 Integration
 
@@ -76,9 +89,21 @@ See `web3/README.md` for usage guide.
 
 ## Documentation
 
-- **Contract Development:** `contract/DEPLOYMENT_GUIDE.md`
+### Deployment Guides 🚀
+- **Quick Start:** `DEPLOY_QUICK_START.md` - Fastest way to deploy (5 minutes!)
+- **Complete Guide:** `DEPLOYMENT_WITH_FOUNDRY.md` - Detailed Foundry deployment
+- **Gas Configuration:** `GAS_CONFIGURATION.md` - Fix slow/stuck transactions ⚡
+- **Old Guide:** `contract/DEPLOYMENT_GUIDE.md` - Original deployment guide
+
+### Core Guides
 - **Web3 Integration:** `web3/README.md`
-- **Quick Start:** `contract/QUICKSTART.md`
+- **Quick Reference:** `QUICK_REFERENCE.md` - Quick setup commands
+
+### New Architecture (Scalable Rewards) ⭐
+- **Reward System:** `REWARD_DISTRIBUTOR_GUIDE.md` - Complete guide to RewardDistributor
+- **Authorization System:** `AUTHORIZATION_SYSTEM.md` - How factory authorization works (automatic!)
+- **Roles & Responsibilities:** `ROLES_AND_RESPONSIBILITIES.md` - Clarifies Deployer vs Arbiter
+- **Environment Variables:** `web3/ENV_VARIABLES.md` - All env vars explained
 
 ## Security
 
