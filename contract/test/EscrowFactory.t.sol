@@ -196,7 +196,8 @@ contract EscrowFactoryTest is Test {
             address(0),
             PROJECT_AMOUNT,
             uint64(block.timestamp + 30 days),
-            50, 50, 50, 25
+            50, 50, 50, 25,
+            address(0)  // No reward distributor
         );
     }
     

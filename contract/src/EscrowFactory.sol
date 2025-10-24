@@ -19,7 +19,8 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
             uint256 buyerFeeBps,
             uint256 vendorFeeBps,
             uint256 disputeFeeBps,
-            uint256 rewardRateBps
+            uint256 rewardRateBps,
+            address rewardDistributor
         ) external;
     }
 
@@ -29,6 +30,13 @@ contract EscrowFactory {
     
     /// @notice Owner of the factory (can be used for future access control)
     address public owner;
+    
+    /// @notice Optional RewardDistributor contract address
+    /// @dev If set, all new escrows will be configured to use this distributor
+    address public rewardDistributor;
+    
+    /// @notice Mapping to track all escrows created by this factory
+    mapping(address => bool) public isEscrowCreated;
 
     /// @notice Emitted when a new escrow clone is created
     /// @param jobId Unique identifier for the job/escrow
@@ -87,9 +95,20 @@ contract EscrowFactory {
         owner = newOwner;
         emit OwnershipTransferred(old, newOwner);
     }
+    
+    /// @notice Set the RewardDistributor contract address
+    /// @dev If set, all new escrows will be configured to use this distributor automatically
+    /// @param _rewardDistributor Address of the RewardDistributor contract (or address(0) to disable)
+    function setRewardDistributor(address _rewardDistributor) external onlyOwner {
+        rewardDistributor = _rewardDistributor;
+        emit RewardDistributorSet(_rewardDistributor);
+    }
 
     /// @notice Emitted when ownership is transferred
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    
+    /// @notice Emitted when reward distributor is set
+    event RewardDistributorSet(address indexed rewardDistributor);
 
     /// @notice Create a new non-deterministic escrow clone
     /// @dev Uses Clones.clone() which is cheaper than deploying the full contract
@@ -138,8 +157,12 @@ contract EscrowFactory {
             buyerFeeBps,
             vendorFeeBps,
             disputeFeeBps,
-            rewardRateBps
+            rewardRateBps,
+            rewardDistributor  // Pass distributor during initialization
         );
+        
+        // Track that this escrow was created by this factory
+        isEscrowCreated[escrow] = true;
         
         emit EscrowCreated(
             jobId,
@@ -209,8 +232,12 @@ contract EscrowFactory {
             buyerFeeBps,
             vendorFeeBps,
             disputeFeeBps,
-            rewardRateBps
+            rewardRateBps,
+            rewardDistributor  // Pass distributor during initialization
         );
+        
+        // Track that this escrow was created by this factory
+        isEscrowCreated[escrow] = true;
         
         emit EscrowCreated(
             jobId,

@@ -15,6 +15,11 @@ remappings = [
     "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"
 ]
 
+# BSC gas settings (important for deployment speed!)
+# BSC Testnet often needs higher gas than mainnet!
+gas_price = 20_000_000_000  # 20 gwei (tested and works!)
+gas_limit = 5_000_000       # 5M gas (safe for all deployments)
+
 # Named RPCs for convenience
 [rpc_endpoints]
 bsc      = "${BSC_RPC_URL}"     # chainId 56
