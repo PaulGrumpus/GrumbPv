@@ -43,13 +43,52 @@ async function main() {
   console.log('Buyer Approved:', info.buyerApproved);
   console.log('Vendor Approved:', info.vendorApproved);
   
-  console.log('\n--- Deadlines ---');
+  console.log('\n--- Timeline ---');
+  const createdAt = new Date(Number(info.createdAt) * 1000);
+  console.log('Created At:', createdAt.toISOString(), `(${info.createdAt})`);
+  
+  if (info.fundedAt > 0) {
+    const fundedAt = new Date(Number(info.fundedAt) * 1000);
+    console.log('Funded At:', fundedAt.toISOString(), `(${info.fundedAt})`);
+  } else {
+    console.log('Funded At: Not funded yet');
+  }
+  
   const deadline = new Date(Number(info.deadline) * 1000);
   console.log('Project Deadline:', deadline.toISOString(), `(${info.deadline})`);
   
+  // Calculate cancel window if funded
+  if (info.fundedAt > 0 && info.state == 1n) { // State.Funded
+    const fundedTimestamp = Number(info.fundedAt);
+    const deadlineTimestamp = Number(info.deadline);
+    const period = deadlineTimestamp - fundedTimestamp;
+    const cancelWindowDuration = period / 5; // 20%
+    const cancelWindowEnd = fundedTimestamp + cancelWindowDuration;
+    const cancelWindowEndDate = new Date(cancelWindowEnd * 1000);
+    const now = Math.floor(Date.now() / 1000);
+    
+    console.log('\n--- Cancel Window ---');
+    console.log('Cancel Window End:', cancelWindowEndDate.toISOString());
+    
+    if (now <= cancelWindowEnd) {
+      const remaining = cancelWindowEnd - now;
+      const hours = Math.floor(remaining / 3600);
+      const minutes = Math.floor((remaining % 3600) / 60);
+      console.log(`✅ Buyer can cancel (${hours}h ${minutes}m remaining)`);
+    } else if (now > deadlineTimestamp) {
+      console.log('✅ Buyer can cancel (deadline passed, vendor never delivered)');
+    } else {
+      console.log('❌ Cancel window closed (must wait for deadline)');
+    }
+  }
+  
   if (info.disputeFeeDeadline > 0) {
     const disputeDeadline = new Date(Number(info.disputeFeeDeadline) * 1000);
+    console.log('\n--- Dispute Info ---');
     console.log('Dispute Fee Deadline:', disputeDeadline.toISOString());
+    console.log('Dispute Initiator:', info.disputeInitiator);
+    console.log('Buyer Paid Dispute Fee:', info.buyerPaidDisputeFee);
+    console.log('Vendor Paid Dispute Fee:', info.vendorPaidDisputeFee);
   }
   
   console.log('\n--- Content ---');

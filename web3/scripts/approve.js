@@ -8,6 +8,7 @@
 
 import { ethers } from 'ethers';
 import { CONFIG } from '../config.js';
+import { decodeError } from '../utils/escrowUtils.js';
 
 async function main() {
   if (!CONFIG.buyerPrivateKey) {
@@ -49,33 +50,40 @@ async function main() {
     throw new Error('CID mismatch. Transaction will revert.');
   }
   
-  // Send transaction
-  console.log('\nSending transaction...');
-  const tx = await escrow.approve(cid);
-  console.log('Transaction hash:', tx.hash);
-  
-  // Wait for confirmation
-  console.log('Waiting for confirmation...');
-  const receipt = await tx.wait();
-  
-  console.log('\n✅ Work approved successfully!');
-  console.log('Block:', receipt.blockNumber);
-  console.log('Gas used:', receipt.gasUsed.toString());
-  console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
-  
-  // Get updated info
-  const updatedInfo = await escrow.getAllInfo();
-  console.log('\n--- Updated Info ---');
-  console.log('Buyer Approved:', updatedInfo.buyerApproved);
-  console.log('Vendor Approved:', updatedInfo.vendorApproved);
-  console.log('State:', updatedInfo.state.toString(), '(4 = Releasable)');
-  console.log('\n✅ Vendor can now call withdraw()!');
+  try {
+    // Send transaction
+    console.log('\nSending transaction...');
+    const tx = await escrow.approve(cid);
+    console.log('Transaction hash:', tx.hash);
+    
+    // Wait for confirmation
+    console.log('Waiting for confirmation...');
+    const receipt = await tx.wait();
+    
+    console.log('\n✅ Work approved successfully!');
+    console.log('Block:', receipt.blockNumber);
+    console.log('Gas used:', receipt.gasUsed.toString());
+    console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
+    
+    // Get updated info
+    const updatedInfo = await escrow.getAllInfo();
+    console.log('\n--- Updated Info ---');
+    console.log('Buyer Approved:', updatedInfo.buyerApproved);
+    console.log('Vendor Approved:', updatedInfo.vendorApproved);
+    console.log('State:', updatedInfo.state.toString(), '(4 = Releasable)');
+    console.log('\n✅ Vendor can now call withdraw()!');
+  } catch (error) {
+    // Decode contract error to show user-friendly message
+    const errorMsg = decodeError(error, escrow.interface);
+    console.error('\n' + errorMsg);
+    throw error;
+  }
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error('\n❌ Error:', error.message);
+    // Error already displayed above
     process.exit(1);
   });
 

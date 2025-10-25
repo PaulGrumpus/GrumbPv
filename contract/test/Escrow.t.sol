@@ -380,7 +380,7 @@ contract EscrowTest is Test {
         // Buyer gets full refund
         uint256 buyerBalanceBefore = buyer.balance;
         vm.prank(buyer);
-        escrow.refundAfterDeadline();
+        escrow.cancel();
         
         assertEq(buyer.balance, buyerBalanceBefore + 1.005 ether);
     }

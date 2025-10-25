@@ -61,6 +61,12 @@ export async function getEscrowInfo(escrowAddress) {
     buyerFeeReserveFormatted: ethers.formatEther(info.buyerFeeReserve),
     disputeFeeAmount: info.disputeFeeAmount.toString(),
     disputeFeeAmountFormatted: ethers.formatEther(info.disputeFeeAmount),
+    createdAt: info.createdAt.toString(),
+    createdAtDate: new Date(Number(info.createdAt) * 1000).toISOString(),
+    fundedAt: info.fundedAt.toString(),
+    fundedAtDate: info.fundedAt > 0 
+      ? new Date(Number(info.fundedAt) * 1000).toISOString()
+      : 'N/A',
     deadline: info.deadline.toString(),
     deadlineDate: new Date(Number(info.deadline) * 1000).toISOString(),
     disputeFeeDeadline: info.disputeFeeDeadline.toString(),
@@ -179,6 +185,8 @@ export function formatEscrowInfo(info) {
 ║ Arbiter: ${info.arbiter.padEnd(53)}║
 ║ Fee Recipient: ${info.feeRecipient.padEnd(47)}║
 ╠════════════════════════════════════════════════════════════════╣
+║ Created At: ${info.createdAtDate.padEnd(50)}║
+║ Funded At: ${(info.fundedAtDate || 'N/A').padEnd(51)}║
 ║ Deadline: ${info.deadlineDate.padEnd(52)}║
 ║ Proposed CID: ${(info.proposedCID || 'N/A').padEnd(48)}║
 ║ Buyer Approved: ${(info.buyerApproved ? 'Yes' : 'No').padEnd(48)}║
@@ -232,7 +240,8 @@ export function decodeError(error, contractInterface) {
       'DisputeFeeDeadlineNotPassed': '❌ Dispute fee deadline has not passed yet',
       'BothPartiesNotPaid': '❌ Both parties have not paid dispute fees',
       'AlreadyInitialized': '❌ Escrow already initialized',
-      'CancelWindowPassed': '❌ Cancel window has passed (only available in first 20% of deadline)',
+      'CancelWindowPassed': '❌ Cancel window has passed. Cancellation is only available:\n  - Within the first 20% of the period from funding to deadline, OR\n  - After the deadline has passed (if vendor never delivered)',
+      'VendorDeliveryNotAllowed': '❌ Cannot cancel after vendor has delivered. Use dispute system if needed.',
     };
     
     const friendlyMessage = errorMessages[decodedError.name];
