@@ -5,27 +5,41 @@ import {Test, console} from "forge-std/Test.sol";
 import {RewardDistributor} from "../src/RewardDistributor.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// Mock ERC20 for testing
-contract MockERC20 {
-    mapping(address => uint256) public balanceOf;
-    mapping(address => mapping(address => uint256)) public allowance;
+// Mock ERC20/BEP-20 for testing (GRMPS compatible)
+contract MockERC20 is IERC20 {
+    mapping(address => uint256) public override balanceOf;
+    mapping(address => mapping(address => uint256)) public override allowance;
+    uint256 public override totalSupply;
     
     function mint(address to, uint256 amount) external {
         balanceOf[to] += amount;
+        totalSupply += amount;
+        emit Transfer(address(0), to, amount);
     }
     
-    function approve(address spender, uint256 amount) external returns (bool) {
+    function approve(address spender, uint256 amount) external override returns (bool) {
         allowance[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
         return true;
     }
     
-    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+    function transfer(address to, uint256 amount) external override returns (bool) {
+        require(balanceOf[msg.sender] >= amount, "insufficient balance");
+        
+        balanceOf[msg.sender] -= amount;
+        balanceOf[to] += amount;
+        emit Transfer(msg.sender, to, amount);
+        return true;
+    }
+    
+    function transferFrom(address from, address to, uint256 amount) external override returns (bool) {
         require(allowance[from][msg.sender] >= amount, "insufficient allowance");
         require(balanceOf[from] >= amount, "insufficient balance");
         
         allowance[from][msg.sender] -= amount;
         balanceOf[from] -= amount;
         balanceOf[to] += amount;
+        emit Transfer(from, to, amount);
         return true;
     }
 }

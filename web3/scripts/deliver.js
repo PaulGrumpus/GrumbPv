@@ -8,6 +8,7 @@
 
 import { ethers } from 'ethers';
 import { CONFIG } from '../config.js';
+import { decodeError } from '../utils/escrowUtils.js';
 
 async function main() {
   if (!CONFIG.vendorPrivateKey) {
@@ -43,32 +44,39 @@ async function main() {
     throw new Error('Invalid state. Must be Funded (1) or Delivered (2)');
   }
   
-  // Send transaction
-  console.log('\nSending transaction...');
-  const tx = await escrow.deliver(cid, contentHash);
-  console.log('Transaction hash:', tx.hash);
-  
-  // Wait for confirmation
-  console.log('Waiting for confirmation...');
-  const receipt = await tx.wait();
-  
-  console.log('\n✅ Work delivered successfully!');
-  console.log('Block:', receipt.blockNumber);
-  console.log('Gas used:', receipt.gasUsed.toString());
-  console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
-  
-  // Get updated info
-  const info = await escrow.getAllInfo();
-  console.log('\n--- Updated Info ---');
-  console.log('Proposed CID:', info.proposedCID);
-  console.log('Vendor Approved:', info.vendorApproved);
-  console.log('State:', info.state.toString(), '(2 = Delivered)');
+  try {
+    // Send transaction
+    console.log('\nSending transaction...');
+    const tx = await escrow.deliver(cid, contentHash);
+    console.log('Transaction hash:', tx.hash);
+    
+    // Wait for confirmation
+    console.log('Waiting for confirmation...');
+    const receipt = await tx.wait();
+    
+    console.log('\n✅ Work delivered successfully!');
+    console.log('Block:', receipt.blockNumber);
+    console.log('Gas used:', receipt.gasUsed.toString());
+    console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
+    
+    // Get updated info
+    const info = await escrow.getAllInfo();
+    console.log('\n--- Updated Info ---');
+    console.log('Proposed CID:', info.proposedCID);
+    console.log('Vendor Approved:', info.vendorApproved);
+    console.log('State:', info.state.toString(), '(2 = Delivered)');
+  } catch (error) {
+    // Decode contract error to show user-friendly message
+    const errorMsg = decodeError(error, escrow.interface);
+    console.error('\n' + errorMsg);
+    throw error;
+  }
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error('\n❌ Error:', error.message);
+    // Error already displayed above
     process.exit(1);
   });
 

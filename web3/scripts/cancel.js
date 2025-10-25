@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * Buyer cancels escrow (before vendor delivers)
+ * Buyer cancels escrow and gets full refund
+ * Can cancel:
+ * - Within first 20% of period from funding to deadline (early cancellation)
+ * - After deadline passes if vendor never delivered
+ * Cannot cancel after vendor has delivered (must use dispute system)
  * Usage: npm run cancel
  */
 
 import { ethers } from 'ethers';
 import { CONFIG } from '../config.js';
+import { decodeError } from '../utils/escrowUtils.js';
 
 async function main() {
   if (!CONFIG.buyerPrivateKey) {
@@ -32,24 +37,31 @@ async function main() {
   
   const buyerBalBefore = await provider.getBalance(wallet.address);
   
-  console.log('\nSending transaction...');
-  const tx = await escrow.cancel();
-  console.log('Transaction hash:', tx.hash);
-  
-  const receipt = await tx.wait();
-  
-  console.log('\n✅ Escrow cancelled successfully!');
-  console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
-  
-  const buyerBalAfter = await provider.getBalance(wallet.address);
-  const refunded = buyerBalAfter - buyerBalBefore + receipt.gasUsed * receipt.gasPrice;
-  console.log('Refunded (excluding gas):', ethers.formatEther(refunded), 'BNB');
+  try {
+    console.log('\nSending transaction...');
+    const tx = await escrow.cancel();
+    console.log('Transaction hash:', tx.hash);
+    
+    const receipt = await tx.wait();
+    
+    console.log('\n✅ Escrow cancelled successfully!');
+    console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
+    
+    const buyerBalAfter = await provider.getBalance(wallet.address);
+    const refunded = buyerBalAfter - buyerBalBefore + receipt.gasUsed * receipt.gasPrice;
+    console.log('Refunded (excluding gas):', ethers.formatEther(refunded), 'BNB');
+  } catch (error) {
+    // Decode contract error to show user-friendly message
+    const errorMsg = decodeError(error, escrow.interface);
+    console.error('\n' + errorMsg);
+    throw error;
+  }
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error('\n❌ Error:', error.message);
+    // Error already displayed above
     process.exit(1);
   });
 

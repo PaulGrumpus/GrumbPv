@@ -8,6 +8,7 @@
 
 import { ethers } from 'ethers';
 import { CONFIG } from '../config.js';
+import { decodeError } from '../utils/escrowUtils.js';
 
 async function main() {
   // Determine which party is initiating
@@ -50,30 +51,37 @@ async function main() {
     console.log('Buyer uses reserved fee (no payment needed)');
   }
   
-  console.log('\nSending transaction...');
-  const tx = await escrow.initiateDispute({ value });
-  console.log('Transaction hash:', tx.hash);
-  
-  const receipt = await tx.wait();
-  
-  console.log('\n✅ Dispute initiated successfully!');
-  console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
-  
-  // Get updated info
-  const updatedInfo = await escrow.getAllInfo();
-  const deadline = new Date(Number(updatedInfo.disputeFeeDeadline) * 1000);
-  
-  console.log('\n--- Dispute Info ---');
-  console.log('Initiator:', updatedInfo.disputeInitiator);
-  console.log('Counterparty deadline:', deadline.toISOString());
-  console.log('Hours remaining:', Math.floor((Number(updatedInfo.disputeFeeDeadline) - Date.now()/1000) / 3600));
-  console.log('\n⚠️  Counterparty must pay dispute fee before deadline or initiator wins by default!');
+  try {
+    console.log('\nSending transaction...');
+    const tx = await escrow.initiateDispute({ value });
+    console.log('Transaction hash:', tx.hash);
+    
+    const receipt = await tx.wait();
+    
+    console.log('\n✅ Dispute initiated successfully!');
+    console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
+    
+    // Get updated info
+    const updatedInfo = await escrow.getAllInfo();
+    const deadline = new Date(Number(updatedInfo.disputeFeeDeadline) * 1000);
+    
+    console.log('\n--- Dispute Info ---');
+    console.log('Initiator:', updatedInfo.disputeInitiator);
+    console.log('Counterparty deadline:', deadline.toISOString());
+    console.log('Hours remaining:', Math.floor((Number(updatedInfo.disputeFeeDeadline) - Date.now()/1000) / 3600));
+    console.log('\n⚠️  Counterparty must pay dispute fee before deadline or initiator wins by default!');
+  } catch (error) {
+    // Decode contract error to show user-friendly message
+    const errorMsg = decodeError(error, escrow.interface);
+    console.error('\n' + errorMsg);
+    throw error;
+  }
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error('\n❌ Error:', error.message);
+    // Error already displayed above
     process.exit(1);
   });
 

@@ -7,6 +7,7 @@
 
 import { ethers } from 'ethers';
 import { CONFIG } from '../config.js';
+import { decodeError } from '../utils/escrowUtils.js';
 
 async function main() {
   if (!CONFIG.vendorPrivateKey) {
@@ -44,53 +45,60 @@ async function main() {
   console.log('Project amount:', ethers.formatEther(info.amount), 'BNB');
   console.log('Expected vendor receives (~99%):', ethers.formatEther(info.amount * 99n / 100n), 'BNB');
   
-  // Send transaction
-  console.log('\nSending transaction...');
-  const tx = await escrow.withdraw();
-  console.log('Transaction hash:', tx.hash);
-  
-  // Wait for confirmation
-  console.log('Waiting for confirmation...');
-  const receipt = await tx.wait();
-  
-  console.log('\n✅ Withdrawal successful!');
-  console.log('Block:', receipt.blockNumber);
-  console.log('Gas used:', receipt.gasUsed.toString());
-  console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
-  
-  // Get balances after
-  const vendorBalAfter = await provider.getBalance(wallet.address);
-  const received = vendorBalAfter - vendorBalBefore + receipt.gasUsed * receipt.gasPrice;
-  console.log('\n--- Payment Received ---');
-  console.log('Vendor balance after:', ethers.formatEther(vendorBalAfter), 'BNB');
-  console.log('Net received (excluding gas):', ethers.formatEther(received), 'BNB');
-  
-  // Check for reward events
-  console.log('\n--- Checking for Rewards ---');
-  const rewardEvents = receipt.logs.filter(log => {
-    try {
-      const parsed = escrow.interface.parseLog(log);
-      return parsed?.name === 'RewardPaid';
-    } catch {
-      return false;
-    }
-  });
-  
-  if (rewardEvents.length > 0) {
-    console.log('✅ GRMPS Rewards paid!');
-    rewardEvents.forEach(log => {
-      const parsed = escrow.interface.parseLog(log);
-      console.log(`  - ${parsed.args.reason}: ${ethers.formatEther(parsed.args.amount)} GRMPS to ${parsed.args.to}`);
+  try {
+    // Send transaction
+    console.log('\nSending transaction...');
+    const tx = await escrow.withdraw();
+    console.log('Transaction hash:', tx.hash);
+    
+    // Wait for confirmation
+    console.log('Waiting for confirmation...');
+    const receipt = await tx.wait();
+    
+    console.log('\n✅ Withdrawal successful!');
+    console.log('Block:', receipt.blockNumber);
+    console.log('Gas used:', receipt.gasUsed.toString());
+    console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
+    
+    // Get balances after
+    const vendorBalAfter = await provider.getBalance(wallet.address);
+    const received = vendorBalAfter - vendorBalBefore + receipt.gasUsed * receipt.gasPrice;
+    console.log('\n--- Payment Received ---');
+    console.log('Vendor balance after:', ethers.formatEther(vendorBalAfter), 'BNB');
+    console.log('Net received (excluding gas):', ethers.formatEther(received), 'BNB');
+    
+    // Check for reward events
+    console.log('\n--- Checking for Rewards ---');
+    const rewardEvents = receipt.logs.filter(log => {
+      try {
+        const parsed = escrow.interface.parseLog(log);
+        return parsed?.name === 'RewardPaid';
+      } catch {
+        return false;
+      }
     });
-  } else {
-    console.log('No GRMPS rewards (not configured or insufficient balance)');
+    
+    if (rewardEvents.length > 0) {
+      console.log('✅ GRMPS Rewards paid!');
+      rewardEvents.forEach(log => {
+        const parsed = escrow.interface.parseLog(log);
+        console.log(`  - ${parsed.args.reason}: ${ethers.formatEther(parsed.args.amount)} GRMPS to ${parsed.args.to}`);
+      });
+    } else {
+      console.log('No GRMPS rewards (not configured or insufficient balance)');
+    }
+  } catch (error) {
+    // Decode contract error to show user-friendly message
+    const errorMsg = decodeError(error, escrow.interface);
+    console.error('\n' + errorMsg);
+    throw error;
   }
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error('\n❌ Error:', error.message);
+    // Error already displayed above
     process.exit(1);
   });
 

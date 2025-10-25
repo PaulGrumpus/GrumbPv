@@ -18,7 +18,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * 4) Buyer approve(cid) must match proposedCID -> buyerApproved.
  * 5) When both approved -> state becomes Releasable, vendor can withdraw().
  * 6) Contract emits ResultFinalized(cid, contentHash). Off-chain service pins CID.
- * 7) If deadline passes without approval -> buyer can refundAfterDeadline().
+ * 7) If deadline passes without delivery -> buyer can cancel() for full refund.
  * 8) Either party may initiate dispute (pay fee immediately) -> other party has 48-72h to pay.
  *
  * Fee Structure:
@@ -45,6 +45,7 @@ contract Escrow is Ownable, ReentrancyGuard {
         uint256 disputeFeeBps;          // Dispute fee in basis points (e.g., 50 = 0.5%)
         uint256 rewardRateBps;          // Reward rate in basis points (e.g., 25 = 0.25%)
         uint64 createdAt;               // Escrow creation timestamp (initialize time)
+        uint64 fundedAt;                 // When buyer funded the escrow
         uint64 deadline;
         uint64 disputeFeeDeadline;
         address disputeInitiator;
@@ -108,6 +109,7 @@ contract Escrow is Ownable, ReentrancyGuard {
     error BothPartiesNotPaid();
     error AlreadyInitialized();
     error CancelWindowPassed();
+    error VendorDeliveryNotAllowed();
 
     modifier onlyBuyer() {
         if (msg.sender != escrowInfo.buyer) revert OnlyBuyer();
@@ -236,21 +238,34 @@ contract Escrow is Ownable, ReentrancyGuard {
         // Set dispute fee amount (disputeFeeBps% of project amount for each party)
         escrowInfo.disputeFeeAmount = (projectAmount * escrowInfo.disputeFeeBps) / 10000;
         
+        escrowInfo.fundedAt = uint64(block.timestamp);
         escrowInfo.state = State.Funded;
         emit Funded(escrowInfo.buyer, projectAmount, buyerFee);
     }
 
     /// @notice Buyer can cancel and get immediate refund if vendor hasn't delivered yet.
     /// @dev Only works in Funded state. Once vendor delivers, must use dispute system.
+    /// Can cancel within first 20% of period from funding to deadline OR after deadline passes if vendor never delivered.
     function cancel() external onlyBuyer nonReentrant {
         if (escrowInfo.state != State.Funded) revert BadState();
-        // Allow cancel only within the first 20% of the total period (from createdAt to deadline)
-        uint64 start = escrowInfo.createdAt;
+        
+        // Check if vendor has delivered - if so, buyer cannot cancel
+        if (escrowInfo.vendorApproved) revert VendorDeliveryNotAllowed();
+        
+        uint64 fundedAt = escrowInfo.fundedAt;
         uint64 end = escrowInfo.deadline;
+        uint64 currentTime = uint64(block.timestamp);
+        
         // Protect against potential underflow if misconfigured
-        if (end > start) {
-            uint64 window = (end - start) / 5; // 20%
-            if (uint64(block.timestamp) > start + window) revert CancelWindowPassed();
+        if (end > fundedAt) {
+            uint64 window = (end - fundedAt) / 5; // 20% of period from funding to deadline
+            bool withinEarlyWindow = currentTime <= fundedAt + window;
+            bool deadlinePassed = currentTime > end;
+            
+            // Allow cancel if: within first 20% window from funding OR deadline has passed
+            if (!withinEarlyWindow && !deadlinePassed) {
+                revert CancelWindowPassed();
+            }
         }
         
         uint256 projectAmount = escrowInfo.amount;
@@ -524,27 +539,6 @@ contract Escrow is Ownable, ReentrancyGuard {
         }
     }
 
-    /// @notice If not approved by deadline, buyer can get a refund.
-    /// @dev No fees charged - buyer gets full amount back (project + their 0.5% fee).
-    function refundAfterDeadline() external onlyBuyer nonReentrant {
-        // Restrict refunds after deadline to cases where work has not been delivered
-        // i.e., only allowed from Funded state (not after delivery)
-        if (escrowInfo.state != State.Funded) revert BadState();
-        if (block.timestamp < escrowInfo.deadline) revert DeadlineNotReached();
-
-        uint256 projectAmount = escrowInfo.amount;
-        uint256 buyerFee = escrowInfo.buyerFeeReserve;
-        uint256 totalRefund = projectAmount + buyerFee;
-        
-        escrowInfo.amount = 0;
-        escrowInfo.buyerFeeReserve = 0;
-        escrowInfo.state = State.Refunded;
-
-        (bool ok, ) = payable(escrowInfo.buyer).call{value: totalRefund}("");
-        require(ok, "refund failed");
-
-        emit Refunded(escrowInfo.buyer, totalRefund);
-    }
 
     // ------- Internal reward distribution helpers -------
     

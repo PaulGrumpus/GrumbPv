@@ -18,7 +18,7 @@ remappings = [
 # BSC gas settings (important for deployment speed!)
 # BSC Testnet often needs higher gas than mainnet!
 gas_price = 20_000_000_000  # 20 gwei (tested and works!)
-gas_limit = 5_000_000       # 5M gas (safe for all deployments)
+gas_limit = 100_000_000     # 100M gas (safe for all deployments and tests)
 
 # Named RPCs for convenience
 [rpc_endpoints]

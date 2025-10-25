@@ -7,6 +7,7 @@
 
 import { ethers } from 'ethers';
 import { CONFIG } from '../config.js';
+import { decodeError } from '../utils/escrowUtils.js';
 
 async function main() {
   const role = process.env.DISPUTE_PAYER || 'vendor'; // who is paying
@@ -33,21 +34,28 @@ async function main() {
   // Vendor must pay, buyer uses reserved
   const value = role === 'vendor' ? disputeFee : 0n;
   
-  console.log('\nSending transaction...');
-  const tx = await escrow.payDisputeFee({ value });
-  console.log('Transaction hash:', tx.hash);
-  
-  const receipt = await tx.wait();
-  
-  console.log('\n✅ Dispute fee paid!');
-  console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
-  console.log('\n⚠️  Both parties have now paid. Arbiter can resolve the dispute.');
+  try {
+    console.log('\nSending transaction...');
+    const tx = await escrow.payDisputeFee({ value });
+    console.log('Transaction hash:', tx.hash);
+    
+    const receipt = await tx.wait();
+    
+    console.log('\n✅ Dispute fee paid!');
+    console.log('Transaction:', `https://testnet.bscscan.com/tx/${receipt.hash}`);
+    console.log('\n⚠️  Both parties have now paid. Arbiter can resolve the dispute.');
+  } catch (error) {
+    // Decode contract error to show user-friendly message
+    const errorMsg = decodeError(error, escrow.interface);
+    console.error('\n' + errorMsg);
+    throw error;
+  }
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error('\n❌ Error:', error.message);
+    // Error already displayed above
     process.exit(1);
   });
 
