@@ -14,7 +14,7 @@ async function main() {
     throw new Error('ARBITER_PRIVATE_KEY not set');
   }
   
-  const resolution = process.env.RESOLUTION || 'vendor'; // 'buyer' or 'vendor'
+  const resolution = process.env.RESOLUTION || 'buyer'; // 'buyer' or 'vendor'
   
   if (resolution !== 'buyer' && resolution !== 'vendor') {
     throw new Error('RESOLUTION must be "buyer" or "vendor"');

@@ -12,7 +12,7 @@ import { decodeError } from '../utils/escrowUtils.js';
 
 async function main() {
   // Determine which party is initiating
-  const role = process.env.DISPUTE_INITIATOR || 'buyer'; // 'buyer' or 'vendor'
+  const role = process.env.DISPUTE_INITIATOR || 'vendor'; // 'buyer' or 'vendor'
   
   const privateKey = role === 'buyer' ? CONFIG.buyerPrivateKey : CONFIG.vendorPrivateKey;
   

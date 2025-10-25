@@ -426,11 +426,18 @@ contract Escrow is Ownable, ReentrancyGuard {
         
         // Loser's (buyer's) fee split 50/50 between arbiter and fee recipient
         uint256 arbiterShare = disputeFee / 2;
-        uint256 feeRecipientShare = disputeFee - arbiterShare; // Handle rounding
+        uint256 feeRecipientShare = disputeFee - arbiterShare; // Handle rounding (give remainder to fee recipient)
         
         escrowInfo.amount = 0;
         escrowInfo.buyerFeeReserve = 0;
         escrowInfo.state = State.Paid;
+        
+        // Send any remaining wei to fee recipient to drain contract balance
+        uint256 contractBalance = address(this).balance;
+        uint256 expectedTotal = vendorAmount + arbiterShare + feeRecipientShare;
+        if (contractBalance > expectedTotal) {
+            feeRecipientShare += contractBalance - expectedTotal;
+        }
 
         // Pay arbiter
         (bool ok1, ) = payable(escrowInfo.arbiter).call{value: arbiterShare}("");
@@ -465,11 +472,18 @@ contract Escrow is Ownable, ReentrancyGuard {
         
         // Loser's (vendor's) fee split 50/50 between arbiter and fee recipient
         uint256 arbiterShare = disputeFee / 2;
-        uint256 feeRecipientShare = disputeFee - arbiterShare; // Handle rounding
+        uint256 feeRecipientShare = disputeFee - arbiterShare; // Handle rounding (give remainder to fee recipient)
         
         escrowInfo.amount = 0;
         escrowInfo.buyerFeeReserve = 0;
         escrowInfo.state = State.Refunded;
+        
+        // Send any remaining wei to fee recipient to drain contract balance
+        uint256 contractBalance = address(this).balance;
+        uint256 expectedTotal = buyerAmount + arbiterShare + feeRecipientShare;
+        if (contractBalance > expectedTotal) {
+            feeRecipientShare += contractBalance - expectedTotal;
+        }
 
         // Pay arbiter
         (bool ok1, ) = payable(escrowInfo.arbiter).call{value: arbiterShare}("");

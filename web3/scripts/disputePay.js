@@ -10,7 +10,7 @@ import { CONFIG } from '../config.js';
 import { decodeError } from '../utils/escrowUtils.js';
 
 async function main() {
-  const role = process.env.DISPUTE_PAYER || 'vendor'; // who is paying
+  const role = process.env.DISPUTE_PAYER || 'buyer'; // who is paying
   const privateKey = role === 'buyer' ? CONFIG.buyerPrivateKey : CONFIG.vendorPrivateKey;
   
   if (!privateKey) {
