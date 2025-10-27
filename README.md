@@ -1,117 +1,311 @@
-# BSC Escrow Smart Contract
+# BSC Escrow System
 
-A production-ready escrow system for BNB Smart Chain with advanced dispute resolution, fee management, and GRMPS token rewards.
+A production-ready, scalable escrow system for BNB Smart Chain with factory pattern deployment, dispute resolution, fee management, and GRMPS token rewards.
 
-## Project Structure
+## 🌟 Features
 
-```
-bsc-escrow/
-├── contract/          # Smart contract code (Foundry)
-│   ├── src/          # Solidity contracts
-│   ├── test/         # Contract tests
-│   ├── script/       # Deployment scripts
-│   └── lib/          # Dependencies (OpenZeppelin, forge-std)
-│
-└── web3/             # Web3 interaction scripts (JavaScript/TypeScript)
-    ├── scripts/      # CLI interaction scripts
-    ├── examples/     # Frontend integration examples
-    └── abi/          # Contract ABIs
-```
-
-## Quick Links
-
-- **Deployed Contract (Testnet):** `0x4035920Dee6bb6DF73e68ED06b5666ca28BD247B`
-- **Explorer:** https://testnet.bscscan.com/address/0x4035920Dee6bb6DF73e68ED06b5666ca28BD247B
-- **Network:** BSC Testnet (Chain ID: 97)
-
-## Features
-
-### Core Features
-- ✅ Two-party escrow for BNB
-- ✅ IPFS CID verification
-- ✅ Deadline-based refunds
-- ✅ Optional arbiter for disputes
-- ✅ Cancel before vendor delivers
+### Core Escrow Features
+- ✅ Two-party escrow for BNB (native token)
+- ✅ IPFS CID verification for deliverables
+- ✅ Deadline-based automatic refunds
+- ✅ Optional arbiter for dispute resolution
+- ✅ Cancel functionality before delivery
+- ✅ Factory pattern for gas-efficient deployment (~100k gas vs ~3M gas)
 
 ### Advanced Dispute System
 - ✅ Pay-to-dispute mechanism (prevents frivolous disputes)
-- ✅ Automatic default judgment if counterparty doesn't pay
-- ✅ Winner gets fee refunded, loser pays
-- ✅ Arbiter compensation (50% of loser's fee)
-- ✅ Asymmetric deadlines (buyer gets more time)
+- ✅ Automatic default judgment if counterparty doesn't respond
+- ✅ Winner gets dispute fee refunded, loser pays
+- ✅ Arbiter receives 50% of loser's fee as compensation
+- ✅ Asymmetric deadlines (buyer gets more time to respond)
 
 ### Fee System
-- ✅ 1% total fee on normal completion (0.5% buyer + 0.5% vendor)
+- ✅ 1% total fee on successful completion (0.5% buyer + 0.5% vendor)
 - ✅ Dispute fees: 0.5% per side
-- ✅ Winner's fee refunded in disputes
+- ✅ Winner's dispute fee refunded
 - ✅ No fees on cancellation or deadline refunds
 
-### GRMPS Rewards
-- ✅ Optional GRMPS (BEP-20) token rewards
-- ✅ 0.25% per side on successful completion
-- ✅ Configurable BNB→GRMPS conversion rate
+### GRMPS Reward System
+- ✅ Optional GRMPS (BEP-20) token rewards on completion
+- ✅ 0.25% per side (buyer and vendor)
+- ✅ Centralized RewardDistributor for scalability
+- ✅ Approve once for all escrows (factory authorization)
+- ✅ Works with EOA wallets and Gnosis Safe multisig
 - ✅ No rewards on dispute paths
-- ✅ **RewardDistributor:** Scalable architecture (approve once for all escrows)
-- ✅ Works with EOA and Gnosis Safe multisig
 
-## Getting Started
+## 📁 Project Structure
 
-### Quick Deployment (Recommended 🚀)
+```
+bsc-escrow/
+├── contract/              # Smart contracts (Foundry/Solidity)
+│   ├── src/
+│   │   ├── Escrow.sol              # Core escrow logic
+│   │   ├── EscrowFactory.sol       # Factory for gas-efficient deployment
+│   │   └── RewardDistributor.sol   # Centralized reward distribution
+│   ├── script/                     # Deployment scripts
+│   ├── test/                       # Contract tests
+│   └── deploy-all.sh              # One-command deployment script
+│
+└── web3/                  # Web3 integration (JavaScript/ethers.js)
+    ├── scripts/           # Interaction scripts (fund, approve, etc.)
+    ├── examples/          # Frontend integration examples
+    └── abi/              # Contract ABIs
+```
 
-**Using Foundry scripts (fastest):**
+## 🚀 Quick Start
+
+### 1. Deploy Smart Contracts
+
 ```bash
+# Navigate to contract directory
 cd contract
+
+# Configure environment
+cp env.example .env
+nano .env  # Add PRIVATE_KEY, BSC_TESTNET_RPC_URL, GRMPS_TOKEN_ADDRESS
+
+# Deploy all contracts (Implementation + Factory + RewardDistributor)
 chmod +x deploy-all.sh
 ./deploy-all.sh
 ```
 
-See `DEPLOY_QUICK_START.md` for details.
+This deploys:
+1. **Escrow Implementation** - Base contract for cloning
+2. **EscrowFactory** - Creates minimal proxy escrows
+3. **RewardDistributor** - Manages GRMPS token rewards
 
-### For Smart Contract Development
+See [`contract/README.md`](contract/README.md) for detailed deployment instructions.
+
+### 2. Configure Reward System
+
+```bash
+# Navigate to web3 directory
+cd ../web3
+
+# Install dependencies
+npm install
+
+# Copy deployed addresses to .env
+nano .env  # Add FACTORY_ADDRESS, REWARD_DISTRIBUTOR_ADDRESS
+
+# Approve GRMPS tokens for RewardDistributor
+npm run approve:distributor
+```
+
+### 3. Create and Use Escrows
+
+```bash
+# Create a new escrow via factory
+npm run create:escrow
+
+# Interact with the escrow
+npm run fund           # Buyer funds escrow
+npm run deliver        # Vendor delivers work
+npm run approve        # Buyer approves delivery
+npm run withdraw       # Vendor withdraws payment
+```
+
+See [`web3/README.md`](web3/README.md) for all available scripts.
+
+## 📖 Documentation
+
+### Smart Contracts
+- **[Contract README](contract/README.md)** - Build, test, and deploy contracts
+- **[Escrow.sol](contract/src/Escrow.sol)** - Core escrow implementation
+- **[EscrowFactory.sol](contract/src/EscrowFactory.sol)** - Factory for creating escrows
+- **[RewardDistributor.sol](contract/src/RewardDistributor.sol)** - Reward distribution system
+
+### Web3 Integration
+- **[Web3 README](web3/README.md)** - Scripts and frontend integration
+- **[Examples](web3/examples/)** - Frontend integration examples
+- **[Scripts](web3/scripts/)** - CLI interaction scripts
+
+## 🔄 Complete Workflow
+
+### System Setup (One-time)
+
+```bash
+# 1. Deploy contracts
+cd contract
+./deploy-all.sh
+
+# 2. Configure web3
+cd ../web3
+npm install
+# Add FACTORY_ADDRESS and REWARD_DISTRIBUTOR_ADDRESS to .env
+
+# 3. Approve GRMPS for rewards
+npm run approve:distributor
+```
+
+### Per-Escrow Workflow
+
+```bash
+# 1. Create escrow (Factory creates minimal proxy)
+npm run create:escrow
+# Save the escrow address
+
+# 2. Buyer funds escrow
+ESCROW_ADDRESS=0x... FUND_AMOUNT=1.0 npm run fund
+
+# 3. Vendor delivers work
+ESCROW_ADDRESS=0x... IPFS_CID=QmYourCID npm run deliver
+
+# 4. Buyer approves delivery
+ESCROW_ADDRESS=0x... IPFS_CID=QmYourCID npm run approve
+
+# 5. Vendor withdraws payment (with GRMPS rewards!)
+ESCROW_ADDRESS=0x... npm run withdraw
+```
+
+### Alternative Paths
+
+**Cancellation (before delivery):**
+```bash
+npm run cancel  # Buyer gets full refund
+```
+
+**Deadline Refund (after deadline expires):**
+```bash
+npm run withdraw  # Buyer can withdraw after deadline
+```
+
+**Dispute Resolution:**
+```bash
+# 1. Initiate dispute (buyer or vendor)
+DISPUTE_INITIATOR=buyer npm run dispute-init
+
+# 2. Counterparty pays dispute fee
+DISPUTE_PAYER=vendor npm run dispute-pay
+
+# 3. Arbiter resolves
+RESOLUTION=vendor npm run dispute-resolve
+```
+
+## 🏗️ Architecture
+
+### Factory Pattern
+- **EscrowFactory** deploys minimal proxy clones using EIP-1167
+- **Gas savings:** ~97% less gas per escrow (~100k vs ~3M)
+- **Upgradability:** New implementation can be deployed, new factory points to it
+- **Deterministic deployment:** Predict escrow address before creation
+
+### Reward Distribution
+- **Centralized RewardDistributor** approved once for all escrows
+- **Factory authorization:** Authorize factory → all its escrows are authorized
+- **Scalable:** No need to approve each escrow individually
+- **Safe:** Only factory-created escrows can request rewards
+
+### Security
+- ✅ OpenZeppelin v5.x contracts
+- ✅ ReentrancyGuard on all payment functions
+- ✅ Comprehensive access control
+- ✅ State machine enforcement
+- ✅ Minimal proxy pattern (EIP-1167)
+- ✅ Authorization system for reward distribution
+
+## 🧪 Testing
 
 ```bash
 cd contract
-forge build
-forge test
+
+# Run all tests
+forge test -vv
+
+# Gas report
+forge test --gas-report
+
+# Coverage
+forge coverage
 ```
 
-See `DEPLOYMENT_WITH_FOUNDRY.md` for complete deployment guide.
+**Test Coverage:**
+- ✅ 15+ comprehensive tests
+- ✅ All escrow lifecycle paths
+- ✅ Dispute resolution scenarios
+- ✅ Fee calculations
+- ✅ GRMPS reward distribution
+- ✅ Factory escrow creation
 
-### For Web3 Integration
+## 🌐 Network Information
 
+### BSC Testnet (Chain ID: 97)
+- **RPC URL:** `https://bsc-testnet-rpc.publicnode.com/`
+- **Explorer:** https://testnet.bscscan.com/
+- **Faucet:** https://testnet.bnbchain.org/faucet-smart
+
+### BSC Mainnet (Chain ID: 56)
+- **RPC URL:** `https://bsc-rpc.publicnode.com/`
+- **Explorer:** https://bscscan.com/
+
+## 📝 Environment Variables
+
+### Contract Deployment (`contract/.env`)
+```bash
+PRIVATE_KEY=                    # Deployer private key
+BSC_TESTNET_RPC_URL=           # BSC testnet RPC
+GRMPS_TOKEN_ADDRESS=           # GRMPS token contract
+```
+
+### Web3 Interaction (`web3/.env`)
+```bash
+# Deployed contracts
+FACTORY_ADDRESS=                # EscrowFactory address
+REWARD_DISTRIBUTOR_ADDRESS=     # RewardDistributor address
+
+# Wallets
+BUYER_PRIVATE_KEY=             # Buyer wallet
+VENDOR_PRIVATE_KEY=            # Vendor wallet
+ARBITER_PRIVATE_KEY=           # Arbiter wallet
+
+# Network
+BSC_TESTNET_RPC_URL=           # BSC testnet RPC
+```
+
+See `contract/env.example` and `web3/.env` for complete examples.
+
+## 🛠️ Development
+
+### Prerequisites
+- [Foundry](https://book.getfoundry.sh/getting-started/installation) - Smart contract development
+- [Node.js](https://nodejs.org/) v18+ - Web3 scripts
+- [Git](https://git-scm.com/) - Version control
+
+### Smart Contract Development
+```bash
+cd contract
+forge build        # Compile contracts
+forge test         # Run tests
+forge fmt          # Format code
+```
+
+### Web3 Development
 ```bash
 cd web3
-npm install
-npm run info  # View deployed contract
+npm install        # Install dependencies
+npm run info       # Test connection to contracts
 ```
 
-See `web3/README.md` for usage guide.
+## 📜 License
 
-## Documentation
+MIT License - See [LICENSE](LICENSE) file for details.
 
-### Deployment Guides 🚀
-- **Quick Start:** `DEPLOY_QUICK_START.md` - Fastest way to deploy (5 minutes!)
-- **Complete Guide:** `DEPLOYMENT_WITH_FOUNDRY.md` - Detailed Foundry deployment
-- **Gas Configuration:** `GAS_CONFIGURATION.md` - Fix slow/stuck transactions ⚡
-- **Old Guide:** `contract/DEPLOYMENT_GUIDE.md` - Original deployment guide
+## 🤝 Contributing
 
-### Core Guides
-- **Web3 Integration:** `web3/README.md`
-- **Quick Reference:** `QUICK_REFERENCE.md` - Quick setup commands
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new features
+5. Submit a pull request
 
-### New Architecture (Scalable Rewards) ⭐
-- **Reward System:** `REWARD_DISTRIBUTOR_GUIDE.md` - Complete guide to RewardDistributor
-- **Authorization System:** `AUTHORIZATION_SYSTEM.md` - How factory authorization works (automatic!)
-- **Roles & Responsibilities:** `ROLES_AND_RESPONSIBILITIES.md` - Clarifies Deployer vs Arbiter
-- **Environment Variables:** `web3/ENV_VARIABLES.md` - All env vars explained
+## 📧 Support
 
-## Security
+For questions, issues, or feature requests:
+- Open an issue on GitHub
+- Check existing documentation
+- Review contract tests for usage examples
 
-- ✅ OpenZeppelin contracts (Ownable, ReentrancyGuard)
-- ✅ Comprehensive test coverage (15 tests)
-- ✅ Verified on BscScan
-- ✅ Audited logic patterns
+---
 
-## License
-
-MIT
+**Built with ❤️ for the BNB Smart Chain ecosystem**
