@@ -72,12 +72,12 @@ GRMPS_TOKEN_ADDRESS=0x...
 npm run dev
 ```
 
-API runs at `http://localhost:3000`
+API runs at `http://localhost:5000`
 
 ### 5. Test API
 
 ```bash
-curl http://localhost:3000/health
+curl http://localhost:5000/health
 ```
 
 ## 📚 Documentation

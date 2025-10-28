@@ -3,6 +3,7 @@ import { CONTRACT_ABIS, CONTRACT_ADDRESSES, DEFAULT_CONFIG } from '../config/con
 import { web3Provider } from '../utils/web3Provider.js';
 import { logger } from '../utils/logger.js';
 import { AppError } from '../middlewares/errorHandler.js';
+import { checkWalletBalance, validateDeadline, validateFeeBps, validateAddress } from '../utils/validation.js';
 
 export interface CreateEscrowParams {
   jobId: string;
@@ -41,19 +42,75 @@ export class FactoryService {
   /**
    * Create a new escrow
    */
-  async createEscrow(params: CreateEscrowParams, privateKey: string): Promise<{
+  async createEscrow(params: CreateEscrowParams): Promise<{
     escrowAddress: string;
     transactionHash: string;
   }> {
     try {
+      // Use DEPLOYER_PRIVATE_KEY from .env
+      const privateKey = CONTRACT_ADDRESSES.privateKey;
+      
+      if (!privateKey || privateKey === '') {
+        throw new AppError(
+          'DEPLOYER_PRIVATE_KEY not configured in .env',
+          500,
+          'DEPLOYER_PRIVATE_KEY_NOT_SET'
+        );
+      }
+
+      // Validate FEE_RECIPIENT is configured
+      if (!DEFAULT_CONFIG.feeRecipient || DEFAULT_CONFIG.feeRecipient === '') {
+        throw new AppError(
+          'FEE_RECIPIENT_ADDRESS not configured in .env',
+          500,
+          'FEE_RECIPIENT_NOT_SET'
+        );
+      }
+
+      // Validate addresses
+      validateAddress(params.buyer, 'buyer');
+      validateAddress(params.seller, 'seller');
+      validateAddress(params.arbiter, 'arbiter');
+      validateAddress(DEFAULT_CONFIG.feeRecipient, 'feeRecipient');
+
+      // Validate deadline
+      validateDeadline(params.deadline);
+
+      // Validate fees
+      const buyerFeeBps = params.buyerFeeBps || DEFAULT_CONFIG.buyerFeeBps;
+      const vendorFeeBps = params.vendorFeeBps || DEFAULT_CONFIG.vendorFeeBps;
+      const feeBps = buyerFeeBps + vendorFeeBps;
+      validateFeeBps(buyerFeeBps, vendorFeeBps, feeBps);
+
       const wallet = web3Provider.getWallet(privateKey);
+      
+      // Check wallet has enough BNB for gas
+      await checkWalletBalance(wallet.address, ethers.parseEther('0.01'));
+
       const factory = this.getFactoryContract(wallet);
 
       const jobIdBytes = ethers.id(params.jobId);
-      const feeBps = (params.buyerFeeBps || DEFAULT_CONFIG.buyerFeeBps) + 
-                     (params.vendorFeeBps || DEFAULT_CONFIG.vendorFeeBps);
 
       logger.info(`Creating escrow for job ${params.jobId}`);
+
+      // Log all parameters for debugging
+      logger.info('Factory.createEscrow params:', {
+        jobIdBytes,
+        buyer: params.buyer,
+        seller: params.seller,
+        arbiter: params.arbiter,
+        feeRecipient: DEFAULT_CONFIG.feeRecipient,
+        feeBps,
+        paymentToken: ethers.ZeroAddress,
+        amountWei: ethers.parseEther(params.amount).toString(),
+        deadline: params.deadline,
+        buyerFeeBps: buyerFeeBps,
+        vendorFeeBps: vendorFeeBps,
+        disputeFeeBps: params.disputeFeeBps || DEFAULT_CONFIG.disputeFeeBps,
+        rewardRateBps: params.rewardRateBps || DEFAULT_CONFIG.rewardRateBps,
+        walletAddress: wallet.address,
+        walletBalance: ethers.formatEther(await web3Provider.getBalance(wallet.address)) + ' BNB',
+      });
 
       const tx = await factory.createEscrow(
         jobIdBytes,
@@ -65,11 +122,14 @@ export class FactoryService {
         ethers.ZeroAddress, // Native BNB
         ethers.parseEther(params.amount),
         params.deadline,
-        params.buyerFeeBps || DEFAULT_CONFIG.buyerFeeBps,
-        params.vendorFeeBps || DEFAULT_CONFIG.vendorFeeBps,
+        buyerFeeBps,
+        vendorFeeBps,
         params.disputeFeeBps || DEFAULT_CONFIG.disputeFeeBps,
         params.rewardRateBps || DEFAULT_CONFIG.rewardRateBps,
-        { gasLimit: 2000000 }
+        { 
+          gasLimit: 3000000,
+          gasPrice: ethers.parseUnits('10', 'gwei'), // BSC testnet gas price
+        }
       );
 
       const receipt = await tx.wait();
@@ -108,13 +168,13 @@ export class FactoryService {
    */
   async createDeterministicEscrow(
     params: CreateEscrowParams,
-    privateKey: string,
     salt: string
   ): Promise<{
     escrowAddress: string;
     transactionHash: string;
   }> {
     try {
+      const privateKey = CONTRACT_ADDRESSES.privateKey;
       const wallet = web3Provider.getWallet(privateKey);
       const factory = this.getFactoryContract(wallet);
 
@@ -140,7 +200,10 @@ export class FactoryService {
         params.disputeFeeBps || DEFAULT_CONFIG.disputeFeeBps,
         params.rewardRateBps || DEFAULT_CONFIG.rewardRateBps,
         saltBytes,
-        { gasLimit: 2000000 }
+        { 
+          gasLimit: 3000000,
+          gasPrice: ethers.parseUnits('10', 'gwei'),
+        }
       );
 
       const receipt = await tx.wait();

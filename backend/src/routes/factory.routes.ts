@@ -19,7 +19,6 @@ const router = Router();
  *           schema:
  *             $ref: '#/components/schemas/CreateEscrowRequest'
  *           example:
- *             privateKey: "0x1234567890abcdef..."
  *             jobId: "JOB-001"
  *             buyer: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
  *             seller: "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"
@@ -65,7 +64,6 @@ const router = Router();
 router.post(
   '/escrow',
   [
-    body('privateKey').isString().notEmpty(),
     body('jobId').isString().notEmpty(),
     body('buyer').isEthereumAddress(),
     body('seller').isEthereumAddress(),
@@ -78,7 +76,6 @@ router.post(
     body('rewardRateBps').optional().isInt({ min: 0, max: 1000 }),
   ],
   validate([
-    body('privateKey'),
     body('jobId'),
     body('buyer'),
     body('seller'),
@@ -97,7 +94,6 @@ router.post(
 router.post(
   '/escrow/deterministic',
   [
-    body('privateKey').isString().notEmpty(),
     body('salt').isString().notEmpty(),
     body('jobId').isString().notEmpty(),
     body('buyer').isEthereumAddress(),
@@ -107,7 +103,6 @@ router.post(
     body('deadline').isInt({ min: 1 }),
   ],
   validate([
-    body('privateKey'),
     body('salt'),
     body('jobId'),
     body('buyer'),

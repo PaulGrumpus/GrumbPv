@@ -120,13 +120,8 @@ const options: swaggerJsdoc.Options = {
         },
         CreateEscrowRequest: {
           type: 'object',
-          required: ['privateKey', 'jobId', 'buyer', 'seller', 'arbiter', 'amount', 'deadline'],
+          required: ['jobId', 'buyer', 'seller', 'arbiter', 'amount', 'deadline'],
           properties: {
-            privateKey: {
-              type: 'string',
-              example: '0x1234567890abcdef...',
-              description: 'Private key of the deployer',
-            },
             jobId: {
               type: 'string',
               example: 'JOB-001',

@@ -7,9 +7,9 @@ export class FactoryController {
    */
   async createEscrow(req: Request, res: Response, next: NextFunction) {
     try {
-      const { privateKey, ...params } = req.body;
+      const { ...params } = req.body;
 
-      const result = await factoryService.createEscrow(params, privateKey);
+      const result = await factoryService.createEscrow(params);
 
       res.status(201).json({
         success: true,
@@ -26,9 +26,9 @@ export class FactoryController {
    */
   async createDeterministicEscrow(req: Request, res: Response, next: NextFunction) {
     try {
-      const { privateKey, salt, ...params } = req.body;
+      const { salt, ...params } = req.body;
 
-      const result = await factoryService.createDeterministicEscrow(params, privateKey, salt);
+      const result = await factoryService.createDeterministicEscrow(params, salt);
 
       res.status(201).json({
         success: true,

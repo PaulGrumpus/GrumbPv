@@ -32,6 +32,7 @@ export const CONTRACT_ADDRESSES = {
   implementation: process.env.ESCROW_IMPLEMENTATION_ADDRESS || '',
   rewardDistributor: process.env.REWARD_DISTRIBUTOR_ADDRESS || '',
   grmpsToken: process.env.GRMPS_TOKEN_ADDRESS || '',
+  privateKey: process.env.DEPLOYER_PRIVATE_KEY || '',
 };
 
 // Validate critical addresses on startup (only in non-test environments)
@@ -47,7 +48,9 @@ if (process.env.NODE_ENV !== 'test') {
   if (!CONTRACT_ADDRESSES.rewardDistributor) {
     missingAddresses.push('REWARD_DISTRIBUTOR_ADDRESS');
   }
-  
+  if (!CONTRACT_ADDRESSES.privateKey) {
+    missingAddresses.push('PRIVATE_KEY');
+  }
   if (missingAddresses.length > 0) {
     console.warn('⚠️  Warning: Missing contract addresses in .env:');
     missingAddresses.forEach(addr => console.warn(`   - ${addr}`));
