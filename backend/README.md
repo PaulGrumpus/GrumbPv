@@ -42,6 +42,25 @@ backend/
 └── README.md
 ```
 
+## 📚 **Interactive API Documentation**
+
+This API includes **Swagger/OpenAPI** documentation!
+
+### Access Swagger UI
+
+Once the server is running:
+
+🎯 **http://localhost:3000/api-docs**
+
+Features:
+- 📖 Interactive documentation
+- 🧪 Test endpoints directly ("Try it out")
+- 📝 Request/response schemas
+- 💡 Example payloads
+- 📥 Export OpenAPI JSON
+
+See [SWAGGER_GUIDE.md](SWAGGER_GUIDE.md) for details.
+
 ## 🚀 Setup
 
 ### 1. Install Dependencies

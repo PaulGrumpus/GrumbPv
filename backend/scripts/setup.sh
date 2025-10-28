@@ -22,25 +22,32 @@ fi
 echo "✅ Node.js $(node -v) detected"
 echo ""
 
+# Determine script directory and backend root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BACKEND_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
+
 # Install dependencies
 echo "📦 Installing dependencies..."
+cd "$BACKEND_DIR"
 npm install
 echo ""
 
 # Copy ABIs
 echo "📋 Copying contract ABIs..."
-bash scripts/copy-abis.sh
+cd "$SCRIPT_DIR"
+bash ./copy-abis.sh
+cd "$BACKEND_DIR"
 echo ""
 
 # Create logs directory
 echo "📁 Creating logs directory..."
-mkdir -p logs
+mkdir -p "$BACKEND_DIR/logs"
 echo ""
 
 # Copy .env.example if .env doesn't exist
-if [ ! -f .env ]; then
+if [ ! -f "$BACKEND_DIR/.env" ]; then
     echo "📝 Creating .env file from template..."
-    cp .env.example .env
+    cp "$BACKEND_DIR/.env.example" "$BACKEND_DIR/.env"
     echo "⚠️  Please edit .env file with your configuration!"
 else
     echo "✅ .env file already exists"
@@ -52,5 +59,5 @@ echo ""
 echo "Next steps:"
 echo "  1. Edit .env file with your configuration"
 echo "  2. Run 'npm run dev' to start development server"
-echo "  3. Visit http://localhost:3000/health to check if API is running"
+echo "  3. Visit http://localhost:5000/health to check if API is running"
 
