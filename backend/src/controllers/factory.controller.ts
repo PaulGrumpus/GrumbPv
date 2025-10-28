@@ -79,7 +79,7 @@ export class FactoryController {
   /**
    * Get factory owner
    */
-  async getOwner(req: Request, res: Response, next: NextFunction) {
+  async getOwner(_req: Request, res: Response, next: NextFunction) {
     try {
       const owner = await factoryService.getFactoryOwner();
 
