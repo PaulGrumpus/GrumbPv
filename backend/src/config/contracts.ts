@@ -1,6 +1,10 @@
+import { config } from 'dotenv';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+
+// Load environment variables FIRST
+config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -29,6 +33,27 @@ export const CONTRACT_ADDRESSES = {
   rewardDistributor: process.env.REWARD_DISTRIBUTOR_ADDRESS || '',
   grmpsToken: process.env.GRMPS_TOKEN_ADDRESS || '',
 };
+
+// Validate critical addresses on startup (only in non-test environments)
+if (process.env.NODE_ENV !== 'test') {
+  const missingAddresses: string[] = [];
+  
+  if (!CONTRACT_ADDRESSES.factory) {
+    missingAddresses.push('FACTORY_ADDRESS');
+  }
+  if (!CONTRACT_ADDRESSES.implementation) {
+    missingAddresses.push('ESCROW_IMPLEMENTATION_ADDRESS');
+  }
+  if (!CONTRACT_ADDRESSES.rewardDistributor) {
+    missingAddresses.push('REWARD_DISTRIBUTOR_ADDRESS');
+  }
+  
+  if (missingAddresses.length > 0) {
+    console.warn('⚠️  Warning: Missing contract addresses in .env:');
+    missingAddresses.forEach(addr => console.warn(`   - ${addr}`));
+    console.warn('   Some API endpoints will not work until these are configured.');
+  }
+}
 
 export const BLOCKCHAIN_CONFIG = {
   rpcUrl: process.env.BSC_TESTNET_RPC_URL || 'https://bsc-testnet-rpc.publicnode.com/',

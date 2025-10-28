@@ -22,6 +22,14 @@ export class FactoryService {
    * Get factory contract instance
    */
   private getFactoryContract(signer?: ethers.Wallet): ethers.Contract {
+    if (!CONTRACT_ADDRESSES.factory || CONTRACT_ADDRESSES.factory === '') {
+      throw new AppError(
+        'Factory address not configured. Please set FACTORY_ADDRESS in .env file',
+        500,
+        'FACTORY_ADDRESS_NOT_SET'
+      );
+    }
+    
     const provider = web3Provider.getProvider();
     return new ethers.Contract(
       CONTRACT_ADDRESSES.factory,

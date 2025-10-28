@@ -39,6 +39,22 @@ export class EscrowService {
    * Get escrow contract instance
    */
   private getEscrowContract(escrowAddress: string, signer?: ethers.Wallet): ethers.Contract {
+    if (!escrowAddress || escrowAddress === '') {
+      throw new AppError(
+        'Escrow address is required',
+        400,
+        'ESCROW_ADDRESS_REQUIRED'
+      );
+    }
+    
+    if (!ethers.isAddress(escrowAddress)) {
+      throw new AppError(
+        'Invalid escrow address format',
+        400,
+        'INVALID_ESCROW_ADDRESS'
+      );
+    }
+    
     const provider = web3Provider.getProvider();
     return new ethers.Contract(
       escrowAddress,

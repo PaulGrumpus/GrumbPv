@@ -9,6 +9,14 @@ export class RewardService {
    * Get reward distributor contract instance
    */
   private getRewardContract(signer?: ethers.Wallet): ethers.Contract {
+    if (!CONTRACT_ADDRESSES.rewardDistributor || CONTRACT_ADDRESSES.rewardDistributor === '') {
+      throw new AppError(
+        'RewardDistributor address not configured. Please set REWARD_DISTRIBUTOR_ADDRESS in .env file',
+        500,
+        'REWARD_DISTRIBUTOR_ADDRESS_NOT_SET'
+      );
+    }
+    
     const provider = web3Provider.getProvider();
     return new ethers.Contract(
       CONTRACT_ADDRESSES.rewardDistributor,
