@@ -257,7 +257,7 @@ export class EscrowService {
   /**
    * Pay dispute fee (counterparty)
    */
-  async payDisputeFee(escrowAddress: string, privateKey: string): Promise<string> {
+  async venderPayDisputeFee(escrowAddress: string, privateKey: string): Promise<string> {
     try {
       const wallet = web3Provider.getWallet(privateKey);
       const contract = this.getEscrowContract(escrowAddress, wallet);
@@ -282,22 +282,47 @@ export class EscrowService {
   }
 
   /**
+   * Buyer join the 
+   */
+  async buyerJoinDispute(escrowAddress: string, privateKey: string): Promise<string> {
+    try {
+      const wallet = web3Provider.getWallet(privateKey);
+      const contract = this.getEscrowContract(escrowAddress, wallet);
+
+      logger.info(`Buyer join the dispute for escrow ${escrowAddress}`);
+
+      const tx = await contract.payDisputeFee({
+        value: 0,
+        gasLimit: 500000,
+      });
+      await tx.wait();
+
+      logger.info(`Dispute fee paid successfully: ${tx.hash}`);
+      return tx.hash;
+    } catch (error: any) {
+      logger.error('Error paying dispute fee:', error);
+      throw new AppError(`Failed to pay dispute fee: ${error.message}`, 500);
+    }
+  }
+
+
+  /**
    * Resolve dispute (arbiter)
    */
   async resolveDispute(
     escrowAddress: string,
-    privateKey: string,
     favorBuyer: boolean
   ): Promise<string> {
     try {
+      const privateKey = CONTRACT_ADDRESSES.ArbiterPrivateKey;
       const wallet = web3Provider.getWallet(privateKey);
       const contract = this.getEscrowContract(escrowAddress, wallet);
 
       logger.info(`Resolving dispute for escrow ${escrowAddress}, favor buyer: ${favorBuyer}`);
 
       const tx = favorBuyer
-        ? await contract.resolveDisputeToBuyer({ gasLimit: 1000000 })
-        : await contract.resolveDisputeToVendor({ gasLimit: 1000000 });
+        ? await contract.resolveToBuyer({ gasLimit: 1000000 })
+        : await contract.resolveToVendor({ gasLimit: 1000000 });
 
       await tx.wait();
 

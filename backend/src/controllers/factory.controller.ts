@@ -91,6 +91,30 @@ export class FactoryController {
       next(error);
     }
   }
+
+  /**
+   * Setup rewards for an escrow
+   */
+  async setupEscrowRewards(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { address } = req.params;
+      const { rewardTokenAddress, rewardRate } = req.body;
+
+      const result = await factoryService.setupEscrowRewards(
+        address,
+        rewardTokenAddress,
+        rewardRate
+      );
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Rewards configured successfully for escrow',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const factoryController = new FactoryController();

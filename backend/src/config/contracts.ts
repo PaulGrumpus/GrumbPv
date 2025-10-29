@@ -33,6 +33,7 @@ export const CONTRACT_ADDRESSES = {
   rewardDistributor: process.env.REWARD_DISTRIBUTOR_ADDRESS || '',
   grmpsToken: process.env.GRMPS_TOKEN_ADDRESS || '',
   privateKey: process.env.DEPLOYER_PRIVATE_KEY || '',
+  ArbiterPrivateKey: process.env.DEPLOYER_PRIVATE_KEY || '',
 };
 
 // Validate critical addresses on startup (only in non-test environments)

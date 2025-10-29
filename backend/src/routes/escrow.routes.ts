@@ -417,9 +417,9 @@ router.post(
 
 /**
  * @swagger
- * /api/v1/escrow/{address}/dispute/pay:
+ * /api/v1/escrow/{address}/dispute/vender-pay-fee:
  *   post:
- *     summary: Pay dispute fee
+ *     summary: Vender pay dispute fee
  *     description: Counterparty pays their dispute fee (must be done within 48-72h of dispute initiation)
  *     tags: [Escrow]
  *     parameters:
@@ -465,10 +465,67 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-  '/:address/dispute/pay',
+  '/:address/dispute/vender-pay-fee',
   [param('address').isEthereumAddress(), body('privateKey').isString().notEmpty()],
   validate([param('address'), body('privateKey')]),
-  escrowController.payDisputeFee.bind(escrowController)
+  escrowController.venderPayDisputeFee.bind(escrowController)
+);
+
+
+/**
+ * @swagger
+ * /api/v1/escrow/{address}/dispute/buyer-join:
+ *   post:
+ *     summary: Buyer join the dispute
+ *     description: Buyer joins the dispute
+ *     tags: [Escrow]
+ *     parameters:
+ *       - in: path 
+ *         name: address
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Escrow contract address
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - privateKey
+ *             properties:
+ *               privateKey:
+ *                 type: string
+ *                 description: Buyer's private key
+ *                 example: "0x1234567890abcdef..."
+ *           example:
+ *             privateKey: "0x1234567890abcdef..."
+ *     responses:
+ *       200:
+ *         description: Buyer joined the dispute successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TransactionResponse'
+ *       400:
+ *         description: Bad state or dispute already initiated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Transaction failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post(
+  '/:address/dispute/buyer-join',
+  [param('address').isEthereumAddress(), body('privateKey').isString().notEmpty()],
+  validate([param('address'), body('privateKey')]),
+  escrowController.buyerJoinDispute.bind(escrowController)
 );
 
 /**
@@ -546,11 +603,10 @@ router.post(
 router.post(
   '/:address/dispute/resolve',
   [
-    param('address').isEthereumAddress(),
-    body('privateKey').isString().notEmpty(),
+    param('address').isEthereumAddress(),    
     body('favorBuyer').isBoolean(),
   ],
-  validate([param('address'), body('privateKey'), body('favorBuyer')]),
+  validate([param('address'), body('favorBuyer')]),
   escrowController.resolveDispute.bind(escrowController)
 );
 

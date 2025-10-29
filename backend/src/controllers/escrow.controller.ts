@@ -17,10 +17,16 @@ export class EscrowController {
         success: true,
         data: {
           ...info,
+          rewardRatePer1e18: Number(info.rewardRatePer1e18),
           state: ESCROW_STATES[info.state as keyof typeof ESCROW_STATES],
-          amount: info.amount.toString(),
-          buyerFeeReserve: info.buyerFeeReserve.toString(),
-          disputeFeeAmount: info.disputeFeeAmount.toString(),
+          amount: Number(info.amount),
+          buyerFeeReserve: Number(info.buyerFeeReserve),
+          disputeFeeAmount: Number(info.disputeFeeAmount),
+          buyerFeeBps: Number(info.buyerFeeBps),
+          vendorFeeBps: Number(info.vendorFeeBps),
+          disputeFeeBps: Number(info.disputeFeeBps),
+          rewardRateBps: Number(info.rewardRateBps),
+          disputeFeeDeadline: Number(info.disputeFeeDeadline),
           deadline: Number(info.deadline),
           createdAt: Number(info.createdAt),
           fundedAt: Number(info.fundedAt),
@@ -154,12 +160,32 @@ export class EscrowController {
   /**
    * Pay dispute fee
    */
-  async payDisputeFee(req: Request, res: Response, next: NextFunction) {
+  async venderPayDisputeFee(req: Request, res: Response, next: NextFunction) {
     try {
       const { address } = req.params;
       const { privateKey } = req.body;
 
-      const txHash = await escrowService.payDisputeFee(address, privateKey);
+      const txHash = await escrowService.venderPayDisputeFee(address, privateKey);
+
+      res.json({
+        success: true,
+        data: { transactionHash: txHash },
+        message: 'Dispute fee paid successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Buyer join the dispute
+   */
+  async buyerJoinDispute(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { address } = req.params;
+      const { privateKey } = req.body;
+
+      const txHash = await escrowService.buyerJoinDispute(address, privateKey);
 
       res.json({
         success: true,
@@ -177,9 +203,9 @@ export class EscrowController {
   async resolveDispute(req: Request, res: Response, next: NextFunction) {
     try {
       const { address } = req.params;
-      const { privateKey, favorBuyer } = req.body;
+      const { favorBuyer } = req.body;
 
-      const txHash = await escrowService.resolveDispute(address, privateKey, favorBuyer);
+      const txHash = await escrowService.resolveDispute(address, favorBuyer);
 
       res.json({
         success: true,

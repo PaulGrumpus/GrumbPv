@@ -282,6 +282,85 @@ export class FactoryService {
       throw new AppError(`Failed to get factory owner: ${error.message}`, 500);
     }
   }
+
+  /**
+   * Setup rewards for an escrow contract
+   * Configures reward token, rate, and distributor using arbiter's key from .env
+   */
+  async setupEscrowRewards(
+    escrowAddress: string,
+    rewardTokenAddress: string,
+    rewardRate: string
+  ): Promise<{
+    setTokenTxHash: string;
+    setRateTxHash: string;
+    setDistributorTxHash?: string;
+  }> {
+    try {
+      // Use ARBITER_PRIVATE_KEY from .env (escrow owner)
+      const privateKey = CONTRACT_ADDRESSES.privateKey;
+      const distributorAddress = CONTRACT_ADDRESSES.rewardDistributor;
+
+      if (!privateKey || privateKey === '') {
+        throw new AppError(
+          'DEPLOYER_PRIVATE_KEY (arbiter key) not configured in .env',
+          500,
+          'ARBITER_KEY_NOT_SET'
+        );
+      }
+
+      const wallet = web3Provider.getWallet(privateKey);
+      
+      // Get escrow contract
+      const escrowABI = CONTRACT_ABIS.Escrow;
+      const escrow = new ethers.Contract(escrowAddress, escrowABI, wallet);
+
+      logger.info(`Setting up rewards for escrow ${escrowAddress}`);
+      logger.info('Reward config:', {
+        rewardToken: rewardTokenAddress,
+        rewardRate,
+        distributor: distributorAddress || 'Not set',
+        arbiter: wallet.address,
+      });
+
+      // Set reward token
+      logger.info('1. Setting reward token...');
+      const tx1 = await escrow.setRewardToken(rewardTokenAddress, { gasLimit: 200000 });
+      await tx1.wait();
+      const setTokenTxHash = tx1.hash;
+      logger.info(`✅ Reward token set: ${setTokenTxHash}`);
+
+      // Set reward rate
+      logger.info('2. Setting reward rate...');
+      const tx2 = await escrow.setRewardRatePer1e18(rewardRate, { gasLimit: 200000 });
+      await tx2.wait();
+      const setRateTxHash = tx2.hash;
+      logger.info(`✅ Reward rate set: ${setRateTxHash}`);
+
+      // Set distributor (if configured in .env)
+      let setDistributorTxHash: string | undefined;
+      if (distributorAddress && distributorAddress !== ethers.ZeroAddress && distributorAddress !== '') {
+        logger.info('3. Setting reward distributor...');
+        const tx3 = await escrow.setRewardDistributor(distributorAddress, { gasLimit: 200000 });
+        await tx3.wait();
+        setDistributorTxHash = tx3.hash;
+        logger.info(`✅ Reward distributor set: ${setDistributorTxHash}`);
+      } else {
+        logger.info('3. Skipping reward distributor (not configured in .env)');
+      }
+
+      logger.info('✅ Rewards setup complete');
+
+      return {
+        setTokenTxHash,
+        setRateTxHash,
+        setDistributorTxHash,
+      };
+    } catch (error: any) {
+      logger.error('Error setting up escrow rewards:', error);
+      throw new AppError(`Failed to setup escrow rewards: ${error.message}`, 500);
+    }
+  }
 }
 
 export const factoryService = new FactoryService();

@@ -24,7 +24,7 @@ const router = Router();
  *             seller: "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"
  *             arbiter: "0xfB6916095ca1df60bB79Ce92cE3Ea74c37c5d359"
  *             amount: "1.0"
- *             deadline: 1735689600
+ *             deadline: 1764710400
  *             buyerFeeBps: 50
  *             vendorFeeBps: 50
  *             disputeFeeBps: 50
@@ -163,6 +163,105 @@ router.get(
  *                       example: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
  */
 router.get('/owner', factoryController.getOwner.bind(factoryController));
+
+/**
+ * @swagger
+ * /api/v1/factory/escrow/{address}/setup-rewards:
+ *   post:
+ *     summary: Setup GRMPS rewards for an escrow
+ *     description: Configure reward token and rate for an escrow contract. Uses DEPLOYER_PRIVATE_KEY (arbiter) and REWARD_DISTRIBUTOR_ADDRESS from .env. Only arbiter can configure.
+ *     tags: [Factory]
+ *     parameters:
+ *       - in: path
+ *         name: address
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Escrow contract address
+ *         example: "0x1234567890abcdef1234567890abcdef12345678"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - rewardTokenAddress
+ *               - rewardRate
+ *             properties:
+ *               rewardTokenAddress:
+ *                 type: string
+ *                 description: GRMPS token address
+ *                 example: "0xB908a4d3534D3e63b30b856e33Bf1B5d1dEd0016"
+ *               rewardRate:
+ *                 type: string
+ *                 description: GRMPS tokens per 1e18 wei of project amount (e.g., 30000 GRMPS per BNB = 30000 * 1e18)
+ *                 example: "30000000000000000000000"
+ *           example:
+ *             rewardTokenAddress: "0xB908a4d3534D3e63b30b856e33Bf1B5d1dEd0016"
+ *             rewardRate: "30000000000000000000000"
+ *     responses:
+ *       200:
+ *         description: Rewards configured successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     setTokenTxHash:
+ *                       type: string
+ *                       description: Transaction hash for setting reward token
+ *                       example: "0x1234567890abcdef..."
+ *                     setRateTxHash:
+ *                       type: string
+ *                       description: Transaction hash for setting reward rate
+ *                       example: "0x5678901234abcdef..."
+ *                     setDistributorTxHash:
+ *                       type: string
+ *                       description: Transaction hash for setting distributor (if REWARD_DISTRIBUTOR_ADDRESS in .env)
+ *                       example: "0x9abcdef012345678..."
+ *                 message:
+ *                   type: string
+ *                   example: "Rewards configured successfully for escrow"
+ *       400:
+ *         description: Validation error or invalid address
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Only arbiter can configure rewards
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Transaction failed or configuration error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post(
+  '/escrow/:address/setup-rewards',
+  [
+    param('address').isEthereumAddress(),
+    body('rewardTokenAddress').isEthereumAddress(),
+    body('rewardRate').isString().notEmpty(),
+  ],
+  validate([
+    param('address'),
+    body('rewardTokenAddress'),
+    body('rewardRate'),
+  ]),
+  factoryController.setupEscrowRewards.bind(factoryController)
+);
 
 export default router;
 
