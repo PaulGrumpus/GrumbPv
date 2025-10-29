@@ -13,6 +13,7 @@ import escrowRoutes from './routes/escrow.routes.js';
 import factoryRoutes from './routes/factory.routes.js';
 import rewardRoutes from './routes/reward.routes.js';
 import healthRoutes from './routes/health.routes.js';
+import { DatabaseService } from './services/database.service.js';
 
 // Load environment variables
 config();
@@ -40,7 +41,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 }));
 
 // Swagger JSON
-app.get('/api-docs.json', (req, res) => {
+app.get('/api-docs.json', (_req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerSpec);
 });
@@ -55,24 +56,33 @@ app.use(`${API_PREFIX}/rewards`, rewardRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-  logger.info(`🚀 Server running on port ${PORT}`);
-  logger.info(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.info(`🔗 API: http://localhost:${PORT}${API_PREFIX}`);
-  logger.info(`📚 Swagger Docs: http://localhost:${PORT}/api-docs`);
-});
+// Start server after DB connection
+async function bootstrap() {
+  const db = DatabaseService.getInstance();
+  await db.connect();
+
+  app.listen(PORT, () => {
+    logger.info(`🚀 Server running on port ${PORT}`);
+    logger.info(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
+    logger.info(`🔗 API: http://localhost:${PORT}${API_PREFIX}`);
+    logger.info(`📚 Swagger Docs: http://localhost:${PORT}/api-docs`);
+  });
+
+  // Graceful shutdown
+  const shutdown = async (signal: string) => {
+    logger.info(`${signal} received, shutting down gracefully`);
+    await db.disconnect();
+    process.exit(0);
+  };
+
+  process.on('SIGTERM', () => void shutdown('SIGTERM'));
+  process.on('SIGINT', () => void shutdown('SIGINT'));
+}
+
+void bootstrap();
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  logger.info('SIGINT received, shutting down gracefully');
-  process.exit(0);
-});
+// Signals handled in bootstrap
 
 export default app;
 
