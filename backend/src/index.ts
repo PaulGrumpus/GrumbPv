@@ -14,6 +14,7 @@ import factoryRoutes from './routes/factory.routes.js';
 import rewardRoutes from './routes/reward.routes.js';
 import healthRoutes from './routes/health.routes.js';
 import userRoutes from './routes/user.routes.js';
+import walletRoutes from './routes/wallet.routes.js';
 import { DatabaseService } from './services/database.service.js';
 
 // Load environment variables
@@ -53,7 +54,7 @@ app.use(`${API_PREFIX}/escrow`, escrowRoutes);
 app.use(`${API_PREFIX}/factory`, factoryRoutes);
 app.use(`${API_PREFIX}/rewards`, rewardRoutes);
 app.use(`${API_PREFIX}/users`, userRoutes);
-
+app.use(`${API_PREFIX}/wallets`, walletRoutes);
 // Error handlers (must be last)
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -77,8 +77,26 @@ const options: swaggerJsdoc.Options = {
             chain: { type: 'string', enum: ['evm'], example: 'evm' },
             chain_id: { type: 'integer', example: 97 },
             address: { type: 'string', example: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' },
-            is_primary: { type: 'boolean', example: false },
             created_at: { type: 'string', format: 'date-time', readOnly: true },
+            updated_at: { type: 'string', format: 'date-time', readOnly: true },
+          },
+        },
+        CreateUserWalletRequest: {
+          type: 'object',
+          required: ['chain_id', 'address'],
+          properties: {
+            chain: { type: 'string', enum: ['evm'], example: 'evm' },
+            chain_id: { type: 'integer', example: 97 },
+            address: { type: 'string', example: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' },
+            user_id: { type: 'string', format: 'uuid', description: 'Owner user ID' },
+          },
+        },
+        UpdateUserWalletRequest: {
+          type: 'object',
+          properties: {
+            chain: { type: 'string', enum: ['evm'], example: 'evm' },
+            chain_id: { type: 'integer', example: 97 },
+            address: { type: 'string', example: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' },
           },
         },
         Error: {
@@ -259,6 +277,10 @@ const options: swaggerJsdoc.Options = {
       {
         name: 'Users',
         description: 'User management and wallets',
+      },
+      {
+        name: 'Wallets',
+        description: 'User wallet management',
       },
     ],
   },

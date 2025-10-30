@@ -45,14 +45,13 @@ model user_wallets {
   id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id    String     @db.Uuid
   chain      chain_type @default(evm)
-  chain_id   BigInt
+  chain_id   Int
   address    String
-  is_primary Boolean    @default(false)
   created_at DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at DateTime   @default(now()) @db.Timestamptz(6)
   user       users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([chain_id, address])
-  @@unique([user_id, is_primary])
   @@map("user_wallets")
 }
 
@@ -126,7 +125,7 @@ model escrows {
   buyer_id            String                 @db.Uuid
   seller_id           String                 @db.Uuid
   arbiter_id          String?                @db.Uuid
-  chain_id            BigInt
+  chain_id            Int
   factory_address     String
   implementation_addr String
   proxy_address       String
@@ -172,11 +171,11 @@ model escrow_state_history {
 model escrow_chain_events {
   id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   escrow_id      String   @db.Uuid
-  chain_id       BigInt
+  chain_id       Int
   contract_addr  String
   event_name     String
   tx_hash        String
-  block_number   BigInt
+  block_number   Int
   log_index      Int
   raw_event_json Json
   created_at     DateTime @default(now()) @db.Timestamptz(6)
@@ -301,7 +300,7 @@ model attachments {
 model chain_txs {
   id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   purpose         String
-  chain_id        BigInt
+  chain_id        Int
   from_address    String
   to_address      String?
   tx_hash         String?  @unique
