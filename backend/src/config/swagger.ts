@@ -26,6 +26,61 @@ const options: swaggerJsdoc.Options = {
     ],
     components: {
       schemas: {
+        User: {
+          type: 'object',
+          required: ['id', 'handle', 'email', 'role', 'is_verified', 'created_at', 'updated_at'],
+          properties: {
+            id: { type: 'string', format: 'uuid', readOnly: true, example: 'b9e3b0d0-4d4a-4b7d-8e5a-0c9a0d5e1a2b' },
+            handle: { type: 'string', example: 'satoshi' },
+            email: { type: 'string', format: 'email', example: 'satoshi@nchain.org' },
+            role: { type: 'string', enum: ['client', 'freelancer', 'admin'], example: 'client' },
+            display_name: { type: 'string', nullable: true, example: 'Satoshi Nakamoto' },
+            bio: { type: 'string', nullable: true, example: 'Cryptography enthusiast' },
+            country_code: { type: 'string', nullable: true, example: 'USA' },
+            is_verified: { type: 'boolean', example: false },
+            created_at: { type: 'string', format: 'date-time', readOnly: true },
+            updated_at: { type: 'string', format: 'date-time', readOnly: true },
+            deleted_at: { type: 'string', format: 'date-time', nullable: true, readOnly: true },
+          },
+        },
+        CreateUserRequest: {
+          type: 'object',
+          required: ['handle', 'email'],
+          properties: {
+            handle: { type: 'string' },
+            email: { type: 'string', format: 'email' },
+            role: { type: 'string', enum: ['client', 'freelancer', 'admin'], description: 'If omitted, backend may apply defaults if any' },
+            display_name: { type: 'string', nullable: true },
+            bio: { type: 'string', nullable: true },
+            country_code: { type: 'string', nullable: true },
+            password: { type: 'string', nullable: true, writeOnly: true },
+          },
+        },
+        UpdateUserRequest: {
+          type: 'object',
+          properties: {
+            handle: { type: 'string' },
+            email: { type: 'string', format: 'email' },
+            role: { type: 'string', enum: ['client', 'freelancer', 'admin'] },
+            display_name: { type: 'string', nullable: true },
+            bio: { type: 'string', nullable: true },
+            country_code: { type: 'string', nullable: true },
+            is_verified: { type: 'boolean' },
+            password: { type: 'string', nullable: true, writeOnly: true },
+          },
+        },
+        UserWallet: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid', readOnly: true, example: '5f47c25b-0f8d-4b6e-8b2a-7c2c1b3a1e9f' },
+            user_id: { type: 'string', format: 'uuid', example: 'b9e3b0d0-4d4a-4b7d-8e5a-0c9a0d5e1a2b' },
+            chain: { type: 'string', enum: ['evm'], example: 'evm' },
+            chain_id: { type: 'integer', example: 97 },
+            address: { type: 'string', example: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' },
+            is_primary: { type: 'boolean', example: false },
+            created_at: { type: 'string', format: 'date-time', readOnly: true },
+          },
+        },
         Error: {
           type: 'object',
           properties: {
@@ -200,6 +255,10 @@ const options: swaggerJsdoc.Options = {
       {
         name: 'Rewards',
         description: 'GRMPS reward distribution',
+      },
+      {
+        name: 'Users',
+        description: 'User management and wallets',
       },
     ],
   },

@@ -10,7 +10,8 @@ datasource db {
 model users {
   id                   String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   handle               String                      @unique @db.Citext
-  email                String?                     @unique @db.Citext
+  email                String                     @unique @db.Citext
+  password             String?                      
   role                 user_role
   display_name         String?
   bio                  String?

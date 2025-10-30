@@ -13,13 +13,14 @@ import escrowRoutes from './routes/escrow.routes.js';
 import factoryRoutes from './routes/factory.routes.js';
 import rewardRoutes from './routes/reward.routes.js';
 import healthRoutes from './routes/health.routes.js';
+import userRoutes from './routes/user.routes.js';
 import { DatabaseService } from './services/database.service.js';
 
 // Load environment variables
 config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 const API_PREFIX = process.env.API_PREFIX || '/api/v1';
 
 // Middlewares
@@ -51,6 +52,7 @@ app.use('/health', healthRoutes);
 app.use(`${API_PREFIX}/escrow`, escrowRoutes);
 app.use(`${API_PREFIX}/factory`, factoryRoutes);
 app.use(`${API_PREFIX}/rewards`, rewardRoutes);
+app.use(`${API_PREFIX}/users`, userRoutes);
 
 // Error handlers (must be last)
 app.use(notFoundHandler);
