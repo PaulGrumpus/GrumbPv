@@ -1,0 +1,387 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id             String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  handle         String                      @unique @db.Citext
+  email          String                      @unique @db.Citext
+  password       String?
+  role           user_role
+  display_name   String?
+  bio            String?
+  country_code   String?
+  is_verified    Boolean                     @default(false)
+  created_at     DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime                    @default(now()) @db.Timestamptz(6)
+  deleted_at     DateTime?                   @db.Timestamptz(6)
+  uploads        attachments[]               @relation("UploaderAttachments")
+  audits         audit_log[]                 @relation("ActorAudits")
+  chain_txs      chain_txs[]
+  conversations  conversation_participants[]
+  state_actions  escrow_state_history[]
+  escrows_arb    escrows[]                   @relation("ArbiterEscrows")
+  escrows_buyer  escrows[]                   @relation("BuyerEscrows")
+  escrows_seller escrows[]                   @relation("SellerEscrows")
+  bids           job_bids[]
+  milestones     job_milestones[]            @relation("MilestoneCreators")
+  jobs           jobs[]                      @relation("ClientJobs")
+  receipts       message_receipts[]
+  sent_messages  messages[]                  @relation("SenderMessages")
+  notifications  notifications[]
+  wallets        user_wallets[]
+
+  @@map("users")
+}
+
+model user_wallets {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String     @db.Uuid
+  chain      chain_type @default(evm)
+  chain_id   Int
+  address    String
+  created_at DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at DateTime   @default(now()) @db.Timestamptz(6)
+  user       users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([chain_id, address])
+  @@map("user_wallets")
+}
+
+model jobs {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id      String           @db.Uuid
+  title          String
+  description_md String
+  budget_min_usd Decimal?         @db.Decimal(18, 2)
+  budget_max_usd Decimal?         @db.Decimal(18, 2)
+  token_symbol   String?
+  deadline_at    DateTime?        @db.Timestamptz(6)
+  status         job_status       @default(open)
+  is_remote      Boolean          @default(true)
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime         @default(now()) @db.Timestamptz(6)
+  conversations  conversations[]
+  escrows        escrows[]
+  bids           job_bids[]
+  milestones     job_milestones[]
+  client         users            @relation("ClientJobs", fields: [client_id], references: [id])
+
+  @@index([status, created_at(sort: Desc)])
+  @@map("jobs")
+}
+
+model job_bids {
+  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id          String     @db.Uuid
+  freelancer_id   String     @db.Uuid
+  cover_letter_md String?
+  bid_amount      Decimal?   @db.Decimal(78, 0)
+  token_address   String?
+  token_type      token_type @default(native)
+  token_decimals  Int        @default(18)
+  status          bid_status @default(pending)
+  created_at      DateTime   @default(now()) @db.Timestamptz(6)
+  freelancer      users      @relation(fields: [freelancer_id], references: [id], onDelete: Cascade)
+  job             jobs       @relation(fields: [job_id], references: [id], onDelete: Cascade)
+
+  @@unique([job_id, freelancer_id])
+  @@index([job_id, status])
+  @@map("job_bids")
+}
+
+model job_milestones {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id         String           @db.Uuid
+  creator_id     String?          @db.Uuid
+  title          String
+  amount         Decimal          @db.Decimal(78, 0)
+  token_address  String?
+  token_type     token_type       @default(native)
+  token_decimals Int              @default(18)
+  due_at         DateTime?        @db.Timestamptz(6)
+  order_index    Int              @default(1)
+  status         milestone_status @default(pending_fund)
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  escrow         escrows?         @relation("EscrowMilestone")
+  creator        users?           @relation("MilestoneCreators", fields: [creator_id], references: [id])
+  job            jobs             @relation(fields: [job_id], references: [id], onDelete: Cascade)
+
+  @@unique([job_id, order_index])
+  @@map("job_milestones")
+}
+
+model escrows {
+  id                          String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id                      String                 @db.Uuid
+  milestone_id                String?                @unique @db.Uuid
+  buyer_id                    String                 @db.Uuid
+  seller_id                   String                 @db.Uuid
+  arbiter_id                  String?                @db.Uuid
+  feerecipient_id             String?                @db.Uuid
+  rewardToken                 String?
+  rewardRateVsNative          Int?
+  amount                      Decimal?
+  buyerFeeReserve             Decimal?
+  disputeFeeAmount            Decimal?
+  fee_bps                     Int                    @default(0)
+  dispute_fee_bps             Int                    @default(0)
+  rewardRateBps               Int                    @default(0)
+  escrow_created_at           Int
+  escrow_funded_at            Int
+  escrow_deadline             Int
+  escrow_dispute_fee_deadline Int
+  dispute_initiator           String?
+  buyer_paid_dispute_fee      Boolean?
+  vender_paid_dispute_fee     Boolean?
+  cid                         String
+  contentHash                 String
+  proposed_cid                String
+  proposed_content_hash       String
+  buyer_approved              Boolean                @default(false)
+  vender_approved             Boolean                @default(false)
+  current_state               escrow_state           @default(unfunded)
+  chain_id                    Int
+  factory_address             String
+  implementation_addr         String
+  proxy_address               String
+  deployment_tx_hash          String
+  token_address               String?
+  token_type                  token_type             @default(native)
+  token_decimals              Int                    @default(18)
+  created_at                  DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime               @default(now()) @db.Timestamptz(6)
+  conversations               conversations[]
+  states                      escrow_state_history[]
+  arbiter                     users?                 @relation("ArbiterEscrows", fields: [arbiter_id], references: [id])
+  buyer                       users                  @relation("BuyerEscrows", fields: [buyer_id], references: [id])
+  job                         jobs                   @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  milestone                   job_milestones?        @relation("EscrowMilestone", fields: [milestone_id], references: [id])
+  seller                      users                  @relation("SellerEscrows", fields: [seller_id], references: [id])
+
+  @@unique([chain_id, proxy_address])
+  @@index([job_id])
+  @@map("escrows")
+}
+
+model escrow_state_history {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  escrow_id     String        @db.Uuid
+  from_state    escrow_state?
+  to_state      escrow_state
+  cause         String?
+  actor_user_id String?       @db.Uuid
+  tx_hash       String?
+  created_at    DateTime      @default(now()) @db.Timestamptz(6)
+  actor         users?        @relation(fields: [actor_user_id], references: [id])
+  escrow        escrows       @relation(fields: [escrow_id], references: [id], onDelete: Cascade)
+
+  @@index([escrow_id, created_at])
+  @@map("escrow_state_history")
+}
+
+model conversations {
+  id           String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type         convo_type                  @default(dm)
+  job_id       String?                     @db.Uuid
+  escrow_id    String?                     @db.Uuid
+  created_at   DateTime                    @default(now()) @db.Timestamptz(6)
+  participants conversation_participants[]
+  escrow       escrows?                    @relation(fields: [escrow_id], references: [id])
+  job          jobs?                       @relation(fields: [job_id], references: [id])
+  messages     messages[]
+
+  @@map("conversations")
+}
+
+model conversation_participants {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversation_id  String        @db.Uuid
+  user_id          String        @db.Uuid
+  is_muted         Boolean       @default(false)
+  blocked_until    DateTime?     @db.Timestamptz(6)
+  last_read_msg_id String?       @db.Uuid
+  conversation     conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  last_read        messages?     @relation("LastReadPointer", fields: [last_read_msg_id], references: [id])
+  user             users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([conversation_id, user_id])
+  @@index([user_id])
+  @@map("conversation_participants")
+}
+
+model messages {
+  id              String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversation_id String                      @db.Uuid
+  sender_id       String                      @db.Uuid
+  kind            msg_type                    @default(text)
+  body_text       String?
+  attachment_id   String?                     @db.Uuid
+  reply_to_msg_id String?                     @db.Uuid
+  created_at      DateTime                    @default(now()) @db.Timestamptz(6)
+  edited_at       DateTime?                   @db.Timestamptz(6)
+  deleted_at      DateTime?                   @db.Timestamptz(6)
+  last_read_of    conversation_participants[] @relation("LastReadPointer")
+  receipts        message_receipts[]
+  attachment      attachments?                @relation(fields: [attachment_id], references: [id])
+  conversation    conversations               @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  reply_to        messages?                   @relation("MessageReplies", fields: [reply_to_msg_id], references: [id])
+  replies         messages[]                  @relation("MessageReplies")
+  sender          users                       @relation("SenderMessages", fields: [sender_id], references: [id], onDelete: Cascade)
+
+  @@index([conversation_id, created_at])
+  @@map("messages")
+}
+
+model message_receipts {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  message_id String     @db.Uuid
+  user_id    String     @db.Uuid
+  state      read_state
+  created_at DateTime   @default(now()) @db.Timestamptz(6)
+  message    messages   @relation(fields: [message_id], references: [id], onDelete: Cascade)
+  user       users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([message_id, user_id, state])
+  @@map("message_receipts")
+}
+
+model attachments {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  uploader_id String     @db.Uuid
+  storage_key String
+  mime_type   String
+  bytes       BigInt
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  uploader    users      @relation("UploaderAttachments", fields: [uploader_id], references: [id], onDelete: Cascade)
+  messages    messages[]
+
+  @@map("attachments")
+}
+
+model chain_txs {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  purpose         String
+  chain_id        Int
+  from_address    String
+  to_address      String?
+  tx_hash         String?  @unique
+  request_id      String?  @unique
+  request_payload Json?
+  status          String
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+  user_id         String?  @db.Uuid
+  user            users?   @relation(fields: [user_id], references: [id])
+
+  @@map("chain_txs")
+}
+
+model notifications {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String    @db.Uuid
+  kind       String
+  payload    Json
+  read_at    DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  user       users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model audit_log {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actor_user_id String?  @db.Uuid
+  action        String
+  entity_table  String
+  entity_id     String   @db.Uuid
+  meta          Json?
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  actor         users?   @relation("ActorAudits", fields: [actor_user_id], references: [id])
+
+  @@map("audit_log")
+}
+
+/// ---------- Enums ----------
+enum user_role {
+  client
+  freelancer
+  admin
+}
+
+enum job_status {
+  draft
+  open
+  in_review
+  in_progress
+  completed
+  cancelled
+}
+
+enum bid_status {
+  pending
+  accepted
+  rejected
+  withdrawn
+}
+
+enum milestone_status {
+  pending_fund
+  funded
+  submitted
+  approved
+  released
+  disputed
+  cancelled
+}
+
+enum chain_type {
+  evm
+}
+
+enum token_type {
+  native
+  erc20
+}
+
+enum escrow_state {
+  unfunded
+  funded
+  delivered
+  disputed
+  releasable
+  paid
+  refunded
+}
+
+enum dispute_status {
+  open
+  awaiting_fees
+  panel_assigned
+  evidence
+  deliberation
+  resolved
+  dismissed
+}
+
+enum convo_type {
+  dm
+}
+
+enum msg_type {
+  text
+  image
+  file
+  system
+}
+
+enum read_state {
+  sent
+  delivered
+  read
+}

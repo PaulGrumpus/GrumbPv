@@ -1,9 +1,9 @@
 import { ethers } from 'ethers';
-import { CONTRACT_ABIS, CONTRACT_ADDRESSES, DEFAULT_CONFIG } from '../config/contracts.js';
-import { web3Provider } from '../utils/web3Provider.js';
-import { logger } from '../utils/logger.js';
-import { AppError } from '../middlewares/errorHandler.js';
-import { checkWalletBalance, validateDeadline, validateFeeBps, validateAddress } from '../utils/validation.js';
+import { CONTRACT_ABIS, CONTRACT_ADDRESSES, DEFAULT_CONFIG } from '../../config/contracts.js';
+import { web3Provider } from '../../utils/web3Provider.js';
+import { logger } from '../../utils/logger.js';
+import { AppError } from '../../middlewares/errorHandler.js';
+import { checkWalletBalance, validateDeadline, validateFeeBps, validateAddress } from '../../utils/validation.js';
 
 export interface CreateEscrowParams {
   jobId: string;
