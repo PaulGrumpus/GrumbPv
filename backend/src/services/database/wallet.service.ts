@@ -1,5 +1,5 @@
-import { logger } from '../utils/logger.js';
-import { AppError } from '../middlewares/errorHandler.js';
+import { logger } from '../../utils/logger.js';
+import { AppError } from '../../middlewares/errorHandler.js';
 import { chain_type, Prisma, PrismaClient, user_wallets } from '@prisma/client';
 import { userService } from './user.service.js';
 

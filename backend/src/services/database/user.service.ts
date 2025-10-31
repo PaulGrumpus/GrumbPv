@@ -1,6 +1,6 @@
-import { logger } from '../utils/logger.js';
-import { AppError } from '../middlewares/errorHandler.js';
-import { Prisma, PrismaClient, users, user_wallets } from '@prisma/client';
+import { logger } from '../../utils/logger.js';
+import { AppError } from '../../middlewares/errorHandler.js';
+import { Prisma, PrismaClient, users } from '@prisma/client';
 
 export class UserService {
     private prisma: PrismaClient;

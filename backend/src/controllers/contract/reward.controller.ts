@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { rewardService } from '../services/reward.service.js';
+import { rewardService } from '../../services/contract/reward.service.js';
 
 export class RewardController {
   /**

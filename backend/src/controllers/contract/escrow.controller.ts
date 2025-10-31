@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { escrowService } from '../services/escrow.service.js';
-import { ESCROW_STATES } from '../config/contracts.js';
+import { escrowService } from '../../services/contract/escrow.service.js';
+import { ESCROW_STATES } from '../../config/contracts.js';
 
 export class EscrowController {
   /**

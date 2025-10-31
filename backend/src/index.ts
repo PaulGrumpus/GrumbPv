@@ -9,13 +9,17 @@ import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import { rateLimiter } from './middlewares/rateLimiter.js';
 import { swaggerSpec } from './config/swagger.js';
-import escrowRoutes from './routes/escrow.routes.js';
-import factoryRoutes from './routes/factory.routes.js';
-import rewardRoutes from './routes/reward.routes.js';
+import escrowRoutes from './routes/contract/escrow.routes.js';
+import factoryRoutes from './routes/contract/factory.routes.js';
+import rewardRoutes from './routes/contract/reward.routes.js';
 import healthRoutes from './routes/health.routes.js';
-import userRoutes from './routes/user.routes.js';
-import walletRoutes from './routes/wallet.routes.js';
-import { DatabaseService } from './services/database.service.js';
+import jobRoutes from './routes/database/job.routes.js';
+import jobMilestoneRoutes from './routes/database/job.milestone.routes.js';
+import { DatabaseService } from './services/database/database.service.js';
+import walletRoutes from './routes/database/wallet.routes.js';
+import userRoutes from './routes/database/user.routes.js';
+import jobBidRoutes from './routes/database/job.bid.routes.js';
+import databaseEscrowRoutes from './routes/database/escrow.routes.js';
 
 // Load environment variables
 config();
@@ -49,12 +53,16 @@ app.get('/api-docs.json', (_req, res) => {
 });
 
 // Routes
-app.use('/health', healthRoutes);
-app.use(`${API_PREFIX}/escrow`, escrowRoutes);
-app.use(`${API_PREFIX}/factory`, factoryRoutes);
-app.use(`${API_PREFIX}/rewards`, rewardRoutes);
-app.use(`${API_PREFIX}/users`, userRoutes);
-app.use(`${API_PREFIX}/wallets`, walletRoutes);
+app.use(`${API_PREFIX}/health`, healthRoutes);
+app.use(`${API_PREFIX}/contract/escrow`, escrowRoutes);
+app.use(`${API_PREFIX}/contract/factory`, factoryRoutes);
+app.use(`${API_PREFIX}/contract/rewards`, rewardRoutes);
+app.use(`${API_PREFIX}/database/users`, userRoutes);
+app.use(`${API_PREFIX}/database/wallets`, walletRoutes);
+app.use(`${API_PREFIX}/database/jobs`, jobRoutes);
+app.use(`${API_PREFIX}/database/job-milestones`, jobMilestoneRoutes);
+app.use(`${API_PREFIX}/database/job-bids`, jobBidRoutes);
+app.use(`${API_PREFIX}/database/escrows`, databaseEscrowRoutes);
 // Error handlers (must be last)
 app.use(notFoundHandler);
 app.use(errorHandler);

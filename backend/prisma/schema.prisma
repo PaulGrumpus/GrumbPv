@@ -8,35 +8,33 @@ datasource db {
 }
 
 model users {
-  id                   String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  handle               String                      @unique @db.Citext
-  email                String                     @unique @db.Citext
-  password             String?                      
-  role                 user_role
-  display_name         String?
-  bio                  String?
-  country_code         String?
-  is_verified          Boolean                     @default(false)
-  created_at           DateTime                    @default(now()) @db.Timestamptz(6)
-  updated_at           DateTime                    @default(now()) @db.Timestamptz(6)
-  deleted_at           DateTime?                   @db.Timestamptz(6)
-  uploads              attachments[]               @relation("UploaderAttachments")
-  audits               audit_log[]                 @relation("ActorAudits")
-  chain_txs            chain_txs[]
-  conversations        conversation_participants[]
-  dispute_participants dispute_participants[]
-  disputes_opened      disputes[]                  @relation("OpenedDisputes")
-  state_actions        escrow_state_history[]
-  escrows_arb          escrows[]                   @relation("ArbiterEscrows")
-  escrows_buyer        escrows[]                   @relation("BuyerEscrows")
-  escrows_seller       escrows[]                   @relation("SellerEscrows")
-  bids                 job_bids[]
-  milestones           job_milestones[]            @relation("MilestoneCreators")
-  jobs                 jobs[]                      @relation("ClientJobs")
-  receipts             message_receipts[]
-  sent_messages        messages[]                  @relation("SenderMessages")
-  notifications        notifications[]
-  wallets              user_wallets[]
+  id             String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  handle         String                      @unique @db.Citext
+  email          String                      @unique @db.Citext
+  password       String?
+  role           user_role
+  display_name   String?
+  bio            String?
+  country_code   String?
+  is_verified    Boolean                     @default(false)
+  created_at     DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime                    @default(now()) @db.Timestamptz(6)
+  deleted_at     DateTime?                   @db.Timestamptz(6)
+  uploads        attachments[]               @relation("UploaderAttachments")
+  audits         audit_log[]                 @relation("ActorAudits")
+  chain_txs      chain_txs[]
+  conversations  conversation_participants[]
+  state_actions  escrow_state_history[]
+  escrows_arb    escrows[]                   @relation("ArbiterEscrows")
+  escrows_buyer  escrows[]                   @relation("BuyerEscrows")
+  escrows_seller escrows[]                   @relation("SellerEscrows")
+  bids           job_bids[]
+  milestones     job_milestones[]            @relation("MilestoneCreators")
+  jobs           jobs[]                      @relation("ClientJobs")
+  receipts       message_receipts[]
+  sent_messages  messages[]                  @relation("SenderMessages")
+  notifications  notifications[]
+  wallets        user_wallets[]
 
   @@map("users")
 }
@@ -107,10 +105,10 @@ model job_milestones {
   token_type     token_type       @default(native)
   token_decimals Int              @default(18)
   due_at         DateTime?        @db.Timestamptz(6)
-  order_index    Int
+  order_index    Int              @default(1)
   status         milestone_status @default(pending_fund)
   created_at     DateTime         @default(now()) @db.Timestamptz(6)
-  escrows        escrows[]
+  escrow         escrows?         @relation("EscrowMilestone")
   creator        users?           @relation("MilestoneCreators", fields: [creator_id], references: [id])
   job            jobs             @relation(fields: [job_id], references: [id], onDelete: Cascade)
 
@@ -119,33 +117,52 @@ model job_milestones {
 }
 
 model escrows {
-  id                  String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  job_id              String                 @db.Uuid
-  milestone_id        String?                @db.Uuid
-  buyer_id            String                 @db.Uuid
-  seller_id           String                 @db.Uuid
-  arbiter_id          String?                @db.Uuid
-  chain_id            Int
-  factory_address     String
-  implementation_addr String
-  proxy_address       String
-  deployment_tx_hash  String
-  token_address       String?
-  token_type          token_type             @default(native)
-  token_decimals      Int                    @default(18)
-  fee_bps             Int                    @default(0)
-  current_state       escrow_state           @default(created)
-  metadata_cid        String?
-  created_at          DateTime               @default(now()) @db.Timestamptz(6)
-  conversations       conversations[]
-  dispute             disputes?
-  events              escrow_chain_events[]
-  states              escrow_state_history[]
-  arbiter             users?                 @relation("ArbiterEscrows", fields: [arbiter_id], references: [id])
-  buyer               users                  @relation("BuyerEscrows", fields: [buyer_id], references: [id])
-  job                 jobs                   @relation(fields: [job_id], references: [id], onDelete: Cascade)
-  milestone           job_milestones?        @relation(fields: [milestone_id], references: [id])
-  seller              users                  @relation("SellerEscrows", fields: [seller_id], references: [id])
+  id                          String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id                      String                 @db.Uuid
+  milestone_id                String?                @unique @db.Uuid
+  buyer_id                    String                 @db.Uuid
+  seller_id                   String                 @db.Uuid
+  arbiter_id                  String?                @db.Uuid
+  feerecipient_id             String?                @db.Uuid
+  rewardToken                 String?
+  rewardRateVsNative          Int?
+  amount                      Decimal?
+  buyerFeeReserve             Decimal?
+  disputeFeeAmount            Decimal?
+  fee_bps                     Int                    @default(0)
+  dispute_fee_bps             Int                    @default(0)
+  rewardRateBps               Int                    @default(0)
+  escrow_created_at           Int
+  escrow_funded_at            Int
+  escrow_deadline             Int
+  escrow_dispute_fee_deadline Int
+  dispute_initiator           String?
+  buyer_paid_dispute_fee      Boolean?
+  vender_paid_dispute_fee     Boolean?
+  cid                         String
+  contentHash                 String
+  proposed_cid                String
+  proposed_content_hash       String
+  buyer_approved              Boolean                @default(false)
+  vender_approved             Boolean                @default(false)
+  current_state               escrow_state           @default(unfunded)
+  chain_id                    Int
+  factory_address             String
+  implementation_addr         String
+  proxy_address               String
+  deployment_tx_hash          String
+  token_address               String?
+  token_type                  token_type             @default(native)
+  token_decimals              Int                    @default(18)
+  created_at                  DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime               @default(now()) @db.Timestamptz(6)
+  conversations               conversations[]
+  states                      escrow_state_history[]
+  arbiter                     users?                 @relation("ArbiterEscrows", fields: [arbiter_id], references: [id])
+  buyer                       users                  @relation("BuyerEscrows", fields: [buyer_id], references: [id])
+  job                         jobs                   @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  milestone                   job_milestones?        @relation("EscrowMilestone", fields: [milestone_id], references: [id])
+  seller                      users                  @relation("SellerEscrows", fields: [seller_id], references: [id])
 
   @@unique([chain_id, proxy_address])
   @@index([job_id])
@@ -166,56 +183,6 @@ model escrow_state_history {
 
   @@index([escrow_id, created_at])
   @@map("escrow_state_history")
-}
-
-model escrow_chain_events {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  escrow_id      String   @db.Uuid
-  chain_id       Int
-  contract_addr  String
-  event_name     String
-  tx_hash        String
-  block_number   Int
-  log_index      Int
-  raw_event_json Json
-  created_at     DateTime @default(now()) @db.Timestamptz(6)
-  escrow         escrows  @relation(fields: [escrow_id], references: [id], onDelete: Cascade)
-
-  @@unique([tx_hash, log_index])
-  @@index([escrow_id, block_number])
-  @@map("escrow_chain_events")
-}
-
-model disputes {
-  id              String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  escrow_id       String                 @unique @db.Uuid
-  opened_by_id    String                 @db.Uuid
-  status          dispute_status         @default(open)
-  fee_amount      Decimal?               @db.Decimal(78, 0)
-  token_address   String?
-  token_type      token_type             @default(native)
-  token_decimals  Int                    @default(18)
-  resolution_json Json?
-  created_at      DateTime               @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime               @default(now()) @db.Timestamptz(6)
-  participants    dispute_participants[]
-  escrow          escrows                @relation(fields: [escrow_id], references: [id], onDelete: Cascade)
-  opened_by       users                  @relation("OpenedDisputes", fields: [opened_by_id], references: [id])
-
-  @@map("disputes")
-}
-
-model dispute_participants {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  dispute_id   String   @db.Uuid
-  user_id      String   @db.Uuid
-  role         String
-  has_paid_fee Boolean  @default(false)
-  dispute      disputes @relation(fields: [dispute_id], references: [id], onDelete: Cascade)
-  user         users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  @@unique([dispute_id, user_id])
-  @@map("dispute_participants")
 }
 
 model conversations {
@@ -383,16 +350,13 @@ enum token_type {
 }
 
 enum escrow_state {
-  created
+  unfunded
   funded
-  delivery_submitted
-  buyer_approved
-  seller_approved
-  released
-  refunded
+  delivered
   disputed
-  paused
-  closed
+  releasable
+  paid
+  refunded
 }
 
 enum dispute_status {

@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
-import { factoryController } from '../controllers/factory.controller.js';
-import { validate } from '../middlewares/validateRequest.js';
+import { factoryController } from '../../controllers/contract/factory.controller.js';
+import { validate } from '../../middlewares/validateRequest.js';
 
 const router = Router();
 
 /**
  * @swagger
- * /api/v1/factory/escrow:
+ * /api/v1/contract/factory/escrow:
  *   post:
  *     summary: Create a new escrow
  *     description: Deploy a new escrow contract using the factory
@@ -87,7 +87,7 @@ router.post(
 );
 
 /**
- * @route   POST /api/v1/factory/escrow/deterministic
+ * @route   POST /api/v1/contract/factory/escrow/deterministic
  * @desc    Create deterministic escrow
  * @access  Private
  */
@@ -115,7 +115,7 @@ router.post(
 );
 
 /**
- * @route   GET /api/v1/factory/predict/:salt
+ * @route   GET /api/v1/contract/factory/predict/:salt
  * @desc    Predict escrow address
  * @access  Public
  */
@@ -127,7 +127,7 @@ router.get(
 );
 
 /**
- * @route   GET /api/v1/factory/verify/:address
+ * @route   GET /api/v1/contract/factory/verify/:address
  * @desc    Check if escrow was created by factory
  * @access  Public
  */
@@ -140,7 +140,7 @@ router.get(
 
 /**
  * @swagger
- * /api/v1/factory/owner:
+ * /api/v1/contract/factory/owner:
  *   get:
  *     summary: Get factory owner address
  *     description: Returns the current owner of the factory contract
@@ -166,7 +166,7 @@ router.get('/owner', factoryController.getOwner.bind(factoryController));
 
 /**
  * @swagger
- * /api/v1/factory/escrow/{address}/setup-rewards:
+ * /api/v1/contract/factory/escrow/{address}/setup-rewards:
  *   post:
  *     summary: Setup GRMPS rewards for an escrow
  *     description: Configure reward token and rate for an escrow contract. Uses DEPLOYER_PRIVATE_KEY (arbiter) and REWARD_DISTRIBUTOR_ADDRESS from .env. Only arbiter can configure.

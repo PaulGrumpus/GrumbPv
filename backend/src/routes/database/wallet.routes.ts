@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
-import { validate } from '../middlewares/validateRequest.js';
-import { walletController } from '../controllers/wallet.controller.js';
+import { validate } from '../../middlewares/validateRequest.js';
+import { walletController } from '../../controllers/database/wallet.controller.js';
 
 const router = Router();
 
 /**
  * @openapi
- * /api/v1/wallets:
+ * /api/v1/database/wallets:
  *   post:
  *     tags: [Wallets]
  *     summary: Create a user wallet
@@ -45,7 +45,7 @@ router.post(
 
 /**
  * @openapi
- * /api/v1/wallets/{id}:
+ * /api/v1/database/wallets/{id}:
  *   post:
  *     tags: [Wallets]
  *     summary: Update a user wallet by ID
@@ -83,7 +83,7 @@ router.post(
 
 /**
  * @openapi
- * /api/v1/wallets/by-id/{id}:
+ * /api/v1/database/wallets/by-id/{id}:
  *   get:
  *     tags: [Wallets]
  *     summary: Get wallet by ID
@@ -115,7 +115,7 @@ router.get(
 
 /**
  * @openapi
- * /api/v1/wallets/by-chain-id-and-address/{chainId}/{address}:
+ * /api/v1/database/wallets/by-chain-id-and-address/{chainId}/{address}:
  *   get:
  *     tags: [Wallets]
  *     summary: Get wallet by chain ID and address
@@ -152,7 +152,7 @@ router.get(
 
 /**
  * @openapi
- * /api/v1/wallets/by-user-id/{userId}:
+ * /api/v1/database/wallets/by-user-id/{userId}:
  *   get:
  *     tags: [Wallets]
  *     summary: List wallets by user ID
@@ -186,7 +186,7 @@ router.get(
 
 /**
  * @openapi
- * /api/v1/wallets/{id}:
+ * /api/v1/database/wallets/{id}:
  *   delete:
  *     tags: [Wallets]
  *     summary: Delete wallet by ID
@@ -213,7 +213,7 @@ router.delete(
 
 /**
  * @openapi
- * /api/v1/wallets/by-user-id/{userId}:
+ * /api/v1/database/wallets/by-user-id/{userId}:
  *   delete:
  *     tags: [Wallets]
  *     summary: Delete all wallets for a user
@@ -240,7 +240,7 @@ router.delete(
 
 /**
  * @openapi
- * /api/v1/wallets:
+ * /api/v1/database/wallets:
  *   get:
  *     tags: [Wallets]
  *     summary: Get all wallets

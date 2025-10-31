@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
-import { validate } from '../middlewares/validateRequest.js';
-import { userController } from '../controllers/user.controller.js';
+import { validate } from '../../middlewares/validateRequest.js';
+import { userController } from '../../controllers/database/user.controller.js';
 
 const router = Router();
 
 /**
  * @openapi
- * /api/v1/users:
+ * /api/v1/database/users:
  *   post:
  *     tags: [Users]
  *     summary: Create a new user
@@ -45,7 +45,7 @@ router.post(
 
 /**
  * @openapi
- * /api/v1/users/{id}:
+ * /api/v1/database/users/{id}:
  *   post:
  *     tags: [Users]
  *     summary: Update a user by ID
@@ -83,7 +83,7 @@ router.post(
 
 /**
  * @openapi
- * /api/v1/users/{id}:
+ * /api/v1/database/users/{id}:
  *   delete:
  *     tags: [Users]
  *     summary: Delete a user by ID
@@ -110,7 +110,7 @@ router.delete(
 
 /**
  * @openapi
- * /api/v1/users:
+ * /api/v1/database/users:
  *   get:
  *     tags: [Users]
  *     summary: List users
@@ -142,7 +142,7 @@ router.get(
 
 /**
  * @openapi
- * /api/v1/users/by-id/{id}:
+ * /api/v1/database/users/by-id/{id}:
  *   get:
  *     tags: [Users]
  *     summary: Get user by ID
@@ -180,7 +180,7 @@ router.get(
 
 /**
  * @openapi
- * /api/v1/users/by-email/{email}:
+ * /api/v1/database/users/by-email/{email}:
  *   get:
  *     tags: [Users]
  *     summary: Get user by email
@@ -219,7 +219,7 @@ router.get(
 
 /**
  * @openapi
- * /api/v1/users/by-handle/{handle}:
+ * /api/v1/database/users/by-handle/{handle}:
  *   get:
  *     tags: [Users]
  *     summary: Get user by handle

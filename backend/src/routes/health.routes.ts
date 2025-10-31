@@ -6,7 +6,7 @@ const router = Router();
 
 /**
  * @swagger
- * /health:
+ * /api/v1/health:
  *   get:
  *     summary: Health check endpoint
  *     description: Returns API health status and blockchain connection info
@@ -56,7 +56,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (_req: Request, res: Response) => {
   try {
     const blockNumber = await web3Provider.getBlockNumber();
     

@@ -1,5 +1,5 @@
-import { logger } from '../utils/logger.js';
-import { AppError } from '../middlewares/errorHandler.js';
+import { logger } from '../../utils/logger.js';
+import { AppError } from '../../middlewares/errorHandler.js';
 import { PrismaClient } from '@prisma/client';
 
 export class DatabaseService {

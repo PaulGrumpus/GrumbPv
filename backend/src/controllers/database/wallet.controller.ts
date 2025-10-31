@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { walletService } from '../services/wallet.service.js';
-import { AppError } from '../middlewares/errorHandler.js';
+import { walletService } from '../../services/database/wallet.service.js';
+import { AppError } from '../../middlewares/errorHandler.js';
 
 export class WalletController {
     async createUserWallet(req: Request, res: Response, next: NextFunction) {

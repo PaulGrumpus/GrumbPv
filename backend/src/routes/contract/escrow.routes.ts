@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
-import { escrowController } from '../controllers/escrow.controller.js';
-import { validate } from '../middlewares/validateRequest.js';
+import { escrowController } from '../../controllers/contract/escrow.controller.js';
+import { validate } from '../../middlewares/validateRequest.js';
 
 const router = Router();
 
