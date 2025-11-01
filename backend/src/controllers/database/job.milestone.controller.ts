@@ -65,8 +65,8 @@ export class JobMilestoneController {
 
     async getJobMilestonesByJobId(req: Request, res: Response, next: NextFunction) {
         try {
-            const { jobId } = req.params;
-            const result = await jobMilestoneService.getJobMilestonesByJobId(jobId);
+            const { job_id } = req.params;
+            const result = await jobMilestoneService.getJobMilestonesByJobId(job_id);
             res.json({
                 success: true,
                 data: result,
