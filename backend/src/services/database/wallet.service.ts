@@ -12,8 +12,8 @@ export class WalletService {
 
     public async createUserWallet(userWallet: Prisma.user_walletsUncheckedCreateInput): Promise<user_wallets> {
         try {
-            if(!userWallet.chain_id || !userWallet.address) {
-                throw new AppError('Chain ID and address are required', 400, 'CHAIN_ID_ADDRESS_REQUIRED');
+            if(!userWallet.chain_id || !userWallet.address || !userWallet.is_primary || !userWallet.user_id) {
+                throw new AppError('Chain ID, address, is_primary, and user_id are required', 400, 'CHAIN_ID_ADDRESS_IS_PRIMARY_USER_ID_REQUIRED');
             }
             if(userWallet.chain !== chain_type.evm ){
                 throw new AppError('Invalid chain', 400, 'INVALID_CHAIN');
@@ -24,9 +24,17 @@ export class WalletService {
             if (existingUserWallet) {
                 throw new AppError('User wallet already exists', 400, 'USER_WALLET_ALREADY_EXISTS');
             }
-            const existingUser = await userService.getUserById(userWallet.user_id as string);
+            const existingUser = await userService.getUserById(userWallet.user_id);
             if (!existingUser) {
                 throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+            }
+            if(userWallet.is_primary) {
+                const checkPrimaryWallet = await this.prisma.user_wallets.findFirst({
+                    where: { user_id: userWallet.user_id, is_primary: true },
+                });
+                if (checkPrimaryWallet) {
+                    throw new AppError('Primary wallet already exists', 400, 'PRIMARY_WALLET_ALREADY_EXISTS');
+                }
             }
             const newUserWallet = await this.prisma.user_wallets.create({
                 data: userWallet,
@@ -60,6 +68,14 @@ export class WalletService {
             });
             if (!existingUserWallet) {
                 throw new AppError('User wallet not found', 404, 'USER_WALLET_NOT_FOUND');
+            }
+            if(userWallet.is_primary) {
+                const checkPrimaryWallet = await this.prisma.user_wallets.findFirst({
+                    where: { user_id: existingUserWallet.user_id, is_primary: true, NOT: { id } },
+                });
+                if (checkPrimaryWallet) {
+                    throw new AppError('Primary wallet already exists', 400, 'PRIMARY_WALLET_ALREADY_EXISTS');
+                }
             }
             const now = new Date();
             const updatedUserWallet = await this.prisma.user_wallets.update({

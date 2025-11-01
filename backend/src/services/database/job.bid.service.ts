@@ -24,6 +24,9 @@ export class JobBidService {
             if (!existingFreelancer) {
                 throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
             }
+            if(existingFreelancer.role !== 'freelancer') {
+                throw new AppError('Bidder is not a freelancer', 400, 'BIDDER_IS_NOT_A_FREELANCER');
+            }
             const existingJobBid = await this.prisma.job_bids.findFirst({
                 where: { job_id: jobBid.job_id, freelancer_id: jobBid.freelancer_id },
             });
@@ -66,9 +69,15 @@ export class JobBidService {
             if (!existingFreelancer) {
                 throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
             }
+            if(existingFreelancer.role !== 'freelancer') {
+                throw new AppError('Bidder is not a freelancer', 400, 'BIDDER_IS_NOT_A_FREELANCER');
+            }
             const updatedJobBid = await this.prisma.job_bids.update({
                 where: { id },
-                data: jobBid,
+                data: {
+                    ...jobBid,
+                    updated_at: new Date(),
+                },
             });
             return updatedJobBid;
         }

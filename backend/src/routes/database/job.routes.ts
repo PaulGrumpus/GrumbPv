@@ -38,8 +38,8 @@ const router = Router();
  */
 router.post(
     '/',
-    [body('title').isString().notEmpty(), body('description_md').isString().notEmpty(), body('client_id').isString().notEmpty()],
-    validate([body('title'), body('description_md'), body('client_id')]),
+    [body('title').isString().notEmpty(), body('description_md').isString().notEmpty(), body('client_id').isString().notEmpty(), body('status').isString().notEmpty()],
+    validate([body('title'), body('description_md'), body('client_id'), body('status')]),
     jobController.createJob.bind(jobController)
 );
 

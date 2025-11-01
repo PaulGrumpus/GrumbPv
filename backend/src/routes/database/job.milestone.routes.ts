@@ -62,8 +62,8 @@ const router = Router();
  */
 router.post(
     '/',
-    [body('job_id').isString().notEmpty(), body('order_index').isInt().notEmpty(), body('title').isString().notEmpty(), body('amount').isDecimal().notEmpty()],
-    validate([body('job_id'), body('order_index'), body('title'), body('amount')]),
+    [body('job_id').isString().notEmpty(), body('order_index').isInt().notEmpty(), body('title').isString().notEmpty(), body('freelancer_id').isString().notEmpty()],
+    validate([body('job_id'), body('order_index'), body('title'), body('freelancer_id')]),
     jobMilestoneController.createJobMilestone.bind(jobMilestoneController)
 );
 

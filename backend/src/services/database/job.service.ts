@@ -1,6 +1,6 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, PrismaClient, jobs } from '@prisma/client';
+import { Prisma, PrismaClient, jobs, job_status } from '@prisma/client';
 import { userService } from './user.service.js';
 
 export class JobService {
@@ -9,24 +9,56 @@ export class JobService {
     public constructor() {
         this.prisma = new PrismaClient();
     }
+    
+    private toNumber(value: any): number | null {
+        if (value === null || value === undefined) return null;
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') return parseFloat(value);
+        // Handle Prisma Decimal type
+        if (value && typeof value.toNumber === 'function') return value.toNumber();
+        return parseFloat(String(value));
+    }
 
     public async createJob(job: Prisma.jobsUncheckedCreateInput): Promise<jobs> {
         try {
-            if(!job.title || !job.description_md || !job.client_id) {
-                throw new AppError('Title, description and client ID are required', 400, 'TITLE_DESCRIPTION_CLIENT_ID_REQUIRED');
+            if(!job.title || !job.description_md || !job.client_id || !job.status) {
+                throw new AppError('Title, description, client ID and status are required', 400, 'TITLE_DESCRIPTION_CLIENT_ID_STATUS_REQUIRED');
             }
-            if(job.budget_min_usd && job.budget_max_usd && Number(job.budget_min_usd) > Number(job.budget_max_usd)) {
-                throw new AppError('Budget minimum is greater than budget maximum', 400, 'BUDGET_MIN_GREATER_THAN_MAX');
+
+            const budgetMin = this.toNumber(job.budget_min_usd);
+            const budgetMax = this.toNumber(job.budget_max_usd);
+            
+            if (budgetMin !== null && budgetMin <= 0) {
+                throw new AppError('Budget minimum is less than or equal to 0', 400, 'BUDGET_MIN_LESS_THAN_OR_EQUAL_TO_0');
             }
-            if(job.budget_min_usd && Number(job.budget_min_usd) < 0) {
-                throw new AppError('Budget minimum is less than 0', 400, 'BUDGET_MIN_LESS_THAN_0');
+            if (budgetMax !== null && budgetMax <= 0) {
+                throw new AppError('Budget maximum is less than or equal to 0', 400, 'BUDGET_MAX_LESS_THAN_OR_EQUAL_TO_0');
             }
-            if(job.budget_max_usd && Number(job.budget_max_usd) < 0) {
-                throw new AppError('Budget maximum is less than 0', 400, 'BUDGET_MAX_LESS_THAN_0');
+            if (budgetMin !== null && budgetMax !== null && budgetMin >= budgetMax) {
+                throw new AppError('Budget minimum is greater than or equal to budget maximum', 400, 'BUDGET_MIN_GREATER_THAN_OR_EQUAL_TO_MAX');
+            }
+            if(job.status !== job_status.draft && job.status !== job_status.open && job.status !== job_status.in_review && job.status !== job_status.in_progress && job.status !== job_status.completed && job.status !== job_status.cancelled) {
+                throw new AppError('Status is not valid. Valid statuses are draft, open, in_review, in_progress, completed and cancelled', 400, 'STATUS_NOT_VALID');
             }
             const existingClient = await userService.getUserById(job.client_id);
             if (!existingClient) {
                 throw new AppError('Client not found', 404, 'CLIENT_NOT_FOUND');
+            }
+            if(job.deadline_at) {
+                const deadlineDate = job.deadline_at instanceof Date ? job.deadline_at : new Date(job.deadline_at);
+                const now = new Date();
+                const oneYearFromNow = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+                
+                if(isNaN(deadlineDate.getTime())) {
+                    throw new AppError('Invalid deadline date format', 400, 'INVALID_DEADLINE_FORMAT');
+                }
+                
+                if(deadlineDate < now) {
+                    throw new AppError('Deadline is in the past', 400, 'DEADLINE_IN_PAST');
+                }
+                if(deadlineDate > oneYearFromNow) {
+                    throw new AppError('Deadline is more than 1 year in the future', 400, 'DEADLINE_MORE_THAN_1_YEAR_IN_FUTURE');
+                }
             }
             const existingJob = await this.prisma.jobs.findFirst({
                 where: {
@@ -62,21 +94,43 @@ export class JobService {
             if (!existingJob) {
                 throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
             }
-            if(!job.title || !job.description_md || !job.client_id) {
-                throw new AppError('Title, description and client ID are required', 400, 'TITLE_DESCRIPTION_CLIENT_ID_REQUIRED');
+            if(!job.title || !job.description_md || !job.client_id || !job.status) {
+                throw new AppError('Title, description, client ID and status are required', 400, 'TITLE_DESCRIPTION_CLIENT_ID_STATUS_REQUIRED');
             }
-            if(job.budget_min_usd && job.budget_max_usd && Number(job.budget_min_usd) > Number(job.budget_max_usd)) {
-                throw new AppError('Budget minimum is greater than budget maximum', 400, 'BUDGET_MIN_GREATER_THAN_MAX');
+            if(job.status !== job_status.draft && job.status !== job_status.open && job.status !== job_status.in_review && job.status !== job_status.in_progress && job.status !== job_status.completed && job.status !== job_status.cancelled) {
+                throw new AppError('Status is not valid. Valid statuses are draft, open, in_review, in_progress, completed and cancelled', 400, 'STATUS_NOT_VALID');
             }
-            if(job.budget_min_usd && Number(job.budget_min_usd) < 0) {
-                throw new AppError('Budget minimum is less than 0', 400, 'BUDGET_MIN_LESS_THAN_0');
+            const budgetMin = this.toNumber(job.budget_min_usd);
+            const budgetMax = this.toNumber(job.budget_max_usd);
+            
+            if (budgetMin !== null && budgetMin <= 0) {
+                throw new AppError('Budget minimum is less than or equal to 0', 400, 'BUDGET_MIN_LESS_THAN_OR_EQUAL_TO_0');
             }
-            if(job.budget_max_usd && Number(job.budget_max_usd) < 0) {
-                throw new AppError('Budget maximum is less than 0', 400, 'BUDGET_MAX_LESS_THAN_0');
+            if (budgetMax !== null && budgetMax <= 0) {
+                throw new AppError('Budget maximum is less than or equal to 0', 400, 'BUDGET_MAX_LESS_THAN_OR_EQUAL_TO_0');
+            }
+            if (budgetMin !== null && budgetMax !== null && budgetMin >= budgetMax) {
+                throw new AppError('Budget minimum is greater than or equal to budget maximum', 400, 'BUDGET_MIN_GREATER_THAN_OR_EQUAL_TO_MAX');
             }
             const existingClient = await userService.getUserById(job.client_id as string);
             if (!existingClient) {
                 throw new AppError('Client not found', 404, 'CLIENT_NOT_FOUND');
+            }
+            if(job.deadline_at) {
+                const deadlineDate = job.deadline_at instanceof Date ? job.deadline_at : new Date(job.deadline_at as string);
+                const now = new Date();
+                const oneYearFromNow = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+                
+                if(isNaN(deadlineDate.getTime())) {
+                    throw new AppError('Invalid deadline date format', 400, 'INVALID_DEADLINE_FORMAT');
+                }
+                
+                if(deadlineDate < now) {
+                    throw new AppError('Deadline is in the past', 400, 'DEADLINE_IN_PAST');
+                }
+                if(deadlineDate > oneYearFromNow) {
+                    throw new AppError('Deadline is more than 1 year in the future', 400, 'DEADLINE_MORE_THAN_1_YEAR_IN_FUTURE');
+                }
             }
             const updatedJob = await this.prisma.jobs.update({
                 where: { id },

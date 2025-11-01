@@ -4,18 +4,12 @@ import { web3Provider } from '../../utils/web3Provider.js';
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
 import { checkWalletBalance, validateDeadline, validateFeeBps, validateAddress } from '../../utils/validation.js';
+import { jobMilestoneService } from '../database/job.milestone.service.js';
+import { jobService } from '../database/job.service.js';
+import { walletService } from '../database/wallet.service.js';
 
 export interface CreateEscrowParams {
-  jobId: string;
-  buyer: string;
-  seller: string;
-  arbiter: string;
-  amount: string;
-  deadline: number;
-  buyerFeeBps?: number;
-  vendorFeeBps?: number;
-  disputeFeeBps?: number;
-  rewardRateBps?: number;
+  job_milestone_id: string;
 }
 
 export class FactoryService {
@@ -66,19 +60,99 @@ export class FactoryService {
           'FEE_RECIPIENT_NOT_SET'
         );
       }
+      if (!DEFAULT_CONFIG.arbiter || DEFAULT_CONFIG.arbiter === '') {
+        throw new AppError(
+          'ARBITER_ADDRESS not configured in .env',
+          500,
+          'ARBITER_NOT_SET'
+        );
+      }
+
+      const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(params.job_milestone_id);
+      if (!exsitingJobMilestone) {
+        throw new AppError(
+          'Job milestone not found',
+          404,
+          'JOB_MILESTONE_NOT_FOUND'
+        );
+      }
+
+      if(exsitingJobMilestone.escrow) {
+        throw new AppError(
+          'Escrow already exists',
+          400,
+          'ESCROW_ALREADY_EXISTS'
+        );
+      }
+
+      const existingJob = await jobService.getJobById(exsitingJobMilestone.job_id);
+      if (!existingJob) {
+        throw new AppError(
+          'Job not found',
+          404,
+          'JOB_NOT_FOUND'
+        );
+      }
+
+      const clientWallet = await walletService.getUserWalletsByUserId(existingJob.client_id);
+      if (!clientWallet || clientWallet.length === 0) {
+        throw new AppError(
+          'Client wallet not found',
+          404,
+          'CLIENT_WALLET_NOT_FOUND'
+        );
+      }
+      const primaryClientWallet = clientWallet.find((wallet) => wallet.is_primary);
+      if (!primaryClientWallet) {
+        throw new AppError(
+          'Primary client wallet not found',
+          404,
+          'PRIMARY_CLIENT_WALLET_NOT_FOUND'
+        );
+      }
+
+      const freelancerWallet = await walletService.getUserWalletsByUserId(exsitingJobMilestone.freelancer_id);
+      if (!freelancerWallet || freelancerWallet.length === 0) {
+        throw new AppError(
+          'Freelancer wallet not found',
+          404,
+          'FREELANCER_WALLET_NOT_FOUND'
+        );
+      }
+      const primaryFreelancerWallet = freelancerWallet.find((wallet) => wallet.is_primary);
+      if (!primaryFreelancerWallet) {
+        throw new AppError(
+          'Primary freelancer wallet not found',
+          404,
+          'PRIMARY_FREELANCER_WALLET_NOT_FOUND'
+        );
+      }
+
+      if (!exsitingJobMilestone.due_at) {
+        throw new AppError(
+          'Deadline not found',
+          404,
+          'DEADLINE_NOT_FOUND'
+        );
+      }
+
+      const deadline = exsitingJobMilestone.due_at instanceof Date ? exsitingJobMilestone.due_at : new Date(exsitingJobMilestone.due_at);
+
+      // Convert deadline to Unix timestamp (seconds)
+      const deadlineTimestamp = Math.floor(deadline.getTime() / 1000);
 
       // Validate addresses
-      validateAddress(params.buyer, 'buyer');
-      validateAddress(params.seller, 'seller');
-      validateAddress(params.arbiter, 'arbiter');
+      validateAddress(primaryClientWallet.address, 'buyer');
+      validateAddress(primaryFreelancerWallet.address, 'seller');
+      validateAddress(DEFAULT_CONFIG.arbiter, 'arbiter');
       validateAddress(DEFAULT_CONFIG.feeRecipient, 'feeRecipient');
 
       // Validate deadline
-      validateDeadline(params.deadline);
+      validateDeadline(deadlineTimestamp);
 
       // Validate fees
-      const buyerFeeBps = params.buyerFeeBps || DEFAULT_CONFIG.buyerFeeBps;
-      const vendorFeeBps = params.vendorFeeBps || DEFAULT_CONFIG.vendorFeeBps;
+      const buyerFeeBps = DEFAULT_CONFIG.buyerFeeBps;
+      const vendorFeeBps = DEFAULT_CONFIG.vendorFeeBps;
       const feeBps = buyerFeeBps + vendorFeeBps;
       validateFeeBps(buyerFeeBps, vendorFeeBps, feeBps);
 
@@ -89,43 +163,46 @@ export class FactoryService {
 
       const factory = this.getFactoryContract(wallet);
 
-      const jobIdBytes = ethers.id(params.jobId);
+      const jobIdBytes = ethers.id(exsitingJobMilestone.id);
 
-      logger.info(`Creating escrow for job ${params.jobId}`);
+      // Convert amount from Decimal to string
+      const amountString = exsitingJobMilestone.amount.toString();
+
+      logger.info(`Creating escrow for job milestone ${exsitingJobMilestone.id}`);
 
       // Log all parameters for debugging
       logger.info('Factory.createEscrow params:', {
         jobIdBytes,
-        buyer: params.buyer,
-        seller: params.seller,
-        arbiter: params.arbiter,
+        buyer: primaryClientWallet.address,
+        seller: primaryFreelancerWallet.address,
+        arbiter: DEFAULT_CONFIG.arbiter,
         feeRecipient: DEFAULT_CONFIG.feeRecipient,
         feeBps,
         paymentToken: ethers.ZeroAddress,
-        amountWei: ethers.parseEther(params.amount).toString(),
-        deadline: params.deadline,
+        amountWei: ethers.parseEther(amountString).toString(),
+        deadline: deadlineTimestamp,
         buyerFeeBps: buyerFeeBps,
         vendorFeeBps: vendorFeeBps,
-        disputeFeeBps: params.disputeFeeBps || DEFAULT_CONFIG.disputeFeeBps,
-        rewardRateBps: params.rewardRateBps || DEFAULT_CONFIG.rewardRateBps,
+        disputeFeeBps: DEFAULT_CONFIG.disputeFeeBps,
+        rewardRateBps: DEFAULT_CONFIG.rewardRateBps,
         walletAddress: wallet.address,
         walletBalance: ethers.formatEther(await web3Provider.getBalance(wallet.address)) + ' BNB',
       });
 
       const tx = await factory.createEscrow(
         jobIdBytes,
-        params.buyer,
-        params.seller,
-        params.arbiter,
+        primaryClientWallet.address, // buyer
+        primaryFreelancerWallet.address, // seller
+        DEFAULT_CONFIG.arbiter,
         DEFAULT_CONFIG.feeRecipient,
         feeBps,
         ethers.ZeroAddress, // Native BNB
-        ethers.parseEther(params.amount),
-        params.deadline,
+        ethers.parseEther(amountString),
+        deadlineTimestamp,
         buyerFeeBps,
         vendorFeeBps,
-        params.disputeFeeBps || DEFAULT_CONFIG.disputeFeeBps,
-        params.rewardRateBps || DEFAULT_CONFIG.rewardRateBps,
+        DEFAULT_CONFIG.disputeFeeBps,
+        DEFAULT_CONFIG.rewardRateBps,
         { 
           gasLimit: 3000000,
           gasPrice: ethers.parseUnits('10', 'gwei'), // BSC testnet gas price
@@ -153,6 +230,10 @@ export class FactoryService {
 
       logger.info(`Escrow created at ${escrowAddress}, tx: ${tx.hash}`);
 
+      await jobMilestoneService.updateJobMilestone(exsitingJobMilestone.id, {
+        escrow: escrowAddress,
+      });
+
       return {
         escrowAddress,
         transactionHash: tx.hash,
@@ -178,27 +259,103 @@ export class FactoryService {
       const wallet = web3Provider.getWallet(privateKey);
       const factory = this.getFactoryContract(wallet);
 
-      const jobIdBytes = ethers.id(params.jobId);
-      const feeBps = (params.buyerFeeBps || DEFAULT_CONFIG.buyerFeeBps) + 
-                     (params.vendorFeeBps || DEFAULT_CONFIG.vendorFeeBps);
+      // Fetch job milestone and related data
+      const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(params.job_milestone_id);
+      if (!exsitingJobMilestone) {
+        throw new AppError(
+          'Job milestone not found',
+          404,
+          'JOB_MILESTONE_NOT_FOUND'
+        );
+      }
+
+      if(exsitingJobMilestone.escrow) {
+        throw new AppError(
+          'Escrow already exists',
+          400,
+          'ESCROW_ALREADY_EXISTS'
+        );
+      }
+
+      const existingJob = await jobService.getJobById(exsitingJobMilestone.job_id);
+      if (!existingJob) {
+        throw new AppError(
+          'Job not found',
+          404,
+          'JOB_NOT_FOUND'
+        );
+      }
+
+      const clientWallet = await walletService.getUserWalletsByUserId(existingJob.client_id);
+      if (!clientWallet || clientWallet.length === 0) {
+        throw new AppError(
+          'Client wallet not found',
+          404,
+          'CLIENT_WALLET_NOT_FOUND'
+        );
+      }
+      const primaryClientWallet = clientWallet.find((wallet) => wallet.is_primary);
+      if (!primaryClientWallet) {
+        throw new AppError(
+          'Primary client wallet not found',
+          404,
+          'PRIMARY_CLIENT_WALLET_NOT_FOUND'
+        );
+      }
+
+      const freelancerWallet = await walletService.getUserWalletsByUserId(exsitingJobMilestone.freelancer_id);
+      if (!freelancerWallet || freelancerWallet.length === 0) {
+        throw new AppError(
+          'Freelancer wallet not found',
+          404,
+          'FREELANCER_WALLET_NOT_FOUND'
+        );
+      }
+      const primaryFreelancerWallet = freelancerWallet.find((wallet) => wallet.is_primary);
+      if (!primaryFreelancerWallet) {
+        throw new AppError(
+          'Primary freelancer wallet not found',
+          404,
+          'PRIMARY_FREELANCER_WALLET_NOT_FOUND'
+        );
+      }
+
+      if (!exsitingJobMilestone.due_at) {
+        throw new AppError(
+          'Deadline not found',
+          404,
+          'DEADLINE_NOT_FOUND'
+        );
+      }
+
+      const deadline = exsitingJobMilestone.due_at instanceof Date ? exsitingJobMilestone.due_at : new Date(exsitingJobMilestone.due_at);
+
+      // Convert deadline to Unix timestamp (seconds)
+      const deadlineTimestamp = Math.floor(deadline.getTime() / 1000);
+
+      const jobIdBytes = ethers.id(exsitingJobMilestone.id);
+      const feeBps = DEFAULT_CONFIG.buyerFeeBps + DEFAULT_CONFIG.vendorFeeBps;
       const saltBytes = ethers.id(salt);
 
-      logger.info(`Creating deterministic escrow for job ${params.jobId} with salt ${salt}`);
+      // Convert amount from Decimal to string
+      const amountString = exsitingJobMilestone.amount.toString();
+
+      logger.info(`Creating deterministic escrow for job milestone ${exsitingJobMilestone.id} with salt ${salt}`);
 
       const tx = await factory.createEscrowDeterministic(
         jobIdBytes,
-        params.buyer,
-        params.seller,
-        params.arbiter,
+        primaryClientWallet.address, // buyer
+        primaryFreelancerWallet.address, // seller
+        DEFAULT_CONFIG.arbiter,
         DEFAULT_CONFIG.feeRecipient,
         feeBps,
         ethers.ZeroAddress,
-        ethers.parseEther(params.amount),
-        params.deadline,
-        params.buyerFeeBps || DEFAULT_CONFIG.buyerFeeBps,
-        params.vendorFeeBps || DEFAULT_CONFIG.vendorFeeBps,
-        params.disputeFeeBps || DEFAULT_CONFIG.disputeFeeBps,
-        params.rewardRateBps || DEFAULT_CONFIG.rewardRateBps,
+        ethers.parseEther(amountString),
+        deadlineTimestamp,
+        DEFAULT_CONFIG.buyerFeeBps,
+        DEFAULT_CONFIG.vendorFeeBps,
+        DEFAULT_CONFIG.disputeFeeBps,
+        DEFAULT_CONFIG.rewardRateBps,
         saltBytes,
         { 
           gasLimit: 3000000,
@@ -225,6 +382,10 @@ export class FactoryService {
       const escrowAddress = parsedEvent?.args.escrow;
 
       logger.info(`Deterministic escrow created at ${escrowAddress}, tx: ${tx.hash}`);
+
+      await jobMilestoneService.updateJobMilestone(exsitingJobMilestone.id, {
+        escrow: escrowAddress,
+      });
 
       return {
         escrowAddress,

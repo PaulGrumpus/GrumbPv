@@ -62,8 +62,8 @@ export class JobController {
     
     async getJobsByClientId(req: Request, res: Response, next: NextFunction) {
         try {
-            const { clientId } = req.params;
-            const result = await jobService.getJobsByClientId(clientId);
+            const { client_id } = req.params;
+            const result = await jobService.getJobsByClientId(client_id);
             res.json({
                 success: true,
                 data: result,
