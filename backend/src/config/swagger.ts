@@ -68,7 +68,7 @@ const options: swaggerJsdoc.Options = {
           properties: {
             id: { type: 'string', format: 'uuid', readOnly: true },
             job_id: { type: 'string', format: 'uuid' },
-            creator_id: { type: 'string', format: 'uuid', nullable: true },
+            freelancer_id: { type: 'string', format: 'uuid', nullable: true },
             title: { type: 'string' },
             amount: { type: 'number', nullable: true },
             token_symbol: { type: 'string', nullable: true },
@@ -81,30 +81,28 @@ const options: swaggerJsdoc.Options = {
         },
         CreateJobMilestoneRequest: {
           type: 'object',
-          required: ['job_id', 'order_index', 'title', 'amount'],
+          required: ['job_id', 'order_index', 'title', 'amount', 'freelancer_id'],
           properties: {
             job_id: { type: 'string', format: 'uuid' },
-            creator_id: { type: 'string', format: 'uuid', nullable: true },
+            freelancer_id: { type: 'string', format: 'uuid', nullable: true },
             title: { type: 'string' },
             amount: { type: 'number', nullable: true },
             token_symbol: { type: 'string', nullable: true },
             due_at: { type: 'string', format: 'date-time', nullable: true },
             order_index: { type: 'integer' },
-            escrow: { type: 'string', nullable: true },
           },
         },
         UpdateJobMilestoneRequest: {
           type: 'object',
           properties: {
             job_id: { type: 'string', format: 'uuid' },
-            creator_id: { type: 'string', format: 'uuid', nullable: true },
+            freelancer_id: { type: 'string', format: 'uuid', nullable: true },
             title: { type: 'string' },
             amount: { type: 'number', nullable: true },
             token_symbol: { type: 'string', nullable: true },
             due_at: { type: 'string', format: 'date-time', nullable: true },
             order_index: { type: 'integer' },
             status: { type: 'string', enum: ['pending_fund','funded','submitted','approved','released','disputed','cancelled'] },
-            escrow: { type: 'string', nullable: true },
           },
         },
         Job: {
@@ -205,6 +203,7 @@ const options: swaggerJsdoc.Options = {
             chain: { type: 'string', enum: ['evm'], example: 'evm' },
             chain_id: { type: 'integer', example: 97 },
             address: { type: 'string', example: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' },
+            is_primary: { type: 'boolean', example: true },
             created_at: { type: 'string', format: 'date-time', readOnly: true },
             updated_at: { type: 'string', format: 'date-time', readOnly: true },
           },
@@ -217,6 +216,7 @@ const options: swaggerJsdoc.Options = {
             chain_id: { type: 'integer', example: 97 },
             address: { type: 'string', example: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' },
             user_id: { type: 'string', format: 'uuid', description: 'Owner user ID' },
+            is_primary: { type: 'boolean', example: true },
           },
         },
         UpdateUserWalletRequest: {
@@ -225,6 +225,7 @@ const options: swaggerJsdoc.Options = {
             chain: { type: 'string', enum: ['evm'], example: 'evm' },
             chain_id: { type: 'integer', example: 97 },
             address: { type: 'string', example: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' },
+            is_primary: { type: 'boolean', example: true },
           },
         },
         Error: {
@@ -321,57 +322,13 @@ const options: swaggerJsdoc.Options = {
         },
         CreateEscrowRequest: {
           type: 'object',
-          required: ['jobId', 'buyer', 'seller', 'arbiter', 'amount', 'deadline'],
+          required: ['job_milestone_id'],
           properties: {
-            jobId: {
+            job_milestone_id: {
               type: 'string',
-              example: 'JOB-001',
-              description: 'Unique job identifier',
-            },
-            buyer: {
-              type: 'string',
-              example: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-              description: 'Buyer wallet address',
-            },
-            seller: {
-              type: 'string',
-              example: '0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed',
-              description: 'Vendor/seller wallet address',
-            },
-            arbiter: {
-              type: 'string',
-              example: '0xfB6916095ca1df60bB79Ce92cE3Ea74c37c5d359',
-              description: 'Arbiter wallet address',
-            },
-            amount: {
-              type: 'string',
-              example: '1.0',
-              description: 'Project amount in BNB',
-            },
-            deadline: {
-              type: 'number',
-              example: 1735689600,
-              description: 'Unix timestamp for deadline',
-            },
-            buyerFeeBps: {
-              type: 'number',
-              example: 50,
-              description: 'Buyer fee in basis points (optional)',
-            },
-            vendorFeeBps: {
-              type: 'number',
-              example: 50,
-              description: 'Vendor fee in basis points (optional)',
-            },
-            disputeFeeBps: {
-              type: 'number',
-              example: 50,
-              description: 'Dispute fee in basis points (optional)',
-            },
-            rewardRateBps: {
-              type: 'number',
-              example: 25,
-              description: 'Reward rate in basis points (optional)',
+              format: 'uuid',
+              example: 'b9e3b0d0-4d4a-4b7d-8e5a-0c9a0d5e1a2b',
+              description: 'Job milestone UUID - all other data (amount, addresses, deadline) will be fetched from database',
             },
           },
         },

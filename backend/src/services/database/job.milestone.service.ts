@@ -14,31 +14,20 @@ export class JobMilestoneService {
     public async createJobMilestone(jobMilestone: Prisma.job_milestonesUncheckedCreateInput): Promise<job_milestones> {
         try {
             console.log('jobMilestone', jobMilestone);
-            if(!jobMilestone.job_id || !jobMilestone.order_index || !jobMilestone.title) {
-                throw new AppError('Job ID, order index and title are required', 400, 'JOB_ID_ORDER_INDEX_TITLE_REQUIRED');
+            if(!jobMilestone.job_id || !jobMilestone.order_index || !jobMilestone.title || !jobMilestone.freelancer_id) {
+                throw new AppError('Job ID, order index, title and freelancer ID are required', 400, 'JOB_ID_ORDER_INDEX_TITLE_FREELANCER_ID_REQUIRED');
             }
             const existingJob = await jobService.getJobById(jobMilestone.job_id);
             if (!existingJob) {
                 throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
             }
                         
-            if (jobMilestone.creator_id) {
-                const existingCreator = await userService.getUserById(jobMilestone.creator_id as string);
-                if (!existingCreator) {
-                    throw new AppError('Creator not found', 404, 'CREATOR_NOT_FOUND');
-                }
-                
-                const isClient = existingJob.client_id === jobMilestone.creator_id;
-                const isBidder = await this.prisma.job_bids.findFirst({
-                    where: {
-                        job_id: jobMilestone.job_id,
-                        freelancer_id: jobMilestone.creator_id as string,
-                    },
-                });
-                
-                if (!isClient && !isBidder) {
-                    throw new AppError('Creator must be either the job client or a bidder for this job', 400, 'CREATOR_MUST_BE_CLIENT_OR_BIDDER');
-                }
+            const existingFreelancer = await userService.getUserById(jobMilestone.freelancer_id as string);
+            if (!existingFreelancer) {
+                throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
+            }            
+            if(existingFreelancer.role !== 'freelancer') {
+                throw new AppError('Freelancer is not a freelancer', 400, 'FREELANCER_IS_NOT_A_FREELANCER');
             }
 
             if(jobMilestone.due_at) {
@@ -98,24 +87,15 @@ export class JobMilestoneService {
             const existingJob = await jobService.getJobById(jobIdForValidation);
             if (!existingJob) {
                 throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
+            }   
+
+            const freelancerIdForValidation = (jobMilestone.freelancer_id as string) || existingJobMilestone.freelancer_id;
+            const existingFreelancer = await userService.getUserById(freelancerIdForValidation);
+            if (!existingFreelancer) {
+                throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
             }
-            if (jobMilestone.creator_id) {
-                const existingCreator = await userService.getUserById(jobMilestone.creator_id as string);
-                if (!existingCreator) {
-                    throw new AppError('Creator not found', 404, 'CREATOR_NOT_FOUND');
-                }
-                
-                const isClient = existingJob.client_id === jobMilestone.creator_id;
-                const isBidder = await this.prisma.job_bids.findFirst({
-                    where: {
-                        job_id: jobIdForValidation,
-                        freelancer_id: jobMilestone.creator_id as string,
-                    },
-                });
-                
-                if (!isClient && !isBidder) {
-                    throw new AppError('Creator must be either the job client or a bidder for this job', 400, 'CREATOR_MUST_BE_CLIENT_OR_BIDDER');
-                }
+            if(existingFreelancer.role !== 'freelancer') {
+                throw new AppError('Freelancer is not a freelancer', 400, 'FREELANCER_IS_NOT_A_FREELANCER');
             }
 
             if(jobMilestone.due_at) {
