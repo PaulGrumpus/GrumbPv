@@ -1,16 +1,19 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
-import { factoryController } from '../controllers/factory.controller.js';
-import { validate } from '../middlewares/validateRequest.js';
+import { factoryController } from '../../controllers/contract/factory.controller.js';
+import { validate } from '../../middlewares/validateRequest.js';
 
 const router = Router();
 
 /**
  * @swagger
- * /api/v1/factory/escrow:
+ * /api/v1/contract/factory/escrow:
  *   post:
  *     summary: Create a new escrow
- *     description: Deploy a new escrow contract using the factory
+ *     description: |
+ *       Deploy a new escrow contract using the factory pattern.
+ *       All parameters (buyer, seller, amount, deadline) are automatically fetched from the job milestone.
+ *       Uses DEPLOYER_PRIVATE_KEY from environment for deployment.
  *     tags: [Factory]
  *     requestBody:
  *       required: true
@@ -19,16 +22,7 @@ const router = Router();
  *           schema:
  *             $ref: '#/components/schemas/CreateEscrowRequest'
  *           example:
- *             jobId: "JOB-001"
- *             buyer: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
- *             seller: "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"
- *             arbiter: "0xfB6916095ca1df60bB79Ce92cE3Ea74c37c5d359"
- *             amount: "1.0"
- *             deadline: 1764710400
- *             buyerFeeBps: 50
- *             vendorFeeBps: 50
- *             disputeFeeBps: 50
- *             rewardRateBps: 25
+ *             job_milestone_id: "b9e3b0d0-4d4a-4b7d-8e5a-0c9a0d5e1a2b"
  *     responses:
  *       201:
  *         description: Escrow created successfully
@@ -39,23 +33,35 @@ const router = Router();
  *               properties:
  *                 success:
  *                   type: boolean
+ *                   example: true
  *                 data:
  *                   type: object
  *                   properties:
  *                     escrowAddress:
  *                       type: string
+ *                       example: "0x1234567890abcdef1234567890abcdef12345678"
+ *                       description: Deployed escrow contract address
  *                     transactionHash:
  *                       type: string
+ *                       example: "0xabcdef1234567890abcdef1234567890abcdef12"
+ *                       description: Blockchain transaction hash
  *                 message:
  *                   type: string
+ *                   example: "Escrow created successfully"
  *       400:
  *         description: Validation error
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Job milestone, job, or wallet not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       500:
- *         description: Server error
+ *         description: Server error or contract deployment failed
  *         content:
  *           application/json:
  *             schema:
@@ -64,30 +70,16 @@ const router = Router();
 router.post(
   '/escrow',
   [
-    body('jobId').isString().notEmpty(),
-    body('buyer').isEthereumAddress(),
-    body('seller').isEthereumAddress(),
-    body('arbiter').isEthereumAddress(),
-    body('amount').isString().notEmpty(),
-    body('deadline').isInt({ min: 1 }),
-    body('buyerFeeBps').optional().isInt({ min: 0, max: 1000 }),
-    body('vendorFeeBps').optional().isInt({ min: 0, max: 1000 }),
-    body('disputeFeeBps').optional().isInt({ min: 0, max: 1000 }),
-    body('rewardRateBps').optional().isInt({ min: 0, max: 1000 }),
+    body('job_milestone_id').isString().notEmpty(),
   ],
   validate([
-    body('jobId'),
-    body('buyer'),
-    body('seller'),
-    body('arbiter'),
-    body('amount'),
-    body('deadline'),
+    body('job_milestone_id'),
   ]),
   factoryController.createEscrow.bind(factoryController)
 );
 
 /**
- * @route   POST /api/v1/factory/escrow/deterministic
+ * @route   POST /api/v1/contract/factory/escrow/deterministic
  * @desc    Create deterministic escrow
  * @access  Private
  */
@@ -95,27 +87,17 @@ router.post(
   '/escrow/deterministic',
   [
     body('salt').isString().notEmpty(),
-    body('jobId').isString().notEmpty(),
-    body('buyer').isEthereumAddress(),
-    body('seller').isEthereumAddress(),
-    body('arbiter').isEthereumAddress(),
-    body('amount').isString().notEmpty(),
-    body('deadline').isInt({ min: 1 }),
+    body('job_milestone_id').isString().notEmpty(),
   ],
   validate([
     body('salt'),
-    body('jobId'),
-    body('buyer'),
-    body('seller'),
-    body('arbiter'),
-    body('amount'),
-    body('deadline'),
+    body('job_milestone_id'),
   ]),
   factoryController.createDeterministicEscrow.bind(factoryController)
 );
 
 /**
- * @route   GET /api/v1/factory/predict/:salt
+ * @route   GET /api/v1/contract/factory/predict/:salt
  * @desc    Predict escrow address
  * @access  Public
  */
@@ -127,7 +109,7 @@ router.get(
 );
 
 /**
- * @route   GET /api/v1/factory/verify/:address
+ * @route   GET /api/v1/contract/factory/verify/:address
  * @desc    Check if escrow was created by factory
  * @access  Public
  */
@@ -140,7 +122,7 @@ router.get(
 
 /**
  * @swagger
- * /api/v1/factory/owner:
+ * /api/v1/contract/factory/owner:
  *   get:
  *     summary: Get factory owner address
  *     description: Returns the current owner of the factory contract
@@ -166,7 +148,7 @@ router.get('/owner', factoryController.getOwner.bind(factoryController));
 
 /**
  * @swagger
- * /api/v1/factory/escrow/{address}/setup-rewards:
+ * /api/v1/contract/factory/escrow/{address}/setup-rewards:
  *   post:
  *     summary: Setup GRMPS rewards for an escrow
  *     description: Configure reward token and rate for an escrow contract. Uses DEPLOYER_PRIVATE_KEY (arbiter) and REWARD_DISTRIBUTOR_ADDRESS from .env. Only arbiter can configure.

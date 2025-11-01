@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
-import { rewardController } from '../controllers/reward.controller.js';
-import { validate } from '../middlewares/validateRequest.js';
+import { rewardController } from '../../controllers/contract/reward.controller.js';
+import { validate } from '../../middlewares/validateRequest.js';
 
 const router = Router();
 
 /**
  * @swagger
- * /api/v1/rewards/approve:
+ * /api/v1/contract/rewards/approve:
  *   post:
  *     summary: Approve reward distributor
  *     description: Reward source approves the distributor contract to spend GRMPS tokens for reward distribution
@@ -62,7 +62,7 @@ router.post(
 
 /**
  * @swagger
- * /api/v1/rewards/allowance:
+ * /api/v1/contract/rewards/allowance:
  *   get:
  *     summary: Get current allowance
  *     description: Returns how much GRMPS the reward distributor is allowed to spend from reward source
@@ -94,7 +94,7 @@ router.get('/allowance', rewardController.getAllowance.bind(rewardController));
 
 /**
  * @swagger
- * /api/v1/rewards/balance:
+ * /api/v1/contract/rewards/balance:
  *   get:
  *     summary: Get reward source balance
  *     description: Returns the GRMPS token balance of the reward source wallet
@@ -126,7 +126,7 @@ router.get('/balance', rewardController.getSourceBalance.bind(rewardController))
 
 /**
  * @swagger
- * /api/v1/rewards/authorize-factory:
+ * /api/v1/contract/rewards/authorize-factory:
  *   post:
  *     summary: Authorize factory
  *     description: Owner authorizes the escrow factory so all escrows created by it can distribute rewards
@@ -175,7 +175,7 @@ router.post(
 
 /**
  * @swagger
- * /api/v1/rewards/check-auth/{address}:
+ * /api/v1/contract/rewards/check-auth/{address}:
  *   get:
  *     summary: Check authorization
  *     description: Check if a caller (escrow contract) is authorized to distribute rewards
@@ -220,7 +220,7 @@ router.get(
 
 /**
  * @swagger
- * /api/v1/rewards/info:
+ * /api/v1/contract/rewards/info:
  *   get:
  *     summary: Get reward distributor information
  *     description: Returns configuration details of the reward distributor contract

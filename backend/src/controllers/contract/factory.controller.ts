@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { factoryService } from '../services/factory.service.js';
+import { factoryService } from '../../services/contract/factory.service.js';
 
 export class FactoryController {
   /**

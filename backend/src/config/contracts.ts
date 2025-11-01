@@ -81,5 +81,6 @@ export const DEFAULT_CONFIG = {
   disputeFeeBps: parseInt(process.env.DEFAULT_DISPUTE_FEE_BPS || '50'),
   rewardRateBps: parseInt(process.env.DEFAULT_REWARD_RATE_BPS || '25'),
   feeRecipient: process.env.FEE_RECIPIENT_ADDRESS || '',
+  arbiter: process.env.ARBITER_ADDRESS || '',
 };
 

@@ -1,8 +1,8 @@
 import { ethers } from 'ethers';
-import { CONTRACT_ABIS, CONTRACT_ADDRESSES } from '../config/contracts.js';
-import { web3Provider } from '../utils/web3Provider.js';
-import { logger } from '../utils/logger.js';
-import { AppError } from '../middlewares/errorHandler.js';
+import { CONTRACT_ABIS, CONTRACT_ADDRESSES } from '../../config/contracts.js';
+import { web3Provider } from '../../utils/web3Provider.js';
+import { logger } from '../../utils/logger.js';
+import { AppError } from '../../middlewares/errorHandler.js';
 
 export class RewardService {
   /**

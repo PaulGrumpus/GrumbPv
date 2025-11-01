@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
-import { escrowController } from '../controllers/escrow.controller.js';
-import { validate } from '../middlewares/validateRequest.js';
+import { escrowController } from '../../controllers/contract/escrow.controller.js';
+import { validate } from '../../middlewares/validateRequest.js';
 
 const router = Router();
 
 /**
  * @swagger
- * /api/v1/escrow/{address}:
+ * /api/v1/contract/escrow/{address}:
  *   get:
  *     summary: Get escrow information
  *     description: Returns detailed information about an escrow contract including state, amounts, participants, and deadlines
@@ -55,7 +55,7 @@ router.get(
 
 /**
  * @swagger
- * /api/v1/escrow/{address}/fund:
+ * /api/v1/contract/escrow/{address}/fund:
  *   post:
  *     summary: Fund escrow
  *     description: Buyer funds the escrow with BNB (project amount + buyer fee)
@@ -118,7 +118,7 @@ router.post(
 
 /**
  * @swagger
- * /api/v1/escrow/{address}/deliver:
+ * /api/v1/contract/escrow/{address}/deliver:
  *   post:
  *     summary: Deliver work
  *     description: Vendor submits the completed work with IPFS CID
@@ -186,7 +186,7 @@ router.post(
 
 /**
  * @swagger
- * /api/v1/escrow/{address}/approve:
+ * /api/v1/contract/escrow/{address}/approve:
  *   post:
  *     summary: Approve work
  *     description: Buyer approves the delivered work (CID must match vendor's delivery)
@@ -249,7 +249,7 @@ router.post(
 
 /**
  * @swagger
- * /api/v1/escrow/{address}/withdraw:
+ * /api/v1/contract/escrow/{address}/withdraw:
  *   post:
  *     summary: Withdraw funds
  *     description: Vendor withdraws funds after buyer approval (state must be Releasable). Distributes GRMPS rewards if configured.
@@ -305,7 +305,7 @@ router.post(
 
 /**
  * @swagger
- * /api/v1/escrow/{address}/cancel:
+ * /api/v1/contract/escrow/{address}/cancel:
  *   post:
  *     summary: Cancel escrow
  *     description: Buyer cancels escrow and gets full refund (only within first 20% of time window from funding to deadline, or after deadline if vendor never delivered)
@@ -361,7 +361,7 @@ router.post(
 
 /**
  * @swagger
- * /api/v1/escrow/{address}/dispute/initiate:
+ * /api/v1/contract/escrow/{address}/dispute/initiate:
  *   post:
  *     summary: Initiate dispute
  *     description: Either party can initiate a dispute by paying the dispute fee. Counterparty has 48-72h to pay their fee.
@@ -417,7 +417,7 @@ router.post(
 
 /**
  * @swagger
- * /api/v1/escrow/{address}/dispute/vender-pay-fee:
+ * /api/v1/contract/escrow/{address}/dispute/vender-pay-fee:
  *   post:
  *     summary: Vender pay dispute fee
  *     description: Counterparty pays their dispute fee (must be done within 48-72h of dispute initiation)
@@ -474,7 +474,7 @@ router.post(
 
 /**
  * @swagger
- * /api/v1/escrow/{address}/dispute/buyer-join:
+ * /api/v1/contract/escrow/{address}/dispute/buyer-join:
  *   post:
  *     summary: Buyer join the dispute
  *     description: Buyer joins the dispute
@@ -530,7 +530,7 @@ router.post(
 
 /**
  * @swagger
- * /api/v1/escrow/{address}/dispute/resolve:
+ * /api/v1/contract/escrow/{address}/dispute/resolve:
  *   post:
  *     summary: Resolve dispute
  *     description: Arbiter resolves the dispute in favor of buyer or vendor (both parties must have paid dispute fees)
