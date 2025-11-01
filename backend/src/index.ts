@@ -19,7 +19,6 @@ import { DatabaseService } from './services/database/database.service.js';
 import walletRoutes from './routes/database/wallet.routes.js';
 import userRoutes from './routes/database/user.routes.js';
 import jobBidRoutes from './routes/database/job.bid.routes.js';
-import databaseEscrowRoutes from './routes/database/escrow.routes.js';
 
 // Load environment variables
 config();
@@ -62,7 +61,6 @@ app.use(`${API_PREFIX}/database/wallets`, walletRoutes);
 app.use(`${API_PREFIX}/database/jobs`, jobRoutes);
 app.use(`${API_PREFIX}/database/job-milestones`, jobMilestoneRoutes);
 app.use(`${API_PREFIX}/database/job-bids`, jobBidRoutes);
-app.use(`${API_PREFIX}/database/escrows`, databaseEscrowRoutes);
 // Error handlers (must be last)
 app.use(notFoundHandler);
 app.use(errorHandler);

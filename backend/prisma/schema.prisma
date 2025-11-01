@@ -8,33 +8,29 @@ datasource db {
 }
 
 model users {
-  id             String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  handle         String                      @unique @db.Citext
-  email          String                      @unique @db.Citext
-  password       String?
-  role           user_role
-  display_name   String?
-  bio            String?
-  country_code   String?
-  is_verified    Boolean                     @default(false)
-  created_at     DateTime                    @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime                    @default(now()) @db.Timestamptz(6)
-  deleted_at     DateTime?                   @db.Timestamptz(6)
-  uploads        attachments[]               @relation("UploaderAttachments")
-  audits         audit_log[]                 @relation("ActorAudits")
-  chain_txs      chain_txs[]
-  conversations  conversation_participants[]
-  state_actions  escrow_state_history[]
-  escrows_arb    escrows[]                   @relation("ArbiterEscrows")
-  escrows_buyer  escrows[]                   @relation("BuyerEscrows")
-  escrows_seller escrows[]                   @relation("SellerEscrows")
-  bids           job_bids[]
-  milestones     job_milestones[]            @relation("MilestoneCreators")
-  jobs           jobs[]                      @relation("ClientJobs")
-  receipts       message_receipts[]
-  sent_messages  messages[]                  @relation("SenderMessages")
-  notifications  notifications[]
-  wallets        user_wallets[]
+  id            String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  handle        String                      @unique @db.Citext
+  email         String                      @unique @db.Citext
+  password      String?
+  role          user_role
+  display_name  String?
+  bio           String?
+  country_code  String?
+  is_verified   Boolean                     @default(false)
+  created_at    DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime                    @default(now()) @db.Timestamptz(6)
+  deleted_at    DateTime?                   @db.Timestamptz(6)
+  uploads       attachments[]               @relation("UploaderAttachments")
+  audits        audit_log[]                 @relation("ActorAudits")
+  chain_txs     chain_txs[]
+  conversations conversation_participants[]
+  bids          job_bids[]
+  milestones    job_milestones[]            @relation("MilestoneCreators")
+  jobs          jobs[]                      @relation("ClientJobs")
+  receipts      message_receipts[]
+  sent_messages messages[]                  @relation("SenderMessages")
+  notifications notifications[]
+  wallets       user_wallets[]
 
   @@map("users")
 }
@@ -58,8 +54,8 @@ model jobs {
   client_id      String           @db.Uuid
   title          String
   description_md String
-  budget_min_usd Decimal?         @db.Decimal(18, 2)
-  budget_max_usd Decimal?         @db.Decimal(18, 2)
+  budget_min_usd Decimal?         @db.Decimal(18, 8)
+  budget_max_usd Decimal?         @db.Decimal(18, 8)
   token_symbol   String?
   deadline_at    DateTime?        @db.Timestamptz(6)
   status         job_status       @default(open)
@@ -67,7 +63,6 @@ model jobs {
   created_at     DateTime         @default(now()) @db.Timestamptz(6)
   updated_at     DateTime         @default(now()) @db.Timestamptz(6)
   conversations  conversations[]
-  escrows        escrows[]
   bids           job_bids[]
   milestones     job_milestones[]
   client         users            @relation("ClientJobs", fields: [client_id], references: [id])
@@ -81,12 +76,11 @@ model job_bids {
   job_id          String     @db.Uuid
   freelancer_id   String     @db.Uuid
   cover_letter_md String?
-  bid_amount      Decimal?   @db.Decimal(78, 0)
-  token_address   String?
-  token_type      token_type @default(native)
-  token_decimals  Int        @default(18)
+  bid_amount      Decimal?   @db.Decimal(18, 8)
+  token_symbol    String?
   status          bid_status @default(pending)
   created_at      DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime   @default(now()) @db.Timestamptz(6)
   freelancer      users      @relation(fields: [freelancer_id], references: [id], onDelete: Cascade)
   job             jobs       @relation(fields: [job_id], references: [id], onDelete: Cascade)
 
@@ -96,103 +90,32 @@ model job_bids {
 }
 
 model job_milestones {
-  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  job_id         String           @db.Uuid
-  creator_id     String?          @db.Uuid
-  title          String
-  amount         Decimal          @db.Decimal(78, 0)
-  token_address  String?
-  token_type     token_type       @default(native)
-  token_decimals Int              @default(18)
-  due_at         DateTime?        @db.Timestamptz(6)
-  order_index    Int              @default(1)
-  status         milestone_status @default(pending_fund)
-  created_at     DateTime         @default(now()) @db.Timestamptz(6)
-  escrow         escrows?         @relation("EscrowMilestone")
-  creator        users?           @relation("MilestoneCreators", fields: [creator_id], references: [id])
-  job            jobs             @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id       String           @db.Uuid
+  creator_id   String?          @db.Uuid
+  title        String
+  amount       Decimal          @db.Decimal(18, 8)
+  token_symbol String?
+  due_at       DateTime?        @db.Timestamptz(6)
+  order_index  Int              @default(1)
+  status       milestone_status @default(pending_fund)
+  created_at   DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime   @default(now()) @db.Timestamptz(6)
+  escrow       String?
+  creator      users?           @relation("MilestoneCreators", fields: [creator_id], references: [id])
+  job          jobs             @relation(fields: [job_id], references: [id], onDelete: Cascade)
 
   @@unique([job_id, order_index])
   @@map("job_milestones")
-}
-
-model escrows {
-  id                          String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  job_id                      String                 @db.Uuid
-  milestone_id                String?                @unique @db.Uuid
-  buyer_id                    String                 @db.Uuid
-  seller_id                   String                 @db.Uuid
-  arbiter_id                  String?                @db.Uuid
-  feerecipient_id             String?                @db.Uuid
-  rewardToken                 String?
-  rewardRateVsNative          Int?
-  amount                      Decimal?
-  buyerFeeReserve             Decimal?
-  disputeFeeAmount            Decimal?
-  fee_bps                     Int                    @default(0)
-  dispute_fee_bps             Int                    @default(0)
-  rewardRateBps               Int                    @default(0)
-  escrow_created_at           Int
-  escrow_funded_at            Int
-  escrow_deadline             Int
-  escrow_dispute_fee_deadline Int
-  dispute_initiator           String?
-  buyer_paid_dispute_fee      Boolean?
-  vender_paid_dispute_fee     Boolean?
-  cid                         String
-  contentHash                 String
-  proposed_cid                String
-  proposed_content_hash       String
-  buyer_approved              Boolean                @default(false)
-  vender_approved             Boolean                @default(false)
-  current_state               escrow_state           @default(unfunded)
-  chain_id                    Int
-  factory_address             String
-  implementation_addr         String
-  proxy_address               String
-  deployment_tx_hash          String
-  token_address               String?
-  token_type                  token_type             @default(native)
-  token_decimals              Int                    @default(18)
-  created_at                  DateTime               @default(now()) @db.Timestamptz(6)
-  updated_at                  DateTime               @default(now()) @db.Timestamptz(6)
-  conversations               conversations[]
-  states                      escrow_state_history[]
-  arbiter                     users?                 @relation("ArbiterEscrows", fields: [arbiter_id], references: [id])
-  buyer                       users                  @relation("BuyerEscrows", fields: [buyer_id], references: [id])
-  job                         jobs                   @relation(fields: [job_id], references: [id], onDelete: Cascade)
-  milestone                   job_milestones?        @relation("EscrowMilestone", fields: [milestone_id], references: [id])
-  seller                      users                  @relation("SellerEscrows", fields: [seller_id], references: [id])
-
-  @@unique([chain_id, proxy_address])
-  @@index([job_id])
-  @@map("escrows")
-}
-
-model escrow_state_history {
-  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  escrow_id     String        @db.Uuid
-  from_state    escrow_state?
-  to_state      escrow_state
-  cause         String?
-  actor_user_id String?       @db.Uuid
-  tx_hash       String?
-  created_at    DateTime      @default(now()) @db.Timestamptz(6)
-  actor         users?        @relation(fields: [actor_user_id], references: [id])
-  escrow        escrows       @relation(fields: [escrow_id], references: [id], onDelete: Cascade)
-
-  @@index([escrow_id, created_at])
-  @@map("escrow_state_history")
 }
 
 model conversations {
   id           String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   type         convo_type                  @default(dm)
   job_id       String?                     @db.Uuid
-  escrow_id    String?                     @db.Uuid
   created_at   DateTime                    @default(now()) @db.Timestamptz(6)
   participants conversation_participants[]
-  escrow       escrows?                    @relation(fields: [escrow_id], references: [id])
+  escrow       String?
   job          jobs?                       @relation(fields: [job_id], references: [id])
   messages     messages[]
 

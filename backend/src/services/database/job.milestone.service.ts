@@ -136,7 +136,10 @@ export class JobMilestoneService {
             }
             const updatedJobMilestone = await this.prisma.job_milestones.update({
                 where: { id },
-                data: jobMilestone,
+                data: {
+                    ...jobMilestone,
+                    updated_at: new Date(),
+                },
             });
             return updatedJobMilestone;
         }
