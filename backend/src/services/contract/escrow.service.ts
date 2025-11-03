@@ -236,7 +236,12 @@ export class EscrowService {
 
       // Get dispute fee amount
       const info = await this.getEscrowInfo(escrowAddress);
-      const disputeFee = info.disputeFeeAmount;
+      let disputeFee = 0n;
+      if(info.buyer === wallet.address) {
+        disputeFee = 0n;
+      } else {
+        disputeFee = info.disputeFeeAmount;
+      }
 
       logger.info(`Initiating dispute for escrow ${escrowAddress}`);
 
