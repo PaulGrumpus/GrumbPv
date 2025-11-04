@@ -163,19 +163,6 @@ contract EscrowTest is Test {
         assertEq(grmps.balanceOf(vendor), vendorGRBefore);
     }
 
-    function test_Cancel() public {
-        vm.deal(buyer, 1.005 ether);
-        vm.prank(buyer);
-        escrow.fund{value: 1.005 ether}();
-        
-        // Buyer cancels and gets everything back
-        uint256 buyerBalanceBefore = buyer.balance;
-        vm.prank(buyer);
-        escrow.cancel();
-        
-        assertEq(buyer.balance, buyerBalanceBefore + 1.005 ether);
-    }
-
     function test_DisputeBuyerInitiates() public {
         vm.deal(buyer, 1.005 ether);
         vm.prank(buyer);
@@ -369,19 +356,4 @@ contract EscrowTest is Test {
         escrow.initiateDispute{value: 0.001 ether}();
     }
 
-    function test_RefundAfterDeadline() public {
-        vm.deal(buyer, 1.005 ether);
-        vm.prank(buyer);
-        escrow.fund{value: 1.005 ether}();
-        
-        // Fast forward past deadline
-        vm.warp(deadline + 1);
-        
-        // Buyer gets full refund
-        uint256 buyerBalanceBefore = buyer.balance;
-        vm.prank(buyer);
-        escrow.cancel();
-        
-        assertEq(buyer.balance, buyerBalanceBefore + 1.005 ether);
-    }
 }

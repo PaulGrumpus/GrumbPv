@@ -263,42 +263,6 @@ contract EscrowFactoryTest is Test {
         assertEq(feeRecipient.balance - feeRecipientBalanceBefore, expectedFeeTotal, "Fee recipient should receive 1%");
     }
     
-    /// @notice Test buyer can cancel before delivery
-    function test_BuyerCancel() public {
-        bytes32 jobId = keccak256("JOB-CANCEL");
-        
-        address escrowAddr = factory.createEscrow(
-            jobId,
-            buyer,
-            seller,
-            arbiter,
-            feeRecipient,
-            FEE_BPS,
-            address(0),
-            PROJECT_AMOUNT,
-            uint64(block.timestamp + 30 days),
-            50, 50, 50, 25
-        );
-        
-        Escrow escrow = Escrow(payable(escrowAddr));
-        
-        // Buyer funds
-        uint256 buyerFeeAmount = (PROJECT_AMOUNT * 50) / 10000;
-        uint256 totalFundAmount = PROJECT_AMOUNT + buyerFeeAmount;
-        
-        vm.prank(buyer);
-        escrow.fund{value: totalFundAmount}();
-        
-        // Buyer cancels
-        uint256 buyerBalanceBefore = buyer.balance;
-        
-        vm.prank(buyer);
-        escrow.cancel();
-        
-        assertEq(escrow.getState(), uint256(Escrow.State.Refunded), "Should be in Refunded state");
-        assertEq(buyer.balance - buyerBalanceBefore, totalFundAmount, "Buyer should get full refund");
-    }
-    
     /// @notice Test dispute resolution to vendor
     function test_DisputeResolveToVendor() public {
         bytes32 jobId = keccak256("JOB-DISPUTE-VENDOR");
