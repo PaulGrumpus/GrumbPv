@@ -206,27 +206,6 @@ export class EscrowService {
   }
 
   /**
-   * Cancel escrow (buyer)
-   */
-  async cancelEscrow(escrowAddress: string, privateKey: string): Promise<string> {
-    try {
-      const wallet = web3Provider.getWallet(privateKey);
-      const contract = this.getEscrowContract(escrowAddress, wallet);
-
-      logger.info(`Cancelling escrow ${escrowAddress}`);
-
-      const tx = await contract.cancel({ gasLimit: 500000 });
-      await tx.wait();
-
-      logger.info(`Escrow cancelled successfully: ${tx.hash}`);
-      return tx.hash;
-    } catch (error: any) {
-      logger.error('Error cancelling escrow:', error);
-      throw new AppError(`Failed to cancel escrow: ${error.message}`, 500);
-    }
-  }
-
-  /**
    * Initiate dispute
    */
   async initiateDispute(escrowAddress: string, privateKey: string): Promise<string> {
