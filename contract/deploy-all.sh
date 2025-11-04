@@ -33,6 +33,17 @@ if [ -z "$BSC_TESTNET_RPC_URL" ]; then
     exit 1
 fi
 
+# Check for BSCSCAN_API_KEY (optional but recommended for verification)
+if [ -z "$BSCSCAN_API_KEY" ]; then
+    echo "⚠️  Warning: BSCSCAN_API_KEY not set in .env"
+    echo "   Contract verification will be skipped"
+    echo "   Set BSCSCAN_API_KEY in .env to enable verification"
+    VERIFY_FLAGS=""
+else
+    VERIFY_FLAGS="--verify --etherscan-api-key $BSCSCAN_API_KEY"
+    echo "✅ BSCSCAN_API_KEY found - contracts will be verified"
+fi
+
 # Set gas settings (important for BSC!)
 GAS_PRICE=${GAS_PRICE:-20000000000}  # Default 20 gwei (BSC testnet needs higher!)
 GAS_LIMIT=${GAS_LIMIT:-5000000}      # Default 5M gas
@@ -52,6 +63,7 @@ echo "----------------------------------------------"
 forge script script/DeployImplementation.s.sol:DeployImplementation \
   --rpc-url $BSC_TESTNET_RPC_URL \
   --broadcast \
+  $VERIFY_FLAGS \
   --gas-price $GAS_PRICE \
   --gas-limit 5000000 \
   --legacy \
@@ -79,6 +91,7 @@ echo "----------------------------------------------"
 forge script script/DeployFactory.s.sol:DeployFactory \
   --rpc-url $BSC_TESTNET_RPC_URL \
   --broadcast \
+  $VERIFY_FLAGS \
   --gas-price $GAS_PRICE \
   --gas-limit 5000000 \
   --legacy \
@@ -122,6 +135,7 @@ echo "----------------------------------------------"
 forge script script/DeployRewardDistributor.s.sol:DeployRewardDistributor \
   --rpc-url $BSC_TESTNET_RPC_URL \
   --broadcast \
+  $VERIFY_FLAGS \
   --gas-price $GAS_PRICE \
   --gas-limit 3000000 \
   --legacy \
@@ -182,6 +196,13 @@ echo "  Implementation: $ESCROW_IMPLEMENTATION_ADDRESS"
 echo "  Factory:        $FACTORY_ADDRESS"
 echo "  RewardDistrib:  $REWARD_DISTRIBUTOR_ADDRESS"
 echo ""
+if [ ! -z "$BSCSCAN_API_KEY" ]; then
+    echo "✅ Contracts verified on BscScan:"
+    echo "  https://testnet.bscscan.com/address/$ESCROW_IMPLEMENTATION_ADDRESS"
+    echo "  https://testnet.bscscan.com/address/$FACTORY_ADDRESS"
+    echo "  https://testnet.bscscan.com/address/$REWARD_DISTRIBUTOR_ADDRESS"
+    echo ""
+fi
 echo "Addresses saved to: contract/.env.deployed"
 echo ""
 echo "⚠️  Next Steps:"

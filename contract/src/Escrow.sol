@@ -18,14 +18,12 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * 4) Buyer approve(cid) must match proposedCID -> buyerApproved.
  * 5) When both approved -> state becomes Releasable, vendor can withdraw().
  * 6) Contract emits ResultFinalized(cid, contentHash). Off-chain service pins CID.
- * 7) If deadline passes without delivery -> buyer can cancel() for full refund.
- * 8) Either party may initiate dispute (pay fee immediately) -> other party has 48-72h to pay.
+ * 7) Either party may initiate dispute (pay fee immediately) -> other party has 48-72h to pay.
  *
  * Fee Structure:
  * - Normal completion: 1% total (0.5% buyer + 0.5% vendor) -> feeRecipient
  * - Dispute (both paid): Winner gets fee refunded, loser's fee split (arbiter 50%, feeRecipient 50%)
  * - Dispute (counterparty doesn't pay): Initiator wins by default, gets full fee refund
- * - Cancel/deadline refund: No fees (100% returned to buyer)
  */
 contract Escrow is Ownable, ReentrancyGuard {
     enum State { Unfunded, Funded, Delivered, Disputed, Releasable, Paid, Refunded }
@@ -79,7 +77,6 @@ contract Escrow is Ownable, ReentrancyGuard {
     );
 
     event Funded(address indexed buyer, uint256 amount, uint256 buyerFee);
-    event Cancelled(address indexed buyer, uint256 amount);
     event Delivered(address indexed vendor, string cid, bytes32 contentHash);
     event Approved(address indexed buyer, string cid);
     event DisputeInitiated(address indexed initiator, uint256 feeAmount, uint64 deadline);
@@ -108,8 +105,6 @@ contract Escrow is Ownable, ReentrancyGuard {
     error DisputeFeeDeadlineNotPassed();
     error BothPartiesNotPaid();
     error AlreadyInitialized();
-    error CancelWindowPassed();
-    error VendorDeliveryNotAllowed();
 
     modifier onlyBuyer() {
         if (msg.sender != escrowInfo.buyer) revert OnlyBuyer();
@@ -243,46 +238,6 @@ contract Escrow is Ownable, ReentrancyGuard {
         emit Funded(escrowInfo.buyer, projectAmount, buyerFee);
     }
 
-    /// @notice Buyer can cancel and get immediate refund if vendor hasn't delivered yet.
-    /// @dev Only works in Funded state. Once vendor delivers, must use dispute system.
-    /// Can cancel within first 20% of period from funding to deadline OR after deadline passes if vendor never delivered.
-    function cancel() external onlyBuyer nonReentrant {
-        if (escrowInfo.state != State.Funded) revert BadState();
-        
-        // Check if vendor has delivered - if so, buyer cannot cancel
-        if (escrowInfo.vendorApproved) revert VendorDeliveryNotAllowed();
-        
-        uint64 fundedAt = escrowInfo.fundedAt;
-        uint64 end = escrowInfo.deadline;
-        uint64 currentTime = uint64(block.timestamp);
-        
-        // Protect against potential underflow if misconfigured
-        if (end > fundedAt) {
-            uint64 window = (end - fundedAt) / 5; // 20% of period from funding to deadline
-            bool withinEarlyWindow = currentTime <= fundedAt + window;
-            bool deadlinePassed = currentTime > end;
-            
-            // Allow cancel if: within first 20% window from funding OR deadline has passed
-            if (!withinEarlyWindow && !deadlinePassed) {
-                revert CancelWindowPassed();
-            }
-        }
-        
-        uint256 projectAmount = escrowInfo.amount;
-        uint256 buyerFee = escrowInfo.buyerFeeReserve;
-        uint256 totalRefund = projectAmount + buyerFee;
-        
-        escrowInfo.amount = 0;
-        escrowInfo.buyerFeeReserve = 0;
-        escrowInfo.state = State.Refunded;
-        
-        (bool ok, ) = payable(escrowInfo.buyer).call{value: totalRefund}("");
-        require(ok, "refund failed");
-        
-        emit Cancelled(escrowInfo.buyer, totalRefund);
-        emit Refunded(escrowInfo.buyer, totalRefund);
-    }
-
     /// @notice Vendor delivers by proposing a CID (and optional integrity hash).
     /// @dev Sets vendorApproved = true. Moves state to Delivered.
     function deliver(string calldata _cid, bytes32 _contentHash) external onlyVendor {
@@ -318,8 +273,16 @@ contract Escrow is Ownable, ReentrancyGuard {
 
     /// @notice Either party can initiate a dispute by paying the dispute fee immediately.
     /// @dev Buyer uses their reserved fee. Vendor must send payment. Sets deadline for counterparty.
+    ///      Buyer can dispute in Funded or Delivered state. Vendor can only dispute in Delivered state.
     function initiateDispute() external payable onlyParticipant {
-        if (escrowInfo.state != State.Funded && escrowInfo.state != State.Delivered) revert BadState();
+        // Buyer can dispute when state is Funded or Delivered
+        if (msg.sender == escrowInfo.buyer) {
+            if (escrowInfo.state != State.Funded && escrowInfo.state != State.Delivered) revert BadState();
+        }
+        // Vendor can only dispute when state is Delivered
+        else if (msg.sender == escrowInfo.vendor) {
+            if (escrowInfo.state != State.Delivered) revert BadState();
+        }
         if (escrowInfo.arbiter == address(0)) revert NoArbiter();
         
         // Determine dispute fee deadline based on who initiates
