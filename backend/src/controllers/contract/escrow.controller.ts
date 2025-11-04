@@ -117,26 +117,6 @@ export class EscrowController {
   }
 
   /**
-   * Cancel escrow
-   */
-  async cancel(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { address } = req.params;
-      const { privateKey } = req.body;
-
-      const txHash = await escrowService.cancelEscrow(address, privateKey);
-
-      res.json({
-        success: true,
-        data: { transactionHash: txHash },
-        message: 'Escrow cancelled successfully',
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  /**
    * Initiate dispute
    */
   async initiateDispute(req: Request, res: Response, next: NextFunction) {

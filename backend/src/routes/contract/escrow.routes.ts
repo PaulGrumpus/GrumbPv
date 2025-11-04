@@ -305,62 +305,6 @@ router.post(
 
 /**
  * @swagger
- * /api/v1/contract/escrow/{address}/cancel:
- *   post:
- *     summary: Cancel escrow
- *     description: Buyer cancels escrow and gets full refund (only within first 20% of time window from funding to deadline, or after deadline if vendor never delivered)
- *     tags: [Escrow]
- *     parameters:
- *       - in: path
- *         name: address
- *         required: true
- *         schema:
- *           type: string
- *         description: Escrow contract address
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - privateKey
- *             properties:
- *               privateKey:
- *                 type: string
- *                 description: Buyer's private key
- *                 example: "0x1234567890abcdef..."
- *           example:
- *             privateKey: "0x1234567890abcdef..."
- *     responses:
- *       200:
- *         description: Escrow cancelled successfully, full refund sent to buyer
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/TransactionResponse'
- *       400:
- *         description: Cancel window passed or vendor already delivered
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Transaction failed
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.post(
-  '/:address/cancel',
-  [param('address').isEthereumAddress(), body('privateKey').isString().notEmpty()],
-  validate([param('address'), body('privateKey')]),
-  escrowController.cancel.bind(escrowController)
-);
-
-/**
- * @swagger
  * /api/v1/contract/escrow/{address}/dispute/initiate:
  *   post:
  *     summary: Initiate dispute
