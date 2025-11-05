@@ -334,6 +334,34 @@ const options: swaggerJsdoc.Options = {
             },
           },
         },
+        ChainTx: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid', readOnly: true },
+            purpose: { type: 'string', example: 'escrow_funding' },
+            chain_id: { type: 'integer', example: 97 },
+            from_address: { type: 'string', example: '0x1234...abcd' },
+            to_address: { type: 'string', nullable: true, example: '0xabcd...1234' },
+            tx_hash: { type: 'string', nullable: true, example: '0xdeadbeef...' },
+            status: { type: 'string', example: 'success' },
+            user_id: { type: 'string', format: 'uuid', nullable: true },
+            created_at: { type: 'string', format: 'date-time', readOnly: true },
+            updated_at: { type: 'string', format: 'date-time', readOnly: true },
+          },
+        },
+        CreateChainTxRequest: {
+          type: 'object',
+          required: ['purpose', 'chain_id', 'from_address', 'to_address', 'tx_hash', 'status', 'user_id'],
+          properties: {
+            purpose: { type: 'string', example: 'escrow_funding' },
+            chain_id: { type: 'integer', example: 97 },
+            from_address: { type: 'string', example: '0x1234...abcd' },
+            to_address: { type: 'string', example: '0xabcd...1234' },
+            tx_hash: { type: 'string', example: '0xdeadbeef...' },
+            status: { type: 'string', example: 'success' },
+            user_id: { type: 'string', format: 'uuid' },
+          },
+        },
       },
       securitySchemes: {
         PrivateKey: {
@@ -380,6 +408,10 @@ const options: swaggerJsdoc.Options = {
       {
         name: 'Job Bids',
         description: 'Job bid management',
+      },
+      {
+        name: 'ChainTxs',
+        description: 'Blockchain transaction records linked to users/actions',
       },
     ],
   },
