@@ -1,7 +1,16 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
+import multer from 'multer';
 import { escrowController } from '../../controllers/contract/escrow.controller.js';
 import { validate } from '../../middlewares/validateRequest.js';
+
+// Configure multer for file uploads (store in memory)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB limit
+  },
+});
 
 const router = Router();
 
@@ -121,7 +130,10 @@ router.post(
  * /api/v1/contract/escrow/{address}/deliver:
  *   post:
  *     summary: Deliver work
- *     description: Vendor submits the completed work with IPFS CID
+ *     description: |
+ *       Vendor submits the completed work. You can either:
+ *       1. Upload a file (multipart/form-data) - file will be uploaded to Pinata IPFS automatically
+ *       2. Provide a CID directly (multipart/form-data or application/json)
  *     tags: [Escrow]
  *     parameters:
  *       - in: path
@@ -133,6 +145,20 @@ router.post(
  *     requestBody:
  *       required: true
  *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - privateKey
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: File to upload (will be uploaded to Pinata IPFS). Either file or cid must be provided.
+ *               privateKey:
+ *                 type: string
+ *                 description: Vendor's private key
+ *                 example: "0x1234567890abcdef..."
  *         application/json:
  *           schema:
  *             type: object
@@ -158,7 +184,18 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/TransactionResponse'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/TransactionResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         transactionHash:
+ *                           type: string
+ *                         cid:
+ *                           type: string
+ *                           description: IPFS CID (from file upload or provided CID)
  *       400:
  *         description: Validation error or bad state
  *         content:
@@ -174,13 +211,14 @@ router.post(
  */
 router.post(
   '/:address/deliver',
+  upload.single('file'), // Handle single file upload with field name 'file'
   [
     param('address').isEthereumAddress(),
     body('privateKey').isString().notEmpty(),
-    body('cid').isString().notEmpty(),
+    body('cid').optional().isString(),
     body('contentHash').optional().isString(),
   ],
-  validate([param('address'), body('privateKey'), body('cid')]),
+  validate([param('address'), body('privateKey')]),
   escrowController.deliver.bind(escrowController)
 );
 

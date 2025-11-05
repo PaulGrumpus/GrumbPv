@@ -146,9 +146,34 @@ export class EscrowService {
       const wallet = web3Provider.getWallet(privateKey);
       const contract = this.getEscrowContract(escrowAddress, wallet);
 
-      const hashBytes = contentHash 
-        ? ethers.zeroPadValue(contentHash, 32)
-        : ethers.ZeroHash;
+      // Convert contentHash to bytes32 format
+      // contentHash should already be a 32-byte keccak256 hash from the controller
+      let hashBytes: string;
+      if (contentHash) {
+        try {
+          // Validate and convert to bytes32
+          const hashBytesArray = ethers.getBytes(contentHash);
+          
+          if (hashBytesArray.length !== 32) {
+            logger.warn(`contentHash is not 32 bytes (${hashBytesArray.length} bytes), padding/truncating`);
+            if (hashBytesArray.length > 32) {
+              // Truncate to first 32 bytes
+              hashBytes = ethers.hexlify(hashBytesArray.slice(0, 32));
+            } else {
+              // Pad to 32 bytes
+              hashBytes = ethers.zeroPadValue(ethers.hexlify(hashBytesArray), 32);
+            }
+          } else {
+            // Already 32 bytes, use as-is
+            hashBytes = ethers.hexlify(hashBytesArray);
+          }
+        } catch (error) {
+          logger.warn(`Invalid contentHash format, using ZeroHash: ${contentHash}`);
+          hashBytes = ethers.ZeroHash;
+        }
+      } else {
+        hashBytes = ethers.ZeroHash;
+      }
 
       logger.info(`Delivering work for escrow ${escrowAddress}, CID: ${cid}`);
 

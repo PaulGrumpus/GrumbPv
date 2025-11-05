@@ -1,6 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
+import { ethers } from 'ethers';
 import { escrowService } from '../../services/contract/escrow.service.js';
 import { ESCROW_STATES } from '../../config/contracts.js';
+import { pinata } from '../../utils/pinata.js';
+import { AppError } from '../../middlewares/errorHandler.js';
+import { CID } from 'multiformats/cid';
 
 export class EscrowController {
   /**
@@ -63,12 +67,60 @@ export class EscrowController {
     try {
       const { address } = req.params;
       const { privateKey, cid, contentHash } = req.body;
+      
+      const file = req.file as Express.Multer.File | undefined;
+      
+      let finalCid = cid;
+      let finalContentHash = contentHash;
 
-      const txHash = await escrowService.deliverWork(address, privateKey, cid, contentHash);
+      if (file) {
+        try {
+          const fileObj = new File([file.buffer], file.originalname, {
+            type: file.mimetype || 'application/octet-stream',
+          });
+          
+          const uploadResult = await pinata.upload.public.file(fileObj);
+
+          finalCid = uploadResult.cid;
+
+          // Extract multihash bytes and create a 32-byte content hash using keccak256
+          const cidString = CID.parse(finalCid);
+          const multihashBytes = Buffer.from(cidString.multihash.bytes);
+          
+          // Use keccak256 to create a proper 32-byte hash from the multihash
+          finalContentHash = ethers.keccak256(ethers.hexlify(multihashBytes));
+
+          const url = await pinata.gateways.public.convert(
+            finalCid
+          )
+
+          console.log('File uploaded to Pinata');
+          console.log('CID:', finalCid);
+          console.log('Content Hash:', finalContentHash);
+          console.log('Download URL:', url);
+
+        } catch (pinataError) {
+          throw new AppError(
+            `Failed to upload file to Pinata: ${pinataError instanceof Error ? pinataError.message : 'Unknown error'}`,
+            500,
+            'PINATA_UPLOAD_ERROR'
+          );
+        }
+      }
+
+      if (!finalCid && !file) {
+        throw new AppError(
+          'Either a file or CID must be provided',
+          400,
+          'MISSING_FILE_OR_CID'
+        );
+      }
+
+      const txHash = await escrowService.deliverWork(address, privateKey, finalCid, finalContentHash);
 
       res.json({
         success: true,
-        data: { transactionHash: txHash },
+        data: { transactionHash: txHash, cid: finalCid },
         message: 'Work delivered successfully',
       });
     } catch (error) {
