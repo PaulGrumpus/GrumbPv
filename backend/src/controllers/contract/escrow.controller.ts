@@ -4,6 +4,7 @@ import { escrowService } from '../../services/contract/escrow.service.js';
 import { ESCROW_STATES } from '../../config/contracts.js';
 import { pinata } from '../../utils/pinata.js';
 import { AppError } from '../../middlewares/errorHandler.js';
+import { jobMilestoneService } from '../../services/database/job.milestone.service.js';
 import { CID } from 'multiformats/cid';
 
 export class EscrowController {
@@ -12,9 +13,26 @@ export class EscrowController {
    */
   async getInfo(req: Request, res: Response, next: NextFunction) {
     try {
-      const { address } = req.params;
-      
-      const info = await escrowService.getEscrowInfo(address);
+      const { job_milestone_id } = req.params;
+
+      const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+      if (!exsitingJobMilestone) {
+        throw new AppError(
+          'Job milestone not found',
+          404,
+          'JOB_MILESTONE_NOT_FOUND'
+        );
+      }
+
+      const escrowAddress = exsitingJobMilestone.escrow;
+      if (!escrowAddress) {
+        throw new AppError(
+          'Escrow not found',
+          404,
+          'ESCROW_NOT_FOUND'
+        );
+      }
+      const info = await escrowService.getEscrowInfo(escrowAddress);
       
       res.json({
         success: true,
@@ -45,10 +63,10 @@ export class EscrowController {
    */
   async fund(req: Request, res: Response, next: NextFunction) {
     try {
-      const { address } = req.params;
+      const { job_milestone_id } = req.params;
       const { privateKey, value } = req.body;
 
-      const txHash = await escrowService.fundEscrow(address, privateKey, value);
+      const txHash = await escrowService.fundEscrow(job_milestone_id, privateKey, value);
 
       res.json({
         success: true,
@@ -65,7 +83,7 @@ export class EscrowController {
    */
   async deliver(req: Request, res: Response, next: NextFunction) {
     try {
-      const { address } = req.params;
+      const { job_milestone_id } = req.params;
       const { privateKey, cid, contentHash } = req.body;
       
       const file = req.file as Express.Multer.File | undefined;
@@ -116,7 +134,7 @@ export class EscrowController {
         );
       }
 
-      const txHash = await escrowService.deliverWork(address, privateKey, finalCid, finalContentHash);
+      const txHash = await escrowService.deliverWork(job_milestone_id, privateKey, finalCid, finalContentHash);
 
       res.json({
         success: true,
@@ -133,10 +151,10 @@ export class EscrowController {
    */
   async approve(req: Request, res: Response, next: NextFunction) {
     try {
-      const { address } = req.params;
+      const { job_milestone_id } = req.params;
       const { privateKey, cid } = req.body;
 
-      const txHash = await escrowService.approveWork(address, privateKey, cid);
+      const txHash = await escrowService.approveWork(job_milestone_id, privateKey, cid);
 
       res.json({
         success: true,
@@ -153,10 +171,10 @@ export class EscrowController {
    */
   async withdraw(req: Request, res: Response, next: NextFunction) {
     try {
-      const { address } = req.params;
+      const { job_milestone_id } = req.params;
       const { privateKey } = req.body;
 
-      const txHash = await escrowService.withdrawFunds(address, privateKey);
+      const txHash = await escrowService.withdrawFunds(job_milestone_id, privateKey);
 
       res.json({
         success: true,
@@ -173,10 +191,10 @@ export class EscrowController {
    */
   async initiateDispute(req: Request, res: Response, next: NextFunction) {
     try {
-      const { address } = req.params;
+      const { job_milestone_id } = req.params;
       const { privateKey } = req.body;
 
-      const txHash = await escrowService.initiateDispute(address, privateKey);
+      const txHash = await escrowService.initiateDispute(job_milestone_id, privateKey);
 
       res.json({
         success: true,
@@ -193,10 +211,10 @@ export class EscrowController {
    */
   async venderPayDisputeFee(req: Request, res: Response, next: NextFunction) {
     try {
-      const { address } = req.params;
+      const { job_milestone_id } = req.params;
       const { privateKey } = req.body;
 
-      const txHash = await escrowService.venderPayDisputeFee(address, privateKey);
+      const txHash = await escrowService.venderPayDisputeFee(job_milestone_id, privateKey);
 
       res.json({
         success: true,
@@ -213,10 +231,10 @@ export class EscrowController {
    */
   async buyerJoinDispute(req: Request, res: Response, next: NextFunction) {
     try {
-      const { address } = req.params;
+      const { job_milestone_id } = req.params;
       const { privateKey } = req.body;
 
-      const txHash = await escrowService.buyerJoinDispute(address, privateKey);
+      const txHash = await escrowService.buyerJoinDispute(job_milestone_id, privateKey);
 
       res.json({
         success: true,
@@ -233,10 +251,10 @@ export class EscrowController {
    */
   async resolveDispute(req: Request, res: Response, next: NextFunction) {
     try {
-      const { address } = req.params;
+      const { job_milestone_id } = req.params;
       const { favorBuyer } = req.body;
 
-      const txHash = await escrowService.resolveDispute(address, favorBuyer);
+      const txHash = await escrowService.resolveDispute(job_milestone_id, favorBuyer);
 
       res.json({
         success: true,
