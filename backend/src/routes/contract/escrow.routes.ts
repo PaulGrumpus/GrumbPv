@@ -1,25 +1,34 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
+import multer from 'multer';
 import { escrowController } from '../../controllers/contract/escrow.controller.js';
 import { validate } from '../../middlewares/validateRequest.js';
+
+// Configure multer for file uploads (store in memory)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB limit
+  },
+});
 
 const router = Router();
 
 /**
  * @swagger
- * /api/v1/contract/escrow/{address}:
+ * /api/v1/contract/escrow/{job_milestone_id}:
  *   get:
  *     summary: Get escrow information
  *     description: Returns detailed information about an escrow contract including state, amounts, participants, and deadlines
  *     tags: [Escrow]
  *     parameters:
  *       - in: path
- *         name: address
+ *         name: job_milestone_id
  *         required: true
  *         schema:
  *           type: string
- *         description: Escrow contract address
- *         example: "0x1234567890abcdef1234567890abcdef12345678"
+ *         description: Job milestone ID
+ *         example: "b9e3b0d0-4d4a-4b7d-8e5a-0c9a0d5e1a2b"
  *     responses:
  *       200:
  *         description: Escrow information retrieved successfully
@@ -47,26 +56,26 @@ const router = Router();
  *               $ref: '#/components/schemas/Error'
  */
 router.get(
-  '/:address',
-  [param('address').isEthereumAddress().withMessage('Invalid escrow address')],
-  validate([param('address')]),
+  '/:job_milestone_id',
+  [param('job_milestone_id').isString().notEmpty().withMessage('Invalid job milestone ID')],
+  validate([param('job_milestone_id')]),
   escrowController.getInfo.bind(escrowController)
 );
 
 /**
  * @swagger
- * /api/v1/contract/escrow/{address}/fund:
+ * /api/v1/contract/escrow/{job_milestone_id}/fund:
  *   post:
  *     summary: Fund escrow
  *     description: Buyer funds the escrow with BNB (project amount + buyer fee)
  *     tags: [Escrow]
  *     parameters:
  *       - in: path
- *         name: address
+ *         name: job_milestone_id
  *         required: true
  *         schema:
  *           type: string
- *         description: Escrow contract address
+ *         description: Job milestone ID
  *     requestBody:
  *       required: true
  *       content:
@@ -106,33 +115,50 @@ router.get(
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-  '/:address/fund',
+  '/:job_milestone_id/fund',
   [
-    param('address').isEthereumAddress(),
+    param('job_milestone_id').isString().notEmpty(),
     body('privateKey').isString().notEmpty(),
     body('value').isString().notEmpty(),
   ],
-  validate([param('address'), body('privateKey'), body('value')]),
+  validate([param('job_milestone_id'), body('privateKey'), body('value')]),
   escrowController.fund.bind(escrowController)
 );
 
 /**
  * @swagger
- * /api/v1/contract/escrow/{address}/deliver:
+ * /api/v1/contract/escrow/{job_milestone_id}/deliver:
  *   post:
  *     summary: Deliver work
- *     description: Vendor submits the completed work with IPFS CID
+ *     description: |
+ *       Vendor submits the completed work. You can either:
+ *       1. Upload a file (multipart/form-data) - file will be uploaded to Pinata IPFS automatically
+ *       2. Provide a CID directly (multipart/form-data or application/json)
  *     tags: [Escrow]
  *     parameters:
  *       - in: path
- *         name: address
+ *         name: job_milestone_id
  *         required: true
  *         schema:
  *           type: string
- *         description: Escrow contract address
+ *         description: Job milestone ID
  *     requestBody:
  *       required: true
  *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - privateKey
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: File to upload (will be uploaded to Pinata IPFS). Either file or cid must be provided.
+ *               privateKey:
+ *                 type: string
+ *                 description: Vendor's private key
+ *                 example: "0x1234567890abcdef..."
  *         application/json:
  *           schema:
  *             type: object
@@ -158,7 +184,18 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/TransactionResponse'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/TransactionResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         transactionHash:
+ *                           type: string
+ *                         cid:
+ *                           type: string
+ *                           description: IPFS CID (from file upload or provided CID)
  *       400:
  *         description: Validation error or bad state
  *         content:
@@ -173,31 +210,32 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-  '/:address/deliver',
+  '/:job_milestone_id/deliver',
+  upload.single('file'), // Handle single file upload with field name 'file'
   [
-    param('address').isEthereumAddress(),
+    param('job_milestone_id').isString().notEmpty(),
     body('privateKey').isString().notEmpty(),
-    body('cid').isString().notEmpty(),
+    body('cid').optional().isString(),
     body('contentHash').optional().isString(),
   ],
-  validate([param('address'), body('privateKey'), body('cid')]),
+  validate([param('job_milestone_id'), body('privateKey')]),
   escrowController.deliver.bind(escrowController)
 );
 
 /**
  * @swagger
- * /api/v1/contract/escrow/{address}/approve:
+ * /api/v1/contract/escrow/{job_milestone_id}/approve:
  *   post:
  *     summary: Approve work
  *     description: Buyer approves the delivered work (CID must match vendor's delivery)
  *     tags: [Escrow]
  *     parameters:
  *       - in: path
- *         name: address
+ *         name: job_milestone_id
  *         required: true
  *         schema:
  *           type: string
- *         description: Escrow contract address
+ *         description: Job milestone ID
  *     requestBody:
  *       required: true
  *       content:
@@ -237,30 +275,30 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-  '/:address/approve',
+  '/:job_milestone_id/approve',
   [
-    param('address').isEthereumAddress(),
+    param('job_milestone_id').isString().notEmpty(),
     body('privateKey').isString().notEmpty(),
     body('cid').isString().notEmpty(),
   ],
-  validate([param('address'), body('privateKey'), body('cid')]),
+  validate([param('job_milestone_id'), body('privateKey'), body('cid')]),
   escrowController.approve.bind(escrowController)
 );
 
 /**
  * @swagger
- * /api/v1/contract/escrow/{address}/withdraw:
+ * /api/v1/contract/escrow/{job_milestone_id}/withdraw:
  *   post:
  *     summary: Withdraw funds
  *     description: Vendor withdraws funds after buyer approval (state must be Releasable). Distributes GRMPS rewards if configured.
  *     tags: [Escrow]
  *     parameters:
  *       - in: path
- *         name: address
+ *         name: job_milestone_id
  *         required: true
  *         schema:
  *           type: string
- *         description: Escrow contract address
+ *         description: Job milestone ID
  *     requestBody:
  *       required: true
  *       content:
@@ -297,26 +335,26 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-  '/:address/withdraw',
-  [param('address').isEthereumAddress(), body('privateKey').isString().notEmpty()],
-  validate([param('address'), body('privateKey')]),
+  '/:job_milestone_id/withdraw',
+  [param('job_milestone_id').isString().notEmpty(), body('privateKey').isString().notEmpty()],
+  validate([param('job_milestone_id'), body('privateKey')]),
   escrowController.withdraw.bind(escrowController)
 );
 
 /**
  * @swagger
- * /api/v1/contract/escrow/{address}/dispute/initiate:
+ * /api/v1/contract/escrow/{job_milestone_id}/dispute/initiate:
  *   post:
  *     summary: Initiate dispute
  *     description: Either party can initiate a dispute by paying the dispute fee. Counterparty has 48-72h to pay their fee.
  *     tags: [Escrow]
  *     parameters:
  *       - in: path
- *         name: address
+ *         name: job_milestone_id
  *         required: true
  *         schema:
  *           type: string
- *         description: Escrow contract address
+ *         description: Job milestone ID
  *     requestBody:
  *       required: true
  *       content:
@@ -353,26 +391,26 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-  '/:address/dispute/initiate',
-  [param('address').isEthereumAddress(), body('privateKey').isString().notEmpty()],
-  validate([param('address'), body('privateKey')]),
+  '/:job_milestone_id/dispute/initiate',
+  [param('job_milestone_id').isString().notEmpty(), body('privateKey').isString().notEmpty()],
+  validate([param('job_milestone_id'), body('privateKey')]),
   escrowController.initiateDispute.bind(escrowController)
 );
 
 /**
  * @swagger
- * /api/v1/contract/escrow/{address}/dispute/vender-pay-fee:
+ * /api/v1/contract/escrow/{job_milestone_id}/dispute/vender-pay-fee:
  *   post:
  *     summary: Vender pay dispute fee
  *     description: Counterparty pays their dispute fee (must be done within 48-72h of dispute initiation)
  *     tags: [Escrow]
  *     parameters:
  *       - in: path
- *         name: address
+ *         name: job_milestone_id
  *         required: true
  *         schema:
  *           type: string
- *         description: Escrow contract address
+ *         description: Job milestone ID
  *     requestBody:
  *       required: true
  *       content:
@@ -409,27 +447,27 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-  '/:address/dispute/vender-pay-fee',
-  [param('address').isEthereumAddress(), body('privateKey').isString().notEmpty()],
-  validate([param('address'), body('privateKey')]),
+  '/:job_milestone_id/dispute/vender-pay-fee',
+  [param('job_milestone_id').isString().notEmpty(), body('privateKey').isString().notEmpty()],
+  validate([param('job_milestone_id'), body('privateKey')]),
   escrowController.venderPayDisputeFee.bind(escrowController)
 );
 
 
 /**
  * @swagger
- * /api/v1/contract/escrow/{address}/dispute/buyer-join:
+ * /api/v1/contract/escrow/{job_milestone_id}/dispute/buyer-join:
  *   post:
  *     summary: Buyer join the dispute
  *     description: Buyer joins the dispute
  *     tags: [Escrow]
  *     parameters:
  *       - in: path 
- *         name: address
+ *         name: job_milestone_id
  *         required: true
  *         schema:
  *           type: string
- *         description: Escrow contract address
+ *         description: Job milestone ID
  *     requestBody:
  *       required: true
  *       content:
@@ -466,26 +504,26 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-  '/:address/dispute/buyer-join',
-  [param('address').isEthereumAddress(), body('privateKey').isString().notEmpty()],
-  validate([param('address'), body('privateKey')]),
+  '/:job_milestone_id/dispute/buyer-join',
+  [param('job_milestone_id').isString().notEmpty(), body('privateKey').isString().notEmpty()],
+  validate([param('job_milestone_id'), body('privateKey')]),
   escrowController.buyerJoinDispute.bind(escrowController)
 );
 
 /**
  * @swagger
- * /api/v1/contract/escrow/{address}/dispute/resolve:
+ * /api/v1/contract/escrow/{job_milestone_id}/dispute/resolve:
  *   post:
  *     summary: Resolve dispute
  *     description: Arbiter resolves the dispute in favor of buyer or vendor (both parties must have paid dispute fees)
  *     tags: [Escrow]
  *     parameters:
  *       - in: path
- *         name: address
+ *         name: job_milestone_id
  *         required: true
  *         schema:
  *           type: string
- *         description: Escrow contract address
+ *         description: Job milestone ID
  *     requestBody:
  *       required: true
  *       content:
@@ -545,12 +583,12 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-  '/:address/dispute/resolve',
+  '/:job_milestone_id/dispute/resolve',
   [
-    param('address').isEthereumAddress(),    
+    param('job_milestone_id').isString().notEmpty(),    
     body('favorBuyer').isBoolean(),
   ],
-  validate([param('address'), body('favorBuyer')]),
+  validate([param('job_milestone_id'), body('favorBuyer')]),
   escrowController.resolveDispute.bind(escrowController)
 );
 
