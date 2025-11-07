@@ -129,6 +129,19 @@ export class ChainTxsService {
             throw new AppError('Error getting chain txs by user id', 500, 'DB_CHAIN_TXS_GET_BY_USER_ID_FAILED');
         }
     }
+
+    async getChainTxs(): Promise<chain_txs[] | null> {
+        try {
+            const chainTxs = await this.prisma.chain_txs.findMany();
+            return chainTxs;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            logger.error('Error getting chain txs', { error });
+            throw new AppError('Error getting chain txs', 500, 'DB_CHAIN_TXS_GET_FAILED');
+        }
+    }
 }
 
 export const chainTxsService = new ChainTxsService();
