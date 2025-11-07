@@ -210,4 +210,27 @@ router.delete('/delete/:id',
     [param('id').isString().notEmpty().withMessage('Invalid id')], validate([param('id')]), 
     chainTxsController.deleteChainTx.bind(chainTxsController));
 
+/**
+ * @openapi
+ * /api/v1/database/chain-txs:
+ *   get:
+ *     tags: [ChainTxs]
+ *     summary: Get all chain transactions
+ *     responses:
+ *       200:
+ *         description: Chain txs found successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/ChainTx'
+ */
+router.get('/', 
+    chainTxsController.getChainTxs.bind(chainTxsController));
 export default router;

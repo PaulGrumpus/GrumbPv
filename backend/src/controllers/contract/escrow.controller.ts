@@ -85,6 +85,49 @@ export class EscrowController {
     try {
       const { job_milestone_id } = req.params;
       const { privateKey, cid, contentHash } = req.body;
+
+      const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+      if (!exsitingJobMilestone) {
+        throw new AppError(
+          'Job milestone not found',
+          404,
+          'JOB_MILESTONE_NOT_FOUND'
+        );
+      }
+
+      const escrowAddress = exsitingJobMilestone.escrow;
+      if (!escrowAddress) {
+        throw new AppError(
+          'Escrow not found',
+          404,
+          'ESCROW_NOT_FOUND'
+        );
+      }
+
+      const escrowInfo = await escrowService.getEscrowInfo(escrowAddress);
+      if (!escrowInfo) {
+        throw new AppError(
+          'Escrow info not found',
+          404,
+          'ESCROW_INFO_NOT_FOUND'
+        );
+      }
+
+      if(ESCROW_STATES[escrowInfo.state as keyof typeof ESCROW_STATES] !== 'Funded') {
+        if(ESCROW_STATES[escrowInfo.state as keyof typeof ESCROW_STATES] === "Delivered") {
+          throw new AppError(
+            'Escrow is already delivered',
+            400,
+            'ESCROW_ALREADY_DELIVERED'
+          );
+        } else {
+          throw new AppError(
+            'Escrow must be funded to deliver work',
+            400,
+            'ESCROW_MUST_BE_FUNDED_TO_DELIVER_WORK'
+          );
+        }
+      }
       
       const file = req.file as Express.Multer.File | undefined;
       
