@@ -70,6 +70,19 @@ export class ChainTxsController {
             next(error);
         }
     }
+
+    async getChainTxs(_req: Request, res: Response, next: NextFunction) {
+        try {
+            const result = await chainTxsService.getChainTxs();
+            res.json({
+                success: true,
+                data: result,
+                message: 'Chain txs found successfully',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export const chainTxsController = new ChainTxsController();
