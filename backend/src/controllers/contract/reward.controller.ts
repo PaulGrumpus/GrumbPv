@@ -24,7 +24,7 @@ export class RewardController {
   /**
    * Get current allowance
    */
-  async getAllowance(req: Request, res: Response, next: NextFunction) {
+  async getAllowance(_req: Request, res: Response, next: NextFunction) {
     try {
       const allowance = await rewardService.getCurrentAllowance();
 
@@ -40,7 +40,7 @@ export class RewardController {
   /**
    * Get source balance
    */
-  async getSourceBalance(req: Request, res: Response, next: NextFunction) {
+  async getSourceBalance(_req: Request, res: Response, next: NextFunction) {
     try {
       const balance = await rewardService.getSourceBalance();
 
@@ -93,7 +93,7 @@ export class RewardController {
   /**
    * Get distributor info
    */
-  async getInfo(req: Request, res: Response, next: NextFunction) {
+  async getInfo(_req: Request, res: Response, next: NextFunction) {
     try {
       const info = await rewardService.getDistributorInfo();
 
