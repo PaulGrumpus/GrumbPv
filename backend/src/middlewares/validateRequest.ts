@@ -3,7 +3,7 @@ import { validationResult, ValidationChain } from 'express-validator';
 import { AppError } from './errorHandler.js';
 
 export const validate = (validations: ValidationChain[]) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
     // Run all validations
     await Promise.all(validations.map((validation) => validation.run(req)));
 
@@ -11,11 +11,6 @@ export const validate = (validations: ValidationChain[]) => {
     if (errors.isEmpty()) {
       return next();
     }
-
-    const extractedErrors = errors.array().map((err) => ({
-      field: err.type === 'field' ? err.path : undefined,
-      message: err.msg,
-    }));
 
     throw new AppError(
       'Validation failed',
