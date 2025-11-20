@@ -13,9 +13,9 @@ export default function Button({
     <button
       onClick={onClick}
       className={`
-        px-4 py-2 rounded-lg font-medium transition-colors
+        rounded-lg font-regular transition-colors text-normal text-white items-center justify-center px-4 py-2
         ${variant === 'primary' 
-          ? 'bg-blue-600 text-white hover:bg-blue-700' 
+          ? 'button-primary' 
           : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
         }
       `}

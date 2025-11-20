@@ -12,6 +12,15 @@
   --font-mono: var(--font-geist-mono);
   --font-roboto: var(--font-roboto);
   --font-poppins: var(--font-poppins);
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 600;
+  --font-weight-bold: 700;
+
+  --color-light-blue: rgba(47, 61, 246, 0.6);
+  --color-blue: rgba(126, 63, 242, 1);
+
+  --color-purple: rgba(126, 63, 242, 1);
 }
 
 /* Custom font size CSS variables */
@@ -20,6 +29,8 @@
   --font-size-title: 2rem; /* 32px */
   --font-size-subtitle: 1.5rem; /* 24px */
   --font-size-large: 1.25rem; /* 20px */
+  --font-size-logo: 1.225rem;  /*19.6 px*/
+  --font-size-normal: 1rem;  /*16 px*/
   --font-size-small: 0.875rem; /* 14px */
   --font-size-tiny: 0.75rem; /* 12px */
 }
@@ -27,26 +38,104 @@
 /* Custom font size utility classes */
 .text-display {
   font-size: var(--font-size-display);
+  line-height: 3.6rem;
 }
 
 .text-title {
   font-size: var(--font-size-title);
+  line-height: 1.25rem;
 }
 
 .text-subtitle {
   font-size: var(--font-size-subtitle);
+  line-height: 1.8rem;
 }
 
 .text-large {
   font-size: var(--font-size-large);
 }
 
+.text-logo {
+  font-size: var(--font-size-logo);
+  line-height: 1.225rem;
+}
+
+.text-normal {
+  font-size: var(--font-size-normal);
+  line-height: 1.5rem;
+}
+
 .text-small {
   font-size: var(--font-size-small);
+  line-height: 1.3125rem;
 }
 
 .text-tiny {
   font-size: var(--font-size-tiny);
+}
+
+.font-regular {
+  font-weight: var(--font-weight-regular);
+}
+
+.font-medium {
+  font-weight: var(--font-weight-medium);
+}
+
+.font-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+.from-bg-light-bule-to-bg-purple {
+  position: relative; /* Create a stacking context */
+  z-index: 0;
+}
+
+.from-bg-light-bule-to-bg-purple::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    var(--color-light-blue),
+    var(--color-purple)
+  );
+  opacity: 0.4; /* Only affects background */
+  z-index: -1; /* Keeps gradient behind content */
+}
+
+.button-primary {
+  background: linear-gradient(
+    to right,
+    var(--color-light-blue),
+    var(--color-purple)
+  );
+  box-shadow:
+    0px 4px 16px -6px #C49D9F,
+    0px 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.linear-border {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 8px;
+  background: linear-gradient(
+    to right,
+    var(--color-light-blue),
+    var(--color-purple)
+  );
+}
+
+.linear-border__inner {
+  width: 100%;
+  border-radius: 6px;
+  border: none;
+}
+
+.container {
+  @media (width >= 90rem /* 1440px */) {
+    max-width: 90rem /* 1440px */;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
