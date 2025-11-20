@@ -10,6 +10,43 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-roboto: var(--font-roboto);
+  --font-poppins: var(--font-poppins);
+}
+
+/* Custom font size CSS variables */
+:root {
+  --font-size-display: 3rem; /* 48px */
+  --font-size-title: 2rem; /* 32px */
+  --font-size-subtitle: 1.5rem; /* 24px */
+  --font-size-large: 1.25rem; /* 20px */
+  --font-size-small: 0.875rem; /* 14px */
+  --font-size-tiny: 0.75rem; /* 12px */
+}
+
+/* Custom font size utility classes */
+.text-display {
+  font-size: var(--font-size-display);
+}
+
+.text-title {
+  font-size: var(--font-size-title);
+}
+
+.text-subtitle {
+  font-size: var(--font-size-subtitle);
+}
+
+.text-large {
+  font-size: var(--font-size-large);
+}
+
+.text-small {
+  font-size: var(--font-size-small);
+}
+
+.text-tiny {
+  font-size: var(--font-size-tiny);
 }
 
 @media (prefers-color-scheme: dark) {
