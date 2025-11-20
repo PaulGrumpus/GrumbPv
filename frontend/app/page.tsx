@@ -1,10 +1,11 @@
-import Image from "next/image";
 import Footer from "@/components/footer";
 
-export default function Home() {
+const Home = () => {
   return (
     <div className="bg-white">
       <Footer />
     </div>
   );
-}
+};
+
+export default Home;

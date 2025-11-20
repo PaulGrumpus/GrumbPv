@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Button from "./Button";
+import Input from "./Input";
 
-export default function Footer() {
+const Footer = () => {
 
     const footerLinks = [
         {
@@ -142,8 +143,8 @@ export default function Footer() {
                                     <p className="text-base font-roboto font-medium pb-4">{column.title}</p>
                                     <ul className="list-none w-full">
                                         {column.items.map((item) => (
-                                            <li key={item.title}>
-                                                <a href={item.href} className="text-small font-roboto font-regular py-2">{item.title}</a>
+                                            <li key={item.title} className="h-9.25 flex items-center">
+                                                <a href={item.href} className="text-small font-roboto font-regular">{item.title}</a>
                                             </li>
                                         ))}
                                     </ul>
@@ -155,14 +156,13 @@ export default function Footer() {
                         <p className="text-normal font-roboto font-medium pb-4">Subscribe</p>
                         <p className="text-normal font-roboto font-regular pb-6">Join our newsletter to stay up to date on features and releases.</p>
                         <div className="flex gap-4">
-                            <div className="linear-border w-91.25">
-                                <input
-                                    type="email"
-                                    placeholder="Enter your email"
-                                    className="linear-border__inner text-normal font-roboto font-regular px-4 py-2 bg-white w-full"
-                                />
-                            </div>
+                            <Input
+                                type="email"
+                                placeholder="Enter your email"
+                                wrapperClassName="w-91.25"
+                            />
                             <Button
+                                variant="secondary"
                                 onClick={() => {}}
                             >
                                 Subscribe
@@ -192,4 +192,6 @@ export default function Footer() {
             </div>
         </footer>
     );
-}
+};
+
+export default Footer;
