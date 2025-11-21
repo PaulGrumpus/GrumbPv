@@ -84,6 +84,6 @@ const JobsPage = () => {
             </div>
         </div>
     )
-}
+} 
 
 export default JobsPage
