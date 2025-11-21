@@ -127,17 +127,17 @@ const Footer = () => {
         }
     ]
     return (
-        <footer className="from-bg-light-bule-to-bg-purple text-black py-20 px-16">
+        <footer className="from-bg-light-bule-to-bg-purple text-black py-20 px-16 bg-white">
             <div className="container mx-auto">
                 <div className="flex items-center justify-between pb-20">
-                    <div className="flex">
-                        <div className="flex pr-10 max-h-10.25 items-center">
+                    <div className="flex gap-10">
+                        <div className="flex max-h-10.25 items-center">
                             <div className="w-8.95 h-8.95 pr-1">
                                 <Image src="/Grmps/logo2.svg" alt="Logo" width={35} height={35} />
                             </div>
                             <p className="text-logo font-poppins font-bold pr-1.75">Grumpus</p>
                         </div>
-                        <div className="flex">
+                        <div className="flex gap-10">
                             {footerLinks.map((column, index) => (
                                 <div key={index} className="w-35.25">
                                     <p className="text-base font-roboto font-medium pb-4">{column.title}</p>
@@ -162,7 +162,6 @@ const Footer = () => {
                                 wrapperClassName="w-91.25"
                             />
                             <Button
-                                variant="secondary"
                                 onClick={() => {}}
                             >
                                 Subscribe
