@@ -40,7 +40,7 @@ const Button = ({
   if (variant === 'secondary') {
     return (
       <div
-        className={`linear-border inline-flex transition-transform duration-150 ${
+        className={`linear-border transition-transform duration-150 ${
           isPressed ? 'scale-95' : ''
         }`}
       >

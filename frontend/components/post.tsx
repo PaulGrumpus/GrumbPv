@@ -48,7 +48,7 @@ const Post = ({ description, title, location, tags, price, currency, deadline }:
                             variant="secondary"
                             padding='px-5 py-3'
                         >
-                            <p className="text-normal font-regular text-black">Apply Now</p>
+                            <p className="text-normal font-regular">Apply Now</p>
                         </Button>
                     </div>
                     <div
@@ -64,7 +64,7 @@ const Post = ({ description, title, location, tags, price, currency, deadline }:
                     {canToggle && (
                         <button
                             type="button"
-                            className="mt-3 text-small font-regular text-gray-500"
+                            className="mt-3 text-small font-regular text-gray-500 cursor-pointer"
                             onClick={() => setExpanded((prev) => !prev)}
                         >
                             {expanded ? "show less" : "show more"}

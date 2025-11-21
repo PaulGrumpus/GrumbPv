@@ -18,7 +18,7 @@
   --font-weight-bold: 700;
 
   --color-light-blue: rgba(47, 61, 246, 0.6);
-  --color-blue: rgba(126, 63, 242, 1);
+  --color-blue: rgba(47, 61, 246, 1);
 
   --color-purple: rgba(126, 63, 242, 1);
 }
@@ -125,8 +125,8 @@
 .button-primary:hover {
   background: linear-gradient(
     to right,
-    rgba(47, 61, 246, 0.95),
-    rgba(150, 70, 255, 1)
+    var(--color-light-blue),
+    var(--color-purple)
   );
   box-shadow:
     0px 8px 26px -6px rgba(47, 61, 246, 0.45),
@@ -137,8 +137,8 @@
 .button-primary:active {
   background: linear-gradient(
     to right,
-    rgba(30, 42, 210, 1),
-    rgba(90, 30, 190, 1)
+    var(--color-light-blue),
+    var(--color-purple)
   );
   box-shadow:
     0px 3px 14px -6px rgba(0, 0, 0, 0.4),
@@ -165,7 +165,7 @@
 .linear-border--dark-hover:focus-within {
   background: linear-gradient(
     to right,
-    rgba(47, 61, 246, 1),
+    var(--color-blue),
     rgba(50, 15, 120, 1)
   );
 }

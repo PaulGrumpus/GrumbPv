@@ -1,5 +1,4 @@
 import Post from "@/components/post";
-import Footer from "@/components/footer";
 
 const jobs = [
     {
@@ -62,11 +61,11 @@ const jobs = [
 const JobsPage = () => {
     return (
         <div>
-            <div className="px-16 bg-white">
+            <div className="px-16 bg-white pt-46">
                 <div className="container mx-auto">
-                    <p className="text-display font-bold text-black pb-6 pt-28">Jobs</p>
+                    <p className="text-display font-bold text-black pb-6">Jobs</p>
                     <p className="text-normal font-regular text-black pb-20">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.</p>
-                    <div className="grid grid-cols-2 gap-4 pb-28">  
+                    <div className="grid grid-cols-2 gap-8 pb-28">  
                         {jobs.map((job) => (
                             <Post 
                                 key={job.id} 
