@@ -20,6 +20,11 @@ const menuItems = [
     },
     {
         icon: "/Grmps/setting.svg",
+        label: "Dashboard",
+        href: "/dashboard"
+    },
+    {
+        icon: "/Grmps/setting.svg",
         label: "Settings",
         href: "/settings"
     },
