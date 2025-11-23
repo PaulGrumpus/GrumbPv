@@ -1,64 +1,72 @@
+"use client";
+
+import ApplyJob from "@/components/applyJob";
+import Button from "@/components/Button";
 import JobPost from "@/components/jobPost";
+import ModalTemplate from "@/components/modalTemplate";
+import { useState } from "react";
 
 const jobs = [
     {
         id: 1,
-        title: "Job Title",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        location: "Job Location",
-        tags: ["Tag 1", "Tag 2", "Tag 3"],
-        price: 100,
+        title: "Escrow Smart Contract Deployment",
+        description: "Deploy an escrow smart contract for a job. The escrow smart contract will be used to hold the funds for the job. I need a smart contract that is secure and can be used to hold the funds for the job.",
+        location: "Remote",
+        tags: ["Smart Contract", "Deployment", "Escrow"],
+        price: 1000,
         currency: "USD",
-        deadline: 1716796800,
-        createdAt: 1716796800,
+        deadline: 1737936000,
+        createdAt: 1737936000,
     },
     {
         id: 2,
-        title: "Job Title",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        location: "Job Location",
-        tags: ["Tag 1", "Tag 2", "Tag 3"],
-        price: 100,
+        title: "Design a new logo for my company",
+        description: "I need a new logo for my company. The logo should be modern and stylish. I need a logo that is easy to remember and that I can use on my website and marketing materials.",
+        location: "Remote",
+        tags: ["Design", "Logo", "Branding"],
+        price: 1000,
         currency: "USD",
-        deadline: 1716796800,
-        createdAt: 1716796800,
+        deadline: 1737936000,
+        createdAt: 1737936000,
     },
     {
         id: 3,
-        title: "Job Title",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        location: "Job Location",
-        tags: ["Tag 1", "Tag 2", "Tag 3"],
-        price: 100,
+        title: "Develop a new website for my company",
+        description: "I need a new website for my company. The website should be modern and stylish. I need a website that is easy to use and that I can use on my website and marketing materials.",
+        location: "Remote",
+        tags: ["Development", "Website", "Frontend"],
+        price: 1000,
         currency: "USD",
-        deadline: 1716796800,
-        createdAt: 1716796800,
+        deadline: 1737936000,
+        createdAt: 1737936000,
     },
     {
         id: 4,
-        title: "Job Title",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        location: "Job Location",
-        tags: ["Tag 1", "Tag 2", "Tag 3"],
-        price: 100,
+        title: "Develop a new mobile app for my company",
+        description: "I need a new mobile app for my company. The mobile app should be modern and stylish. I need a mobile app that is easy to use and that I can use on my website and marketing materials.",
+        location: "Remote",
+        tags: ["Development", "Mobile App", "Backend"],
+        price: 1000,
         currency: "USD",
-        deadline: 1716796800,
-        createdAt: 1716796800,
+        deadline: 1737936000,
+        createdAt: 1737936000,
     },
     {
         id: 5,
-        title: "Job Title",
+        title: "Develop a new backend for my company",
         description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        location: "Job Location",
-        tags: ["Tag 1", "Tag 2", "Tag 3"],
-        price: 100,
+        location: "Remote",
+        tags: ["Development", "Backend", "Database"],
+        price: 1000,
         currency: "USD",
-        deadline: 1716796800,
-        createdAt: 1716796800,
+        deadline: 1737936000,
+        createdAt: 1737936000,
     },
 ]
 
 const JobsPage = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
     return (
         <div>
             <div className="px-16 bg-white pt-46">
@@ -73,15 +81,40 @@ const JobsPage = () => {
                                 title={job.title} 
                                 location={job.location} 
                                 tags={job.tags} 
-                                price={100} 
+                                price={job.price} 
                                 currency={job.currency} 
                                 deadline={job.deadline} 
-                                createdAt={job.createdAt} 
+                                createdAt={job.createdAt}
+                                clickHandler={() => {
+                                    setIsOpen(true);
+                                    setSelectedJobId(job.id);
+                                }}
                             />
                         ))}
                     </div>
                 </div>
             </div>
+            {selectedJobId && (
+                <ModalTemplate
+                    isOpen={isOpen}
+                    onClose={() => setIsOpen(false)}
+                    title={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.title ?? "" : ""}
+                    subtitle={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.description ?? "" : ""}
+                    actionLabel=""
+                    onAction={() => {}}
+                    className="p-10.5"
+                    customButton={true}                
+                >
+                    <div className="mt-6">
+                        <ApplyJob
+                            jobId="1"
+                            clickHandler={() => {
+                                setIsOpen(false)
+                            }}
+                        />
+                    </div>
+                </ModalTemplate>
+            )}
         </div>
     )
 } 
