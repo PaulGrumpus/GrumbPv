@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import Button from "./Button";
+import Image from "next/image";
 
-interface PostProps {
+interface BidPostProps {
     description: string;
     title: string;
     location: string; 
@@ -12,12 +12,12 @@ interface PostProps {
     price: number;
     currency: string;
     deadline: number;
-    createdAt: number;    
+    status: "pending" | "accepted" | "declined"; 
 }
 
 const COLLAPSED_MAX_HEIGHT = 168;
 
-const Post = ({ description, title, location, tags, price, currency, deadline }: PostProps) => {
+const BidPost = ({ description, title, location, tags, price, currency, deadline, status }: BidPostProps) => {
     const [expanded, setExpanded] = useState(false);
     const [canToggle, setCanToggle] = useState(false);
     const descriptionRef = useRef<HTMLParagraphElement>(null);
@@ -37,19 +37,38 @@ const Post = ({ description, title, location, tags, price, currency, deadline }:
                 <div className="text-black">
                     <div className="flex justify-between pb-6">
                         <div className="flex flex-col">
-                            <h1 className="text-subtitle font-bold text-black">{title}</h1>
-                            <div className="flex gap-2">
+                            <div className="flex items-center gap-1">
+                                <h1 className="text-subtitle font-bold text-black">{title}</h1>
+                                <div>
+                                    <Image 
+                                        src="/Grmps/yellowStar.svg" 
+                                        alt="favorite icon" 
+                                        width={24} 
+                                        height={24} 
+                                    />
+                                </div>                
+                            </div>
+                            <div className="flex flex-col gap-2">
                                 <p className="text-light-large font-regular text-black">{location}</p>
                                 <p className="text-light-large font-regular text-black">{price}{currency}</p>
                                 <p className="text-light-large font-regular text-black">Due Date: {new Date(deadline * 1000).toLocaleDateString()}</p>
                             </div>
                         </div>
-                        <Button 
-                            variant="secondary"
-                            padding='px-5 py-3'
-                        >
-                            <p className="text-normal font-regular">Apply Now</p>
-                        </Button>
+                        {status === "pending" && (
+                            <div className="bg-[#8F99AF1A] border border-[#8F99AF] rounded-lg px-6.75 py-1.75 h-fit">
+                                <p className="text-normal font-regular italic text-[#8F99AF]">Pending...</p>
+                            </div>
+                        )}
+                        {status === "accepted" && (
+                            <div className="bg-[#34C7591A] border border-[#34C759] rounded-lg px-6.75 py-1.75 h-fit">
+                                <p className="text-normal font-regular italic text-[#34C759]">Accepted</p>
+                            </div>
+                        )}
+                        {status === "declined" && (
+                            <div className="bg-[#FF383C33] border border-[#FF383C] rounded-lg px-6.75 py-1.75 h-fit">
+                                <p className="text-normal font-regular italic text-[#FF383C]">Declined</p>
+                            </div>
+                        )}
                     </div>
                     <div
                         className={`overflow-hidden transition-[max-height] duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}
@@ -90,4 +109,4 @@ const Post = ({ description, title, location, tags, price, currency, deadline }:
     );
 };
 
-export default Post;
+export default BidPost;

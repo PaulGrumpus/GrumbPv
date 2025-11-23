@@ -1,4 +1,4 @@
-import Post from "@/components/post";
+import JobPost from "@/components/jobPost";
 
 const jobs = [
     {
@@ -67,7 +67,7 @@ const JobsPage = () => {
                     <p className="text-normal font-regular text-black pb-20">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.</p>
                     <div className="grid grid-cols-2 gap-8 pb-28">  
                         {jobs.map((job) => (
-                            <Post 
+                            <JobPost 
                                 key={job.id} 
                                 description={job.description} 
                                 title={job.title} 
