@@ -30,6 +30,8 @@ const menuItems = [
     },
 ]
 
+const userRole = "freelancer";
+
 const Navbar = () => {
     const router = useRouter();
     const [loggedIn] = useState(true);
@@ -78,11 +80,19 @@ const Navbar = () => {
                         </div>
                         <p className="text-logo font-poppins font-bold text-black">Grumpus</p>
                     </div>
-                    <div className="flex gap-8 text-normal font-regular text-black">    
-                        <Link className="hover:text-purple" href="/jobs">Featured Jobs</Link>
-                        <Link className="hover:text-purple" href="/gigs">Gigs</Link>
-                        <Link className="hover:text-purple" href="/post-job">Post Job</Link>
-                    </div>
+                    {userRole === "freelancer" ? (  
+                        <div className="flex gap-8 text-normal font-regular text-black">    
+                            <Link className="hover:text-purple" href="/jobs">Featured Jobs</Link>
+                            <Link className="hover:text-purple" href="/gigs">Gigs</Link>
+                            <Link className="hover:text-purple" href="/dashboard?view=create-gig">Post Gig</Link>
+                        </div>
+                    ) : (
+                        <div className="flex gap-8 text-normal font-regular text-black">    
+                            <Link className="hover:text-purple" href="/jobs">Featured Jobs</Link>
+                            <Link className="hover:text-purple" href="/gigs">Gigs</Link>
+                            <Link className="hover:text-purple" href="/dashboard?view=create-post">Post Job</Link>
+                        </div>
+                    )}
                     {loggedIn ? ( 
                     <div 
                         className="flex items-center gap-4"
