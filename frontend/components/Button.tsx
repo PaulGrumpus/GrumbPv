@@ -6,7 +6,7 @@ import type { KeyboardEvent } from 'react';
 interface ButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'disable';
   padding?: string;
 }
 
@@ -47,7 +47,25 @@ const Button = ({
         <button
           onClick={onClick}
           {...pressHandlers}
-          className={`linear-border__inner rounded-lg font-regular transition-colors text-normal items-center justify-center bg-white text-black hover:text-white hover:bg-linear-to-r hover:from-(--color-light-blue) hover:to-(--color-purple) ${padding}`}
+          className={`linear-border__inner rounded-lg font-regular transition-colors text-normal items-center justify-center bg-white text-[#7E3FF2] hover:text-white hover:bg-linear-to-r hover:from-(--color-light-blue) hover:to-(--color-purple) ${padding}`}
+        >
+          {children}
+        </button>
+      </div>
+    );
+  }
+
+  if (variant === 'disable') {
+    return (
+      <div
+        className={`transition-transform duration-150 ${
+          isPressed ? 'scale-95' : ''
+        }`}
+      >
+        <button
+          onClick={onClick}
+          {...pressHandlers}
+          className={`rounded-lg font-regular text-normal items-center justify-center bg-white text-gray-500 border border-gray-500 cursor-not-allowed ${padding}`}
         >
           {children}
         </button>

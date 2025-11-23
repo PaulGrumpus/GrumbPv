@@ -1,11 +1,13 @@
-import React from 'react'
+import type { ReactNode } from 'react';
 
-const dashboardLayout = ({ children }: { children: React.ReactNode }) => {
+const DashboardLayout = ({ children }: { children: ReactNode }) => {
     return (
-        <div>
-            {children}
+        <div className="pt-34 pb-8.75 px-16 bg-white">
+            <div className="container mx-auto">
+                {children}
+            </div>
         </div>
     )
 }
 
-export default dashboardLayout
+export default DashboardLayout

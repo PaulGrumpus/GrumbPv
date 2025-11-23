@@ -355,8 +355,8 @@ const ProfilePage = () => {
                                 </button>
                             </div>
                         </div>
-                        <div className='flex flex-col gap-1'>
-                            <p className='text-normal font-regular text-black text-left pb-2'>Language</p>
+                        <div className='flex flex-col gap-2'>
+                            <p className='text-normal font-regular text-black text-left'>Language</p>
                             <div ref={dropdownRef} className={`relative max-w-140 ${dropdownMenuOpen ? 'border-blue-500' : ''}`}>
                                 <select
                                     value={selectedLanguage}
