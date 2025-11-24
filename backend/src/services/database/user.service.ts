@@ -123,7 +123,7 @@ export class UserService {
         }
     }
     
-    public async getUserByAddress(address: string): Promise<users> {
+    public async getUserByAddress(address: string): Promise<string> {
         try {
             if(!address) {
                 throw new AppError('Address is required', 400, 'ADDRESS_REQUIRED');
@@ -134,7 +134,8 @@ export class UserService {
             if (!user) {
                 throw new AppError('User not found', 404, 'USER_NOT_FOUND');
             }
-            return user;
+            const token = generateToken(user);
+            return token;
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;

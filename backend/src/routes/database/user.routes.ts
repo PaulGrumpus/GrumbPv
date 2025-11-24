@@ -75,7 +75,7 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-    '/with-address',
+    '/with-email',
     [body('email').isEmail().notEmpty(), body('role').isString().notEmpty()],
     validate([body('email'), body('role')]),
     userController.createUserWithEmail.bind(userController)

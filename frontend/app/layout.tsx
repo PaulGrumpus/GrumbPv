@@ -6,6 +6,9 @@ import Navbar from "@/components/navbar";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { UserInfoProvider } from "@/context/userContext";
+import { LoadingProvider } from "@/context/loadingContext";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -49,10 +52,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${roboto.variable} ${poppins.variable} ${inter.variable} antialiased bg-white`}
       >
-        <Navbar />
-        {children}
-        <Footer />
-        <ToastContainer />
+        <LoadingProvider>
+          <UserInfoProvider>
+            <Navbar />
+            {children}
+            <Footer />
+            <ToastContainer />
+          </UserInfoProvider>
+        </LoadingProvider>
       </body>
     </html>
   );

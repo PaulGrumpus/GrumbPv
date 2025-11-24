@@ -4,10 +4,11 @@ import Button from "./button";
 import ModalTemplate from "./modalTemplate";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { CONFIG } from "@/config/config";
 import { toast } from "react-toastify";
-import { createUserWithAddress } from "@/utils/functions";
+import { createUserWithAddress, getUserbyAddress } from "@/utils/functions";
+import { UserInfoCtx } from "@/context/userContext";
 
 interface LoginSignupModalProps {
     isOpen: boolean;
@@ -148,7 +149,8 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     const [walletFeedback, setWalletFeedback] = useState<WalletFeedback | null>(null);
     const [isWalletConnecting, setIsWalletConnecting] = useState(false);
     const [isMetaMaskAvailable, setIsMetaMaskAvailable] = useState(true);
-
+    const { setUserInfo } = useContext(UserInfoCtx);
+    
     useEffect(() => {
         if (typeof window === "undefined") {
             return;
@@ -312,7 +314,8 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
             console.log("currentChainId", currentChainId);
             console.log("NETWORK_PARAMS.chainId", NETWORK_PARAMS.chainId);
             if (!isSameChain(currentChainId, NETWORK_PARAMS.chainId)) {
-                throw new Error("Chain not supported. Please switch to the supported chain.");
+                switchOrAddTargetChain(provider);
+                // throw new Error("Chain not supported. Please switch to the supported chain.");
             }
 
             const accounts = (await provider.request({
@@ -367,9 +370,43 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     const handleLoginWithMetamask = async () => {
         console.log("handleLoginWithMetamask");
         const connection = await connectMetaMaskWallet("login");
-        if (connection) {
-            setIsOpen(false);
+        if(!connection) {
+            return null
         }
+        const response = await getUserbyAddress(connection?.address || '');
+        if(!response.success) {
+            toast.error(response.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.success("Logged in successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+
+            setUserInfo({
+                id: response.data?.id || '',
+                address: response.data?.address || '',
+                chain: response.data?.chain || '',
+                email: response.data?.email || '',
+                role: response.data?.role || '',
+                display_name: response.data?.display_name || '',
+                bio: response.data?.bio || '',
+                country_code: response.data?.country_code || '',
+                is_verified: response.data?.is_verified || false,
+                image_id: response.data?.image_id || '',
+                created_at: response.data?.created_at || '',
+                updated_at: response.data?.updated_at || '',
+            });
+        }
+        setIsOpen(false);
     };
 
     const handleRegisterWithMetamask = async () => {
@@ -428,9 +465,8 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     }
 
     const handleCreateAccount = async () => {
-        console.log("create account");
-        // async () => {}
         const response = await createUserWithAddress(walletAddress || '', registeredUserRole);
+
         if(!response.success) {
             toast.error(response.error, {
                 position: "top-right",
@@ -439,6 +475,9 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                 closeOnClick: true,
                 pauseOnHover: true,
             });
+
+            setRegisterProcessing(false);
+            setIsOpen(false);
         } else {
             toast.success("Account created successfully", {
                 position: "top-right",
@@ -447,10 +486,22 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                 closeOnClick: true,
                 pauseOnHover: true,
             });
-        }
 
-        setRegisterProcessing(false);
-        setIsOpen(false);
+            setUserInfo({
+                id: response.data?.id || '',
+                address: response.data?.address || '',
+                chain: response.data?.chain || '',
+                email: response.data?.email || '',
+                role: response.data?.role || '',
+                display_name: response.data?.display_name || '',
+                bio: response.data?.bio || '',
+                country_code: response.data?.country_code || '',
+                is_verified: response.data?.is_verified || false,
+                image_id: response.data?.image_id || '',
+                created_at: response.data?.created_at || '',
+                updated_at: response.data?.updated_at || '',
+            });
+        }
     }
 
     const metaMaskButtonLabel = isWalletConnecting

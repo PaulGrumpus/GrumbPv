@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState, forwardRef } from "react";
+import { useEffect, useRef, useState, forwardRef, useContext } from "react";
 
 import { useRouter } from "next/navigation";
 import Button from "./button";
@@ -8,6 +8,9 @@ import Link from "next/link";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
 import { CONFIG } from "@/config/config";
 import LoginSignupModal from "./loginSignupModal";
+import { UserInfoCtx } from "@/context/userContext";
+import { toast } from "react-toastify";
+
 
 const username = "John Doe";
 const userPhoto = "/Grmps/grmps.jpg";
@@ -32,17 +35,27 @@ const menuItems = [
     },
 ]
 
-const userRole = CONFIG.userRole;
-
 const Navbar = () => {
     const router = useRouter();
-    const [loggedIn] = useState(false);
+    const { userInfo } = useContext(UserInfoCtx);
+    const [userRole, setUserRole] = useState("client");
+    const [loggedIn, setLoggedIn] = useState(false);
     const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
     const [notifications] = useState(0);
     const [messages] = useState(2);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const menuToggleRef = useRef<HTMLDivElement>(null);
     const [loginSignupModalOpen, setLoginSignupModalOpen] = useState(false);
+
+    useEffect(() => {
+        if(userInfo.id) {
+            setUserRole(userInfo.role);
+            setLoggedIn(true);
+        } else {
+            setUserRole('client');
+            setLoggedIn(false);
+        }
+    }, [userInfo]);
 
     const handleDropdownMenuOpen = () => {
         setDropdownMenuOpen(!dropdownMenuOpen);
@@ -163,13 +176,40 @@ const Navbar = () => {
             <LoginSignupModal
                 isOpen={loginSignupModalOpen} 
                 setIsOpen={setLoginSignupModalOpen} 
-                signedUp={true}
+                signedUp={userInfo.id ? true : false}
             />
         </div>
     )
 }
 
 const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
+    const { setUserInfo } = useContext(UserInfoCtx);
+    const router = useRouter();
+    const handleLogOut = () => {
+        window.localStorage.removeItem('token');
+        toast.success("Logged out successfully", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        });
+        setUserInfo({
+            id: '',
+            address: '',
+            chain: '',
+            email: '',
+            role: '',
+            display_name: '',
+            bio: '',
+            country_code: '',
+            is_verified: false,
+            image_id: '',
+            created_at: '',
+            updated_at: ''
+        });
+        router.push('/');
+    }
     return (
         <div
             ref={ref}
@@ -195,6 +235,20 @@ const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
                         </Link>
                     </li>
                 ))}
+                <li className="text-black hover:text-purple hover:bg-[#2F3DF633] w-full" key="logout">
+                    <div className="flex items-center gap-3 p-2 cursor-pointer" onClick={handleLogOut}>
+                        <div className="w-6 h-6">
+                            <Image 
+                                src="/Grmps/logout.svg" 
+                                alt="Logout" 
+                                width={24} 
+                                height={24} 
+                                className="h-full w-full object-cover"
+                            />
+                        </div>
+                        <p className="text-normal font-regular">Logout</p>
+                    </div>
+                </li>
             </ul>
         </div>
     );

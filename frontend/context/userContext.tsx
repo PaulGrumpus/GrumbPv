@@ -8,9 +8,9 @@ import {
     useState
 } from "react";
 import { UserContextType, User } from "@/types/user";
-import { getUserInfo } from "@/src/utils/functions";
-import { decodeToken } from "@/src/utils/help";
 import { LoadingCtx } from "./loadingContext";
+import { decodeToken } from "@/utils/jwt";
+import { toast } from "react-toastify";
 
 const defaultProvider: UserContextType = {
     userInfo: {
@@ -48,17 +48,25 @@ const UserInfoProvider = ({ children }: Props) => {
         const token = localStorage.getItem('token');
         if(token) {
             const decodedToken = decodeToken(token);
-            
-            const userInfo = await getUserInfo({ emailAddr: decodedToken?.email || '' });
-            if(userInfo.error) {
-                setUserInfoError(userInfo.error);
-                setAuthState("failure");
-            } else {
-                setUserInfoData(userInfo.data.data);
-                setAuthState("success");
-            }
+            setUserInfo(decodedToken as User);
+            setLoadingState("success");
+            toast.success("User is logged in", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
         } else {
-            setAuthState("failure");
+            setLoadingState("failure");
+            setUserInfoError("No token found");
+            toast.error("User is not logged in", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
         }
     }
     const isInvitePage = typeof window !== 'undefined' && 
@@ -82,7 +90,7 @@ const UserInfoProvider = ({ children }: Props) => {
     // Check if we're on the invite page
 
     return (
-        <UserInfoCtx.Provider value={{ userInfoData, setUserInfoData, userInfoError, setUserInfoError }}>
+        <UserInfoCtx.Provider value={{ userInfo, setUserInfo, userInfoError, setUserInfoError }}>
             {children}
         </UserInfoCtx.Provider>
     )
