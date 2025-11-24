@@ -1,6 +1,6 @@
 'use client'
 
-import Button from "./Button";
+import Button from "./button";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import { CONFIG } from "@/config/config";
@@ -227,8 +227,8 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
 
     return (
         <div>
-            <div className="linear-border linear-border--dark-hover">
-                <div className="linear-border__inner p-8 bg-white">
+            <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
+                <div className="linear-border__inner rounded-[0.4375rem] p-8 bg-white">
                     {
                         variant === "open" && (
                             <div className="text-black flex flex-wrap justify-between gap-6">

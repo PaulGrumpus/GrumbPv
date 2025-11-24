@@ -1,7 +1,7 @@
 "use client";
 
 import ApplyJob from "@/components/applyJob";
-import Button from "@/components/Button";
+import Button from "@/components/button";
 import PubJobOrGigPost from "@/components/pubJobOrGigPost";
 import ModalTemplate from "@/components/modalTemplate";
 import { useState } from "react";

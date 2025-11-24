@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import SectionPlaceholder from "./sectionPlaceholder";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
-import Button from "../Button";
+import Button from "../button";
 import Image from "next/image";
 import { toast } from "react-toastify";
 
@@ -78,8 +78,8 @@ const CreateGigSection = () => {
                 title="Create Gig"
                 description="Set up a new gig to showcase your services to clients."
             /> 
-            <div className="linear-border linear-border--dark-hover">
-                <div className="linear-border__inner bg-white p-8">
+            <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
+                <div className="linear-border__inner rounded-[0.4375rem] bg-white p-8">
                     <div className='flex flex-col gap-6'>
                         <div>
                             <p className='text-normal font-regular text-black text-left pb-2'>Title</p>

@@ -69,8 +69,8 @@ const DashboardOverview = () => {
                 eros elementum tristique.
             </p>
             <div className="flex flex-col gap-20">
-                <div className="linear-border linear-border--dark-hover">
-                    <div className="linear-border__inner bg-white">
+                <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
+                    <div className="linear-border__inner rounded-[0.4375rem] bg-white">
                         <div className="flex flex-col py-3 px-4">
                             <div
                                 className="flex justify-between items-center py-5 w-241.5"
@@ -118,8 +118,8 @@ const DashboardOverview = () => {
                         </div>
                     </div>
                 </div>
-                <div className="linear-border linear-border--dark-hover">
-                    <div className="linear-border__inner bg-white">
+                <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
+                    <div className="linear-border__inner rounded-[0.4375rem] bg-white">
                         <div className="flex flex-col py-3 px-4">
                             <div
                                 className="flex justify-between items-center py-5 w-241.5"

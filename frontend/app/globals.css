@@ -12,7 +12,7 @@
   --font-mono: var(--font-geist-mono);
   --font-roboto: var(--font-roboto);
   --font-poppins: var(--font-poppins);
-
+  --font-inter: var(--font-inter);
   --font-weight-regular: 400;
   --font-weight-medium: 600;
   --font-weight-bold: 700;
@@ -40,44 +40,54 @@
 .text-display {
   font-size: var(--font-size-display);
   line-height: 3.6rem;
+  font-family: var(--font-roboto);
 }
 
 .text-title {
   font-size: var(--font-size-title);
   line-height: 1.25rem;
+  font-family: var(--font-roboto);
 }
 
 .text-subtitle {
   font-size: var(--font-size-subtitle);
   line-height: 2.125rem;
+  font-family: var(--font-roboto);
 }
 
 .text-large {
   font-size: var(--font-size-large);
+  line-height: 1.6875rem;
+  font-family: var(--font-roboto);
 }
 
 .text-logo {
   font-size: var(--font-size-logo);
   line-height: 1.225rem;
+  font-family: var(--font-roboto);
 }
 
 .text-light-large {
   font-size: var(--font-size-light-large);
   line-height: 1.6875rem;
+  font-family: var(--font-roboto);
 }
 
 .text-normal {
   font-size: var(--font-size-normal);
   line-height: 1.5rem;
+  font-family: var(--font-roboto);
 }
 
 .text-small {
   font-size: var(--font-size-small);
   line-height: 1.3125rem;
+  font-family: var(--font-roboto);
 }
 
 .text-tiny {
   font-size: var(--font-size-tiny);
+  font-family: var(--font-roboto);
 }
 
 .font-regular {
@@ -148,8 +158,6 @@
 .linear-border {
   display: flex;
   justify-content: center;
-  padding: 1px;
-  border-radius: 8px;
   background: linear-gradient(
     to right,
     var(--color-light-blue),
@@ -172,7 +180,6 @@
 
 .linear-border__inner {
   width: 100%;
-  border-radius: 7px;
   border: none;
   outline: none;
 }

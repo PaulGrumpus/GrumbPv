@@ -1,9 +1,6 @@
-import Footer from "@/components/footer";
-
 const Home = () => {
   return (
-    <div className="bg-white">
-      <Footer />
+    <div className="bg-white min-h-screen">
     </div>
   );
 };

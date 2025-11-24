@@ -33,8 +33,8 @@ const UserJobOrGigPost = ({ description, title, subtitle, tags, image }: userJob
     }, [description]);
 
     return (
-        <div className="linear-border linear-border--dark-hover">
-            <div className="linear-border__inner p-6 bg-white">
+        <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
+            <div className="linear-border__inner rounded-[0.4375rem] p-6 bg-white">
                 <div className="text-black">
                     <div className="flex justify-between pb-6">
                         <div className="flex flex-col">

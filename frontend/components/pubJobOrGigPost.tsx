@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import Button from "./Button";
+import Button from "./button";
 import Image from "next/image";
 
 interface pubJobOrGigPostProps {
@@ -65,8 +65,8 @@ const PubJobOrGigPost = ({ description, title, location, tags, price, currency, 
     }, [description]);
 
     return (
-        <div className="linear-border linear-border--dark-hover">
-            <div className="linear-border__inner p-6 bg-white">
+        <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
+            <div className="linear-border__inner rounded-[0.4375rem] p-6 bg-white">
                 <div className="text-black">
                     <div className="flex justify-between pb-6">
                         <div className="flex flex-col max-w-[75%]">

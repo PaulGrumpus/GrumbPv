@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
-import Button from "./Button";
+import Button from "./button";
 import Image from "next/image";
 
 interface ApplyJobProps {
@@ -299,8 +299,8 @@ const ApplyJob = ({ jobId, clickHandler }: ApplyJobProps) => {
 
     return (
         <div>
-            <div className="linear-border linear-border--dark-hover">
-                <div className="linear-border__inner bg-white p-8">
+            <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
+                <div className="linear-border__inner rounded-[0.4375rem] bg-white p-8">
                     <div className='flex flex-col gap-6'>
                         <div>
                             <p className='text-normal font-regular text-black text-left pb-2'>Title</p>

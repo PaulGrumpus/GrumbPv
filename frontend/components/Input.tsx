@@ -12,6 +12,8 @@ const Input = ({
 }: InputProps) => {
   const wrapperClasses = [
     'linear-border',
+    'p-0.25',
+    'rounded-lg',
     'linear-border--dark-hover',
     'inline-flex',
     wrapperClassName,
@@ -21,6 +23,7 @@ const Input = ({
 
   const innerClasses = [
     'linear-border__inner',
+    'rounded-[0.4375rem]',
     'text-normal',
     'font-roboto',
     'font-regular',

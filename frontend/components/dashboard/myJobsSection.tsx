@@ -1,5 +1,5 @@
 import SectionPlaceholder from "./sectionPlaceholder";
-import Button from "../Button";
+import Button from "../button";
 import UserJobOrGigPost from "../userJobOrGigPost";
 
 const Jobs = [

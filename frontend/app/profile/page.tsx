@@ -1,6 +1,6 @@
 'use client';
 
-import Button from '@/components/Button'
+import Button from '@/components/button'
 import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
