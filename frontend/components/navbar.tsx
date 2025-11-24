@@ -36,7 +36,7 @@ const userRole = CONFIG.userRole;
 
 const Navbar = () => {
     const router = useRouter();
-    const [loggedIn] = useState(false);
+    const [loggedIn] = useState(true);
     const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
     const [notifications] = useState(0);
     const [messages] = useState(2);
@@ -99,8 +99,7 @@ const Navbar = () => {
                         )}
                         {loggedIn ? ( 
                             <div 
-                                className="flex items-center gap-4"
-                                onClick={handleDropdownMenuOpen}
+                                className="relative flex items-center gap-4"
                                 ref={menuToggleRef}
                             >
                                 <div className="relative w-6 h-6">
@@ -129,7 +128,7 @@ const Navbar = () => {
                                     )}
                                 </div>
                                 <div 
-                                    className="flex items-center gap-2"
+                                    className="flex items-center gap-2 cursor-pointer select-none"
                                     onClick={handleDropdownMenuOpen}
                                 >
                                     <div className="w-9 h-9 overflow-hidden rounded-full">
@@ -148,6 +147,7 @@ const Navbar = () => {
                                         <ChevronDownIcon className="w-5 h-5 text-black" />
                                     )}
                                 </div>
+                                {dropdownMenuOpen && <DropdownMenu ref={dropdownRef} />}
                             </div>
                         ) : (
                             <Button
@@ -158,7 +158,6 @@ const Navbar = () => {
                             </Button>
                         )}
                     </div>
-                    {dropdownMenuOpen && <DropdownMenu ref={dropdownRef} />}
                 </div>
             </div>
             <LoginSignupModal
@@ -174,7 +173,8 @@ const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
     return (
         <div
             ref={ref}
-            className="absolute top-13.5 right-17 bg-white shadow-md border-2 border-[#8F99AF66] rounded-lg py-3 z-50 w-47.5"
+            className="absolute right-0 w-47.5 rounded-lg border-2 border-[#8F99AF66] bg-white py-3 shadow-md z-50"
+            style={{ top: "calc(100% + 12px)" }}
         >
             <ul className="w-full">
                 {menuItems.map((item) => (

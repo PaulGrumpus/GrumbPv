@@ -10,11 +10,15 @@ datasource db {
 model users {
   id            String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   handle        String                      @unique @db.Citext
-  email         String                      @unique @db.Citext
+  address       String                      @unique
+  chain         chain_type                  @default(evm)
+  email         String?                     @unique @db.Citext
   password      String?
   role          user_role
   display_name  String?
   bio           String?
+  image_id      String?                     @db.Uuid
+  image         files?                      @relation(fields: [image_id], references: [id])
   country_code  String?
   is_verified   Boolean                     @default(false)
   created_at    DateTime                    @default(now()) @db.Timestamptz(6)
@@ -29,24 +33,8 @@ model users {
   receipts      message_receipts[]
   sent_messages messages[]                  @relation("SenderMessages")
   notifications notifications[]
-  wallets       user_wallets[]
 
   @@map("users")
-}
-
-model user_wallets {
-  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String     @db.Uuid
-  chain      chain_type @default(evm)
-  chain_id   Int
-  address    String
-  is_primary Boolean    @default(false)
-  created_at DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at DateTime   @default(now()) @db.Timestamptz(6)
-  user       users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  @@unique([chain_id, address])
-  @@map("user_wallets")
 }
 
 model jobs {
@@ -57,6 +45,10 @@ model jobs {
   budget_min_usd Decimal?         @db.Decimal(18, 8)
   budget_max_usd Decimal?         @db.Decimal(18, 8)
   token_symbol   String?
+  location       location_type    @default(remote)
+  tags           String[]
+  image_id       String?          @db.Uuid
+  image          files?           @relation(fields: [image_id], references: [id])
   deadline_at    DateTime?        @db.Timestamptz(6)
   status         job_status       @default(open)
   is_remote      Boolean          @default(true)
@@ -69,6 +61,39 @@ model jobs {
 
   @@index([status, created_at(sort: Desc)])
   @@map("jobs")
+}
+
+model gigs {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  freelancer_id  String          @db.Uuid
+  title          String
+  description_md String
+  budget_min_usd Decimal?        @db.Decimal(18, 8)
+  budget_max_usd Decimal?        @db.Decimal(18, 8)
+  token_symbol   String?
+  tags           String[]
+  image_id       String?         @db.Uuid
+  image          files?          @relation(fields: [image_id], references: [id])
+  created_at     DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime        @default(now()) @db.Timestamptz(6)
+  conversations  conversations[]
+
+  @@index([created_at(sort: Desc)])
+  @@map("gigs")
+}
+
+model files {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  url        String
+  mime_type  String?
+  size_bytes Int?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+  jobs       jobs[]
+  users      users[]
+  gigs       gigs[]
+
+  @@map("files")
 }
 
 model job_bids {
@@ -118,6 +143,8 @@ model conversations {
   escrow       String?
   job          jobs?                       @relation(fields: [job_id], references: [id])
   messages     messages[]
+  gigs         gigs?                       @relation(fields: [gigsId], references: [id])
+  gigsId       String?                     @db.Uuid
 
   @@map("conversations")
 }
@@ -219,6 +246,12 @@ enum user_role {
   client
   freelancer
   admin
+}
+
+enum location_type {
+  remote
+  onsite
+  hybrid
 }
 
 enum job_status {

@@ -148,6 +148,128 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     const [isWalletConnecting, setIsWalletConnecting] = useState(false);
     const [isMetaMaskAvailable, setIsMetaMaskAvailable] = useState(true);
 
+    useEffect(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+
+        const provider = window.ethereum;
+
+        if (!provider) {
+            setIsMetaMaskAvailable(false);
+            setWalletFeedback({
+                message: "MetaMask is not detected. Install the extension to continue.",
+                tone: "error",
+            });
+            return;
+        }
+
+        setIsMetaMaskAvailable(true);
+        let isMounted = true;
+
+        const syncInitialWalletState = async () => {
+            try {
+                const [accounts, chainId] = await Promise.all([
+                    provider.request({ method: "eth_accounts" }) as Promise<string[]>,
+                    provider.request({ method: "eth_chainId" }) as Promise<string>,
+                ]);
+
+                if (!isMounted) {
+                    return;
+                }
+
+                if (accounts && accounts.length > 0) {
+                    setWalletAddress(accounts[0]);
+                    setWalletFeedback({
+                        message: "Wallet session restored from MetaMask.",
+                        tone: "info",
+                    });
+                }
+
+                if (chainId) {
+                    setWalletChainId(chainId);
+                }
+            } catch (error) {
+                console.error("Failed to synchronize wallet session", error);
+            }
+        };
+
+        const handleAccountsChanged = (accountsUpdate: unknown) => {
+            if (!isMounted) {
+                return;
+            }
+
+            const nextAccounts = Array.isArray(accountsUpdate) ? (accountsUpdate as string[]) : [];
+
+            if (nextAccounts.length === 0) {
+                setWalletAddress(null);
+                setWalletFeedback({
+                    message: "Wallet disconnected.",
+                    tone: "info",
+                });
+                return;
+            }
+
+            setWalletAddress(nextAccounts[0]);
+            setWalletFeedback({
+                message: "Wallet account updated.",
+                tone: "info",
+            });
+        };
+
+        const handleChainChanged = (chainIdUpdate: unknown) => {
+            if (!isMounted) {
+                return;
+            }
+
+            if (typeof chainIdUpdate !== "string") {
+                return;
+            }
+
+            setWalletChainId(chainIdUpdate);
+            if (!isSameChain(chainIdUpdate, NETWORK_PARAMS.chainId)) {
+                setWalletFeedback({
+                    message: `Switch to ${NETWORK_PARAMS.chainName} (${NETWORK_PARAMS.chainId}) to continue.`,
+                    tone: "error",
+                });
+                toast.error(`Switch to ${NETWORK_PARAMS.chainName} (${NETWORK_PARAMS.chainId}) to continue.`,
+                    {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                    }
+                )
+            } else {
+                setWalletFeedback({
+                    message: `Connected to ${NETWORK_PARAMS.chainName}.`,
+                    tone: "info",
+                });
+                toast.success(`Connected to ${NETWORK_PARAMS.chainName}.`,
+                    {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                    }
+                )
+            }
+        };
+
+        syncInitialWalletState();
+
+        provider.on?.("accountsChanged", handleAccountsChanged);
+        provider.on?.("chainChanged", handleChainChanged);
+
+        return () => {
+            isMounted = false;
+            provider.removeListener?.("accountsChanged", handleAccountsChanged);
+            provider.removeListener?.("chainChanged", handleChainChanged);
+        };
+    }, []);
+
     const handleClose = () => {
         setIsOpen(false);
         setEmail("");
