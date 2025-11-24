@@ -1,7 +1,8 @@
 'use client'
 
 import Button from "./Button";
-import { useState } from "react";
+import Image from "next/image";
+import { toast } from "react-toastify";
 
 const STATUSES = [
     { key: "started", label: "Started the job" },
@@ -11,33 +12,152 @@ const STATUSES = [
 ];
 
 interface DashboardPostsProps {
+    jobId: string;
+    title: string;
+    description: string;
+    status: number;
+    ipfsUrl?: string;
     variant: "open" | "completed";
 }
 
-const DashboardPosts = ({ variant }: DashboardPostsProps) => {
-    const userRole:string = "freelancer";
-    const [status] = useState(2);
+const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl }: DashboardPostsProps) => {
+    const userRole:string = "client";
     const totalSteps = STATUSES.length;
 
     const handleFund = () => {
-        console.log("processing fund...");
+        toast.success("Processing fund...", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        });
     }
     const handleDeliver = () => {
-        console.log("processing deliver...");
+        toast.success("Processing deliver...", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        });
     }
     const handleApprove = () => {
-        console.log("processing approve...");
+        toast.success("Processing approve...", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        });
     }
     const handleWithdraw = () => {
-        console.log("processing withdraw...");
+        toast.success("Processing withdraw...", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        });
     }
     const handleDispute = () => {
-        (status >= 2 && status < 4 && userRole === "client") ||
-        (status === 3 && userRole === "freelancer") ? console.log("processing dispute...") : console.log("you are not allowed to dispute");
+        (status >= 2 && status < 4 && userRole === "client") || (status === 3 && userRole === "freelancer") ? toast.success("Processing dispute...", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        }) : toast.info("You are not allowed to dispute", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        });
     }
     const handleGoToDoc = () => {
-        console.log("processing go to doc...");
+        toast.success("Processing go to doc...", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        });
     }
+
+    const handleCopy = async (url: string) => {
+        try {
+            if (navigator?.clipboard?.writeText) {
+                await navigator.clipboard.writeText(url);
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = url;
+                textArea.setAttribute("readonly", "");
+                textArea.style.position = "absolute";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
+            }
+            toast.success(
+                "Copied ipfs url to clipboard",
+                {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                }
+            );
+        } catch (error) {
+            toast.error(
+                "Failed to copy ipfs url",
+                {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                }
+            );
+        }
+    }
+    const handleDownload = async (url: string) => {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to download file: ${response.statusText}`);
+            }
+            const blob = await response.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            const fileName = url.split("/").pop() ?? "ipfs_file.txt";
+
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = fileName;
+            link.target = "_blank";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            window.open(objectUrl, "_blank");
+
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 15000);
+        } catch (error) {
+            toast.error(
+                "Failed to download file",
+                {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                }
+            );
+        }
+    }
+
     return (
         <div className="linear-border linear-border--dark-hover">
             <div className="linear-border__inner p-8 bg-white">
@@ -45,9 +165,9 @@ const DashboardPosts = ({ variant }: DashboardPostsProps) => {
                     variant === "open" && (
                         <div className="text-black flex flex-wrap justify-between gap-6">
                             <div className="flex flex-col max-w-180 gap-6">
-                                <p className="text-subtitle font-bold text-black">Job Title</p>
+                                <p className="text-subtitle font-bold text-black">{title}</p>
                                 <p className="text-normal font-regular text-black">
-                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.
+                                    {description}
                                 </p>
                                 <div className="relative mt-2 h-3.5 min-w-[280px]">
                                     <div className="absolute inset-0 rounded-full bg-[#e8e8f0]" />
@@ -99,6 +219,45 @@ const DashboardPosts = ({ variant }: DashboardPostsProps) => {
                                         );
                                     })}
                                 </div>
+                                {ipfsUrl && status == 3 && userRole === "client" && (
+                                    <div className='flex items-center border border-[#8F99AF] rounded-lg p-3 gap-3'>
+                                        <p
+                                            className='flex-1 bg-transparent text-normal font-regular text-[#2F3DF6] text-left focus:outline-none max-w-153.5 truncate'
+                                        >
+                                            {ipfsUrl}
+                                        </p>
+                                        <div className="flex items-center gap-2.5">
+                                            <div>
+                                                <Button
+                                                    onClick={() => handleCopy(ipfsUrl)}
+                                                    padding="p-3"
+                                                    variant="secondary"
+                                                >
+                                                    <Image
+                                                        src="/Grmps/copy.svg"
+                                                        alt="ipfs url"
+                                                        width={24}
+                                                        height={24}
+                                                    />
+                                                </Button>
+                                            </div>
+                                            <div>
+                                                <Button
+                                                    onClick={() => handleDownload(ipfsUrl)}
+                                                    padding="p-3"
+                                                    variant="secondary"
+                                                >
+                                                    <Image
+                                                        src="/Grmps/download.svg"
+                                                        alt="ipfs url"
+                                                        width={24}
+                                                        height={24}
+                                                    />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="flex flex-col gap-2.5">
                                 {status == 1 && userRole === "client" && (
@@ -160,11 +319,48 @@ const DashboardPosts = ({ variant }: DashboardPostsProps) => {
                     variant === "completed" && (
                         <div className="text-black flex flex-wrap justify-between gap-6">
                             <div className="flex flex-col gap-6">
-                                <p className="text-subtitle font-bold text-black">Job Title</p>
+                                <p className="text-subtitle font-bold text-black">{title}</p>
                                 <p className="text-normal font-regular text-black">
-                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.
+                                    {description}
                                 </p>
                             </div>
+                            {ipfsUrl && userRole === "client" && (
+                                <div className='flex items-center border border-[#8F99AF] rounded-lg p-3 gap-3'>
+                                    <p className='flex-1 bg-transparent text-normal font-regular text-[#2F3DF6] text-left focus:outline-none max-w-70 truncate'>
+                                        {ipfsUrl}
+                                    </p>
+                                    <div className="flex items-center gap-2.5">
+                                        <div>
+                                            <Button
+                                                onClick={() => handleCopy(ipfsUrl)}
+                                                padding="p-3"
+                                                variant="secondary"
+                                            >
+                                                <Image
+                                                    src="/Grmps/copy.svg"
+                                                    alt="ipfs url"
+                                                    width={24}
+                                                    height={24}
+                                                />
+                                            </Button>
+                                        </div>
+                                        <div>
+                                            <Button
+                                                onClick={() => handleDownload(ipfsUrl)}
+                                                padding="p-3"
+                                                variant="secondary"
+                                            >
+                                                <Image
+                                                    src="/Grmps/download.svg"
+                                                    alt="ipfs url"
+                                                    width={24}
+                                                    height={24}
+                                                />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )
                 }

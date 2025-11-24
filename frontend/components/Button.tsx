@@ -47,7 +47,7 @@ const Button = ({
         <button
           onClick={onClick}
           {...pressHandlers}
-          className={`linear-border__inner rounded-lg font-regular transition-colors text-normal items-center justify-center bg-white text-[#7E3FF2] hover:text-white hover:bg-linear-to-r hover:from-(--color-light-blue) hover:to-(--color-purple) ${padding}`}
+          className={`linear-border__inner rounded-lg font-regular cursor-pointer transition-colors text-normal items-center justify-center bg-white text-[#7E3FF2] hover:text-white hover:bg-linear-to-r hover:from-(--color-light-blue) hover:to-(--color-purple) ${padding}`}
         >
           {children}
         </button>
@@ -78,7 +78,7 @@ const Button = ({
       onClick={onClick}
       {...pressHandlers}
       className={`
-        rounded-lg font-regular text-normal items-center justify-center transition-transform duration-150
+        rounded-lg font-regular text-normal items-center justify-center transition-transform duration-150 cursor-pointer
         button-primary text-white ${padding} ${isPressed ? 'button-primary--pressed scale-95' : ''}
       `}
     >
