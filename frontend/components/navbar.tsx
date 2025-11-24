@@ -36,7 +36,7 @@ const userRole = CONFIG.userRole;
 
 const Navbar = () => {
     const router = useRouter();
-    const [loggedIn] = useState(true);
+    const [loggedIn] = useState(false);
     const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
     const [notifications] = useState(0);
     const [messages] = useState(2);

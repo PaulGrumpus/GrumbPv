@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { CONFIG } from "@/config/config";
 import { toast } from "react-toastify";
+import { createUserWithAddress } from "@/utils/functions";
 
 interface LoginSignupModalProps {
     isOpen: boolean;
@@ -287,6 +288,15 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                 message: "MetaMask is required. Install the extension to continue.",
                 tone: "error",
             });
+            toast.error("MetaMask is required. Install the extension to continue.",
+                {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                }
+            )
             return null;
         }
 
@@ -299,13 +309,16 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
 
         try {
             const currentChainId = (await provider.request({ method: "eth_chainId" })) as string;
+            console.log("currentChainId", currentChainId);
+            console.log("NETWORK_PARAMS.chainId", NETWORK_PARAMS.chainId);
             if (!isSameChain(currentChainId, NETWORK_PARAMS.chainId)) {
-                await switchOrAddTargetChain(provider);
+                throw new Error("Chain not supported. Please switch to the supported chain.");
             }
 
             const accounts = (await provider.request({
                 method: "eth_requestAccounts",
             })) as string[];
+                        
 
             if (!accounts || accounts.length === 0) {
                 throw new Error("No wallet accounts returned by MetaMask.");
@@ -369,7 +382,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     const handleMetaMaskAuthClick = () => {
         if (isWalletConnecting) {
             return;
-        }
+        }       
 
         if (!isMetaMaskAvailable && !getEthereumProvider()) {
             setWalletFeedback({
@@ -386,7 +399,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                 }
             )
             return;
-        }
+        }        
 
         if (isRegistered) {
             handleLoginWithMetamask();
@@ -414,9 +427,28 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
         setRegisteredUserRole("freelancer");
     }
 
-    const handleCreateAccount = () => {
+    const handleCreateAccount = async () => {
         console.log("create account");
         // async () => {}
+        const response = await createUserWithAddress(walletAddress || '', registeredUserRole);
+        if(!response.success) {
+            toast.error(response.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.success("Account created successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
+
         setRegisterProcessing(false);
         setIsOpen(false);
     }

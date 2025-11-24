@@ -9,8 +9,7 @@ datasource db {
 
 model users {
   id            String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  handle        String                      @unique @db.Citext
-  address       String                      @unique
+  address       String?                     @unique
   chain         chain_type                  @default(evm)
   email         String?                     @unique @db.Citext
   password      String?

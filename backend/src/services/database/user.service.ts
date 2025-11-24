@@ -1,6 +1,7 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, PrismaClient, users } from '@prisma/client';
+import { Prisma, PrismaClient, user_role, users } from '@prisma/client';
+import { generateToken } from '../../utils/jwt.js';
 
 export class UserService {
     private prisma: PrismaClient;
@@ -9,31 +10,27 @@ export class UserService {
         this.prisma = new PrismaClient();
     }
 
-    public async createUser(user: Prisma.usersCreateInput): Promise<users> {
+    public async createUserWithAddress(user: Prisma.usersCreateInput): Promise<string> {
         try {
-            if(!user.handle || !user.email) {
-                throw new AppError('Handle and email are required', 400, 'HANDLE_EMAIL_REQUIRED');
+            if(!user.address || !user.role) {
+                throw new AppError('Address and role are required', 500, 'ADDRESS_ROLE_REQUIRED');
+            }
+            if(user.role !== user_role.client && user.role !== user_role.freelancer) {
+                throw new AppError('Invalid role', 500, 'INVALID_USER_ROLE');
             }
             const existingUser = await this.prisma.users.findUnique({
                 where: {
-                    handle: user.handle,
+                    address: user.address,
                 },
             });
             if (existingUser) {
-                throw new AppError('User already exists', 400, 'USER_ALREADY_EXISTS');
-            }
-            const existingUserByEmail = await this.prisma.users.findUnique({
-                where: {
-                    email: user.email,
-                },
-            });
-            if (existingUserByEmail) {
-                throw new AppError('User with this email already exists', 400, 'USER_EMAIL_ALREADY_EXISTS');
+                throw new AppError('User already exists', 500, 'USER_ALREADY_EXISTS');
             }
             const newUser = await this.prisma.users.create({
                 data: user,
             });
-            return newUser;
+            const token = generateToken(newUser);
+            return token;
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
@@ -43,13 +40,40 @@ export class UserService {
         }
     }
 
-    public async updateUser(id: string, user: Prisma.usersUpdateInput): Promise<users> {
+    public async createUserWithEmail(user: Prisma.usersCreateInput): Promise<string> {
+        try {
+            if(!user.email || !user.role) {
+                throw new AppError('Email and role are required', 400, 'EMAIL_ROLE_REQUIRED');
+            }
+            if(user.role !== user_role.client && user.role !== user_role.freelancer) {
+                throw new AppError('Invalid role', 400, 'INVALID_ROLE');
+            }
+            const existingUser = await this.prisma.users.findUnique({
+                where: {
+                    email: user.email,
+                },
+            });
+            if (existingUser) {
+                throw new AppError('User already exists', 400, 'USER_ALREADY_EXISTS');
+            }
+            const newUser = await this.prisma.users.create({
+                data: user,
+            });
+            const token = generateToken(newUser);
+            return token;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            logger.error('Error creating user', { error });
+            throw new AppError('Error creating user', 500, 'DB_USER_CREATION_FAILED');
+        }
+    }
+
+    public async updateUser(id: string, user: Prisma.usersUpdateInput): Promise<string> {
         try {       
             if(!id) {
                 throw new AppError('User ID is required', 400, 'USER_ID_REQUIRED');
-            }
-            if(!user.handle || !user.email) {
-                throw new AppError('Handle and email are required', 400, 'HANDLE_EMAIL_REQUIRED');
             }
             const existingUser = await this.prisma.users.findUnique({
                 where: { id },
@@ -65,7 +89,8 @@ export class UserService {
                     updated_at: now,
                 },
             });
-            return updatedUser;
+            const token = generateToken(updatedUser);
+            return token;
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
@@ -98,13 +123,13 @@ export class UserService {
         }
     }
     
-    public async getUserByHandle(handle: string): Promise<users> {
+    public async getUserByAddress(address: string): Promise<users> {
         try {
-            if(!handle) {
-                throw new AppError('Handle is required', 400, 'HANDLE_REQUIRED');
+            if(!address) {
+                throw new AppError('Address is required', 400, 'ADDRESS_REQUIRED');
             }
             const user = await this.prisma.users.findUnique({
-                where: { handle },
+                where: { address },
             });
             if (!user) {
                 throw new AppError('User not found', 404, 'USER_NOT_FOUND');
@@ -114,8 +139,8 @@ export class UserService {
             if (error instanceof AppError) {
                 throw error;
             }
-            logger.error('Error getting user by handle', { error });
-            throw new AppError('Error getting user by handle', 500, 'DB_USER_GET_BY_HANDLE_FAILED');
+            logger.error('Error getting user by address', { error });
+            throw new AppError('Error getting user by address', 500, 'DB_USER_GET_BY_ADDRESS_FAILED');
         }
     }
 

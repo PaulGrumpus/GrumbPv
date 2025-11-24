@@ -2,16 +2,32 @@ import { Request, Response, NextFunction } from 'express';
 import { userService } from '../../services/database/user.service.js';
 
 export class UserController {
-    async createUser(req: Request, res: Response, next: NextFunction) {
+    async createUserWithAddress(req: Request, res: Response, next: NextFunction) {
         try {
             const { ...params } = req.body;
 
-            const result = await userService.createUser(params);
+            const result = await userService.createUserWithAddress(params);
 
             res.json({
                 success: true,
                 data: result,
-                message: 'User created successfully',
+                message: 'User created with address successfully',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async createUserWithEmail(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { ...params } = req.body;
+
+            const result = await userService.createUserWithEmail(params);
+
+            res.json({
+                success: true,
+                data: result,
+                message: 'User created with email successfully',
             });
         } catch (error) {
             next(error);
@@ -64,11 +80,11 @@ export class UserController {
         }
     }
 
-    async getUserByHandle(req: Request, res: Response, next: NextFunction) {
+    async getUserByAddress(req: Request, res: Response, next: NextFunction) {
         try {
-            const { handle } = req.params;
+            const { address } = req.params;
 
-            const result = await userService.getUserByHandle(handle);
+            const result = await userService.getUserByAddress(address);
 
             res.json({
                 success: true,
