@@ -1,12 +1,8 @@
 "use client";
 
-import ApplyJob from "@/components/applyJob";
-import Button from "@/components/Button";
 import PubJobOrGigPost from "@/components/pubJobOrGigPost";
-import ModalTemplate from "@/components/modalTemplate";
-import { useState } from "react";
 
-const jobs = [
+const gigs = [
     {
         id: 1,
         title: "Escrow Smart Contract Deployment",
@@ -65,61 +61,36 @@ const jobs = [
     },
 ]
 
-const JobsPage = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+const GigsPage = () => {
     return (
         <div>
             <div className="px-16 bg-white pt-46">
                 <div className="container mx-auto">
-                    <p className="text-display font-bold text-black pb-6">Jobs</p>
+                    <p className="text-display font-bold text-black pb-6">Gigs</p>
                     <p className="text-normal font-regular text-black pb-20">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.</p>
                     <div className="grid grid-cols-2 gap-8 pb-28">  
-                        {jobs.map((job) => (
+                        {gigs.map((gig) => (
                             <PubJobOrGigPost 
-                                key={job.id} 
-                                description={job.description} 
-                                title={job.title} 
-                                location={job.location} 
-                                tags={job.tags} 
-                                price={job.price} 
-                                image={job.image}
-                                currency={job.currency} 
-                                deadline={job.deadline} 
-                                createdAt={job.createdAt}
-                                label="Apply Now"
+                                key={gig.id} 
+                                description={gig.description} 
+                                title={gig.title} 
+                                location={gig.location} 
+                                tags={gig.tags} 
+                                price={gig.price} 
+                                image={gig.image}
+                                currency={gig.currency} 
+                                deadline={gig.deadline} 
+                                createdAt={gig.createdAt}
+                                label="Contact"
                                 clickHandler={() => {
-                                    setIsOpen(true);
-                                    setSelectedJobId(job.id);
                                 }}
                             />
                         ))}
                     </div>
                 </div>
             </div>
-            {selectedJobId && (
-                <ModalTemplate
-                    isOpen={isOpen}
-                    onClose={() => setIsOpen(false)}
-                    title={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.title ?? "" : ""}
-                    subtitle={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.description ?? "" : ""}
-                    actionLabel=""
-                    onAction={() => {}}
-                    className="p-10.5"
-                    customButton={true}                
-                >
-                    <div className="mt-6">
-                        <ApplyJob
-                            jobId={selectedJobId.toString()}
-                            clickHandler={() => {
-                                setIsOpen(false)
-                            }}
-                        />
-                    </div>
-                </ModalTemplate>
-            )}
         </div>
     )
 } 
 
-export default JobsPage
+export default GigsPage;

@@ -6,6 +6,7 @@ import Button from "./Button";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
+import { CONFIG } from "@/config/config";
 
 const username = "John Doe";
 const userPhoto = "/Grmps/grmps.jpg";
@@ -19,7 +20,7 @@ const menuItems = [
         href: "/profile"
     },
     {
-        icon: "/Grmps/setting.svg",
+        icon: "/Grmps/pie-chart-alt.svg",
         label: "Dashboard",
         href: "/dashboard"
     },
@@ -30,7 +31,7 @@ const menuItems = [
     },
 ]
 
-const userRole = "freelancer";
+const userRole = CONFIG.userRole;
 
 const Navbar = () => {
     const router = useRouter();
@@ -90,7 +91,7 @@ const Navbar = () => {
                         <div className="flex gap-8 text-normal font-regular text-black">    
                             <Link className="hover:text-purple" href="/jobs">Featured Jobs</Link>
                             <Link className="hover:text-purple" href="/gigs">Gigs</Link>
-                            <Link className="hover:text-purple" href="/dashboard?view=create-post">Post Job</Link>
+                            <Link className="hover:text-purple" href="/dashboard?view=create-job">Post Job</Link>
                         </div>
                     )}
                     {loggedIn ? ( 

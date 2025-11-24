@@ -2,23 +2,55 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import Button from "./Button";
 import Image from "next/image";
 
-interface gigPostProps {
-    title: string;
+interface pubJobOrGigPostProps {
     description: string;
-    subtitle: string; 
+    title: string;
+    location: string; 
     tags: string[];  
-    price?: number;
-    currency?: string;
+    price: number;
+    currency: string;
+    deadline: number | string;
+    createdAt: number;   
     image?: string;
+    label: string;
+    clickHandler: () => void;
 }
 
-const editIcon = "/Grmps/lucide_edit.svg";
+const formatDueDate = (deadline: number | string) => {
+    if (deadline === null || deadline === undefined) {
+        return "TBD";
+    }
+
+    const numericDeadline =
+        typeof deadline === "number"
+            ? deadline
+            : Number.isNaN(Number(deadline))
+                ? undefined
+                : Number(deadline);
+
+    const timestamp =
+        numericDeadline !== undefined
+            ? (numericDeadline > 1e12 ? numericDeadline : numericDeadline * 1000)
+            : Date.parse(String(deadline));
+
+    if (!Number.isFinite(timestamp)) {
+        return "TBD";
+    }
+
+    return new Intl.DateTimeFormat(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        timeZone: "UTC",
+    }).format(new Date(timestamp));
+};
 
 const COLLAPSED_MAX_HEIGHT = 168;
 
-const GigPost = ({ description, title, subtitle, tags, image }: gigPostProps) => {
+const PubJobOrGigPost = ({ description, title, location, tags, price, currency, deadline, clickHandler, image, label }: pubJobOrGigPostProps) => {
     const [expanded, setExpanded] = useState(false);
     const [canToggle, setCanToggle] = useState(false);
     const descriptionRef = useRef<HTMLParagraphElement>(null);
@@ -37,37 +69,24 @@ const GigPost = ({ description, title, subtitle, tags, image }: gigPostProps) =>
             <div className="linear-border__inner p-6 bg-white">
                 <div className="text-black">
                     <div className="flex justify-between pb-6">
-                        <div className="flex flex-col">
+                        <div className="flex flex-col max-w-[75%]">
                             <h1 className="text-subtitle font-bold text-black">{title}</h1>
-                            <p className="text-light-large font-regular text-black">{subtitle}</p>
+                            <div className="flex gap-2">
+                                <p className="text-light-large font-regular text-black">{location}</p>
+                                <p className="text-light-large font-regular text-black">{price}{currency}</p>
+                                <p className="text-light-large font-regular text-black">Due Date: {formatDueDate(deadline)}</p>
+                            </div>
                         </div>
-                        <div 
-                            onClick={() => {
-                                console.log("edit");
-                            }}
-                            className="cursor-pointer hover:scale-110 transition-transform duration-200"
-                        >
-                            <Image 
-                                src={editIcon} 
-                                alt="edit" 
-                                width={24} 
-                                height={24}
-                            />
+                        <div className="fit-content">
+                            <Button 
+                                variant="secondary"
+                                padding='px-5 py-3'
+                                onClick={clickHandler}
+                            >
+                                <p className="text-normal font-regular">{label}</p>
+                            </Button>
                         </div>
                     </div>
-
-                    {image && (
-                        <div className="pb-6 w-full h-40 rounded-lg overflow-hidden">
-                            <Image 
-                                src={image || ""}
-                                alt="gig image" 
-                                width={100}
-                                height={100}
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
-                    )}
-
                     <div
                         className={`overflow-hidden transition-[max-height] duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}
                     >
@@ -86,6 +105,18 @@ const GigPost = ({ description, title, subtitle, tags, image }: gigPostProps) =>
                         >
                             {expanded ? "show less" : "show more"}
                         </button>
+                    )}
+
+                    {image && (
+                        <div className="py-6">
+                            <Image 
+                                src={image || ""}
+                                alt="job image"
+                                width={100}
+                                height={100}
+                                className="rounded-lg h-100 w-full object-cover"
+                            />
+                        </div>
                     )}
                     <div className="flex justify-end pt-6">
                         <div className="flex gap-2">
@@ -107,4 +138,4 @@ const GigPost = ({ description, title, subtitle, tags, image }: gigPostProps) =>
     );
 };
 
-export default GigPost;
+export default PubJobOrGigPost;

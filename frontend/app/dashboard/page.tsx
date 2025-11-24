@@ -5,10 +5,13 @@ import DashboardOverview from "@/components/dashboard/dashboardOverview";
 import MyGigsSection from "@/components/dashboard/myGigsSection";
 import MyBidsSection from "@/components/dashboard/myBidsSection";
 import CreateGigSection from "@/components/dashboard/createGigSection";
+import MyJobsSection from "@/components/dashboard/myJobsSection";
+import CreateJobSection from "@/components/dashboard/createJobSection";
 import { useMemo, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { CONFIG } from "@/config/config";
 
-type SectionSlug = "dashboard" | "my-gigs" | "create-gig" | "my-bids";
+type SectionSlug = "dashboard" | "my-gigs" | "create-gig" | "my-bids" | "my-jobs" | "create-job";
 
 const SECTION_CONFIG: Record<SectionSlug, { label: string; render: () => ReactNode }> = {
     "dashboard": {
@@ -27,6 +30,14 @@ const SECTION_CONFIG: Record<SectionSlug, { label: string; render: () => ReactNo
         label: "My Bids",
         render: () => <MyBidsSection />,
     },
+    "my-jobs": {
+        label: "My Jobs",
+        render: () => <MyJobsSection />,
+    },
+    "create-job": {
+        label: "Create Job",
+        render: () => <CreateJobSection />,
+    },
 };
 
 const LABEL_TO_SLUG: Record<string, SectionSlug> = {
@@ -35,6 +46,9 @@ const LABEL_TO_SLUG: Record<string, SectionSlug> = {
     Gigs: "my-gigs",
     "Create Gig": "create-gig",
     "My Bids": "my-bids",
+    "My Jobs": "my-jobs",
+    Jobs: "my-jobs",
+    "Create Job": "create-job",
 };
 
 const SLUG_TO_SIDEBAR_LABEL: Record<SectionSlug, string> = {
@@ -42,9 +56,13 @@ const SLUG_TO_SIDEBAR_LABEL: Record<SectionSlug, string> = {
     "my-gigs": "Gigs",
     "create-gig": "Create Gig",
     "my-bids": "My Bids",
+    "my-jobs": "Jobs",
+    "create-job": "Create Job",
 };
 
 const DEFAULT_SECTION: SectionSlug = "dashboard";
+
+const userRole:string = CONFIG.userRole;
 
 const DashboardPage = () => {
     const router = useRouter();
@@ -78,6 +96,23 @@ const DashboardPage = () => {
         },
     ]), []);
 
+    const clientSidebarItems = useMemo(() => ([
+        {
+            icon: "/Grmps/pie-chart-alt.svg",
+            label: "Dashboard",
+            count: 0,
+        },
+        {
+            icon: "/Grmps/layer.svg",
+            label: "My Jobs",
+            count: 0,
+            subItems: [
+                { label: "Jobs" },
+                { label: "Create Job" },
+            ],
+        },
+    ]), []);
+
     const handleSectionChange = (label: string) => {
         const slug = LABEL_TO_SLUG[label] ?? DEFAULT_SECTION;
         const params = new URLSearchParams(searchParams.toString());
@@ -88,7 +123,7 @@ const DashboardPage = () => {
     return (
         <div className="flex gap-20">
             <Sidebar
-                sidebarItems={freelancerSidebarItems}
+                sidebarItems={userRole === "freelancer" ? freelancerSidebarItems : clientSidebarItems}
                 selectedLabel={selectedSidebarLabel}
                 onSelect={(item) => handleSectionChange(item.label)}
             />

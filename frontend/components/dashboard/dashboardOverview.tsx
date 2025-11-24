@@ -100,6 +100,9 @@ const DashboardOverview = () => {
                                             description={job.description}
                                             status={job.status}
                                             ipfsUrl={job.ipfsUrl}
+                                            clickHandler={() => {
+                                                console.log("open job clicked");
+                                            }}
                                         />
                                     ))}
                                     {openJobPosts.length > 2 && (
@@ -140,13 +143,14 @@ const DashboardOverview = () => {
                                     <div className="grid grid-cols-2 gap-8">
                                         {visibleCompletedJobPosts.map((job) => (
                                             <DashboardPosts 
-                                            key={`completed-job-${job.id}`} 
-                                            variant="completed" 
-                                            jobId={job.id.toString()}
-                                            title={job.title}
-                                            description={job.description}
-                                            status={job.status}
-                                            ipfsUrl={job.ipfsUrl}
+                                                key={`completed-job-${job.id}`} 
+                                                variant="completed" 
+                                                jobId={job.id.toString()}
+                                                title={job.title}
+                                                description={job.description}
+                                                status={job.status}
+                                                ipfsUrl={job.ipfsUrl}
+                                                clickHandler={() => {}}
                                             />
                                         ))}
                                     </div>

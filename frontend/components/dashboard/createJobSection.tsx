@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useRef, useState, useEffect } from "react";
 import SectionPlaceholder from "./sectionPlaceholder";
@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 
 const uploadImage = "/Grmps/upload.svg";
 
-const CreateGigSection = () => {
+const CreateJobSection = () => {
     const [title, setTitle] = useState("");
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
@@ -75,8 +75,8 @@ const CreateGigSection = () => {
     return (
         <div>
             <SectionPlaceholder
-                title="Create Gig"
-                description="Set up a new gig to showcase your services to clients."
+                title="Create Job"
+                description="Set up a new job to showcase your services to clients."
             /> 
             <div className="linear-border linear-border--dark-hover">
                 <div className="linear-border__inner bg-white p-8">
@@ -192,4 +192,4 @@ const CreateGigSection = () => {
         </div>
     )
 }
-export default CreateGigSection;
+export default CreateJobSection;
