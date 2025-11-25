@@ -62,15 +62,48 @@ export const createUserWithEmail = async (email: string, role: string) => {
     }
 }
 
-export const updateUser = async (user: User) => {
+export const updateUser = async (user: User, imageFile?: File | null) => {
     try {
-        const response = await EscrowBackend.post(`/database/users/${user.id}`, 
-            user,
-            {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
+        const formData = new FormData();
+        const fieldsToSend: Array<keyof User> = [
+            'address',
+            'chain',
+            'email',
+            'role',
+            'display_name',
+            'bio',
+            'country_code',
+            'image_id',
+            'is_verified',
+        ];
+
+        fieldsToSend.forEach((field) => {
+            const value = user[field];
+
+            if (value === undefined || value === null || value === '') {
+                return;
             }
+
+            if (typeof value === 'boolean') {
+                formData.append(field, value ? 'true' : 'false');
+                return;
+            }
+
+            formData.append(field, value);
+        });
+
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
+        const response = await EscrowBackend.post(
+            `/database/users/${user.id}`,
+            formData,
+            // {
+            //     headers: {
+            //         Authorization: `Bearer ${localStorage.getItem('token')}`,
+            //     },
+            // }
         );
 
         const token = response.data.data;

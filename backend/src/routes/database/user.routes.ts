@@ -1,9 +1,58 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { body, param } from 'express-validator';
+import multer from 'multer';
+import { mkdirSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import path from 'node:path';
 import { validate } from '../../middlewares/validateRequest.js';
 import { userController } from '../../controllers/database/user.controller.js';
+import { AppError } from '../../middlewares/errorHandler.js';
 
 const router = Router();
+const IMAGE_UPLOAD_DIR = path.resolve(process.cwd(), 'uploads', 'images');
+mkdirSync(IMAGE_UPLOAD_DIR, { recursive: true });
+
+const imageStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => {
+        cb(null, IMAGE_UPLOAD_DIR);
+    },
+    filename: (_req, file, cb) => {
+        const extension = path.extname(file.originalname) || '.jpg';
+        cb(null, `${randomUUID()}${extension}`);
+    },
+});
+
+const MAX_IMAGE_SIZE_BYTES = Number(process.env.IMAGE_UPLOAD_MAX_SIZE_BYTES || 5 * 1024 * 1024);
+
+const imageUpload = multer({
+    storage: imageStorage,
+    limits: {
+        fileSize: MAX_IMAGE_SIZE_BYTES,
+    },
+    fileFilter: (_req, file, cb) => {
+        if (file.mimetype && file.mimetype.startsWith('image/')) {
+            cb(null, true);
+            return;
+        }
+        cb(new AppError('Only image uploads are allowed', 400, 'INVALID_IMAGE_TYPE'));
+    },
+});
+
+const optionalImageUpload = (req: Request, res: Response, next: NextFunction) => {
+    if (!req.is('multipart/form-data')) {
+        next();
+        return;
+    }
+
+    const handler = imageUpload.single('image');
+    handler(req, res, (error: unknown) => {
+        if (error) {
+            next(error);
+            return;
+        }
+        next();
+    });
+};
 
 /**
  * @openapi
@@ -114,6 +163,7 @@ router.post(
  */
 router.post(
     '/:id',
+    optionalImageUpload,
     [param('id').isString().notEmpty()],
     validate([param('id')]),
     userController.updateUser.bind(userController)

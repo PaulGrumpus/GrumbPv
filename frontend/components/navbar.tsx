@@ -10,6 +10,7 @@ import { CONFIG } from "@/config/config";
 import LoginSignupModal from "./loginSignupModal";
 import { UserInfoCtx } from "@/context/userContext";
 import { toast } from "react-toastify";
+import { LoadingCtx } from "@/context/loadingContext";
 
 
 const username = "John Doe";
@@ -185,7 +186,10 @@ const Navbar = () => {
 const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
     const { setUserInfo } = useContext(UserInfoCtx);
     const router = useRouter();
+    const { setLoadingState } = useContext(LoadingCtx);
+    
     const handleLogOut = () => {
+        setLoadingState("pending");
         window.localStorage.removeItem('token');
         toast.success("Logged out successfully", {
             position: "top-right",
@@ -209,6 +213,7 @@ const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
             updated_at: ''
         });
         router.push('/');
+        setLoadingState("success");
     }
     return (
         <div

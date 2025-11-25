@@ -3,6 +3,13 @@ import { AppError } from '../../middlewares/errorHandler.js';
 import { Prisma, PrismaClient, user_role, users } from '@prisma/client';
 import { generateToken } from '../../utils/jwt.js';
 
+const IMAGE_PUBLIC_PREFIX = '/uploads/images';
+type UploadedFile = {
+    filename?: string;
+    mimetype: string;
+    size: number;
+};
+
 export class UserService {
     private prisma: PrismaClient;
 
@@ -70,25 +77,52 @@ export class UserService {
         }
     }
 
-    public async updateUser(id: string, user: Prisma.usersUpdateInput): Promise<string> {
+    public async updateUser(
+        id: string,
+        user: Prisma.usersUncheckedUpdateInput,
+        uploadedImage?: UploadedFile,
+    ): Promise<string> {
         try {       
             if(!id) {
                 throw new AppError('User ID is required', 400, 'USER_ID_REQUIRED');
             }
+            console.log("id", id);
+            console.log("user", user);
+            console.log("uploadedImage", uploadedImage);
             const existingUser = await this.prisma.users.findUnique({
                 where: { id },
             });
+            console.log("existingUser", existingUser);
             if (!existingUser) {
                 throw new AppError('User not found', 404, 'USER_NOT_FOUND');
             }
+            const { image_id: rawImageInput, ...userData } = user;
+            console.log("rawImageInput", rawImageInput);
+            console.log("uploadedImage", uploadedImage);
+            const normalizedImageId = uploadedImage
+                ? await this.persistUploadedFile(uploadedImage)
+                : await this.normalizeExistingImageReference(rawImageInput);
+            console.log("normalizedImageId", normalizedImageId);
             const now = new Date();
+            const updateData: Prisma.usersUncheckedUpdateInput = {
+                ...this.normalizeUserFields(userData),
+                updated_at: now,
+            };
+
+            console.log("updateData", updateData);
+
+            if (normalizedImageId !== undefined) {
+                updateData.image_id = normalizedImageId;
+            }            
+
+            console.log("updateData with image_id", updateData);
+
             const updatedUser = await this.prisma.users.update({
                 where: { id },
-                data: {
-                    ...user,
-                    updated_at: now,
-                },
+                data: updateData,
             });
+
+            console.log("updatedUser", updatedUser);
             const token = generateToken(updatedUser);
             return token;
         } catch (error) {
@@ -198,6 +232,124 @@ export class UserService {
             logger.error('Error getting users', { error });
             throw new AppError('Error getting users', 500, 'DB_USERS_GET_FAILED');
         }
+    }
+
+    private normalizeUserFields(
+        userData: Prisma.usersUncheckedUpdateInput,
+    ): Prisma.usersUncheckedUpdateInput {
+        const normalized: Record<string, unknown> = {};
+        const allowedKeys: Array<keyof Prisma.usersUncheckedUpdateInput> = [
+            'address',
+            'chain',
+            'email',
+            'role',
+            'display_name',
+            'bio',
+            'country_code',
+            'is_verified',
+        ];
+
+        for (const key of allowedKeys) {
+            const value = userData[key];
+
+            if (value === undefined) {
+                continue;
+            }
+
+            if (value === null) {
+                normalized[key as string] = null;
+                continue;
+            }
+
+            if (key === 'is_verified') {
+                normalized[key as string] = this.parseBooleanFlag(value);
+                continue;
+            }
+
+            normalized[key as string] = value;
+        }
+
+        return normalized as Prisma.usersUncheckedUpdateInput;
+    }
+
+    private parseBooleanFlag(value: unknown): boolean {
+        if (typeof value === 'boolean') {
+            return value;
+        }
+
+        if (typeof value === 'string') {
+            const normalized = value.trim().toLowerCase();
+            if (normalized === 'true' || normalized === '1') {
+                return true;
+            }
+            if (normalized === 'false' || normalized === '0') {
+                return false;
+            }
+        }
+
+        throw new AppError('Invalid value for is_verified', 400, 'INVALID_IS_VERIFIED_FLAG');
+    }
+
+    private async persistUploadedFile(file: UploadedFile): Promise<string> {
+        if (!file.filename) {
+            throw new AppError('Invalid uploaded image', 400, 'INVALID_IMAGE_FILE');
+        }
+
+        const fileRecord = await this.prisma.files.create({
+            data: {
+                url: `${IMAGE_PUBLIC_PREFIX}/${file.filename}`,
+                mime_type: file.mimetype,
+                size_bytes: file.size,
+            },
+        });
+
+        return fileRecord.id;
+    }
+
+    private async normalizeExistingImageReference(
+        imageInput?: Prisma.usersUncheckedUpdateInput['image_id'],
+    ): Promise<string | null | undefined> {
+        if (typeof imageInput === 'undefined') {
+            return undefined;
+        }
+
+        if (imageInput === null) {
+            return null;
+        }
+
+        if (typeof imageInput === 'string') {
+            await this.ensureImageExists(imageInput);
+            return imageInput;
+        }
+
+        if (this.isNullableStringFieldOperation(imageInput)) {
+            const { set } = imageInput;
+            if (typeof set === 'string') {
+                await this.ensureImageExists(set);
+                return set;
+            }
+            if (set === null) {
+                return null;
+            }
+        }
+
+        return undefined;
+    }
+
+    private async ensureImageExists(imageId: string): Promise<void> {
+        const image = await this.prisma.files.findUnique({
+            where: { id: imageId },
+        });
+
+        if (!image) {
+            throw new AppError('Image not found', 404, 'IMAGE_NOT_FOUND');
+        }
+    }
+
+    private isNullableStringFieldOperation(
+        value: unknown,
+    ): value is Prisma.NullableStringFieldUpdateOperationsInput {
+        return typeof value === 'object' && value !== null && 'set' in value;
     }
 }
 

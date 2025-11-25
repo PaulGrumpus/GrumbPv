@@ -8,7 +8,7 @@ export interface User {
     bio?: string;
     country_code?: string;
     is_verified: boolean;
-    image_id?: string;
+    image_id?: string;    
     created_at: string;
     updated_at: string;
 }
