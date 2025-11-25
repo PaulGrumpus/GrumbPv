@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useContext, useEffect, useState } from "react";
 import { CONFIG } from "@/config/config";
 import { toast } from "react-toastify";
-import { createUserWithAddress, getUserbyAddress } from "@/utils/functions";
+import { createUserWithAddress, loginWithAddress } from "@/utils/functions";
 import { UserInfoCtx } from "@/context/userContext";
 
 interface LoginSignupModalProps {
@@ -117,6 +117,10 @@ const getWalletErrorMessage = (error: unknown) => {
 
 const switchOrAddTargetChain = async (provider: MetaMaskProvider) => {
     try {
+        console.log("provider.request", provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: NETWORK_PARAMS.chainId }],
+        }));
         await provider.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId: NETWORK_PARAMS.chainId }],
@@ -130,6 +134,7 @@ const switchOrAddTargetChain = async (provider: MetaMaskProvider) => {
             });
             return;
         }
+        console.log("error", error);
         throw error;
     }
 };
@@ -368,12 +373,11 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     };
 
     const handleLoginWithMetamask = async () => {
-        console.log("handleLoginWithMetamask");
         const connection = await connectMetaMaskWallet("login");
         if(!connection) {
             return null
         }
-        const response = await getUserbyAddress(connection?.address || '');
+        const response = await loginWithAddress(connection?.address || '');
         if(!response.success) {
             toast.error(response.error, {
                 position: "top-right",
@@ -475,9 +479,6 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                 closeOnClick: true,
                 pauseOnHover: true,
             });
-
-            setRegisterProcessing(false);
-            setIsOpen(false);
         } else {
             toast.success("Account created successfully", {
                 position: "top-right",
@@ -502,6 +503,9 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                 updated_at: response.data?.updated_at || '',
             });
         }
+
+        setRegisterProcessing(false);
+        setIsOpen(false);
     }
 
     const metaMaskButtonLabel = isWalletConnecting

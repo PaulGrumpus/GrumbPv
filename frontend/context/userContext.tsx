@@ -10,7 +10,6 @@ import {
 import { UserContextType, User } from "@/types/user";
 import { LoadingCtx } from "./loadingContext";
 import { decodeToken } from "@/utils/jwt";
-import { toast } from "react-toastify";
 
 const defaultProvider: UserContextType = {
     userInfo: {
@@ -50,23 +49,8 @@ const UserInfoProvider = ({ children }: Props) => {
             const decodedToken = decodeToken(token);
             setUserInfo(decodedToken as User);
             setLoadingState("success");
-            toast.success("User is logged in", {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-            });
         } else {
             setLoadingState("failure");
-            setUserInfoError("No token found");
-            toast.error("User is not logged in", {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-            });
         }
     }
     const isInvitePage = typeof window !== 'undefined' && 

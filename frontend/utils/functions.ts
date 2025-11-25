@@ -92,7 +92,7 @@ export const updateUser = async (user: User) => {
     }
 }
 
-export const getUserbyAddress = async (address: string) => {
+export const loginWithAddress = async (address: string) => {
     try {
         const response = await EscrowBackend.get(`/database/users/by-address/${address}`);
         
@@ -104,6 +104,13 @@ export const getUserbyAddress = async (address: string) => {
         }
 
         localStorage.setItem('token', token);
+        const res = NextResponse.json({ success: true });
+
+        res.cookies.set("token", token, {
+            httpOnly: true,
+            secure: true,
+            path: "/"
+        });
 
         return { success: true, data: decodedToken };
 

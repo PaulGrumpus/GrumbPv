@@ -7,7 +7,7 @@ import MyBidsSection from "@/components/dashboard/myBidsSection";
 import CreateGigSection from "@/components/dashboard/createGigSection";
 import MyJobsSection from "@/components/dashboard/myJobsSection";
 import CreateJobSection from "@/components/dashboard/createJobSection";
-import { useMemo, type ReactNode } from "react";
+import { Suspense, useMemo, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CONFIG } from "@/config/config";
 
@@ -64,7 +64,7 @@ const DEFAULT_SECTION: SectionSlug = "dashboard";
 
 const userRole:string = CONFIG.userRole;
 
-const DashboardPage = () => {
+const DashboardPageContent = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const querySlug = (searchParams.get("view") ?? DEFAULT_SECTION) as SectionSlug;
@@ -133,5 +133,11 @@ const DashboardPage = () => {
         </div>
     );
 };
+
+const DashboardPage = () => (
+    <Suspense fallback={<div className="w-full py-10 text-center">Loading dashboard...</div>}>
+        <DashboardPageContent />
+    </Suspense>
+);
 
 export default DashboardPage
