@@ -13,7 +13,6 @@ import { toast } from 'react-toastify';
 import { User } from '@/types/user';
 import { updateUser } from '@/utils/functions';
 import { EscrowBackendConfig } from '@/config/config';
-import bcrypt from 'bcryptjs';
 
 type FormState = {
     userName: string;
@@ -568,6 +567,8 @@ const ProfilePage = () => {
                 </div>
             </div>
         );
+    } else {
+        return <Loading />;
     }
 }
 

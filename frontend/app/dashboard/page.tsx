@@ -159,6 +159,8 @@ const DashboardPageContent = () => {
                 </div>
             </div>
         );
+    } else {
+        return <Loading />;
     }
 };
 

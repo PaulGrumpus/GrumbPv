@@ -1,6 +1,7 @@
 import SectionPlaceholder from "./sectionPlaceholder";
 import Button from "../button";
 import UserJobOrGigPost from "../userJobOrGigPost";
+import { useRouter } from "next/navigation";
 
 const Jobs = [
     {
@@ -25,6 +26,7 @@ const Jobs = [
 ]
 
 const MyJobsSection = () => {
+    const router = useRouter();
     return (
         <div>
             <SectionPlaceholder
@@ -37,6 +39,7 @@ const MyJobsSection = () => {
                         <div className="w-45 mb-8 flex justify-end">
                             <Button
                                 padding='px-7 py-3'
+                                onClick={() => router.push("/dashboard?view=create-job")}
                             >
                                 <p className='text-normal font-regular'>+ Create Job</p>
                             </Button>

@@ -9,6 +9,8 @@ import { CONFIG } from "@/config/config";
 import { toast } from "react-toastify";
 import { createUserWithAddress, loginWithAddress } from "@/utils/functions";
 import { UserInfoCtx } from "@/context/userContext";
+import { useRouter } from "next/navigation";
+import { LoadingCtx } from "@/context/loadingContext";
 
 interface LoginSignupModalProps {
     isOpen: boolean;
@@ -72,12 +74,6 @@ const NETWORK_PARAMS = {
     blockExplorerUrls: CONFIG.blockExplorerUrls,
 } as const;
 
-// const walletToneClasses: Record<WalletFeedback["tone"], string> = {
-//     success: "text-[#16A34A]",
-//     error: "text-[#DC2626]",
-//     info: "text-[#7E3FF2]",
-// };
-
 const getEthereumProvider = () => (typeof window === "undefined" ? undefined : window.ethereum);
 
 const isSameChain = (current?: string | null, target?: string | null) =>
@@ -140,6 +136,7 @@ const switchOrAddTargetChain = async (provider: MetaMaskProvider) => {
 };
 
 const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupModalProps) => {
+    const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -155,7 +152,8 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     const [isWalletConnecting, setIsWalletConnecting] = useState(false);
     const [isMetaMaskAvailable, setIsMetaMaskAvailable] = useState(true);
     const { setUserInfo } = useContext(UserInfoCtx);
-    
+    const { setLoadingState } = useContext(LoadingCtx);
+
     useEffect(() => {
         if (typeof window === "undefined") {
             return;
@@ -400,6 +398,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                 address: response.data?.address || '',
                 chain: response.data?.chain || '',
                 email: response.data?.email || '',
+                password: response.data?.password || '',
                 role: response.data?.role || '',
                 display_name: response.data?.display_name || '',
                 bio: response.data?.bio || '',
@@ -411,6 +410,8 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
             });
         }
         setIsOpen(false);
+        router.push("/profile");
+        setLoadingState("pending");
     };
 
     const handleRegisterWithMetamask = async () => {
@@ -493,6 +494,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                 address: response.data?.address || '',
                 chain: response.data?.chain || '',
                 email: response.data?.email || '',
+                password: response.data?.password || '',
                 role: response.data?.role || '',
                 display_name: response.data?.display_name || '',
                 bio: response.data?.bio || '',
@@ -506,6 +508,8 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
 
         setRegisterProcessing(false);
         setIsOpen(false);
+        router.push("/profile");
+        setLoadingState("pending");
     }
 
     const metaMaskButtonLabel = isWalletConnecting

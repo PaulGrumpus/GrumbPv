@@ -21,9 +21,9 @@ const Home = () => {
 
   if (loadingState === "success") {
     return <div className="bg-white min-h-screen"></div>;
+  } else {
+    return <div className="bg-white min-h-screen"></div>;
   }
-
-  return <div className="bg-white min-h-screen"></div>;
 };
 
 export default Home;

@@ -212,8 +212,8 @@ const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
             created_at: '',
             updated_at: ''
         });
+        setLoadingState("pending");
         router.push('/');
-        setLoadingState("success");
     }
     return (
         <div
