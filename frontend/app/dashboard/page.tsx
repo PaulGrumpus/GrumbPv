@@ -7,9 +7,12 @@ import MyBidsSection from "@/components/dashboard/myBidsSection";
 import CreateGigSection from "@/components/dashboard/createGigSection";
 import MyJobsSection from "@/components/dashboard/myJobsSection";
 import CreateJobSection from "@/components/dashboard/createJobSection";
-import { Suspense, useMemo, type ReactNode } from "react";
+import { Suspense, useMemo, useContext, useEffect, useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CONFIG } from "@/config/config";
+import { UserInfoCtx } from "@/context/userContext";
+import { LoadingCtx } from "@/context/loadingContext";
+import Loading from "@/components/loading";
 
 type SectionSlug = "dashboard" | "my-gigs" | "create-gig" | "my-bids" | "my-jobs" | "create-job";
 
@@ -62,10 +65,7 @@ const SLUG_TO_SIDEBAR_LABEL: Record<SectionSlug, string> = {
 
 const DEFAULT_SECTION: SectionSlug = "dashboard";
 
-const userRole:string = CONFIG.userRole;
-
 const DashboardPageContent = () => {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const querySlug = (searchParams.get("view") ?? DEFAULT_SECTION) as SectionSlug;
     const normalizedSlug = (Object.keys(SECTION_CONFIG) as SectionSlug[]).includes(querySlug)
@@ -73,6 +73,10 @@ const DashboardPageContent = () => {
         : DEFAULT_SECTION;
     const activeSection = SECTION_CONFIG[normalizedSlug];
     const selectedSidebarLabel = SLUG_TO_SIDEBAR_LABEL[normalizedSlug] ?? activeSection.label;
+    const [userRole, setUserRole] = useState("client");
+    const { userInfo, setUserInfo } = useContext(UserInfoCtx);
+    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const router = useRouter();
 
     const freelancerSidebarItems = useMemo(() => ([
         {
@@ -120,18 +124,42 @@ const DashboardPageContent = () => {
         router.replace(`/dashboard?${params.toString()}`, { scroll: false });
     };
 
-    return (
-        <div className="flex gap-20">
-            <Sidebar
-                sidebarItems={userRole === "freelancer" ? freelancerSidebarItems : clientSidebarItems}
-                selectedLabel={selectedSidebarLabel}
-                onSelect={(item) => handleSectionChange(item.label)}
-            />
-            <div className="flex-1">
-                {activeSection.render()}
+    useEffect(() => {
+        setLoadingState("pending");
+        if(userInfo.id === "") {
+            setLoadingState("failure");
+            return;
+        }
+        if (userInfo && userInfo.id) {
+            setUserRole(userInfo.role || "client");
+            setLoadingState("success");
+        }
+    }, [userInfo])
+
+    useEffect(() => {
+        if (loadingState === "failure") {
+            router.push("/");
+        }
+    }, [loadingState, router]);
+
+    if (loadingState === "pending") {
+        return <Loading />;
+    }
+
+    if (loadingState === "success") {
+        return (
+            <div className="flex gap-20">
+                <Sidebar
+                    sidebarItems={userRole === "freelancer" ? freelancerSidebarItems : clientSidebarItems}
+                    selectedLabel={selectedSidebarLabel}
+                    onSelect={(item) => handleSectionChange(item.label)}
+                />
+                <div className="flex-1">
+                    {activeSection.render()}
+                </div>
             </div>
-        </div>
-    );
+        );
+    }
 };
 
 const DashboardPage = () => (

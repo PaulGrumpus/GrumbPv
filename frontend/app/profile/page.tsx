@@ -56,6 +56,7 @@ const ProfilePage = () => {
         selectedLanguage: "",
     });  
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
+    const { loadingState, setLoadingState } = useContext(LoadingCtx);
     const router = useRouter();
 
     useEffect(() => {
@@ -262,8 +263,6 @@ const ProfilePage = () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [dropdownMenuOpen]);
-
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
 
     useEffect(() => {
         setLoadingState("pending");
