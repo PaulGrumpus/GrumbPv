@@ -373,7 +373,13 @@ export class UserService {
             return;
         }
 
-        const targetPath = path.resolve(IMAGE_UPLOAD_DIR, imageId);
+        const normalizedId = path
+            .normalize(imageId)
+            .replace(/^(\.\.[/\\])+/, '');
+
+        const targetPath = imageId.startsWith(path.sep) || imageId.startsWith('/')
+            ? path.resolve(process.cwd(), normalizedId.replace(/^[/\\]/, ''))
+            : path.resolve(IMAGE_UPLOAD_DIR, normalizedId);
 
         try {
             await unlink(targetPath);
