@@ -148,6 +148,7 @@ const ProfilePage = () => {
             created_at: userInfo?.created_at || "",
             updated_at: userInfo?.updated_at || "",
         };
+        console.log("selectedFile", selectedFile);
 
         const response = await updateUser(user, selectedFile);
         if (response.success) {

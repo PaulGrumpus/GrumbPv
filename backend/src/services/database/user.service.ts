@@ -1,3 +1,5 @@
+import path from 'node:path';
+import { unlink } from 'node:fs/promises';
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
 import { Prisma, PrismaClient, user_role, users } from '@prisma/client';
@@ -86,43 +88,37 @@ export class UserService {
             if(!id) {
                 throw new AppError('User ID is required', 400, 'USER_ID_REQUIRED');
             }
-            console.log("id", id);
-            console.log("user", user);
-            console.log("uploadedImage", uploadedImage);
             const existingUser = await this.prisma.users.findUnique({
                 where: { id },
             });
-            console.log("existingUser", existingUser);
             if (!existingUser) {
                 throw new AppError('User not found', 404, 'USER_NOT_FOUND');
             }
             const { image_id: rawImageInput, ...userData } = user;
-            console.log("rawImageInput", rawImageInput);
-            console.log("uploadedImage", uploadedImage);
-            const normalizedImageId = uploadedImage
-                ? await this.persistUploadedFile(uploadedImage)
-                : await this.normalizeExistingImageReference(rawImageInput);
-            console.log("normalizedImageId", normalizedImageId);
+
+            let normalizedImageId: string | null | undefined;
+
+            if (uploadedImage) {
+                await this.removeExistingImage(existingUser.image_id);
+                normalizedImageId = await this.persistUploadedFile(uploadedImage);
+            } else {
+                normalizedImageId = await this.normalizeExistingImageReference(rawImageInput);
+            }
             const now = new Date();
             const updateData: Prisma.usersUncheckedUpdateInput = {
                 ...this.normalizeUserFields(userData),
                 updated_at: now,
             };
 
-            console.log("updateData", updateData);
-
             if (normalizedImageId !== undefined) {
                 updateData.image_id = normalizedImageId;
             }            
-
-            console.log("updateData with image_id", updateData);
 
             const updatedUser = await this.prisma.users.update({
                 where: { id },
                 data: updateData,
             });
 
-            console.log("updatedUser", updatedUser);
             const token = generateToken(updatedUser);
             return token;
         } catch (error) {
@@ -288,6 +284,42 @@ export class UserService {
         }
 
         throw new AppError('Invalid value for is_verified', 400, 'INVALID_IS_VERIFIED_FLAG');
+    }
+
+    private async removeExistingImage(imageId?: string | null): Promise<void> {
+        if (!imageId) {
+            return;
+        }
+
+        const existingImage = await this.prisma.files.findUnique({
+            where: { id: imageId },
+        });
+
+        if (!existingImage) {
+            return;
+        }
+
+        const absolutePath = path.resolve(
+            process.cwd(),
+            existingImage.url.startsWith('/') ? existingImage.url.slice(1) : existingImage.url,
+        );
+
+        try {
+            await unlink(absolutePath);
+        } catch (error) {
+            const err = error as NodeJS.ErrnoException;
+            if (err.code !== 'ENOENT') {
+                logger.warn('Failed to remove existing user image from disk', {
+                    imageId,
+                    absolutePath,
+                    error,
+                });
+            }
+        }
+
+        await this.prisma.files.delete({
+            where: { id: imageId },
+        });
     }
 
     private async persistUploadedFile(file: UploadedFile): Promise<string> {
