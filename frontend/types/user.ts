@@ -2,7 +2,8 @@ export interface User {
     id: string;
     address?: string;
     chain: string;
-    email?: string;
+    email?: string; 
+    password?: string;
     role: string;
     display_name?: string;
     bio?: string;

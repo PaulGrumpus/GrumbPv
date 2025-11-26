@@ -69,6 +69,7 @@ export const updateUser = async (user: User, imageFile?: File | null) => {
             'address',
             'chain',
             'email',
+            'password',
             'role',
             'display_name',
             'bio',
@@ -99,6 +100,11 @@ export const updateUser = async (user: User, imageFile?: File | null) => {
         const response = await EscrowBackend.post(
             `/database/users/${user.id}`,
             formData,
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            }
             // {
             //     headers: {
             //         Authorization: `Bearer ${localStorage.getItem('token')}`,

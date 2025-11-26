@@ -40,6 +40,12 @@ export class UserController {
             const { ...params } = req.body;
             const file = (req as Request & { file?: Express.Multer.File }).file;
 
+            console.log("req.file", req.file);
+
+            console.log("file", file);
+            console.log("params", params);
+            console.log("id", id);
+
             const result = await userService.updateUser(id, params, file);
 
             res.json({

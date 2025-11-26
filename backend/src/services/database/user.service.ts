@@ -1,16 +1,18 @@
 import path from 'node:path';
 import { unlink } from 'node:fs/promises';
+import bcrypt from 'bcryptjs';
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
 import { Prisma, PrismaClient, user_role, users } from '@prisma/client';
 import { generateToken } from '../../utils/jwt.js';
 
-const IMAGE_PUBLIC_PREFIX = '/uploads/images';
 type UploadedFile = {
     filename?: string;
     mimetype: string;
     size: number;
 };
+const IMAGE_UPLOAD_DIR = path.resolve(process.cwd(), 'uploads', 'images');
+const PASSWORD_SALT_ROUNDS = Number(process.env.PASSWORD_SALT_ROUNDS || 10);
 
 export class UserService {
     private prisma: PrismaClient;
@@ -35,8 +37,12 @@ export class UserService {
             if (existingUser) {
                 throw new AppError('User already exists', 500, 'USER_ALREADY_EXISTS');
             }
+            const hashedPassword = await this.hashPasswordIfPresent(user.password);
             const newUser = await this.prisma.users.create({
-                data: user,
+                data: {
+                    ...user,
+                    ...(hashedPassword ? { password: hashedPassword } : {}),
+                },
             });
             const token = generateToken(newUser);
             return token;
@@ -65,8 +71,12 @@ export class UserService {
             if (existingUser) {
                 throw new AppError('User already exists', 400, 'USER_ALREADY_EXISTS');
             }
+            const hashedPassword = await this.hashPasswordIfPresent(user.password);
             const newUser = await this.prisma.users.create({
-                data: user,
+                data: {
+                    ...user,
+                    ...(hashedPassword ? { password: hashedPassword } : {}),
+                },
             });
             const token = generateToken(newUser);
             return token;
@@ -96,23 +106,31 @@ export class UserService {
             }
             const { image_id: rawImageInput, ...userData } = user;
 
-            let normalizedImageId: string | null | undefined;
-
-            if (uploadedImage) {
-                await this.removeExistingImage(existingUser.image_id);
-                normalizedImageId = await this.persistUploadedFile(uploadedImage);
-            } else {
-                normalizedImageId = await this.normalizeExistingImageReference(rawImageInput);
-            }
+            const normalizedImageId = await this.resolveImageId(
+                existingUser.image_id,
+                rawImageInput,
+                uploadedImage,
+            );
             const now = new Date();
+
             const updateData: Prisma.usersUncheckedUpdateInput = {
                 ...this.normalizeUserFields(userData),
                 updated_at: now,
             };
 
+            if(typeof updateData.password === 'string' && bcrypt.compareSync(updateData.password || "", existingUser.password || "")) {
+                throw new AppError('Current password and new password should not be same', 400, 'CURRENT_PASSWORD_AND_NEW_PASSWORD_SHOULD_NOT_BE_SAME');
+            }
+
+            if (typeof updateData.password === 'string' && updateData.password.length > 0) {
+                updateData.password = await this.hashPasswordIfPresent(updateData.password) ?? updateData.password;
+            }
+
             if (normalizedImageId !== undefined) {
                 updateData.image_id = normalizedImageId;
             }            
+
+            console.log("updateData", updateData);
 
             const updatedUser = await this.prisma.users.update({
                 where: { id },
@@ -238,6 +256,7 @@ export class UserService {
             'address',
             'chain',
             'email',
+            'password',
             'role',
             'display_name',
             'bio',
@@ -286,40 +305,12 @@ export class UserService {
         throw new AppError('Invalid value for is_verified', 400, 'INVALID_IS_VERIFIED_FLAG');
     }
 
-    private async removeExistingImage(imageId?: string | null): Promise<void> {
-        if (!imageId) {
-            return;
+    private async hashPasswordIfPresent(password?: string | null): Promise<string | undefined> {
+        if (!password) {
+            return undefined;
         }
 
-        const existingImage = await this.prisma.files.findUnique({
-            where: { id: imageId },
-        });
-
-        if (!existingImage) {
-            return;
-        }
-
-        const absolutePath = path.resolve(
-            process.cwd(),
-            existingImage.url.startsWith('/') ? existingImage.url.slice(1) : existingImage.url,
-        );
-
-        try {
-            await unlink(absolutePath);
-        } catch (error) {
-            const err = error as NodeJS.ErrnoException;
-            if (err.code !== 'ENOENT') {
-                logger.warn('Failed to remove existing user image from disk', {
-                    imageId,
-                    absolutePath,
-                    error,
-                });
-            }
-        }
-
-        await this.prisma.files.delete({
-            where: { id: imageId },
-        });
+        return bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
     }
 
     private async persistUploadedFile(file: UploadedFile): Promise<string> {
@@ -327,15 +318,7 @@ export class UserService {
             throw new AppError('Invalid uploaded image', 400, 'INVALID_IMAGE_FILE');
         }
 
-        const fileRecord = await this.prisma.files.create({
-            data: {
-                url: `${IMAGE_PUBLIC_PREFIX}/${file.filename}`,
-                mime_type: file.mimetype,
-                size_bytes: file.size,
-            },
-        });
-
-        return fileRecord.id;
+        return file.filename;
     }
 
     private async normalizeExistingImageReference(
@@ -350,14 +333,12 @@ export class UserService {
         }
 
         if (typeof imageInput === 'string') {
-            await this.ensureImageExists(imageInput);
             return imageInput;
         }
 
         if (this.isNullableStringFieldOperation(imageInput)) {
             const { set } = imageInput;
             if (typeof set === 'string') {
-                await this.ensureImageExists(set);
                 return set;
             }
             if (set === null) {
@@ -368,20 +349,44 @@ export class UserService {
         return undefined;
     }
 
-    private async ensureImageExists(imageId: string): Promise<void> {
-        const image = await this.prisma.files.findUnique({
-            where: { id: imageId },
-        });
-
-        if (!image) {
-            throw new AppError('Image not found', 404, 'IMAGE_NOT_FOUND');
-        }
-    }
-
     private isNullableStringFieldOperation(
         value: unknown,
     ): value is Prisma.NullableStringFieldUpdateOperationsInput {
         return typeof value === 'object' && value !== null && 'set' in value;
+    }
+
+    private async resolveImageId(
+        existingImageId: string | null,
+        rawImageInput: Prisma.usersUncheckedUpdateInput['image_id'],
+        uploadedImage?: UploadedFile,
+    ): Promise<string | null | undefined> {
+        if (uploadedImage) {
+            await this.removeExistingImage(existingImageId);
+            return this.persistUploadedFile(uploadedImage);
+        }
+
+        return this.normalizeExistingImageReference(rawImageInput);
+    }
+
+    private async removeExistingImage(imageId?: string | null): Promise<void> {
+        if (!imageId) {
+            return;
+        }
+
+        const targetPath = path.resolve(IMAGE_UPLOAD_DIR, imageId);
+
+        try {
+            await unlink(targetPath);
+        } catch (error) {
+            const err = error as NodeJS.ErrnoException;
+            if (err.code !== 'ENOENT') {
+                logger.warn('Failed to remove existing user image from disk', {
+                    imageId,
+                    targetPath,
+                    error,
+                });
+            }
+        }
     }
 }
 

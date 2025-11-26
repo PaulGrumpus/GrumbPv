@@ -5,8 +5,9 @@ import {
     ReactNode,
     useContext,
     useEffect,
-    useState
+    useState,
 } from "react";
+import { usePathname } from "next/navigation";
 import { UserContextType, User } from "@/types/user";
 import { LoadingCtx } from "./loadingContext";
 import { decodeToken } from "@/utils/jwt";
@@ -41,8 +42,11 @@ const UserInfoProvider = ({ children }: Props) => {
     const [userInfo, setUserInfo] = useState<User>(defaultProvider.userInfo);
     const [userInfoError, setUserInfoError] = useState<string>(defaultProvider.userInfoError);
     const { setLoadingState } = useContext(LoadingCtx);
+    const pathname = usePathname();
 
     const init = async () => {
+        if (typeof window === "undefined") return;
+        
         setLoadingState("pending");
         const token = localStorage.getItem('token');
         if(token) {
@@ -66,10 +70,10 @@ const UserInfoProvider = ({ children }: Props) => {
         window.location.pathname === '/faq';
 
     useEffect(() => {
-        if(!isInvitePage && !isPrivacyPage && !isTermsPage && !isFAQPage) {
+        if(!['/invite', '/privacy', '/terms', '/faq'].includes(pathname)) {
             init();
         }
-    }, []);
+    }, [pathname]);
 
     // Check if we're on the invite page
 

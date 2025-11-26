@@ -12,19 +12,20 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { User } from '@/types/user';
 import { updateUser } from '@/utils/functions';
+import { EscrowBackendConfig } from '@/config/config';
+import bcrypt from 'bcryptjs';
 
 type FormState = {
     userName: string;
     userEmail: string;
     userBio: string;
+    userPhoto: string;
     selectedLanguage: string;
 };
 
 const ProfilePage = () => {
     const [userBio, setUserBio] = useState("");
-    const [password, setPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
     const [selectedLanguage, setSelectedLanguage] = useState("");
     const [userName, setUserName] = useState("Alisa Wilson");
     const [userPhoto, setUserPhoto] = useState("/Grmps/profile-image.jpg");
@@ -51,9 +52,10 @@ const ProfilePage = () => {
         userName: "",
         userEmail: "",
         userBio: "",
+        userPhoto: "",
         selectedLanguage: "",
     });  
-    const { userInfo } = useContext(UserInfoCtx);
+    const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const router = useRouter();
 
     useEffect(() => {
@@ -118,21 +120,15 @@ const ProfilePage = () => {
             userName,
             userEmail,
             userBio,
+            userPhoto,
             selectedLanguage,
         };
 
-        setPassword("");
         setNewPassword("");
         setConfirmPassword("");
-
-        console.log("Data:", {
-            userName,
-            userBio,
-            password,
-            newPassword,
-            confirmPassword,
-            selectedLanguage,
-        });
+        setUploadedFileName("");
+        setPreviewUrl(null);
+        setSelectedFile(null);
 
         const user: User = {
             address: userInfo?.address || "",
@@ -140,15 +136,14 @@ const ProfilePage = () => {
             id: userInfo?.id || "",
             display_name: userName,
             email: userEmail,
+            password: newPassword,
             bio: userBio,
             role: userRole || "",
             image_id: userInfo?.image_id,
-            country_code: selectedLanguage || "",
             is_verified: userInfo?.is_verified || false,
             created_at: userInfo?.created_at || "",
             updated_at: userInfo?.updated_at || "",
         };
-        console.log("selectedFile", selectedFile);
 
         const response = await updateUser(user, selectedFile);
         if (response.success) {
@@ -158,6 +153,20 @@ const ProfilePage = () => {
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: true,
+            });
+
+            setUserInfo({
+                ...userInfo,
+                image_id: response.data?.image_id || "",
+                updated_at: response.data?.updated_at || "",
+                created_at: response.data?.created_at || "",
+                address: response.data?.address || "",
+                chain: response.data?.chain || "",
+                email: response.data?.email || "",
+                password: response.data?.password || "",
+                role: response.data?.role || "",
+                display_name: response.data?.display_name || "",
+                bio: response.data?.bio || "",
             });
         }
         else {
@@ -216,11 +225,9 @@ const ProfilePage = () => {
         setUserName(initialUserName);
         setUserBio(initialBio);
         setUserEmail(initialUserEmail);
-        setPassword("");
         setNewPassword("");
         setConfirmPassword("");
         setSelectedLanguage(initialLanguage);
-        setShowPassword(false);
         setShowNewPassword(false);
         setShowConfirmPassword(false);
         setDropdownMenuOpen(false);
@@ -230,18 +237,12 @@ const ProfilePage = () => {
     };
 
     useEffect(() => {
-        if (password !== "" && newPassword !== "" && password === newPassword) {
-            setError("Current Password and New Password should not be same!");
-        } else {
-            setError("");
-        }
-    }, [password, newPassword]);
-
-    useEffect(() => {
         if (newPassword !== confirmPassword) {
             setErrorNewPassword(true);
+            setError("New password and confirm password should be same!");
         } else {
             setErrorNewPassword(false);
+            setError("");
         }
     }, [newPassword, confirmPassword]);    
 
@@ -266,25 +267,30 @@ const ProfilePage = () => {
 
     useEffect(() => {
         setLoadingState("pending");
-        if(!userInfo) {
+        if(userInfo.id === "") {
             setLoadingState("failure");
             return;
         }
-        initialFormState.current = {
-            userName,
-            userEmail,
-            userBio,
-            selectedLanguage,
-        };
-        setUserBio(userInfo.bio || "")
-        setSelectedLanguage("")
-        setUserName(userInfo.display_name || "")
-        setUserPhoto(userInfo.image_id || "")
-        setUserRole(userInfo.role || "")
-        setUserEmail(userInfo.email || "")
-        setUserWaletAddress(userInfo.address || "")
-        setLoadingState("success");
-    }, []);
+        if (userInfo && userInfo.id) {
+            initialFormState.current = {                
+                userName: userInfo.display_name || "",
+                userEmail: userInfo.email || "",
+                userBio: userInfo.bio || "",
+                userPhoto: userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "",
+                selectedLanguage,
+            };
+            console.log("test-initialFormState", initialFormState.current);
+            console.log("test-userInfo", userInfo);
+            setUserBio(userInfo.bio || "")
+            setSelectedLanguage("")
+            setUserName(userInfo.display_name || "")
+            setUserPhoto(userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "")
+            setUserRole(userInfo.role || "")
+            setUserEmail(userInfo.email || "")
+            setUserWaletAddress(userInfo.address || "")
+            setLoadingState("success");
+        }
+    }, [userInfo]);
 
     useEffect(() => {
         if (loadingState === "failure") {
@@ -304,7 +310,7 @@ const ProfilePage = () => {
                     <div className='flex flex-col items-center'>
                         <div className='min-w-140 pt-10.25 gap-6 flex flex-col pb-10.25'>
                             <p className='text-normal font-regular text-black text-left pb-2'>Photo</p>
-                            {userPhoto && (
+                            {!uploadedFileName && userPhoto && (
                                 <div className='flex items-center gap-6 flex-col justify-center'>
                                     <div
                                         className='w-25 h-25 rounded-full overflow-hidden'
@@ -329,18 +335,21 @@ const ProfilePage = () => {
                                                 src={previewUrl}
                                                 alt="uploaded preview"
                                                 className="w-full h-full rounded-full object-cover"
-                                            />
+                                            />                                            
                                         ) : (
                                             <p className="text-normal font-regular text-black text-left">No image uploaded</p>
                                         )}
                                         <XMarkIcon className="w-6 h-6 absolute text-black cursor-pointer top-[-10px] right-[-15px]" onClick={removeUploadedFile}/>
                                     </div>
+                                    <p className="text-tiny font-regular text-[#7E3FF2] text-left">The uploaded image should be less than 20MB</p>
                                     <Button variant='secondary' padding='px-5 py-2' onClick={handleUploadFile}>Change Photo</Button>
                                 </div>
                             ) : (
-                                <div className='flex items-center justify-center'>
-                                    <Button variant='secondary' padding='px-5 py-2' onClick={handleUploadFile}>Upload Photo</Button>
-                                </div>
+                                !userPhoto && (
+                                    <div className='flex items-center justify-center'>
+                                        <Button variant='secondary' padding='px-5 py-2' onClick={handleUploadFile}>Upload Photo</Button>
+                                    </div>
+                                )
                             )}
                             <div>
                                 <p className='text-normal font-regular text-black text-left pb-2'>Username</p>
@@ -399,58 +408,6 @@ const ProfilePage = () => {
                             </div>
                             <div>
                                 <p className='text-normal font-regular text-black text-left pb-2'>Password</p>
-                                <div className='flex items-center border border-[#8F99AF] rounded-lg p-3 gap-3'>
-                                    <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className='flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none'
-                                        placeholder='Current Password'
-                                    />
-                                    <button
-                                        type='button'
-                                        onClick={() => setShowPassword((prev) => !prev)}
-                                        aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                        className='text-black'
-                                    >
-                                        {showPassword ? (
-                                            <svg width='20' height='20' viewBox='0 0 24 24' fill='none'>
-                                                <path
-                                                    d='M1.5 12C3.1 7.2 7.35 4 12.045 4C16.74 4 21 7.2 22.5 12C21 16.8 16.74 20 12.045 20C7.35 20 3.1 16.8 1.5 12Z'
-                                                    stroke='currentColor'
-                                                    strokeWidth='1.5'
-                                                    strokeLinecap='round'
-                                                    strokeLinejoin='round'
-                                                />
-                                                <circle
-                                                    cx='12.05'
-                                                    cy='12'
-                                                    r='2.5'
-                                                    stroke='currentColor'
-                                                    strokeWidth='1.5'
-                                                />
-                                                <path
-                                                    d='M3 3L21 21'
-                                                    stroke='currentColor'
-                                                    strokeWidth='1.5'
-                                                    strokeLinecap='round'
-                                                    strokeLinejoin='round'
-                                                />
-                                            </svg>
-                                        ) : (
-                                            <div
-                                                className='w-6 h-6'
-                                            >
-                                                <Image 
-                                                    src={showEyeIcon} 
-                                                    alt='show eye icon' 
-                                                    width={24} 
-                                                    height={24} 
-                                                />
-                                            </div>
-                                        )}
-                                    </button>
-                                </div>
                                 <div 
                                     className={`flex items-center border border-[#8F99AF] rounded-lg p-3 gap-3 mt-4 ${errorNewPassword ? 'border-red-500' : ''}`}
                                 >

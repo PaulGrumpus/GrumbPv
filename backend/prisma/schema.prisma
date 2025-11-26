@@ -16,8 +16,7 @@ model users {
   role          user_role
   display_name  String?
   bio           String?
-  image_id      String?                     @db.Uuid
-  image         files?                      @relation(fields: [image_id], references: [id])
+  image_id      String?                     
   country_code  String?
   is_verified   Boolean                     @default(false)
   created_at    DateTime                    @default(now()) @db.Timestamptz(6)
@@ -46,8 +45,7 @@ model jobs {
   token_symbol   String?
   location       location_type    @default(remote)
   tags           String[]
-  image_id       String?          @db.Uuid
-  image          files?           @relation(fields: [image_id], references: [id])
+  image_id       String?          
   deadline_at    DateTime?        @db.Timestamptz(6)
   status         job_status       @default(open)
   is_remote      Boolean          @default(true)
@@ -71,28 +69,13 @@ model gigs {
   budget_max_usd Decimal?        @db.Decimal(18, 8)
   token_symbol   String?
   tags           String[]
-  image_id       String?         @db.Uuid
-  image          files?          @relation(fields: [image_id], references: [id])
+  image_id       String?         
   created_at     DateTime        @default(now()) @db.Timestamptz(6)
   updated_at     DateTime        @default(now()) @db.Timestamptz(6)
   conversations  conversations[]
 
   @@index([created_at(sort: Desc)])
   @@map("gigs")
-}
-
-model files {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  url        String
-  mime_type  String?
-  size_bytes Int?
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @default(now()) @db.Timestamptz(6)
-  jobs       jobs[]
-  users      users[]
-  gigs       gigs[]
-
-  @@map("files")
 }
 
 model job_bids {

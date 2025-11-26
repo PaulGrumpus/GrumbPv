@@ -48,6 +48,11 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: 'BSC Escrow API Docs',
 }));
 
+app.use((req, _, next) => {
+  console.log("Incoming content-type:", req.headers["content-type"]);
+  next();
+});
+
 // Swagger JSON
 app.get('/api-docs.json', (_req, res) => {
   res.setHeader('Content-Type', 'application/json');
