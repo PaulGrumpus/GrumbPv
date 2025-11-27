@@ -1,17 +1,14 @@
-import path from 'node:path';
-import { unlink } from 'node:fs/promises';
 import bcrypt from 'bcryptjs';
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
 import { Prisma, PrismaClient, user_role, users } from '@prisma/client';
 import { generateToken } from '../../utils/jwt.js';
-
-type UploadedFile = {
-    filename?: string;
-    mimetype: string;
-    size: number;
-};
-const IMAGE_UPLOAD_DIR = path.resolve(process.cwd(), 'uploads', 'images');
+import {
+    removeStoredImage,
+    persistUploadedImage,
+    type UploadedImage,
+} from '../../utils/imageStorage.js';
+ 
 const PASSWORD_SALT_ROUNDS = Number(process.env.PASSWORD_SALT_ROUNDS || 10);
 
 export class UserService {
@@ -92,7 +89,7 @@ export class UserService {
     public async updateUser(
         id: string,
         user: Prisma.usersUncheckedUpdateInput,
-        uploadedImage?: UploadedFile,
+        uploadedImage?: UploadedImage,
     ): Promise<string> {
         try {       
             if(!id) {
@@ -129,8 +126,6 @@ export class UserService {
             if (normalizedImageId !== undefined) {
                 updateData.image_id = normalizedImageId;
             }            
-
-            console.log("updateData", updateData);
 
             const updatedUser = await this.prisma.users.update({
                 where: { id },
@@ -247,6 +242,14 @@ export class UserService {
             throw new AppError('Error getting users', 500, 'DB_USERS_GET_FAILED');
         }
     }
+    
+    private async hashPasswordIfPresent(password?: string | null): Promise<string | undefined> {
+        if (!password) {
+            return undefined;
+        }
+
+        return bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
+    }
 
     private normalizeUserFields(
         userData: Prisma.usersUncheckedUpdateInput,
@@ -305,22 +308,6 @@ export class UserService {
         throw new AppError('Invalid value for is_verified', 400, 'INVALID_IS_VERIFIED_FLAG');
     }
 
-    private async hashPasswordIfPresent(password?: string | null): Promise<string | undefined> {
-        if (!password) {
-            return undefined;
-        }
-
-        return bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
-    }
-
-    private async persistUploadedFile(file: UploadedFile): Promise<string> {
-        if (!file.filename) {
-            throw new AppError('Invalid uploaded image', 400, 'INVALID_IMAGE_FILE');
-        }
-
-        return file.filename;
-    }
-
     private async normalizeExistingImageReference(
         imageInput?: Prisma.usersUncheckedUpdateInput['image_id'],
     ): Promise<string | null | undefined> {
@@ -358,41 +345,14 @@ export class UserService {
     private async resolveImageId(
         existingImageId: string | null,
         rawImageInput: Prisma.usersUncheckedUpdateInput['image_id'],
-        uploadedImage?: UploadedFile,
+        uploadedImage?: UploadedImage,
     ): Promise<string | null | undefined> {
         if (uploadedImage) {
-            await this.removeExistingImage(existingImageId);
-            return this.persistUploadedFile(uploadedImage);
+            await removeStoredImage(existingImageId);
+            return persistUploadedImage(uploadedImage);
         }
 
         return this.normalizeExistingImageReference(rawImageInput);
-    }
-
-    private async removeExistingImage(imageId?: string | null): Promise<void> {
-        if (!imageId) {
-            return;
-        }
-
-        const normalizedId = path
-            .normalize(imageId)
-            .replace(/^(\.\.[/\\])+/, '');
-
-        const targetPath = imageId.startsWith(path.sep) || imageId.startsWith('/')
-            ? path.resolve(process.cwd(), normalizedId.replace(/^[/\\]/, ''))
-            : path.resolve(IMAGE_UPLOAD_DIR, normalizedId);
-
-        try {
-            await unlink(targetPath);
-        } catch (error) {
-            const err = error as NodeJS.ErrnoException;
-            if (err.code !== 'ENOENT') {
-                logger.warn('Failed to remove existing user image from disk', {
-                    imageId,
-                    targetPath,
-                    error,
-                });
-            }
-        }
     }
 }
 

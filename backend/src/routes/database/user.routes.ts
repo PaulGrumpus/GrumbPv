@@ -39,19 +39,6 @@ const imageUpload = multer({
 });
 
 const optionalImageUpload = (req: Request, res: Response, next: NextFunction) => {
-    // if (!req.is('multipart/form-data')) {
-    //     next();
-    //     return;
-    // }
-
-    // const handler = imageUpload.single('image');
-    // handler(req, res, (error: unknown) => {
-    //     if (error) {
-    //         next(error);
-    //         return;
-    //     }
-    //     next();
-    // });
     const contentType = req.headers['content-type'] || '';
     const isMultipart = contentType.includes('multipart/form-data');
 

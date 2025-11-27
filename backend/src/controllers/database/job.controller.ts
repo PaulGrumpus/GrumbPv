@@ -5,7 +5,8 @@ export class JobController {
     async createJob(req: Request, res: Response, next: NextFunction) {
         try {
             const { ...params } = req.body;
-            const result = await jobService.createJob(params);
+            const file = (req as Request & { file?: Express.Multer.File }).file;
+            const result = await jobService.createJob(params, file);
             res.json({
                 success: true,
                 data: result,
@@ -20,7 +21,8 @@ export class JobController {
         try {
             const { id } = req.params;
             const { ...params } = req.body;
-            const result = await jobService.updateJob(id, params);
+            const file = (req as Request & { file?: Express.Multer.File }).file;
+            const result = await jobService.updateJob(id, params, file);
             res.json({
                 success: true,
                 data: result,

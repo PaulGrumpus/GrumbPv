@@ -2,6 +2,11 @@ import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
 import { Prisma, PrismaClient, jobs, job_status } from '@prisma/client';
 import { userService } from './user.service.js';
+import {
+    persistUploadedImage,
+    removeStoredImage,
+    type UploadedImage,
+} from '../../utils/imageStorage.js';
 
 export class JobService {
     private prisma: PrismaClient;
@@ -19,7 +24,10 @@ export class JobService {
         return parseFloat(String(value));
     }
 
-    public async createJob(job: Prisma.jobsUncheckedCreateInput): Promise<jobs> {
+    public async createJob(
+        job: Prisma.jobsUncheckedCreateInput,
+        file?: UploadedImage,
+    ): Promise<jobs> {
         try {
             if(!job.title || !job.description_md || !job.client_id || !job.status) {
                 throw new AppError('Title, description, client ID and status are required', 400, 'TITLE_DESCRIPTION_CLIENT_ID_STATUS_REQUIRED');
@@ -68,9 +76,29 @@ export class JobService {
             });
             if (existingJob) {
                 throw new AppError('Job already exists', 400, 'JOB_ALREADY_EXISTS');
-            }            
+            }
+
+            const normalizedImageId = await this.resolveImageId(
+                null,
+                job.image_id,
+                file,
+            );
+
+            const createData: Prisma.jobsUncheckedCreateInput = {
+                ...this.normalizeJobFields(job),
+                ...(normalizedImageId !== undefined ? { image_id: normalizedImageId as string } : null),
+                tags: this.normalizeTags(job.tags),
+            } as Prisma.jobsUncheckedCreateInput;
+
+            console.log("normalizedImageId", normalizedImageId, file);
+
+            const normalizedTags = this.normalizeTags(job.tags);
+            console.log("normalizedTags", normalizedTags);
+
+            console.log("Job", job);
+
             const newJob = await this.prisma.jobs.create({
-                data: job,
+                data: createData,
             });
             return newJob;
         }
@@ -83,7 +111,11 @@ export class JobService {
         }
     }
 
-    public async updateJob(id: string, job: Prisma.jobsUncheckedUpdateInput): Promise<jobs> {
+    public async updateJob(
+        id: string,
+        job: Prisma.jobsUncheckedUpdateInput,
+        file?: UploadedImage,
+    ): Promise<jobs> {
         try {
             if(!id) {
                 throw new AppError('Job ID is required', 400, 'JOB_ID_REQUIRED');
@@ -132,9 +164,18 @@ export class JobService {
                     throw new AppError('Deadline is more than 1 year in the future', 400, 'DEADLINE_MORE_THAN_1_YEAR_IN_FUTURE');
                 }
             }
+            const normalizedImageId = await this.resolveImageId(
+                existingJob.image_id,
+                job.image_id,
+                file,
+            );
+
             const updatedJob = await this.prisma.jobs.update({
                 where: { id },
-                data: job,
+                data: {
+                    ...this.normalizeJobFields(job),
+                    ...(normalizedImageId !== undefined ? { image_id: normalizedImageId as string } : {}),
+                },
             });
             return updatedJob;
         }
@@ -232,6 +273,104 @@ export class JobService {
             throw new AppError('Error getting jobs', 500, 'DB_JOBS_GET_FAILED');
         }
     }
+
+    private async normalizeExistingImageReference(
+        imageInput?: Prisma.jobsUncheckedUpdateInput['image_id'],
+    ): Promise<string | null | undefined> {
+        if (typeof imageInput === 'undefined') {
+            return undefined;
+        }
+
+        if (imageInput === null) {
+            return null;
+        }
+
+        if (typeof imageInput === 'string') {
+            return imageInput;
+        }
+
+        if (this.isNullableStringFieldOperation(imageInput)) {
+            const { set } = imageInput;
+            if (typeof set === 'string') {
+                return set;
+            }
+            if (set === null) {
+                return null;
+            }
+        }
+
+        return undefined;
+    }
+
+    private normalizeJobFields(
+        jobData: Prisma.jobsUncheckedUpdateInput,
+    ): Prisma.jobsUncheckedUpdateInput {
+        const normalized: Record<string, unknown> = {};
+        const allowedKeys: Array<keyof Prisma.jobsUncheckedUpdateInput> = [
+            'title',
+            'description_md',
+            'budget_min_usd',
+            'budget_max_usd',
+            'location',
+            'deadline_at',
+            'client_id',
+            'status',
+            'image_id',
+        ];
+
+        for (const key of allowedKeys) {
+            const value = jobData[key];
+
+            if (value === undefined) {
+                continue;
+            }
+
+            if (value === null) {
+                normalized[key as string] = null;
+                continue;
+            }
+
+            normalized[key as string] = value;
+        }
+
+        return normalized as Prisma.jobsUncheckedUpdateInput;
+    }
+
+    private isNullableStringFieldOperation(
+        value: unknown,
+    ): value is Prisma.NullableStringFieldUpdateOperationsInput {
+        return typeof value === 'object' && value !== null && 'set' in value;
+    }
+
+    private async resolveImageId(
+        existingImageId: string | null,
+        rawImageInput: Prisma.jobsUncheckedUpdateInput['image_id'],
+        uploadedImage?: UploadedImage,
+    ): Promise<string | null | undefined> {
+        if (uploadedImage) {
+            await removeStoredImage(existingImageId);
+            return persistUploadedImage(uploadedImage);
+        }
+
+        return this.normalizeExistingImageReference(rawImageInput);
+    }
+
+    private normalizeTags(input: unknown): string[] {
+        if (!input) return [];
+        if (Array.isArray(input)) return input.map((tag) => String(tag));
+        if (typeof input === 'string') {
+            try {
+                const parsed = JSON.parse(input);
+                if (Array.isArray(parsed)) return parsed.map((tag) => String(tag));
+            } catch {
+                // fall through
+            }
+            return [input];
+        }
+        return [String(input)];
+    }
 }
+
+
 
 export const jobService = new JobService();
