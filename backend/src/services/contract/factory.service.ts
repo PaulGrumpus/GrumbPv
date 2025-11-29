@@ -6,7 +6,7 @@ import { AppError } from '../../middlewares/errorHandler.js';
 import { checkWalletBalance, validateDeadline, validateFeeBps, validateAddress } from '../../utils/validation.js';
 import { jobMilestoneService } from '../database/job.milestone.service.js';
 import { jobService } from '../database/job.service.js';
-import { walletService } from '../database/wallet.service.js';
+import { userService } from '../database/user.service.js';
 
 export interface CreateEscrowParams {
   job_milestone_id: string;
@@ -94,37 +94,21 @@ export class FactoryService {
         );
       }
 
-      const clientWallet = await walletService.getUserWalletsByUserId(existingJob.client_id);
-      if (!clientWallet || clientWallet.length === 0) {
+      const client = await userService.getUserById(existingJob.client_id);
+      if (!client || client.address === null) {
         throw new AppError(
           'Client wallet not found',
           404,
           'CLIENT_WALLET_NOT_FOUND'
         );
       }
-      const primaryClientWallet = clientWallet.find((wallet) => wallet.is_primary);
-      if (!primaryClientWallet) {
-        throw new AppError(
-          'Primary client wallet not found',
-          404,
-          'PRIMARY_CLIENT_WALLET_NOT_FOUND'
-        );
-      }
 
-      const freelancerWallet = await walletService.getUserWalletsByUserId(exsitingJobMilestone.freelancer_id);
-      if (!freelancerWallet || freelancerWallet.length === 0) {
+      const freelancer = await userService.getUserById(exsitingJobMilestone.freelancer_id);
+      if (!freelancer || freelancer.address === null) {
         throw new AppError(
           'Freelancer wallet not found',
           404,
           'FREELANCER_WALLET_NOT_FOUND'
-        );
-      }
-      const primaryFreelancerWallet = freelancerWallet.find((wallet) => wallet.is_primary);
-      if (!primaryFreelancerWallet) {
-        throw new AppError(
-          'Primary freelancer wallet not found',
-          404,
-          'PRIMARY_FREELANCER_WALLET_NOT_FOUND'
         );
       }
 
@@ -142,8 +126,8 @@ export class FactoryService {
       const deadlineTimestamp = Math.floor(deadline.getTime() / 1000);
 
       // Validate addresses
-      validateAddress(primaryClientWallet.address, 'buyer');
-      validateAddress(primaryFreelancerWallet.address, 'seller');
+      validateAddress(client.address, 'buyer');
+      validateAddress(freelancer.address, 'seller');
       validateAddress(DEFAULT_CONFIG.arbiter, 'arbiter');
       validateAddress(DEFAULT_CONFIG.feeRecipient, 'feeRecipient');
 
@@ -173,8 +157,8 @@ export class FactoryService {
       // Log all parameters for debugging
       logger.info('Factory.createEscrow params:', {
         jobIdBytes,
-        buyer: primaryClientWallet.address,
-        seller: primaryFreelancerWallet.address,
+        buyer: client.address,
+        seller: freelancer.address,
         arbiter: DEFAULT_CONFIG.arbiter,
         feeRecipient: DEFAULT_CONFIG.feeRecipient,
         feeBps,
@@ -191,8 +175,8 @@ export class FactoryService {
 
       const tx = await factory.createEscrow(
         jobIdBytes,
-        primaryClientWallet.address, // buyer
-        primaryFreelancerWallet.address, // seller
+        client.address, // buyer
+        freelancer.address, // seller
         DEFAULT_CONFIG.arbiter,
         DEFAULT_CONFIG.feeRecipient,
         feeBps,
@@ -286,37 +270,21 @@ export class FactoryService {
         );
       }
 
-      const clientWallet = await walletService.getUserWalletsByUserId(existingJob.client_id);
-      if (!clientWallet || clientWallet.length === 0) {
+      const client = await userService.getUserById(existingJob.client_id);
+      if (!client || client.address === null) {
         throw new AppError(
           'Client wallet not found',
           404,
           'CLIENT_WALLET_NOT_FOUND'
         );
       }
-      const primaryClientWallet = clientWallet.find((wallet) => wallet.is_primary);
-      if (!primaryClientWallet) {
-        throw new AppError(
-          'Primary client wallet not found',
-          404,
-          'PRIMARY_CLIENT_WALLET_NOT_FOUND'
-        );
-      }
 
-      const freelancerWallet = await walletService.getUserWalletsByUserId(exsitingJobMilestone.freelancer_id);
-      if (!freelancerWallet || freelancerWallet.length === 0) {
+      const freelancer = await userService.getUserById(exsitingJobMilestone.freelancer_id);
+      if (!freelancer || freelancer.address === null) {
         throw new AppError(
           'Freelancer wallet not found',
           404,
           'FREELANCER_WALLET_NOT_FOUND'
-        );
-      }
-      const primaryFreelancerWallet = freelancerWallet.find((wallet) => wallet.is_primary);
-      if (!primaryFreelancerWallet) {
-        throw new AppError(
-          'Primary freelancer wallet not found',
-          404,
-          'PRIMARY_FREELANCER_WALLET_NOT_FOUND'
         );
       }
 
@@ -344,8 +312,8 @@ export class FactoryService {
 
       const tx = await factory.createEscrowDeterministic(
         jobIdBytes,
-        primaryClientWallet.address, // buyer
-        primaryFreelancerWallet.address, // seller
+        client.address, // buyer
+        freelancer.address, // seller
         DEFAULT_CONFIG.arbiter,
         DEFAULT_CONFIG.feeRecipient,
         feeBps,
