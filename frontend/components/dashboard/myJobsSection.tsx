@@ -47,7 +47,14 @@ const MyJobsSection = () => {
                 setJobs(result.data ?? []);
                 setLoading("success");
             } else {
-                toast.error(result.error as string);
+                toast.error(result.error as string, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
             }
         } catch (error) {
             toast.error(error as string);
@@ -102,7 +109,7 @@ const MyJobsSection = () => {
                         <div className="grid grid-cols-2 gap-8">
                             {jobs.map((job) => (
                                 <UserJobOrGigPost
-                                    key={job.title}
+                                    key={job.id}
                                     title={job.title}
                                     description={job.description_md}
                                     subtitle={job.location ?? ""}
@@ -123,7 +130,9 @@ const MyJobsSection = () => {
                         <Button
                             padding='px-7 py-3'
                         >
-                            <p className='text-normal font-regular'>+ Create Job</p>
+                            <p className='text-normal font-regular'
+                                onClick={() => router.push("/dashboard?view=create-job")}
+                            >+ Create Job</p>
                         </Button>
                     </div>
                 ))}

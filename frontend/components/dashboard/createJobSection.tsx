@@ -327,6 +327,9 @@ const CreateJobSection = () => {
             return;
         }
 
+        setError("");
+        setCheckError(false);
+
         const response = await createJob(
             { 
                 title, 
@@ -358,9 +361,6 @@ const CreateJobSection = () => {
                 pauseOnHover: true,
             });
         }
-
-        setError("");
-        setCheckError(false);
     }
 
     useEffect(() => {
