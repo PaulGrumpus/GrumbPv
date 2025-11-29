@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-roboto: var(--font-roboto);
+  --font-poppins: var(--font-poppins);
+  --font-inter: var(--font-inter);
+  --font-weight-regular: 400;
+  --font-weight-medium: 600;
+  --font-weight-bold: 700;
+
+  --color-light-blue: rgba(47, 61, 246, 0.6);
+  --color-blue: rgba(47, 61, 246, 1);
+
+  --color-purple: rgba(126, 63, 242, 1);
+}
+
+/* Custom font size CSS variables */
+:root {
+  --font-size-display: 3rem; /* 48px */
+  --font-size-title: 2rem; /* 32px */
+  --font-size-subtitle: 1.5rem; /* 24px */
+  --font-size-large: 1.25rem; /* 20px */
+  --font-size-logo: 1.225rem;  /*19.6 px*/
+  --font-size-light-large: 1.125rem; /* 18px */
+  --font-size-normal: 1rem;  /*16 px*/
+  --font-size-small: 0.875rem; /* 14px */
+  --font-size-tiny: 0.75rem; /* 12px */
+}
+
+/* Custom font size utility classes */
+.text-display {
+  font-size: var(--font-size-display);
+  line-height: 3.6rem;
+  font-family: var(--font-roboto);
+}
+
+.text-title {
+  font-size: var(--font-size-title);
+  line-height: 1.25rem;
+  font-family: var(--font-roboto);
+}
+
+.text-subtitle {
+  font-size: var(--font-size-subtitle);
+  line-height: 2.125rem;
+  font-family: var(--font-roboto);
+}
+
+.text-large {
+  font-size: var(--font-size-large);
+  line-height: 1.6875rem;
+  font-family: var(--font-roboto);
+}
+
+.text-logo {
+  font-size: var(--font-size-logo);
+  line-height: 1.225rem;
+  font-family: var(--font-roboto);
+}
+
+.text-light-large {
+  font-size: var(--font-size-light-large);
+  line-height: 1.6875rem;
+  font-family: var(--font-roboto);
+}
+
+.text-normal {
+  font-size: var(--font-size-normal);
+  line-height: 1.5rem;
+  font-family: var(--font-roboto);
+}
+
+.text-small {
+  font-size: var(--font-size-small);
+  line-height: 1.3125rem;
+  font-family: var(--font-roboto);
+}
+
+.text-tiny {
+  font-size: var(--font-size-tiny);
+  font-family: var(--font-roboto);
+}
+
+.font-regular {
+  font-weight: var(--font-weight-regular);
+}
+
+.font-medium {
+  font-weight: var(--font-weight-medium);
+}
+
+.font-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+.from-bg-light-bule-to-bg-purple {
+  position: relative; /* Create a stacking context */
+  z-index: 0;
+}
+
+.from-bg-light-bule-to-bg-purple::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    var(--color-light-blue),
+    var(--color-purple)
+  );
+  opacity: 0.4; /* Only affects background */
+  z-index: -1; /* Keeps gradient behind content */
+}
+
+.button-primary {
+  background: linear-gradient(
+    to right,
+    var(--color-light-blue),
+    var(--color-purple)
+  );
+  box-shadow:
+    0px 4px 16px -6px #C49D9F,
+    0px 20px 25px -5px rgba(0, 0, 0, 0.1);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.button-primary:hover {
+  background: linear-gradient(
+    to right,
+    var(--color-light-blue),
+    var(--color-purple)
+  );
+  box-shadow:
+    0px 8px 26px -6px rgba(47, 61, 246, 0.45),
+    0px 25px 30px -5px rgba(0, 0, 0, 0.2);
+}
+
+.button-primary--pressed,
+.button-primary:active {
+  background: linear-gradient(
+    to right,
+    var(--color-light-blue),
+    var(--color-purple)
+  );
+  box-shadow:
+    0px 3px 14px -6px rgba(0, 0, 0, 0.4),
+    0px 18px 20px -5px rgba(0, 0, 0, 0.2);
+}
+
+.linear-border {
+  display: flex;
+  justify-content: center;
+  background: linear-gradient(
+    to right,
+    var(--color-light-blue),
+    var(--color-purple)
+  );
+}
+
+.linear-border--dark-hover {
+  transition: background 0.2s ease;
+}
+
+.linear-border--dark-hover:hover,
+.linear-border--dark-hover:focus-within {
+  background: linear-gradient(
+    to right,
+    var(--color-blue),
+    rgba(50, 15, 120, 1)
+  );
+}
+
+.linear-border__inner {
+  width: 100%;
+  border: none;
+  outline: none;
+}
+
+.linear-border__inner:focus {
+  outline: none;
+  border: none;
+}
+
+.container {
+  @media (width >= 90rem /* 1440px */) {
+    max-width: 90rem /* 1440px */;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}

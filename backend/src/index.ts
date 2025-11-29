@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'node:path';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -16,7 +17,6 @@ import healthRoutes from './routes/health.routes.js';
 import jobRoutes from './routes/database/job.routes.js';
 import jobMilestoneRoutes from './routes/database/job.milestone.routes.js';
 import { DatabaseService } from './services/database/database.service.js';
-import walletRoutes from './routes/database/wallet.routes.js';
 import userRoutes from './routes/database/user.routes.js';
 import jobBidRoutes from './routes/database/job.bid.routes.js';
 import chainTxRoutes from './routes/database/chainTx.routes.js';
@@ -27,6 +27,7 @@ config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 const API_PREFIX = process.env.API_PREFIX || '/api/v1';
+const REQUEST_BODY_LIMIT = process.env.REQUEST_BODY_LIMIT || '10mb';
 
 // Middlewares
 app.use(helmet({
@@ -34,8 +35,9 @@ app.use(helmet({
 }));
 app.use(cors());
 app.use(compression());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: REQUEST_BODY_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: REQUEST_BODY_LIMIT }));
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
 // Rate limiting
 app.use(rateLimiter);
@@ -45,6 +47,11 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'BSC Escrow API Docs',
 }));
+
+app.use((req, _, next) => {
+  console.log("Incoming content-type:", req.headers["content-type"]);
+  next();
+});
 
 // Swagger JSON
 app.get('/api-docs.json', (_req, res) => {
@@ -58,7 +65,6 @@ app.use(`${API_PREFIX}/contract/escrow`, escrowRoutes);
 app.use(`${API_PREFIX}/contract/factory`, factoryRoutes);
 app.use(`${API_PREFIX}/contract/rewards`, rewardRoutes);
 app.use(`${API_PREFIX}/database/users`, userRoutes);
-app.use(`${API_PREFIX}/database/wallets`, walletRoutes);
 app.use(`${API_PREFIX}/database/jobs`, jobRoutes);
 app.use(`${API_PREFIX}/database/job-milestones`, jobMilestoneRoutes);
 app.use(`${API_PREFIX}/database/job-bids`, jobBidRoutes);

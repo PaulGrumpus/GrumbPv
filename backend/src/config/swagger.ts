@@ -159,7 +159,7 @@ const options: swaggerJsdoc.Options = {
           required: ['id', 'handle', 'email', 'role', 'is_verified', 'created_at', 'updated_at'],
           properties: {
             id: { type: 'string', format: 'uuid', readOnly: true, example: 'b9e3b0d0-4d4a-4b7d-8e5a-0c9a0d5e1a2b' },
-            handle: { type: 'string', example: 'satoshi' },
+            address: { type: 'string', example: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' },
             email: { type: 'string', format: 'email', example: 'satoshi@nchain.org' },
             role: { type: 'string', enum: ['client', 'freelancer', 'admin'], example: 'client' },
             display_name: { type: 'string', nullable: true, example: 'Satoshi Nakamoto' },
@@ -171,17 +171,27 @@ const options: swaggerJsdoc.Options = {
             deleted_at: { type: 'string', format: 'date-time', nullable: true, readOnly: true },
           },
         },
-        CreateUserRequest: {
+        CreateUserWithAddressRequest: {
           type: 'object',
-          required: ['handle', 'email'],
+          required: ['address', 'role'],
           properties: {
-            handle: { type: 'string' },
-            email: { type: 'string', format: 'email' },
+            address: { type: 'string' },
             role: { type: 'string', enum: ['client', 'freelancer', 'admin'], description: 'If omitted, backend may apply defaults if any' },
             display_name: { type: 'string', nullable: true },
             bio: { type: 'string', nullable: true },
             country_code: { type: 'string', nullable: true },
-            password: { type: 'string', nullable: true, writeOnly: true },
+          },
+        },
+        CreateUserWithEmailRequest: {
+          type: 'object',
+          required: ['email', 'role'],
+          properties: {
+            email: { type: 'string', format: 'email' },
+            password: { type: 'string', format: 'password', writeOnly: true },
+            role: { type: 'string', enum: ['client', 'freelancer', 'admin'], description: 'If omitted, backend may apply defaults if any' },
+            display_name: { type: 'string', nullable: true },
+            bio: { type: 'string', nullable: true },
+            country_code: { type: 'string', nullable: true },
           },
         },
         UpdateUserRequest: {

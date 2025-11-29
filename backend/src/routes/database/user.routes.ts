@@ -1,25 +1,69 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { body, param } from 'express-validator';
+import multer from 'multer';
+import { mkdirSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import path from 'node:path';
 import { validate } from '../../middlewares/validateRequest.js';
 import { userController } from '../../controllers/database/user.controller.js';
+import { AppError } from '../../middlewares/errorHandler.js';
 
 const router = Router();
+const IMAGE_UPLOAD_DIR = path.resolve(process.cwd(), 'uploads', 'images');
+mkdirSync(IMAGE_UPLOAD_DIR, { recursive: true });
+
+const imageStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => {
+        cb(null, IMAGE_UPLOAD_DIR);
+    },
+    filename: (_req, file, cb) => {
+        const extension = path.extname(file.originalname) || '.jpg';
+        cb(null, `${randomUUID()}${extension}`);
+    },
+});
+
+const MAX_IMAGE_SIZE_BYTES = Number(process.env.IMAGE_UPLOAD_MAX_SIZE_BYTES || 5 * 1024 * 1024);
+
+const imageUpload = multer({
+    storage: imageStorage,
+    limits: {
+        fileSize: MAX_IMAGE_SIZE_BYTES,
+    },
+    fileFilter: (_req, file, cb) => {
+        if (file.mimetype && file.mimetype.startsWith('image/')) {
+            cb(null, true);
+            return;
+        }
+        cb(new AppError('Only image uploads are allowed', 400, 'INVALID_IMAGE_TYPE'));
+    },
+});
+
+const optionalImageUpload = (req: Request, res: Response, next: NextFunction) => {
+    const contentType = req.headers['content-type'] || '';
+    const isMultipart = contentType.includes('multipart/form-data');
+
+    if (!isMultipart) {
+        return next();
+    }
+
+    imageUpload.single('image')(req, res, next);
+};
 
 /**
  * @openapi
- * /api/v1/database/users:
+ * /api/v1/database/users/with-address:
  *   post:
  *     tags: [Users]
- *     summary: Create a new user
+ *     summary: Create a new user with address and role
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CreateUserRequest'
+ *             $ref: '#/components/schemas/CreateUserWithAddressRequest'
  *     responses:
  *       200:
- *         description: User created successfully
+ *         description: User created with address successfully
  *         content:
  *           application/json:
  *             schema:
@@ -37,10 +81,48 @@ const router = Router();
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-    '/',
-    [body('handle').isString().notEmpty(), body('email').isEmail().notEmpty()],
-    validate([body('handle'), body('email')]),
-    userController.createUser.bind(userController)
+    '/with-address',
+    [body('address').isString().notEmpty(), body('role').isString().notEmpty()],
+    validate([body('address'), body('role')]), 
+    userController.createUserWithAddress.bind(userController)
+);
+
+/**
+ * @openapi
+ * /api/v1/database/users/with-email:
+ *   post:
+ *     tags: [Users]
+ *     summary: Create a new user with email and role
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateUserWithEmailRequest'
+ *     responses:
+ *       200:
+ *         description: User created with email successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post(
+    '/with-email',
+    [body('email').isEmail().notEmpty(), body('role').isString().notEmpty()],
+    validate([body('email'), body('role')]),
+    userController.createUserWithEmail.bind(userController)
 );
 
 /**
@@ -76,6 +158,7 @@ router.post(
  */
 router.post(
     '/:id',
+    optionalImageUpload,
     [param('id').isString().notEmpty()],
     validate([param('id')]),
     userController.updateUser.bind(userController)
@@ -219,13 +302,13 @@ router.get(
 
 /**
  * @openapi
- * /api/v1/database/users/by-handle/{handle}:
+ * /api/v1/database/users/by-address/{address}:
  *   get:
  *     tags: [Users]
- *     summary: Get user by handle
+ *     summary: Get user by address
  *     parameters:
  *       - in: path
- *         name: handle
+ *         name: address
  *         required: true
  *         schema:
  *           type: string
@@ -249,10 +332,10 @@ router.get(
  *               $ref: '#/components/schemas/Error'
  */
 router.get(
-    '/by-handle/:handle',
-    [param('handle').isString().notEmpty()],
-    validate([param('handle')]),
-    userController.getUserByHandle.bind(userController)
+    '/by-address/:address',
+    [param('address').isString().notEmpty()],
+    validate([param('address')]),
+    userController.getUserByAddress.bind(userController)
 );
 
 export default router;
