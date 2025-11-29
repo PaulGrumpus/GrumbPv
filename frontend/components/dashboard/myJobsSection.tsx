@@ -76,12 +76,6 @@ const MyJobsSection = () => {
         }
     }, [userInfo, loadingState])
 
-    useEffect(() => {
-        if (loadingState === "failure") {
-            router.push("/");
-        }
-    }, [loadingState, router]);
-
     if (loading === "pending") {
         return <Loading />;
     }

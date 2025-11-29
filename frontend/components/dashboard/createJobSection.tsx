@@ -216,6 +216,7 @@ const CreateJobSection = () => {
     const [uploadedFileName, setUploadedFileName] = useState<string>("");
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const [loading, setLoading] = useState("pending");
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const router = useRouter();
 
@@ -363,27 +364,24 @@ const CreateJobSection = () => {
     }
 
     useEffect(() => {
-        setLoadingState("pending");
-        if(userInfo.id === "") {
-            setLoadingState("failure");
-            return;
-        }
-        if (userInfo && userInfo.id) {
-            setLoadingState("success");
-        }
-    }, [userInfo])
-
-    useEffect(() => {
-        if (loadingState === "failure") {
+        if(loadingState === "success") {
+            if(userInfo.id === "") {
+                setLoadingState("failure");
+                return;
+            }
+            if (userInfo && userInfo.id) {
+                setLoading("success");
+            }
+        } else if (loadingState === "failure") {
             router.push("/");
         }
-    }, [loadingState, router]);
+    }, [userInfo, loadingState, router])
 
-    if (loadingState === "pending") {
+    if (loading === "pending") {
         return <Loading />;
     }
 
-    if (loadingState === "success") {
+    if (loading === "success") {
         return (
             <div>
                 <SectionPlaceholder

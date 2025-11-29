@@ -56,6 +56,7 @@ const ProfilePage = () => {
     });  
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const [loading, setLoading] = useState("pending");
     const router = useRouter();
 
     useEffect(() => {
@@ -264,43 +265,40 @@ const ProfilePage = () => {
     }, [dropdownMenuOpen]);
 
     useEffect(() => {
-        setLoadingState("pending");
-        if(userInfo.id === "") {
-            setLoadingState("failure");
-            return;
-        }
-        if (userInfo && userInfo.id) {
-            initialFormState.current = {                
-                userName: userInfo.display_name || "",
-                userEmail: userInfo.email || "",
-                userBio: userInfo.bio || "",
-                userPhoto: userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "",
-                selectedLanguage,
-            };
-            console.log("test-initialFormState", initialFormState.current);
-            console.log("test-userInfo", userInfo);
-            setUserBio(userInfo.bio || "")
-            setSelectedLanguage("")
-            setUserName(userInfo.display_name || "")
-            setUserPhoto(userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "")
-            setUserRole(userInfo.role || "")
-            setUserEmail(userInfo.email || "")
-            setUserWaletAddress(userInfo.address || "")
-            setLoadingState("success");
-        }
-    }, [userInfo]);
-
-    useEffect(() => {
-        if (loadingState === "failure") {
+        if(loadingState === "success") {
+            if(userInfo.id === "") {
+                router.push("/");
+                return;
+            }
+            if (userInfo && userInfo.id) {
+                initialFormState.current = {                
+                    userName: userInfo.display_name || "",
+                    userEmail: userInfo.email || "",
+                    userBio: userInfo.bio || "",
+                    userPhoto: userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "",
+                    selectedLanguage,
+                };
+                console.log("test-initialFormState", initialFormState.current);
+                console.log("test-userInfo", userInfo);
+                setUserBio(userInfo.bio || "")
+                setSelectedLanguage("")
+                setUserName(userInfo.display_name || "")
+                setUserPhoto(userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "")
+                setUserRole(userInfo.role || "")
+                setUserEmail(userInfo.email || "")
+                setUserWaletAddress(userInfo.address || "")
+                setLoading("success");
+            }
+        } else if (loadingState === "failure") {
             router.push("/");
         }
-    }, [loadingState, router]);
+    }, [userInfo, loadingState, router])
 
-    if (loadingState === "pending") {
+    if (loading === "pending") {
         return <Loading />;
     }
 
-    if (loadingState === "success") {
+    if (loading === "success") {
         return (
             <div className='pt-34 pb-8.75 px-16 bg-white'>
                 <div className='container mx-auto'>
