@@ -76,6 +76,7 @@ const DashboardPageContent = () => {
     const [userRole, setUserRole] = useState("client");
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const [loading, setLoading] = useState("pending");
     const router = useRouter();
 
     const freelancerSidebarItems = useMemo(() => ([
@@ -125,28 +126,25 @@ const DashboardPageContent = () => {
     };
 
     useEffect(() => {
-        setLoadingState("pending");
-        if(userInfo.id === "") {
-            setLoadingState("failure");
-            return;
-        }
-        if (userInfo && userInfo.id) {
-            setUserRole(userInfo.role || "client");
-            setLoadingState("success");
-        }
-    }, [userInfo])
-
-    useEffect(() => {
-        if (loadingState === "failure") {
+        if(loadingState === "success") {
+            if(userInfo.id === "") {
+                router.push("/");
+                return;
+            }
+            if (userInfo && userInfo.id) {
+                setUserRole(userInfo.role || "client");
+                setLoading("success");
+            }
+        } else if (loadingState === "failure") {
             router.push("/");
         }
-    }, [loadingState, router]);
+    }, [userInfo, loadingState, router])
 
-    if (loadingState === "pending") {
+    if (loading === "pending") {
         return <Loading />;
     }
 
-    if (loadingState === "success") {
+    if (loading === "success") {
         return (
             <div className="flex gap-20">
                 <Sidebar

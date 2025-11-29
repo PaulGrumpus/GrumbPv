@@ -2,6 +2,14 @@ import SectionPlaceholder from "./sectionPlaceholder";
 import Button from "../button";
 import UserJobOrGigPost from "../userJobOrGigPost";
 import { useRouter } from "next/navigation";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { LoadingCtx } from "@/context/loadingContext";
+import { UserInfoCtx } from "@/context/userContext";
+import Loading from "../loading";
+import { Job } from "@/types/jobs";
+import { EscrowBackendConfig } from "@/config/config";
+import { getJobsByClientId } from "@/utils/functions";
+import { toast } from "react-toastify";
 
 const Jobs = [
     {
@@ -27,49 +35,109 @@ const Jobs = [
 
 const MyJobsSection = () => {
     const router = useRouter();
-    return (
-        <div>
-            <SectionPlaceholder
-                title="My Jobs"
-                description="Track and manage all the jobs you have published."
-            />
-            {Jobs.length > 0 ? (
-                <div>
-                    <div className="flex justify-end">
-                        <div className="w-45 mb-8 flex justify-end">
-                            <Button
-                                padding='px-7 py-3'
-                                onClick={() => router.push("/dashboard?view=create-job")}
-                            >
-                                <p className='text-normal font-regular'>+ Create Job</p>
-                            </Button>
+    const { userInfo, setUserInfo } = useContext(UserInfoCtx);
+    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const [loading, setLoading] = useState("pending");
+    const [jobs, setJobs] = useState<Job[]>([]);
+
+    const getJobsPerClientId = async (client_id: string) => {
+        try {
+            const result = await getJobsByClientId(client_id);
+            if (result.success) {
+                setJobs(result.data ?? []);
+                setLoading("success");
+            } else {
+                toast.error(result.error as string);
+            }
+        } catch (error) {
+            toast.error(error as string);
+        }
+    }
+
+    useEffect(() => {
+        if(loadingState === "success") {
+            if(userInfo.id === "") {
+                setLoadingState("failure");
+                return;
+            }
+            if (userInfo && userInfo.id) {
+                const loadJobs = async () => {
+                    if (!userInfo?.id) {
+                        setLoadingState("failure");
+                        return;
+                    }
+                    await getJobsPerClientId(userInfo.id);
+                };
+        
+                loadJobs();
+            }
+        } else if (loadingState === "failure") {
+            router.push("/");
+        }
+    }, [userInfo, loadingState])
+
+    useEffect(() => {
+        if (loadingState === "failure") {
+            router.push("/");
+        }
+    }, [loadingState, router]);
+
+    if (loading === "pending") {
+        return <Loading />;
+    }
+
+    if (loading === "success") {
+        return (
+            <div>
+                <SectionPlaceholder
+                    title="My Jobs"
+                    description="Track and manage all the jobs you have published."
+                />
+                {jobs.length > 0 ? (
+                    <div>
+                        <div className="flex justify-end">
+                            <div className="w-45 mb-8 flex justify-end">
+                                <Button
+                                    padding='px-7 py-3'
+                                    onClick={() => router.push("/dashboard?view=create-job")}
+                                >
+                                    <p className='text-normal font-regular'>+ Create Job</p>
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-8">
+                            {jobs.map((job) => (
+                                <UserJobOrGigPost
+                                    key={job.title}
+                                    title={job.title}
+                                    description={job.description_md}
+                                    subtitle={job.location ?? ""}
+                                    tags={job.tags ?? []}
+                                    image={job.image_id?EscrowBackendConfig.uploadedImagesURL + job.image_id: ""}
+                                    minBudget={job.budget_min_usd}
+                                    maxBudget={job.budget_max_usd}
+                                    currency={job.token_symbol ?? "USD"}
+                                    deadline={job.deadline_at ? new Date(job.deadline_at).getTime() / 1000 : undefined}
+                                    status={job.status}
+                                />
+                            ))}
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-8">
-                        {Jobs.map((job) => (
-                            <UserJobOrGigPost
-                                key={job.title}
-                                title={job.title}
-                                description={job.description}
-                                subtitle={job.subtitle}
-                                tags={job.tags}
-                                image={job.image}
-                            />
-                        ))}
+                ) : (
+                    loadingState === "success" && (<div className="flex flex-col items-center justify-center gap-20 mb-38">
+                        <p className="text-normal font-regular text-black">No jobs found.</p>
+                        <Button
+                            padding='px-7 py-3'
+                        >
+                            <p className='text-normal font-regular'>+ Create Job</p>
+                        </Button>
                     </div>
-                </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center gap-20 mb-38">
-                    <p className="text-normal font-regular text-black">No jobs found.</p>
-                    <Button
-                        padding='px-7 py-3'
-                    >
-                        <p className='text-normal font-regular'>+ Create Job</p>
-                    </Button>
-                </div>
-            )}
-        </div>
-    )
+                ))}
+            </div>
+        )
+    } else {
+        return <Loading />;
+    }
 }
 
 export default MyJobsSection;

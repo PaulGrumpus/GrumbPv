@@ -12,13 +12,18 @@ interface userJobOrGigPostProps {
     price?: number;
     currency?: string;
     image?: string;
+    minBudget?: number;
+    maxBudget?: number;
+    deadline?: number;
+    status?: string;
+    link?: string;
 }
 
 const editIcon = "/Grmps/lucide_edit.svg";
 
 const COLLAPSED_MAX_HEIGHT = 168;
 
-const UserJobOrGigPost = ({ description, title, subtitle, tags, image }: userJobOrGigPostProps) => {
+const UserJobOrGigPost = ({ description, title, subtitle, tags, image, minBudget, maxBudget, currency, deadline, status, link }: userJobOrGigPostProps) => {
     const [expanded, setExpanded] = useState(false);
     const [canToggle, setCanToggle] = useState(false);
     const descriptionRef = useRef<HTMLParagraphElement>(null);
@@ -39,7 +44,12 @@ const UserJobOrGigPost = ({ description, title, subtitle, tags, image }: userJob
                     <div className="flex justify-between pb-6">
                         <div className="flex flex-col">
                             <h1 className="text-subtitle font-bold text-black">{title}</h1>
-                            <p className="text-light-large font-regular text-black">{subtitle}</p>
+                            <p className="text-normal font-regular text-black">{subtitle}</p>
+                            {minBudget && maxBudget && (
+                                <p className="text-normal font-regular text-black">
+                                    {minBudget} - {maxBudget} {currency}
+                                </p>
+                            )}                            
                         </div>
                         <div 
                             onClick={() => {
@@ -57,7 +67,7 @@ const UserJobOrGigPost = ({ description, title, subtitle, tags, image }: userJob
                     </div>
 
                     {image && (
-                        <div className="pb-6 w-full h-40 rounded-lg overflow-hidden">
+                        <div className="mb-6 w-full h-40 rounded-lg overflow-hidden">
                             <Image 
                                 src={image || ""}
                                 alt="post image" 
@@ -87,6 +97,23 @@ const UserJobOrGigPost = ({ description, title, subtitle, tags, image }: userJob
                             {expanded ? "show less" : "show more"}
                         </button>
                     )}
+                    <div className="flex flex-col gap-2">
+                        {deadline && (
+                            <p className="text-normal font-regular text-black">
+                                Due Date: {new Date(deadline * 1000).toLocaleDateString()}
+                            </p>
+                        )}
+                        {status && (
+                            <p className="text-normal font-regular text-black">
+                                Status: {status}
+                            </p>
+                        )}
+                        {link && (
+                            <p className="text-normal font-regular text-black">
+                                Link: {link}
+                            </p>
+                        )}
+                    </div>
                     <div className="flex justify-end pt-6">
                         <div className="flex gap-2">
                             {tags.map((tag) => (
