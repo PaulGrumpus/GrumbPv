@@ -73,7 +73,7 @@ const DashboardOverview = () => {
                     <div className="linear-border__inner rounded-[0.4375rem] bg-white">
                         <div className="flex flex-col py-3 px-4">
                             <div
-                                className="flex justify-between items-center py-5 w-241.5"
+                                className="flex justify-between items-center py-5 w-full"
                                 onClick={() => {
                                     setOpenJobs(!openJobs);
                                 }}
@@ -122,7 +122,7 @@ const DashboardOverview = () => {
                     <div className="linear-border__inner rounded-[0.4375rem] bg-white">
                         <div className="flex flex-col py-3 px-4">
                             <div
-                                className="flex justify-between items-center py-5 w-241.5"
+                                className="flex justify-between items-center py-5 w-full"
                                 onClick={() => {
                                     setCompletedJobs(!completedJobs);
                                 }}

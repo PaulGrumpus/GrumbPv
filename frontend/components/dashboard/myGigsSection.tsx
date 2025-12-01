@@ -113,6 +113,10 @@ const MyGigsSection = () => {
                                     title={gig.title}
                                     description={gig.description_md}
                                     subtitle={""}
+                                    minBudget={gig.budget_min_usd}
+                                    maxBudget={gig.budget_max_usd}
+                                    currency={gig.token_symbol ?? "USD"}
+                                    link={gig.link}
                                     tags={gig.tags ?? []}
                                     image={gig.image_id ? EscrowBackendConfig.uploadedImagesURL + gig.image_id : ""}
                                 />

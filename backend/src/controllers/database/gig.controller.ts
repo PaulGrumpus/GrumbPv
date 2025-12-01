@@ -64,8 +64,8 @@ export class GigController {
     
     async getGigsByFreelancerId(req: Request, res: Response, next: NextFunction) {
         try {
-            const { client_id } = req.params;
-            const result = await gigService.getGigsByFreelancerId(client_id);
+            const { freelancer_id } = req.params;
+            const result = await gigService.getGigsByFreelancerId(freelancer_id);
             res.json({
                 success: true,
                 data: result,

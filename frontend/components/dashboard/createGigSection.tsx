@@ -58,7 +58,7 @@ const CreateGigSection = () => {
     }
 
     const handlePostGig = async () => {
-        if (title === "" || selectedCategory === "" || description === "" || budgetMaxUsd === 0 || budgetMinUsd === 0 || link === "") {
+        if (title === "" || selectedCategory === "" || description === "" || budgetMaxUsd === 0 || budgetMinUsd === 0) {
             setError("Please fill in all fields");
             setCheckError(true);
             return;
@@ -91,8 +91,9 @@ const CreateGigSection = () => {
                 description_md: description,
                 budget_max_usd: budgetMaxUsd,
                 budget_min_usd: budgetMinUsd,
-                tags: [selectedCategory],
+                tags: [selectedCategory ?? ""],
                 freelancer_id: userInfo.id,
+                link,
             },
             selectedFile
         );

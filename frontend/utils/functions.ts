@@ -261,7 +261,7 @@ export const createGig = async (gig: Gig, imageFile?: File | null) => {
 
             formData.append(field, value.toString());
         });
-        formData.append('tags', JSON.stringify(gig.tags ?? []));
+        // formData.append('tags', JSON.stringify(gig.tags ?? []));
         if (imageFile) {
             formData.append('image', imageFile);
         }

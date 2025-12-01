@@ -42,8 +42,8 @@ export class GigService {
             if (budgetMax !== null && budgetMax <= 0) {
                 throw new AppError('Budget maximum is less than or equal to 0', 400, 'BUDGET_MAX_LESS_THAN_OR_EQUAL_TO_0');
             }
-            if (budgetMin !== null && budgetMax !== null && budgetMin >= budgetMax) {
-                throw new AppError('Budget minimum is greater than or equal to budget maximum', 400, 'BUDGET_MIN_GREATER_THAN_OR_EQUAL_TO_MAX');
+            if (budgetMin !== null && budgetMax !== null && budgetMin > budgetMax) {
+                throw new AppError('Budget minimum is greater than or qual to budget maximum', 400, 'BUDGET_MIN_GREATER_THAN_OR_EQUAL_TO_MAX');
             }
             const existingFreelancer = await userService.getUserById(gig.freelancer_id);
             if (!existingFreelancer) {
@@ -68,15 +68,10 @@ export class GigService {
             const createData: Prisma.gigsUncheckedCreateInput = {
                 ...this.normalizeGigFields(gig),
                 ...(normalizedImageId !== undefined ? { image_id: normalizedImageId as string } : null),
-                tags: this.normalizeTags(gig.tags),
+                tags: [gig.tags ?? ""],
             } as Prisma.gigsUncheckedCreateInput;
 
-            console.log("normalizedImageId", normalizedImageId, file);
-
-            const normalizedTags = this.normalizeTags(gig.tags);
-            console.log("normalizedTags", normalizedTags);
-
-            console.log("Gig", gig);
+            console.log("createData", createData);
 
             const newGig = await this.prisma.gigs.create({
                 data: createData,
@@ -119,8 +114,8 @@ export class GigService {
             if (budgetMax !== null && budgetMax <= 0) {
                 throw new AppError('Budget maximum is less than or equal to 0', 400, 'BUDGET_MAX_LESS_THAN_OR_EQUAL_TO_0');
             }
-            if (budgetMin !== null && budgetMax !== null && budgetMin >= budgetMax) {
-                throw new AppError('Budget minimum is greater than or equal to budget maximum', 400, 'BUDGET_MIN_GREATER_THAN_OR_EQUAL_TO_MAX');
+            if (budgetMin !== null && budgetMax !== null && budgetMin > budgetMax) {
+                throw new AppError('Budget minimum is greater than or qual to budget maximum', 400, 'BUDGET_MIN_GREATER_THAN_OR_EQUAL_TO_MAX');
             }
             const existingFreelancer = await userService.getUserById(gig.freelancer_id as string);
             if (!existingFreelancer) {
