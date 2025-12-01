@@ -396,7 +396,17 @@ const ProfilePage = () => {
                             <div className='w-140'>
                                 <p className='text-normal font-regular text-black text-left pb-2'>About</p>
                                 <div className='flex flex-col'>
-                                    <textarea className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-45 resize-none mb-2' value={userBio} onChange={(e) => setUserBio(e.target.value)} />
+                                    <textarea
+                                        className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-45 resize-none mb-2'
+                                        value={userBio}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            if (value.length <= charCount) {
+                                                setUserBio(value);
+                                            }
+                                        }}
+                                        maxLength={charCount}
+                                    />
                                     <div className='flex justify-flex-end'>
                                         <p className='text-normal font-regular text-gray-400 text-left'>{charCount - userBio.length} characters left</p>
                                     </div>
