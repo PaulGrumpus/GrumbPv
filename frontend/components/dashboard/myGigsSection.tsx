@@ -11,28 +11,6 @@ import { getGigsByFreelancerId } from "@/utils/functions";
 import { EscrowBackendConfig } from "@/config/config";
 import Loading from "../loading";
 
-const Gigs = [
-    {
-        title: "Gig 1",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.",
-        subtitle: "Subtitle 1",
-        tags: ["Tag 1"],
-    },
-    {
-        title: "Gig 2",
-        image: "/Grmps/profile-image.jpg",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.",
-        subtitle: "Subtitle 2",
-        tags: ["Tag 1"],
-    },
-    {
-        title: "Gig 3",
-        description: "DescLorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.",
-        subtitle: "Subtitle 3",
-        tags: ["Tag 1"],
-    },
-]
-
 const MyGigsSection = () => {
     const router = useRouter();
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);

@@ -175,7 +175,10 @@ const Navbar = () => {
                         ) : (
                             <Button
                                 padding="px-6 py-2"
-                                onClick={() => setLoginSignupModalOpen(true)}
+                                onClick={() => {
+                                    router.push("/");
+                                    setLoginSignupModalOpen(true)
+                                }}
                             >
                                 <p>Login</p>
                             </Button>

@@ -6,7 +6,7 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { LoadingCtx } from "@/context/loadingContext";
 import { UserInfoCtx } from "@/context/userContext";
 import Loading from "../loading";
-import { Job } from "@/types/jobs";
+import { Job, LocationType } from "@/types/jobs";
 import { EscrowBackendConfig } from "@/config/config";
 import { getJobsByClientId } from "@/utils/functions";
 import { toast } from "react-toastify";
@@ -112,7 +112,7 @@ const MyJobsSection = () => {
                                     key={job.id}
                                     title={job.title}
                                     description={job.description_md}
-                                    subtitle={job.location ?? ""}
+                                    location={job.location ?? LocationType.REMOTE}
                                     tags={job.tags ?? []}
                                     image={job.image_id?EscrowBackendConfig.uploadedImagesURL + job.image_id: ""}
                                     minBudget={job.budget_min_usd}

@@ -4,22 +4,24 @@ import { useEffect, useRef, useState } from "react";
 
 import Button from "./button";
 import Image from "next/image";
+import { LocationType } from "@/types/jobs";
 
 interface pubJobOrGigPostProps {
     description: string;
     title: string;
-    location: string; 
+    location: LocationType; 
     tags: string[];  
-    price: number;
+    minBudget: number;
+    maxBudget: number;
     currency: string;
-    deadline: number | string;
+    deadline: number | string | undefined;
     createdAt: number;   
     image?: string;
     label: string;
     clickHandler: () => void;
 }
 
-const formatDueDate = (deadline: number | string) => {
+const formatDueDate = (deadline: number | string | undefined) => {
     if (deadline === null || deadline === undefined) {
         return "TBD";
     }
@@ -50,7 +52,7 @@ const formatDueDate = (deadline: number | string) => {
 
 const COLLAPSED_MAX_HEIGHT = 168;
 
-const PubJobOrGigPost = ({ description, title, location, tags, price, currency, deadline, clickHandler, image, label }: pubJobOrGigPostProps) => {
+const PubJobOrGigPost = ({ description, title, location, tags, minBudget, maxBudget, currency, deadline, clickHandler, image, label }: pubJobOrGigPostProps) => {
     const [expanded, setExpanded] = useState(false);
     const [canToggle, setCanToggle] = useState(false);
     const descriptionRef = useRef<HTMLParagraphElement>(null);
@@ -71,9 +73,9 @@ const PubJobOrGigPost = ({ description, title, location, tags, price, currency, 
                     <div className="flex justify-between pb-6">
                         <div className="flex flex-col max-w-[75%]">
                             <h1 className="text-subtitle font-bold text-black">{title}</h1>
-                            <div className="flex gap-2">
-                                <p className="text-light-large font-regular text-black">{location}</p>
-                                <p className="text-light-large font-regular text-black">{price}{currency}</p>
+                            <div className="flex flex-col">
+                                <p className="text-light-large font-regular text-black">Location: {location === LocationType.REMOTE ? "Remote" : location === LocationType.ON_SITE ? "On Site" : "Hybrid"}</p>
+                                <p className="text-light-large font-regular text-black">Budget: {minBudget} - {maxBudget}{currency}</p>
                                 <p className="text-light-large font-regular text-black">Due Date: {formatDueDate(deadline)}</p>
                             </div>
                         </div>
@@ -87,9 +89,27 @@ const PubJobOrGigPost = ({ description, title, location, tags, price, currency, 
                             </Button>
                         </div>
                     </div>
+
+                    {image && (
+                        <div className="py-6">
+                            <Image 
+                                src={image || ""}
+                                alt="job image"
+                                width={100}
+                                height={100}
+                                className="rounded-lg h-100 w-full object-cover"
+                            />
+                        </div>
+                    )}
+
                     <div
                         className={`overflow-hidden transition-[max-height] duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}
                     >
+                        <p
+                            className="text-normal font-regular text-black"
+                        >
+                            Description:
+                        </p>   
                         <p
                             ref={descriptionRef}
                             className="text-normal font-regular text-black"
@@ -107,17 +127,6 @@ const PubJobOrGigPost = ({ description, title, location, tags, price, currency, 
                         </button>
                     )}
 
-                    {image && (
-                        <div className="py-6">
-                            <Image 
-                                src={image || ""}
-                                alt="job image"
-                                width={100}
-                                height={100}
-                                className="rounded-lg h-100 w-full object-cover"
-                            />
-                        </div>
-                    )}
                     <div className="flex justify-end pt-6">
                         <div className="flex gap-2">
                             {tags.map((tag) => (
