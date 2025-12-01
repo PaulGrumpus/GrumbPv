@@ -13,6 +13,8 @@ import { CONFIG } from "@/config/config";
 import { UserInfoCtx } from "@/context/userContext";
 import { LoadingCtx } from "@/context/loadingContext";
 import Loading from "@/components/loading";
+import { getBidsByFreelancerId, getGigsByFreelancerId, getJobsByClientId } from "@/utils/functions";
+import { toast } from "react-toastify";
 
 type SectionSlug = "dashboard" | "my-gigs" | "create-gig" | "my-bids" | "my-jobs" | "create-job";
 
@@ -78,6 +80,9 @@ const DashboardPageContent = () => {
     const { loadingState, setLoadingState } = useContext(LoadingCtx);
     const [loading, setLoading] = useState("pending");
     const router = useRouter();
+    const [myBidsCount, setMyBidsCount] = useState(0);
+    const [myGigsCount, setMyGigsCount] = useState(0);
+    const [myJobsCount, setMyJobsCount] = useState(0);
 
     const freelancerSidebarItems = useMemo(() => ([
         {
@@ -90,16 +95,16 @@ const DashboardPageContent = () => {
             label: "My Gigs",
             count: 0,
             subItems: [
-                { label: "Gigs" },
+                { label: "Gigs", count: myGigsCount },
                 { label: "Create Gig" },
             ],
         },
         {
             icon: "/Grmps/star.svg",
             label: "My Bids",
-            count: 24,
+            count: myBidsCount,
         },
-    ]), []);
+    ]), [myGigsCount, myBidsCount]);
 
     const clientSidebarItems = useMemo(() => ([
         {
@@ -109,14 +114,14 @@ const DashboardPageContent = () => {
         },
         {
             icon: "/Grmps/layer.svg",
-            label: "My Jobs",
+            label: "My Jobs",            
             count: 0,
             subItems: [
                 { label: "Jobs" },
-                { label: "Create Job" },
+                { label: "Create Job", count: myJobsCount },
             ],
         },
-    ]), []);
+    ]), [myJobsCount]);
 
     const handleSectionChange = (label: string) => {
         const slug = LABEL_TO_SLUG[label] ?? DEFAULT_SECTION;
@@ -124,6 +129,62 @@ const DashboardPageContent = () => {
         params.set("view", slug);
         router.replace(`/dashboard?${params.toString()}`, { scroll: false });
     };
+
+    const getMyGigsCount = async () => {
+        try {
+            const result = await getGigsByFreelancerId(userInfo.id);
+            if(result.success) {
+                setMyGigsCount(result.data?.length ?? 0);
+            }
+        } catch (error) {
+            toast.error(error as string, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
+        }
+    }
+
+    const getMyBidsCount = async () => {
+        try {
+            const result = await getBidsByFreelancerId(userInfo.id);
+            if(result.success) {
+                setMyBidsCount(result.data?.length ?? 0);
+            }
+        }
+        catch (error) {
+            toast.error(error as string, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
+        }
+    }
+
+    const getMyJobsCount = async () => {
+        try {
+            const result = await getJobsByClientId(userInfo.id);
+            if(result.success) {
+                setMyJobsCount(result.data?.length ?? 0);
+            }
+        }
+        catch (error) {
+            toast.error(error as string, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
+        }
+    }
 
     useEffect(() => {
         if(loadingState === "success") {
@@ -133,7 +194,16 @@ const DashboardPageContent = () => {
             }
             if (userInfo && userInfo.id) {
                 setUserRole(userInfo.role || "client");
-                setLoading("success");
+                const loadCounts = async () => {
+                    if(userInfo.role === "freelancer") {
+                        await getMyGigsCount();
+                        await getMyBidsCount();
+                    } else {
+                        await getMyJobsCount();
+                    }
+                    setLoading("success");
+                }
+                loadCounts();
             }
         } else if (loadingState === "failure") {
             router.push("/");

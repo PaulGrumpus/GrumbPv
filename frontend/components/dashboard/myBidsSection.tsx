@@ -136,6 +136,7 @@ const MyBidsSection = () => {
                     <div className="grid grid-cols-2 gap-8">
                         {bids.map((bid: BidPostProps) => (
                             <BidPost 
+                                key={bid.bid_id}
                                 bid_id={bid.bid_id}
                                 job_description={bid.job_description}
                                 job_title={bid.job_title}
