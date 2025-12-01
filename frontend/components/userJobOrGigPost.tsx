@@ -8,7 +8,7 @@ import { LocationType } from "@/types/jobs";
 interface userJobOrGigPostProps {
     title: string;
     description: string;
-    location: LocationType; 
+    location?: LocationType; 
     tags: string[];  
     price?: number;
     currency?: string;
@@ -45,7 +45,9 @@ const UserJobOrGigPost = ({ description, title, location, tags, image, minBudget
                     <div className="flex justify-between">
                         <div className="flex flex-col">
                             <h1 className="text-subtitle font-bold text-black">{title}</h1>
-                            <p className="text-normal font-regular text-black">Location: {location === LocationType.REMOTE ? "Remote" : location === LocationType.ON_SITE ? "On Site" : "Hybrid"}</p>
+                            {location && (
+                                <p className="text-normal font-regular text-black">Location: {location === LocationType.REMOTE ? "Remote" : location === LocationType.ON_SITE ? "On Site" : "Hybrid"}</p>
+                            )}
                             {minBudget && maxBudget && (
                                 <p className="text-normal font-regular text-black">
                                     Budget: {minBudget} - {maxBudget} {currency}

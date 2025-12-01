@@ -13,6 +13,21 @@ export interface Bid {
 export enum BidStatus {
     PENDING = "pending",
     ACCEPTED = "accepted",
-    REJECTED = "rejected",
+    DECLINED = "declined",
     WITHDRAWN = "withdrawn",
+}
+
+export interface BidPostProps {
+    job_description: string;
+    job_title: string;
+    job_location?: string; 
+    job_tags?: string[];  
+    job_deadline?: number | string | undefined;
+    job_max_budget: number;
+    job_min_budget: number;
+    bid_id?: string;
+    bid_cover_letter: string;
+    bid_amount: number;
+    currency: string;
+    bid_status: BidStatus; 
 }

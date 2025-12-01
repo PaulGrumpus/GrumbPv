@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Button from "./button";
 import Image from "next/image";
 import { LocationType } from "@/types/jobs";
+import { formatDueDate } from "@/utils/functions";
 
 interface pubJobOrGigPostProps {
     description: string;
@@ -20,35 +21,6 @@ interface pubJobOrGigPostProps {
     label: string;
     clickHandler: () => void;
 }
-
-const formatDueDate = (deadline: number | string | undefined) => {
-    if (deadline === null || deadline === undefined) {
-        return "TBD";
-    }
-
-    const numericDeadline =
-        typeof deadline === "number"
-            ? deadline
-            : Number.isNaN(Number(deadline))
-                ? undefined
-                : Number(deadline);
-
-    const timestamp =
-        numericDeadline !== undefined
-            ? (numericDeadline > 1e12 ? numericDeadline : numericDeadline * 1000)
-            : Date.parse(String(deadline));
-
-    if (!Number.isFinite(timestamp)) {
-        return "TBD";
-    }
-
-    return new Intl.DateTimeFormat(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "2-digit",
-        timeZone: "UTC",
-    }).format(new Date(timestamp));
-};
 
 const COLLAPSED_MAX_HEIGHT = 168;
 

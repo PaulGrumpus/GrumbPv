@@ -249,6 +249,22 @@ export const getJobs = async () => {
     }
 }
 
+export const getJobById = async (job_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/jobs/by-id/${job_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 // Gigs
 export const createGig = async (gig: Gig, imageFile?: File | null) => {
     try {
@@ -331,3 +347,49 @@ export const createBid = async (bid: Bid) => {
         };
     }
 }
+
+export const getBidsByFreelancerId = async (freelancer_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/job-bids/by-freelancer-id/${freelancer_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+// Utils
+export const formatDueDate = (deadline: number | string | undefined) => {
+    if (deadline === null || deadline === undefined) {
+        return "TBD";
+    }
+
+    const numericDeadline =
+        typeof deadline === "number"
+            ? deadline
+            : Number.isNaN(Number(deadline))
+                ? undefined
+                : Number(deadline);
+
+    const timestamp =
+        numericDeadline !== undefined
+            ? (numericDeadline > 1e12 ? numericDeadline : numericDeadline * 1000)
+            : Date.parse(String(deadline));
+
+    if (!Number.isFinite(timestamp)) {
+        return "TBD";
+    }
+
+    return new Intl.DateTimeFormat(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        timeZone: "UTC",
+    }).format(new Date(timestamp));
+};

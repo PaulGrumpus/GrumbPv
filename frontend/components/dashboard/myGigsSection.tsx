@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import { getGigsByFreelancerId } from "@/utils/functions";
 import { EscrowBackendConfig } from "@/config/config";
 import Loading from "../loading";
+import { LocationType } from "@/types/jobs";
 
 const MyGigsSection = () => {
     const router = useRouter();
@@ -90,7 +91,6 @@ const MyGigsSection = () => {
                                     key={gig.id}
                                     title={gig.title}
                                     description={gig.description_md}
-                                    subtitle={""}
                                     minBudget={gig.budget_min_usd}
                                     maxBudget={gig.budget_max_usd}
                                     currency={gig.token_symbol ?? "USD"}
