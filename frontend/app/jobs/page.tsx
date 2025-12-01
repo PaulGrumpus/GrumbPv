@@ -156,9 +156,10 @@ const JobsPage = () => {
                     <div className="mt-6">
                         <ApplyJob
                             jobId={selectedJobId.toString()}
+                            freelancerId={userInfo.id}
                             clickHandler={() => {
                                 setIsOpen(false)
-                            }}
+                            }}  
                         />
                     </div>
                 </ModalTemplate>

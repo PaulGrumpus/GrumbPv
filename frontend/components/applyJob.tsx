@@ -4,9 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
 import Button from "./button";
 import Image from "next/image";
+import { createBid } from "@/utils/functions";
+import { BidStatus } from "@/types/bid";
+import { toast } from "react-toastify";
 
 interface ApplyJobProps {
     jobId: string;
+    freelancerId: string;
     clickHandler: () => void;
 }
 
@@ -189,12 +193,12 @@ const CalendarDropdown = ({ id, selectedDate, monthDate, onSelectDate, onMonthCh
     );
 };
 
-const ApplyJob = ({ jobId, clickHandler }: ApplyJobProps) => {
+const ApplyJob = ({ jobId, freelancerId, clickHandler }: ApplyJobProps) => {
     const [title, setTitle] = useState("");
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(""); 
-    const categories = ["Category 1", "Category 2", "Category 3"];
+    const categories = ["BNB", "USDC", "USDT", "USD"];
     const [coverLetter, setCoverLetter] = useState("");
     const [budget, setBudget] = useState(0);
     const initialDate = formatISODate(new Date());
@@ -264,11 +268,11 @@ const ApplyJob = ({ jobId, clickHandler }: ApplyJobProps) => {
 
     const [error, setError] = useState("");
 
-    const handleApply = () => {
-        if (title === "") {
-            setError("Please enter a title");
-            return;
-        }
+    const handleApply = async () => {
+        // if (title === "") {
+        //     setError("Please enter a title");
+        //     return;
+        // }
 
         if (budget <= 0) {
             setError("Budget must be greater than 0");
@@ -294,6 +298,31 @@ const ApplyJob = ({ jobId, clickHandler }: ApplyJobProps) => {
 
         setError("");
         console.log("apply job with data: ", { title, coverLetter, budget, selectedCategory, startDate, endDate });
+        const result = await createBid({
+            job_id: jobId,
+            freelancer_id: freelancerId,
+            cover_letter_md: coverLetter,
+            bid_amount: budget,
+            token_symbol: selectedCategory ?? "USD",
+            status: BidStatus.PENDING,
+        });
+        if (result.success) {
+            toast.success("Bid created successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.error(result.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
         clickHandler();
     };
 
@@ -302,7 +331,7 @@ const ApplyJob = ({ jobId, clickHandler }: ApplyJobProps) => {
             <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
                 <div className="linear-border__inner rounded-[0.4375rem] bg-white p-8">
                     <div className='flex flex-col gap-6'>
-                        <div>
+                        {/* <div>
                             <p className='text-normal font-regular text-black text-left pb-2'>Title</p>
                             <input
                                 value={title}
@@ -313,7 +342,7 @@ const ApplyJob = ({ jobId, clickHandler }: ApplyJobProps) => {
                                 className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
                                 placeholder='Title'
                             />
-                        </div>
+                        </div> */}
                         <div className='w-full'>
                             <p className='text-normal font-regular text-black text-left pb-2'>Cover Letter</p>
                             <div className='flex flex-col'>

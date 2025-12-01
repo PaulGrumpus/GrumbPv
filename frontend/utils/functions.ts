@@ -4,6 +4,7 @@ import { User } from "../types/user";
 import { NextResponse } from "next/server";
 import { Job } from "@/types/jobs";
 import { Gig } from "@/types/gigs";
+import { Bid } from "@/types/bid";
 
 // Users
 export const createUserWithAddress = async (address: string, role: string) => {
@@ -306,6 +307,24 @@ export const getGigsByFreelancerId = async (freelancer_id: string) => {
             data: response.data.data,
         };
     } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+// Bids
+export const createBid = async (bid: Bid) => {
+    try {
+        const response = await EscrowBackend.post('/database/job-bids', bid);
+        console.log(response.data);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
         return {
             success: false,
             error: error.response?.data?.error?.message || error.message || "Unknown error"
