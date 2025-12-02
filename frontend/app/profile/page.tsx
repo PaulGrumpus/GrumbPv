@@ -13,6 +13,7 @@ import { toast } from 'react-toastify';
 import { User } from '@/types/user';
 import { updateUser } from '@/utils/functions';
 import { EscrowBackendConfig } from '@/config/config';
+import { connectMetaMaskWallet } from '@/utils/walletConnnect';
 
 type FormState = {
     userName: string;
@@ -56,6 +57,7 @@ const ProfilePage = () => {
     });  
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const [loading, setLoading] = useState("pending");
     const router = useRouter();
 
     useEffect(() => {
@@ -131,7 +133,7 @@ const ProfilePage = () => {
         setSelectedFile(null);
 
         const user: User = {
-            address: userInfo?.address || "",
+            address: userInfo?.address || userWaletAddress || "",
             chain: userInfo?.chain || "",
             id: userInfo?.id || "",
             display_name: userName,
@@ -219,6 +221,14 @@ const ProfilePage = () => {
         }
     }
 
+    const handleConnectWallet = async () => {
+        const connection = await connectMetaMaskWallet(userEmail);
+        if(!connection) {
+            return;
+        }
+        setUserWaletAddress(connection.address);
+    }
+
     const resetForm = () => {
         const { userName: initialUserName, userEmail: initialUserEmail, userBio: initialBio, selectedLanguage: initialLanguage } = initialFormState.current;
 
@@ -264,43 +274,44 @@ const ProfilePage = () => {
     }, [dropdownMenuOpen]);
 
     useEffect(() => {
-        setLoadingState("pending");
-        if(userInfo.id === "") {
-            setLoadingState("failure");
-            return;
-        }
-        if (userInfo && userInfo.id) {
-            initialFormState.current = {                
-                userName: userInfo.display_name || "",
-                userEmail: userInfo.email || "",
-                userBio: userInfo.bio || "",
-                userPhoto: userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "",
-                selectedLanguage,
-            };
-            console.log("test-initialFormState", initialFormState.current);
-            console.log("test-userInfo", userInfo);
-            setUserBio(userInfo.bio || "")
-            setSelectedLanguage("")
-            setUserName(userInfo.display_name || "")
-            setUserPhoto(userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "")
-            setUserRole(userInfo.role || "")
-            setUserEmail(userInfo.email || "")
-            setUserWaletAddress(userInfo.address || "")
-            setLoadingState("success");
-        }
-    }, [userInfo]);
-
-    useEffect(() => {
-        if (loadingState === "failure") {
+        if(loadingState === "success") {
+            if(userInfo.id === "") {
+                router.push("/");
+                return;
+            }
+            if (userInfo && userInfo.id) {
+                const loadProfile = async () => {
+                    initialFormState.current = {                
+                        userName: userInfo.display_name || "",
+                        userEmail: userInfo.email || "",
+                        userBio: userInfo.bio || "",
+                        userPhoto: userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "",
+                        selectedLanguage,
+                    };
+                    console.log("test-initialFormState", initialFormState.current);
+                    console.log("test-userInfo", userInfo);
+                    setUserBio(userInfo.bio || "")
+                    setSelectedLanguage("")
+                    setUserName(userInfo.display_name || "")
+                    setUserPhoto(userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "")
+                    setUserRole(userInfo.role || "")
+                    setUserEmail(userInfo.email || "")
+                    setUserWaletAddress(userInfo.address || "")
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    setLoading("success");
+                }
+                loadProfile();
+            }
+        } else if (loadingState === "failure") {
             router.push("/");
         }
-    }, [loadingState, router]);
+    }, [userInfo, loadingState, router])
 
-    if (loadingState === "pending") {
+    if (loading === "pending") {
         return <Loading />;
     }
 
-    if (loadingState === "success") {
+    if (loading === "success") {
         return (
             <div className='pt-34 pb-8.75 px-16 bg-white'>
                 <div className='container mx-auto'>
@@ -366,7 +377,17 @@ const ProfilePage = () => {
                                         <Button variant='secondary' padding='p-2' onClick={() => handleCopy(userWaletAddress)}>Copy</Button>
                                     </div>
                                 ) : (
-                                    <Button padding='p-2'>Connect Wallet</Button>
+                                    <div className='flex flex-col gap-2'>
+                                        <p className='text-tiny font-regular text-red-500 text-left'>You must connect your wallet to your account to start using the platform</p>
+                                        <div className='flex fit-content'>
+                                            <Button 
+                                                padding='p-2'
+                                                onClick={handleConnectWallet}
+                                            >
+                                                Connect Wallet
+                                            </Button>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                             <div>
@@ -398,7 +419,17 @@ const ProfilePage = () => {
                             <div className='w-140'>
                                 <p className='text-normal font-regular text-black text-left pb-2'>About</p>
                                 <div className='flex flex-col'>
-                                    <textarea className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-45 resize-none mb-2' value={userBio} onChange={(e) => setUserBio(e.target.value)} />
+                                    <textarea
+                                        className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-45 resize-none mb-2'
+                                        value={userBio}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            if (value.length <= charCount) {
+                                                setUserBio(value);
+                                            }
+                                        }}
+                                        maxLength={charCount}
+                                    />
                                     <div className='flex justify-flex-end'>
                                         <p className='text-normal font-regular text-gray-400 text-left'>{charCount - userBio.length} characters left</p>
                                     </div>

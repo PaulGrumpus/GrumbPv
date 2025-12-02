@@ -338,4 +338,45 @@ router.get(
     userController.getUserByAddress.bind(userController)
 );
 
+/**
+ * @openapi
+ * /api/v1/database/users/by-email-and-password:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get user by email and password
+ *     description: Get user by email and password and return a token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/GetUserByEmailAndPasswordRequest'
+ *     responses:
+ *       200:
+ *         description: User retrieved successfully and token returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: string
+ *                       description: The token
+ *                       example: '1234567890'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.put(
+    '/by-email-and-password',
+    [body('email').isEmail().notEmpty(), body('password').isString().notEmpty()],
+    validate([body('email'), body('password')]),
+    userController.getUserByEmailAndPassword.bind(userController)
+);
+
 export default router;

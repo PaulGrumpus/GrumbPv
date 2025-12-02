@@ -115,7 +115,7 @@ const ModalTemplate = ({
                         {title ? (
                             <div className="flex flex-col gap-6">
                                 <div className="flex items-start justify-between gap-6">
-                                    <h2 id={dialogTitleId} className="text-display font-bold">
+                                    <h2 id={dialogTitleId} className="text-display font-bold max-w-[90%]">
                                         {title}
                                     </h2>
                                     {canDismiss ? (

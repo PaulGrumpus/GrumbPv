@@ -4,9 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
 import Button from "./button";
 import Image from "next/image";
+import { createBid } from "@/utils/functions";
+import { BidStatus } from "@/types/bid";
+import { toast } from "react-toastify";
 
 interface ApplyJobProps {
     jobId: string;
+    freelancerId: string;
     clickHandler: () => void;
 }
 
@@ -189,12 +193,12 @@ const CalendarDropdown = ({ id, selectedDate, monthDate, onSelectDate, onMonthCh
     );
 };
 
-const ApplyJob = ({ jobId, clickHandler }: ApplyJobProps) => {
+const ApplyJob = ({ jobId, freelancerId, clickHandler }: ApplyJobProps) => {
     const [title, setTitle] = useState("");
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(""); 
-    const categories = ["Category 1", "Category 2", "Category 3"];
+    const categories = ["BNB", "USDC", "USDT", "USD"];
     const [coverLetter, setCoverLetter] = useState("");
     const [budget, setBudget] = useState(0);
     const initialDate = formatISODate(new Date());
@@ -204,6 +208,7 @@ const ApplyJob = ({ jobId, clickHandler }: ApplyJobProps) => {
     const [isEndCalendarOpen, setIsEndCalendarOpen] = useState(false);
     const [startCalendarMonth, setStartCalendarMonth] = useState(parseISODate(initialDate) ?? new Date());
     const [endCalendarMonth, setEndCalendarMonth] = useState(parseISODate(initialDate) ?? new Date());
+    const [period, setPeriod] = useState(0);
     const startPickerRef = useRef<HTMLDivElement | null>(null);
     const endPickerRef = useRef<HTMLDivElement | null>(null);
 
@@ -264,11 +269,11 @@ const ApplyJob = ({ jobId, clickHandler }: ApplyJobProps) => {
 
     const [error, setError] = useState("");
 
-    const handleApply = () => {
-        if (title === "") {
-            setError("Please enter a title");
-            return;
-        }
+    const handleApply = async () => {
+        // if (title === "") {
+        //     setError("Please enter a title");
+        //     return;
+        // }
 
         if (budget <= 0) {
             setError("Budget must be greater than 0");
@@ -287,13 +292,38 @@ const ApplyJob = ({ jobId, clickHandler }: ApplyJobProps) => {
             return;
         }
 
-        if (startDate >= endDate) {
-            setError("Start date must be before end date");
-            return;
-        }
+        // if (startDate >= endDate) {
+        //     setError("Start date must be before end date");
+        //     return;
+        // }
 
         setError("");
-        console.log("apply job with data: ", { title, coverLetter, budget, selectedCategory, startDate, endDate });
+        const result = await createBid({
+            job_id: jobId,
+            freelancer_id: freelancerId,
+            cover_letter_md: coverLetter,
+            bid_amount: budget,
+            token_symbol: selectedCategory ?? "USD",
+            period: period,
+            status: BidStatus.PENDING,
+        });
+        if (result.success) {
+            toast.success("Bid created successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.error(result.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
         clickHandler();
     };
 
@@ -302,7 +332,7 @@ const ApplyJob = ({ jobId, clickHandler }: ApplyJobProps) => {
             <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
                 <div className="linear-border__inner rounded-[0.4375rem] bg-white p-8">
                     <div className='flex flex-col gap-6'>
-                        <div>
+                        {/* <div>
                             <p className='text-normal font-regular text-black text-left pb-2'>Title</p>
                             <input
                                 value={title}
@@ -313,58 +343,75 @@ const ApplyJob = ({ jobId, clickHandler }: ApplyJobProps) => {
                                 className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
                                 placeholder='Title'
                             />
-                        </div>
+                        </div> */}
                         <div className='w-full'>
                             <p className='text-normal font-regular text-black text-left pb-2'>Cover Letter</p>
                             <div className='flex flex-col'>
                                 <textarea className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-33.5 resize-none' value={coverLetter} onChange={(e) => setCoverLetter(e.target.value)} />
                             </div>
                         </div>
-                        <div>
-                            <p className='text-normal font-regular text-black text-left pb-2'>Budget</p>
-                            <input
-                                value={budget}
-                                onChange={(e) => {
-                                    setBudget(Number(e.target.value));
-                                    setError("");
-                                }}
-                                className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
-                                placeholder='Budget'
-                            />
-                        </div>
-                        <div className='flex flex-col gap-2'>
-                            <p className='text-normal font-regular text-black text-left'>Category</p>
-                            <div ref={dropdownRef} className={`relative w-full ${dropdownMenuOpen ? 'border-blue-500' : ''}`}>
-                                <select
-                                    value={selectedCategory}
+                        <div className="flex gap-6 w-full">
+                            <div className="w-full">
+                                <p className='text-normal font-regular text-black text-left pb-2'>Budget</p>
+                                <input
+                                    value={budget}
                                     onChange={(e) => {
-                                        setSelectedCategory(e.target.value);
+                                        setBudget(Number(e.target.value));
                                         setError("");
-                                        setDropdownMenuOpen(false);
                                     }}
-                                    className='w-full appearance-none rounded-lg border border-[#8F99AF] bg-white p-3 text-normal font-regular text-black focus:outline-none focus:border-blue-500'
-                                    onClick={(event) => {
-                                        event.stopPropagation();
-                                        setDropdownMenuOpen((prev: boolean) => !prev);
-                                    }}
-                                >
-                                    <option value='' disabled>
-                                        Select one ...
-                                    </option>
-                                    {categories.map((category) => (
-                                        <option key={category} value={category} className='text-normal font-regular text-black bg-white py-2 px-3'>
-                                            {category}
+                                    className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
+                                    placeholder='Budget'
+                                />
+                            </div>
+                            <div className='flex flex-col gap-2 w-full'>
+                                <p className='text-normal font-regular text-black text-left'>Category</p>
+                                <div ref={dropdownRef} className={`relative w-full ${dropdownMenuOpen ? 'border-blue-500' : ''}`}>
+                                    <select
+                                        value={selectedCategory}
+                                        onChange={(e) => {
+                                            setSelectedCategory(e.target.value);
+                                            setError("");
+                                            setDropdownMenuOpen(false);
+                                        }}
+                                        className='w-full appearance-none rounded-lg border border-[#8F99AF] bg-white p-3 text-normal font-regular text-black focus:outline-none focus:border-blue-500'
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            setDropdownMenuOpen((prev: boolean) => !prev);
+                                        }}
+                                    >
+                                        <option value='' disabled>
+                                            Select one ...
                                         </option>
-                                    ))}
-                                </select>
-                                {dropdownMenuOpen ? (
-                                    <ChevronUpIcon className="w-5 h-5 text-black absolute right-3 top-1/2 -translate-y-1/2" />
-                                ) : (
-                                    <ChevronDownIcon className="w-5 h-5 text-black absolute right-3 top-1/2 -translate-y-1/2" />
-                                )}
+                                        {categories.map((category) => (
+                                            <option key={category} value={category} className='text-normal font-regular text-black bg-white py-2 px-3'>
+                                                {category}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {dropdownMenuOpen ? (
+                                        <ChevronUpIcon className="w-5 h-5 text-black absolute right-3 top-1/2 -translate-y-1/2" />
+                                    ) : (
+                                        <ChevronDownIcon className="w-5 h-5 text-black absolute right-3 top-1/2 -translate-y-1/2" />
+                                    )}
+                                </div>
+                            </div>
+                            <div className="w-full">
+                                <p className='text-normal font-regular text-black text-left pb-2'>Period</p>
+                                <div className="flex gap-2 items-center">
+                                    <input
+                                        value={period}
+                                        onChange={(e) => {
+                                            setPeriod(Number(e.target.value));
+                                            setError("");
+                                        }}
+                                        className=' bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
+                                        placeholder='Period'
+                                    />
+                                    <p className='text-normal font-regular text-black'>Days</p>
+                                </div>
                             </div>
                         </div>
-                        <div className='flex flex-col gap-4 md:flex-row md:gap-2.5'>
+                        {/* <div className='flex flex-col gap-4 md:flex-row md:gap-2.5'>
                             <div className="flex-1" ref={startPickerRef}>
                                 <p className='text-normal font-regular text-black text-left pb-2'>Start Date</p>
                                 <div className='relative'>
@@ -455,7 +502,7 @@ const ApplyJob = ({ jobId, clickHandler }: ApplyJobProps) => {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
                         {error && (
                             <div className="text-small font-regular text-red-500 text-left">
                                 {error}

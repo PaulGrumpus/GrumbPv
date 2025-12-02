@@ -19,12 +19,6 @@ const LoadingProvider = ({ children }: Props) => {
     const [loadingState, setLoadingState] = useState<LoadingState>("pending");
     const router = useRouter();
 
-    useEffect(() => {
-        if(loadingState === 'failure') {
-            router.push('/')
-        }
-    }, [loadingState])
-
     return (
         <LoadingCtx.Provider value={{ loadingState, setLoadingState }}>
             {children}

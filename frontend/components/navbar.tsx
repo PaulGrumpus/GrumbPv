@@ -6,14 +6,13 @@ import Button from "./button";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
-import { CONFIG } from "@/config/config";
+import { CONFIG, EscrowBackendConfig } from "@/config/config";
 import LoginSignupModal from "./loginSignupModal";
 import { UserInfoCtx } from "@/context/userContext";
 import { toast } from "react-toastify";
 import { LoadingCtx } from "@/context/loadingContext";
 
 
-const username = "John Doe";
 const userPhoto = "/Grmps/grmps.jpg";
 const chatIcon = "/Grmps/chat.svg";
 const bellIcon = "/Grmps/bell.svg";
@@ -47,10 +46,18 @@ const Navbar = () => {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const menuToggleRef = useRef<HTMLDivElement>(null);
     const [loginSignupModalOpen, setLoginSignupModalOpen] = useState(false);
+    const [username, setUsername] = useState("");
 
     useEffect(() => {
         if(userInfo.id) {
             setUserRole(userInfo.role);
+            if(userInfo.display_name) {
+                setUsername(userInfo.display_name);
+            } else if(userInfo.email) {
+                setUsername(userInfo.email);
+            } else if(userInfo.address) {
+                setUsername(userInfo.address.slice(0, 4) + "..." + userInfo.address.slice(-4));
+            }
             setLoggedIn(true);
         } else {
             setUserRole('client');
@@ -145,15 +152,17 @@ const Navbar = () => {
                                     className="flex items-center gap-2 cursor-pointer select-none"
                                     onClick={handleDropdownMenuOpen}
                                 >
-                                    <div className="w-9 h-9 overflow-hidden rounded-full">
-                                        <Image 
-                                            src={userPhoto} 
-                                            alt="User Photo" 
-                                            width={36} 
-                                            height={36} 
-                                            className="h-full w-full rounded-full object-cover"
-                                        />
-                                    </div>
+                                    {
+                                        userInfo.image_id && <div className="w-9 h-9 overflow-hidden rounded-full">
+                                            <Image 
+                                                src={EscrowBackendConfig.uploadedImagesURL + userInfo.image_id} 
+                                                alt="User Photo" 
+                                                width={36} 
+                                                height={36} 
+                                                className="h-full w-full rounded-full object-cover"
+                                            />
+                                        </div>
+                                    }
                                     <p className="text-normal font-regular text-black">{username}</p>
                                     {dropdownMenuOpen ? (
                                         <ChevronUpIcon className="w-5 h-5 text-black" />
@@ -166,7 +175,10 @@ const Navbar = () => {
                         ) : (
                             <Button
                                 padding="px-6 py-2"
-                                onClick={() => setLoginSignupModalOpen(true)}
+                                onClick={() => {
+                                    router.push("/");
+                                    setLoginSignupModalOpen(true)
+                                }}
                             >
                                 <p>Login</p>
                             </Button>
