@@ -250,7 +250,7 @@ enum job_status {
 enum bid_status {
   pending
   accepted
-  rejected
+  declined
   withdrawn
 }
 

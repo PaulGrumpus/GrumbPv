@@ -23,6 +23,7 @@ const MyJobsSection = () => {
             const result = await getJobsByClientId(client_id);
             if (result.success) {
                 setJobs(result.data ?? []);
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 setLoading("success");
             } else {
                 toast.error(result.error as string, {

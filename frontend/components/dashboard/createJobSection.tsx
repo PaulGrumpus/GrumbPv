@@ -370,7 +370,11 @@ const CreateJobSection = () => {
                 return;
             }
             if (userInfo && userInfo.id) {
-                setLoading("success");
+                const loadCreateJob = async () => {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    setLoading("success");
+                }
+                loadCreateJob();
             }
         } else if (loadingState === "failure") {
             router.push("/");

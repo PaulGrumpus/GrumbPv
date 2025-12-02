@@ -75,6 +75,7 @@ const MyBidsSection = () => {
                 );
 
                 setBids(bidsPostProps.filter(Boolean) as BidPostProps[]);
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 setLoading("success");           
             } else {
                 toast.error(result.error as string, {

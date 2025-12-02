@@ -24,6 +24,7 @@ const MyGigsSection = () => {
             const result = await getGigsByFreelancerId(freelancer_id);
             if (result.success) {
                 setGigs(result.data ?? []);
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 setLoading("success");
             } else {
                 toast.error(result.error as string, {

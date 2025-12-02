@@ -151,7 +151,11 @@ const CreateGigSection = () => {
                 return;
             }
             if (userInfo && userInfo.id) {
-                setLoading("success");
+                const loadCreateGig = async () => {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    setLoading("success");
+                }
+                loadCreateGig();
             }
         } else if (loadingState === "failure") {
             router.push("/");

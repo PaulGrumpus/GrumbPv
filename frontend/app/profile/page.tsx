@@ -271,23 +271,27 @@ const ProfilePage = () => {
                 return;
             }
             if (userInfo && userInfo.id) {
-                initialFormState.current = {                
-                    userName: userInfo.display_name || "",
-                    userEmail: userInfo.email || "",
-                    userBio: userInfo.bio || "",
-                    userPhoto: userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "",
-                    selectedLanguage,
-                };
-                console.log("test-initialFormState", initialFormState.current);
-                console.log("test-userInfo", userInfo);
-                setUserBio(userInfo.bio || "")
-                setSelectedLanguage("")
-                setUserName(userInfo.display_name || "")
-                setUserPhoto(userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "")
-                setUserRole(userInfo.role || "")
-                setUserEmail(userInfo.email || "")
-                setUserWaletAddress(userInfo.address || "")
-                setLoading("success");
+                const loadProfile = async () => {
+                    initialFormState.current = {                
+                        userName: userInfo.display_name || "",
+                        userEmail: userInfo.email || "",
+                        userBio: userInfo.bio || "",
+                        userPhoto: userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "",
+                        selectedLanguage,
+                    };
+                    console.log("test-initialFormState", initialFormState.current);
+                    console.log("test-userInfo", userInfo);
+                    setUserBio(userInfo.bio || "")
+                    setSelectedLanguage("")
+                    setUserName(userInfo.display_name || "")
+                    setUserPhoto(userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "")
+                    setUserRole(userInfo.role || "")
+                    setUserEmail(userInfo.email || "")
+                    setUserWaletAddress(userInfo.address || "")
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    setLoading("success");
+                }
+                loadProfile();
             }
         } else if (loadingState === "failure") {
             router.push("/");

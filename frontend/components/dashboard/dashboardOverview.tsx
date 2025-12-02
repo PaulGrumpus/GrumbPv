@@ -77,16 +77,17 @@ const DashboardOverview = () => {
                 return;
             }
             if (userInfo && userInfo.id) {
-                const loadGigs = async () => {
+                const loadDashboardPosts = async () => {
                     if (!userInfo?.id) {
                         setLoadingState("failure");
                         return;
                     }
                     // await getGigsPerFreelancerId(userInfo.id);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 };
         
-                loadGigs();
+                loadDashboardPosts();
             }
         } else if (loadingState === "failure") {
             router.push("/");

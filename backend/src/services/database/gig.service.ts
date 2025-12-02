@@ -313,20 +313,20 @@ export class GigService {
         return this.normalizeExistingImageReference(rawImageInput);
     }
 
-    private normalizeTags(input: unknown): string[] {
-        if (!input) return [];
-        if (Array.isArray(input)) return input.map((tag) => String(tag));
-        if (typeof input === 'string') {
-            try {
-                const parsed = JSON.parse(input);
-                if (Array.isArray(parsed)) return parsed.map((tag) => String(tag));
-            } catch {
-                // fall through
-            }
-            return [input];
-        }
-        return [String(input)];
-    }
+    // private normalizeTags(input: unknown): string[] {
+    //     if (!input) return [];
+    //     if (Array.isArray(input)) return input.map((tag) => String(tag));
+    //     if (typeof input === 'string') {
+    //         try {
+    //             const parsed = JSON.parse(input);
+    //             if (Array.isArray(parsed)) return parsed.map((tag) => String(tag));
+    //         } catch {
+    //             // fall through
+    //         }
+    //         return [input];
+    //     }
+    //     return [String(input)];
+    // }
 }
 
 
