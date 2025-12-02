@@ -83,7 +83,7 @@ const GigsPage = () => {
                 if(result.success) {
                     setGigs(result.data ?? []);
                 }
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 3000));
                 setLoading("success");
             }
             loadGigs();

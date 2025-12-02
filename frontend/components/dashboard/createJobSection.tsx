@@ -371,7 +371,7 @@ const CreateJobSection = () => {
             }
             if (userInfo && userInfo.id) {
                 const loadCreateJob = async () => {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }
                 loadCreateJob();

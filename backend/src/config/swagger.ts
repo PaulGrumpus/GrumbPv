@@ -229,11 +229,19 @@ const options: swaggerJsdoc.Options = {
           required: ['email', 'role'],
           properties: {
             email: { type: 'string', format: 'email' },
-            password: { type: 'string', format: 'password', writeOnly: true },
+            password: { type: 'string' },
             role: { type: 'string', enum: ['client', 'freelancer', 'admin'], description: 'If omitted, backend may apply defaults if any' },
             display_name: { type: 'string', nullable: true },
             bio: { type: 'string', nullable: true },
             country_code: { type: 'string', nullable: true },
+          },
+        },
+        GetUserByEmailAndPasswordRequest: {
+          type: 'object',
+          required: ['email', 'password'],
+          properties: {
+            email: { type: 'string', format: 'email' },
+            password: { type: 'string' },
           },
         },
         UpdateUserRequest: {

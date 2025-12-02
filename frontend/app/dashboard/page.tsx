@@ -201,7 +201,7 @@ const DashboardPageContent = () => {
                     } else {
                         await getMyJobsCount();
                     }
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }
                 loadCounts();

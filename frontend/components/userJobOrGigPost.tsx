@@ -225,6 +225,7 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
                 <div className="mt-6">
                     <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
                         <div className="linear-border__inner rounded-[0.4375rem] p-6 bg-white">
+                            <p className="text-large font-bold text-[#2F3DF6] py-6">See Applicants:</p>
                             <div className="grid grid-cols-3 gap-6">
                                 {applications.length > 0 ? (
                                     applications.map((application) => (

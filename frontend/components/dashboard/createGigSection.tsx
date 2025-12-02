@@ -152,7 +152,7 @@ const CreateGigSection = () => {
             }
             if (userInfo && userInfo.id) {
                 const loadCreateGig = async () => {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }
                 loadCreateGig();

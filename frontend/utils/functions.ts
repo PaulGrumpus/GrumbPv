@@ -40,10 +40,11 @@ export const createUserWithAddress = async (address: string, role: string) => {
     }
 }
 
-export const createUserWithEmail = async (email: string, role: string) => {
+export const createUserWithEmail = async (email: string, password: string, role: string) => {
     try {
         const response = await EscrowBackend.post('/database/users/with-email', {
             email,
+            password,
             role,
         });
 
@@ -158,6 +159,63 @@ export const loginWithAddress = async (address: string) => {
         return { success: true, data: decodedToken };
 
     } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const checkUserByAddress = async (address: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/users/by-address/${address}`);
+
+        const token = response.data.data;
+        const decodedToken = decodeToken(token);
+
+        if (!decodedToken) {
+            return { success: false, error: 'Invalid token' };
+        }
+
+        return {
+            success: true,
+            data: decodedToken,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const loginWithEmail = async (email: string, password: string) => {
+    try {
+        const response = await EscrowBackend.put('/database/users/by-email-and-password', {
+            email,
+            password,
+        });
+
+        const token = response.data.data;
+        const decodedToken = decodeToken(token);
+
+        if (!decodedToken) {
+            return { success: false, error: 'Invalid token' };
+        }
+
+        localStorage.setItem('token', token);
+        const res = NextResponse.json({ success: true });
+
+        res.cookies.set("token", token, {
+            httpOnly: true,
+            secure: true,
+            path: "/"
+        });
+
+        return { success: true, data: decodedToken };
+    }
+    catch (error: any) {
         return {
             success: false,
             error: error.response?.data?.error?.message || error.message || "Unknown error"

@@ -16,7 +16,7 @@ const Loading = () => {
               alt="Grmps logo"
               width={1000}
               height={1000}
-              className="drop-shadow-[0_20px_40px_rgba(14,116,144,0.25)] object-cover w-full h-full"
+              className="animate-[zoomInOut_2.8s_ease-in-out_infinite] drop-shadow-[0_20px_40px_rgba(14,116,144,0.25)] object-cover w-full h-full"
             />
           </div>
         </div>
@@ -32,13 +32,13 @@ const Loading = () => {
       <style jsx global>{`
         @keyframes zoomInOut {
           0% {
-            transform: scale(0.85);
+            transform: scale(0.95);
           }
           50% {
             transform: scale(1.08) rotate(0.4deg);
           }
           100% {
-            transform: scale(0.85);
+            transform: scale(0.95);
           }
         }
 

@@ -13,6 +13,7 @@ import { toast } from 'react-toastify';
 import { User } from '@/types/user';
 import { updateUser } from '@/utils/functions';
 import { EscrowBackendConfig } from '@/config/config';
+import { connectMetaMaskWallet } from '@/utils/walletConnnect';
 
 type FormState = {
     userName: string;
@@ -132,7 +133,7 @@ const ProfilePage = () => {
         setSelectedFile(null);
 
         const user: User = {
-            address: userInfo?.address || "",
+            address: userInfo?.address || userWaletAddress || "",
             chain: userInfo?.chain || "",
             id: userInfo?.id || "",
             display_name: userName,
@@ -220,6 +221,14 @@ const ProfilePage = () => {
         }
     }
 
+    const handleConnectWallet = async () => {
+        const connection = await connectMetaMaskWallet(userEmail);
+        if(!connection) {
+            return;
+        }
+        setUserWaletAddress(connection.address);
+    }
+
     const resetForm = () => {
         const { userName: initialUserName, userEmail: initialUserEmail, userBio: initialBio, selectedLanguage: initialLanguage } = initialFormState.current;
 
@@ -288,7 +297,7 @@ const ProfilePage = () => {
                     setUserRole(userInfo.role || "")
                     setUserEmail(userInfo.email || "")
                     setUserWaletAddress(userInfo.address || "")
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }
                 loadProfile();
@@ -368,7 +377,17 @@ const ProfilePage = () => {
                                         <Button variant='secondary' padding='p-2' onClick={() => handleCopy(userWaletAddress)}>Copy</Button>
                                     </div>
                                 ) : (
-                                    <Button padding='p-2'>Connect Wallet</Button>
+                                    <div className='flex flex-col gap-2'>
+                                        <p className='text-tiny font-regular text-red-500 text-left'>You must connect your wallet to your account to start using the platform</p>
+                                        <div className='flex fit-content'>
+                                            <Button 
+                                                padding='p-2'
+                                                onClick={handleConnectWallet}
+                                            >
+                                                Connect Wallet
+                                            </Button>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                             <div>
