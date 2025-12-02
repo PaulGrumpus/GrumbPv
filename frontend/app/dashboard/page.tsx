@@ -117,8 +117,8 @@ const DashboardPageContent = () => {
             label: "My Jobs",            
             count: 0,
             subItems: [
-                { label: "Jobs" },
-                { label: "Create Job", count: myJobsCount },
+                { label: "Jobs", count: myJobsCount},
+                { label: "Create Job"},
             ],
         },
     ]), [myJobsCount]);

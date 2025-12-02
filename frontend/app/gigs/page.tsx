@@ -1,6 +1,14 @@
 "use client";
 
 import PubJobOrGigPost from "@/components/pubJobOrGigPost";
+import { Gig } from "@/types/gigs";
+import { LocationType } from "@/types/jobs";
+import { useContext, useEffect, useState } from "react";
+import { UserInfoCtx } from "@/context/userContext";
+import { LoadingCtx } from "@/context/loadingContext";
+import { getGigs } from "@/utils/functions";
+import Loading from "@/components/loading";
+import { EscrowBackendConfig } from "@/config/config";
 
 const gigs = [
     {
@@ -62,6 +70,29 @@ const gigs = [
 ]
 
 const GigsPage = () => {
+
+    const { userInfo, setUserInfo } = useContext(UserInfoCtx);
+    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const [loading, setLoading] = useState("pending");
+    const [gigs, setGigs] = useState<Gig[]>([]);
+    
+    useEffect(() => {
+        if(loadingState !== "pending") {
+            const loadGigs = async () => {
+                const result = await getGigs();
+                if(result.success) {
+                    setGigs(result.data ?? []);
+                }
+                setLoading("success");
+            }
+            loadGigs();
+        }
+    }, [userInfo, loadingState])
+
+    if (loading === "pending") {
+        return <Loading />;
+    }
+
     return (
         <div>
             <div className="px-16 bg-white pt-46">
@@ -72,15 +103,14 @@ const GigsPage = () => {
                         {gigs.map((gig) => (
                             <PubJobOrGigPost 
                                 key={gig.id} 
-                                description={gig.description} 
+                                description={gig.description_md} 
                                 title={gig.title} 
-                                location={gig.location} 
-                                tags={gig.tags} 
-                                price={gig.price} 
-                                image={gig.image}
-                                currency={gig.currency} 
-                                deadline={gig.deadline} 
-                                createdAt={gig.createdAt}
+                                tags={gig.tags ?? []} 
+                                minBudget={gig.budget_min_usd ?? 0} 
+                                maxBudget={gig.budget_max_usd ?? 0} 
+                                image={gig.image_id ? EscrowBackendConfig.uploadedImagesURL + gig.image_id : undefined}
+                                currency={gig.token_symbol ?? "USD"} 
+                                createdAt={gig.created_at ? new Date(gig.created_at).getTime() / 1000 : 0}
                                 label="Contact"
                                 clickHandler={() => {
                                 }}

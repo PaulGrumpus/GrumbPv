@@ -10,19 +10,19 @@ import { formatDueDate } from "@/utils/functions";
 interface pubJobOrGigPostProps {
     description: string;
     title: string;
-    location: LocationType; 
+    location?: LocationType; 
     tags: string[];  
     minBudget: number;
     maxBudget: number;
     currency: string;
-    deadline: number | string | undefined;
+    deadline?: number | string | undefined;
     createdAt: number;   
     image?: string;
     label: string;
     clickHandler: () => void;
 }
 
-const COLLAPSED_MAX_HEIGHT = 168;
+const COLLAPSED_MAX_HEIGHT = 120;
 
 const PubJobOrGigPost = ({ description, title, location, tags, minBudget, maxBudget, currency, deadline, clickHandler, image, label }: pubJobOrGigPostProps) => {
     const [expanded, setExpanded] = useState(false);
@@ -67,8 +67,8 @@ const PubJobOrGigPost = ({ description, title, location, tags, minBudget, maxBud
                             <Image 
                                 src={image || ""}
                                 alt="job image"
-                                width={100}
-                                height={100}
+                                width={1000}
+                                height={500}
                                 className="rounded-lg h-100 w-full object-cover"
                             />
                         </div>

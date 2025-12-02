@@ -97,6 +97,7 @@ const MyGigsSection = () => {
                                     link={gig.link}
                                     tags={gig.tags ?? []}
                                     image={gig.image_id ? EscrowBackendConfig.uploadedImagesURL + gig.image_id : ""}
+                                    variant="gig"
                                 />
                             ))}
                         </div>

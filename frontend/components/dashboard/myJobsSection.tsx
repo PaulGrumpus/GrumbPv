@@ -11,28 +11,6 @@ import { EscrowBackendConfig } from "@/config/config";
 import { getJobsByClientId } from "@/utils/functions";
 import { toast } from "react-toastify";
 
-const Jobs = [
-    {
-        title: "Job 1",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.",
-        subtitle: "Subtitle 1",
-        tags: ["Tag 1"],
-    },
-    {
-        title: "Job 2",
-        image: "/Grmps/profile-image.jpg",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.",
-        subtitle: "Subtitle 2",
-        tags: ["Tag 1"],
-    },
-    {
-        title: "Job 3",
-        description: "DescLorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.",
-        subtitle: "Subtitle 3",
-        tags: ["Tag 1"],
-    },
-]
-
 const MyJobsSection = () => {
     const router = useRouter();
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
@@ -110,6 +88,7 @@ const MyJobsSection = () => {
                             {jobs.map((job) => (
                                 <UserJobOrGigPost
                                     key={job.id}
+                                    job_id={job.id}
                                     title={job.title}
                                     description={job.description_md}
                                     location={job.location ?? LocationType.REMOTE}

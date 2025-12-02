@@ -5,6 +5,7 @@ export interface Bid {
     cover_letter_md?: string;
     bid_amount: number;
     token_symbol: string;
+    period?: number;
     status: BidStatus;
     created_at?: number;
     updated_at?: number;

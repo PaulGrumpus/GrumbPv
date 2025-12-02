@@ -7,12 +7,15 @@ import { BidPostProps, BidStatus } from "@/types/bid";
 import { LocationType } from "@/types/jobs";
 import { formatDueDate } from "@/utils/functions";
 
-const COLLAPSED_MAX_HEIGHT = 168;
+const COLLAPSED_MAX_HEIGHT = 120;
 
 const BidPost = ({ bid_id, job_description, job_title, job_location, job_tags, job_max_budget, job_min_budget, job_deadline, bid_cover_letter, bid_amount, currency, bid_status }: BidPostProps) => {
     const [expanded, setExpanded] = useState(false);
     const [canToggle, setCanToggle] = useState(false);
+    const [canToggleBidCoverLetter, setCanToggleBidCoverLetter] = useState(false);
+    const [expandedBidCoverLetter, setExpandedBidCoverLetter] = useState(false);
     const descriptionRef = useRef<HTMLParagraphElement>(null);
+    const bidCoverLetterRef = useRef<HTMLParagraphElement>(null);
 
     useEffect(() => {
         const el = descriptionRef.current;
@@ -23,22 +26,30 @@ const BidPost = ({ bid_id, job_description, job_title, job_location, job_tags, j
         setCanToggle(el.scrollHeight > COLLAPSED_MAX_HEIGHT);
     }, [job_description]);
 
+    useEffect(() => {
+        const el = bidCoverLetterRef.current;
+        if (!el) {
+            return;
+        }
+        setCanToggleBidCoverLetter(el.scrollHeight > COLLAPSED_MAX_HEIGHT);
+    }, [bid_cover_letter]);
+
     return (
         <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
             <div className="linear-border__inner rounded-[0.4375rem] p-6 bg-white">
                 <div className="text-black">
-                    <div className="flex justify-between pb-6">
-                        <div className="flex flex-col">
+                    <div className="flex justify-between pb-6 gap-6">
+                        <div className="flex flex-col max-w-[75%]">
                             <div className="flex items-center gap-1">
                                 <h1 className="text-subtitle font-bold text-black">{job_title}</h1>
-                                <div>
+                                {/* <div>
                                     <Image 
                                         src="/Grmps/yellowStar.svg" 
                                         alt="favorite icon" 
                                         width={24} 
                                         height={24} 
                                     />
-                                </div>                
+                                </div>                 */}
                             </div>
                             <div className="flex flex-col">
                                 <p className="text-normal font-regular text-black">Location: {job_location === LocationType.REMOTE ? "Remote" : job_location === LocationType.ON_SITE ? "On Site" : "Hybrid"}</p>
@@ -105,18 +116,30 @@ const BidPost = ({ bid_id, job_description, job_title, job_location, job_tags, j
                         >
                             {expanded ? "show less" : "show more"}
                         </button>
-                    )}
+                    )}  
 
-                    
+                    <div className="pb-6"></div>
 
-                    <div className="flex flex-col pt-6">
+                    <div className={`overflow-hidden transition-[max-height] duration-200 ${expandedBidCoverLetter ? "max-h-none" : "max-h-42"}`}>
                         <p className="text-normal font-regular text-black">Bid Cover Letter:</p>
                         <p
+                            ref={bidCoverLetterRef}
                             className="text-normal font-regular text-black"
                         >
                             {bid_cover_letter}
                         </p>
                     </div>
+
+                    {canToggleBidCoverLetter && (
+                        <button
+                            type="button"
+                            className="mt-3 text-small font-regular text-gray-500 cursor-pointer"
+                            onClick={() => setExpandedBidCoverLetter((prev) => !prev)}
+                        >
+                            {expandedBidCoverLetter ? "show less" : "show more"}
+                        </button>
+                    )}
+
                     <div className="flex flex-col pt-6">
                         <p className="text-normal font-regular text-black">Bid Amount:</p>
                         <p
