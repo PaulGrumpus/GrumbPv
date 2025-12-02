@@ -97,6 +97,22 @@ export class UserController {
         }
     }
 
+    async getUserByEmailAndPassword(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { email, password } = req.body;
+
+            const result = await userService.getUserByEmailAndPassword(email, password);
+
+            res.json({
+                success: true,
+                data: result,
+                message: 'User retrieved successfully',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async getUserByEmail(req: Request, res: Response, next: NextFunction) {
         try {
             const { email } = req.params;

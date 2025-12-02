@@ -46,7 +46,6 @@ const UserInfoProvider = ({ children }: Props) => {
 
     const init = async () => {
         if (typeof window === "undefined") return;
-        
         setLoadingState("pending");
         const token = localStorage.getItem('token');
         if(token) {

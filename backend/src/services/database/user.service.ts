@@ -54,8 +54,8 @@ export class UserService {
 
     public async createUserWithEmail(user: Prisma.usersCreateInput): Promise<string> {
         try {
-            if(!user.email || !user.role) {
-                throw new AppError('Email and role are required', 400, 'EMAIL_ROLE_REQUIRED');
+            if(!user.email || !user.role || !user.password) {
+                throw new AppError('Email, password and role are required', 400, 'EMAIL_ROLE_PASSWORD_REQUIRED');
             }
             if(user.role !== user_role.client && user.role !== user_role.freelancer) {
                 throw new AppError('Invalid role', 400, 'INVALID_ROLE');
@@ -125,7 +125,14 @@ export class UserService {
 
             if (normalizedImageId !== undefined) {
                 updateData.image_id = normalizedImageId;
-            }            
+            }  
+                        
+            const exsitingWalletAddress = await this.prisma.users.findUnique({
+                where: { address: updateData.address as string },
+            });
+            if(exsitingWalletAddress && existingUser.address !== exsitingWalletAddress.address) {
+                throw new AppError('Wallet address already exists! Connected to another wallet account!', 400, 'WALLET_ADDRESS_ALREADY_CONNECTED_TO_ANOTHER_ACCOUNT');
+            }
 
             const updatedUser = await this.prisma.users.update({
                 where: { id },
@@ -185,6 +192,33 @@ export class UserService {
             }
             logger.error('Error getting user by address', { error });
             throw new AppError('Error getting user by address', 500, 'DB_USER_GET_BY_ADDRESS_FAILED');
+        }
+    }
+
+    public async getUserByEmailAndPassword(email: string, password: string): Promise<string> {
+        try {
+            if (!email || !password) {
+                throw new AppError('Email and password are required', 400, 'EMAIL_PASSWORD_REQUIRED');
+            }
+            const hashedPassword = await this.hashPasswordIfPresent(password);
+            console.log(hashedPassword);
+            const user = await this.prisma.users.findFirst({
+                where: { email },
+            });
+            if (!user) {
+                throw new AppError('Invalid email', 400, 'INVALID_EMAIL');
+            }
+            if(user.password && !bcrypt.compareSync(password, user.password)) {
+                throw new AppError('Invalid password', 400, 'INVALID_PASSWORD');
+            }
+            const token = generateToken(user);
+            return token;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            logger.error('Error getting user by email', { error });
+            throw new AppError('Error getting user by email', 500, 'DB_USER_GET_BY_EMAIL_FAILED');
         }
     }
 

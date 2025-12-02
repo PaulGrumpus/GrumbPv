@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useContext, useEffect, useState } from "react";
 import { CONFIG } from "@/config/config";
 import { toast } from "react-toastify";
-import { createUserWithAddress, loginWithAddress } from "@/utils/functions";
+import { createUserWithAddress, createUserWithEmail, loginWithAddress, loginWithEmail } from "@/utils/functions";
 import { UserInfoCtx } from "@/context/userContext";
 import { useRouter } from "next/navigation";
 import { LoadingCtx } from "@/context/loadingContext";
@@ -153,6 +153,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     const [isMetaMaskAvailable, setIsMetaMaskAvailable] = useState(true);
     const { setUserInfo } = useContext(UserInfoCtx);
     const { setLoadingState } = useContext(LoadingCtx);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         if (typeof window === "undefined") {
@@ -277,11 +278,14 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     }, []);
 
     const handleClose = () => {
+        setError("");
         setIsOpen(false);
         setEmail("");
         setPassword("");
         setShowPassword(false);
         setIsRegistered(signedUp);
+        setRememberMe(false);
+        setTermsAndPolicy(false);
     };
 
     const connectMetaMaskWallet = async (action: WalletAction) => {
@@ -450,13 +454,49 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
         }
     };
 
-    const handleLogin = () => {
-        console.log("login");
+    const handleLogin = async () => {
+        if(!email || !password){
+            setError("Email and password are required");
+            return;
+        }
+        const response = await loginWithEmail(email, password);
+        if(!response.success) {
+            toast.error(response.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.success("Logged in successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
+        
         setIsOpen(false);
+        setEmail("");
+        setPassword("");
+        setShowPassword(false);
+        setRememberMe(false);
+        setTermsAndPolicy(false);
+        router.push("/profile");
+        setLoadingState("pending");
     }
 
     const handleRegister = () => {
-        console.log("register");
+        if(!email || !password){
+            setError("Email and password are required");
+            return;
+        }
+        if(!termsAndPolicy){
+            setError("You must agree to the terms and policy");
+            return;
+        }
         // async () => {}
         setRegisterProcessing(true);
     }
@@ -470,46 +510,87 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     }
 
     const handleCreateAccount = async () => {
-        const response = await createUserWithAddress(walletAddress || '', registeredUserRole);
-
-        if(!response.success) {
-            toast.error(response.error, {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-            });
-        } else {
-            toast.success("Account created successfully", {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-            });
-
-            setUserInfo({
-                id: response.data?.id || '',
-                address: response.data?.address || '',
-                chain: response.data?.chain || '',
-                email: response.data?.email || '',
-                password: response.data?.password || '',
-                role: response.data?.role || '',
-                display_name: response.data?.display_name || '',
-                bio: response.data?.bio || '',
-                country_code: response.data?.country_code || '',
-                is_verified: response.data?.is_verified || false,
-                image_id: response.data?.image_id || '',
-                created_at: response.data?.created_at || '',
-                updated_at: response.data?.updated_at || '',
-            });
+        if(walletAddress && !email && !password){
+            const response = await createUserWithAddress(walletAddress || '', registeredUserRole);
+            if(!response.success) {
+                toast.error(response.error, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                });
+            } else {
+                toast.success("Account created successfully", {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                });
+    
+                setUserInfo({
+                    id: response.data?.id || '',
+                    address: response.data?.address || '',
+                    chain: response.data?.chain || '',
+                    email: response.data?.email || '',
+                    password: response.data?.password || '',
+                    role: response.data?.role || '',
+                    display_name: response.data?.display_name || '',
+                    bio: response.data?.bio || '',
+                    country_code: response.data?.country_code || '',
+                    is_verified: response.data?.is_verified || false,
+                    image_id: response.data?.image_id || '',
+                    created_at: response.data?.created_at || '',
+                    updated_at: response.data?.updated_at || '',
+                });
+            }
         }
-
+        if(email && password){
+            const response = await createUserWithEmail(email, password, registeredUserRole);
+            if(!response.success) {
+                toast.error(response.error, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                });
+            } else {
+                toast.success("Account created successfully", {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                });
+                setUserInfo({
+                    id: response.data?.id || '',
+                    address: response.data?.address || '',
+                    chain: response.data?.chain || '',
+                    email: response.data?.email || '',
+                    password: response.data?.password || '',
+                    role: response.data?.role || '',
+                    display_name: response.data?.display_name || '',
+                    bio: response.data?.bio || '',
+                    country_code: response.data?.country_code || '',
+                    is_verified: response.data?.is_verified || false,
+                    image_id: response.data?.image_id || '',
+                    created_at: response.data?.created_at || '',
+                    updated_at: response.data?.updated_at || '',
+                });
+            }
+        }
+        
         setRegisterProcessing(false);
         setIsOpen(false);
         router.push("/profile");
         setLoadingState("pending");
+        setEmail("");
+        setPassword("");
+        setShowPassword(false);
+        setRememberMe(false);
+        setTermsAndPolicy(false);
     }
 
     const metaMaskButtonLabel = isWalletConnecting
@@ -733,30 +814,29 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                                     </button>
                                 </div>
                             </div>
-                            
-                                {isRegistered ? 
-                                    <div className="flex items-center justify-start gap-2.5 p-2.5">
-                                        <input type="checkbox" id="remember" name="remember" className="w-4 h-4 text-gray-300"
-                                            checked={rememberMe}
-                                            onChange={(e) => setRememberMe(e.target.checked)}
-                                        />
-                                        <label htmlFor="remember" className="text-normal font-regular font-inter text-black">Remember me</label>
-                                    </div>
-                                :
-                                    <div className="flex items-center justify-start gap-2.5 p-2.5">
-                                        <input type="checkbox" id="termsAndPolicy" name="termsAndPolicy" className="w-4 h-4 text-gray-300"
-                                            checked={termsAndPolicy}
-                                            onChange={(e) => setTermsAndPolicy(e.target.checked)}
-                                        />
-                                        <label htmlFor="termsAndPolicy" className="text-normal font-regular font-inter text-black">
-                                            <span>I agree to the </span>
-                                            <Link href="/terms-of-service" className="text-[#7E3FF2]">Terms of Service</Link>
-                                            <span> and </span>
-                                            <Link href="/privacy-policy" className="text-[#7E3FF2]">Privacy Policy</Link>
-                                            <span>.</span>
-                                        </label>
-                                    </div>
-                                }
+                            {isRegistered ? 
+                                <div className="flex items-center justify-start gap-2.5 p-2.5">
+                                    <input type="checkbox" id="remember" name="remember" className="w-4 h-4 text-gray-300"
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                    />
+                                    <label htmlFor="remember" className="text-normal font-regular font-inter text-black">Remember me</label>
+                                </div>
+                            :
+                                <div className="flex items-center justify-start gap-2.5 p-2.5">
+                                    <input type="checkbox" id="termsAndPolicy" name="termsAndPolicy" className="w-4 h-4 text-gray-300"
+                                        checked={termsAndPolicy}
+                                        onChange={(e) => setTermsAndPolicy(e.target.checked)}
+                                    />
+                                    <label htmlFor="termsAndPolicy" className="text-normal font-regular font-inter text-black">
+                                        <span>I agree to the </span>
+                                        <Link href="/terms-of-service" className="text-[#7E3FF2]">Terms of Service</Link>
+                                        <span> and </span>
+                                        <Link href="/privacy-policy" className="text-[#7E3FF2]">Privacy Policy</Link>
+                                        <span>.</span>
+                                    </label>
+                                </div>
+                            }
                             {isRegistered && (
                                 <p 
                                     className="text-normal font-regular font-inter text-[#7E3FF2] text-center cursor-pointer"
@@ -764,6 +844,11 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                                         console.log("forgot password");
                                     }}
                                 >Forgot the password?</p>
+                            )}
+                            {error && (
+                                <div className="text-small font-regular text-red-500 text-left">
+                                    {error}
+                                </div>
                             )}
                             <Button
                                 onClick={() => {

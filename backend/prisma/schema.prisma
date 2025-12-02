@@ -16,7 +16,7 @@ model users {
   role          user_role
   display_name  String?
   bio           String?
-  image_id      String?                     
+  image_id      String?
   country_code  String?
   is_verified   Boolean                     @default(false)
   created_at    DateTime                    @default(now()) @db.Timestamptz(6)
@@ -45,7 +45,7 @@ model jobs {
   token_symbol   String?
   location       location_type    @default(remote)
   tags           String[]
-  image_id       String?          
+  image_id       String?
   deadline_at    DateTime?        @db.Timestamptz(6)
   status         job_status       @default(open)
   is_remote      Boolean          @default(true)
@@ -70,7 +70,7 @@ model gigs {
   token_symbol   String?
   tags           String[]
   link           String?
-  image_id       String?         
+  image_id       String?
   created_at     DateTime        @default(now()) @db.Timestamptz(6)
   updated_at     DateTime        @default(now()) @db.Timestamptz(6)
   conversations  conversations[]
@@ -87,6 +87,7 @@ model job_bids {
   bid_amount      Decimal?   @db.Decimal(18, 8)
   token_symbol    String?
   status          bid_status @default(pending)
+  period          Int?
   created_at      DateTime   @default(now()) @db.Timestamptz(6)
   updated_at      DateTime   @default(now()) @db.Timestamptz(6)
   freelancer      users      @relation(fields: [freelancer_id], references: [id], onDelete: Cascade)
@@ -249,7 +250,7 @@ enum job_status {
 enum bid_status {
   pending
   accepted
-  rejected
+  declined
   withdrawn
 }
 
