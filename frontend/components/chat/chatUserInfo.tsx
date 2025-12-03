@@ -31,7 +31,7 @@ const ChatUserInfo = ({ user }: { user: User }) => {
                 </div>
                 <h1 className="text-light-large font-bold text-[#DEE4F2] pb-3">{user.display_name}</h1>
                 <div className="flex items-center justify-center bg-[#FFFFFF33] rounded-sm py-1 px-2.5 mb-3">
-                    <p className="text-tiny font-regular text-[#DEE4F2]">{user.role}</p>
+                    <p className="text-small font-regular text-[#DEE4F2]">{user.role}</p>
                 </div>
                 <div className="flex flex-col items-start gap-2">
                     <div className="flex items-center justify-center py-2 px-2.5">

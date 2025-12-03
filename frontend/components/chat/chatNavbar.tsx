@@ -1,4 +1,4 @@
-import Button from "./button";
+import Button from "../button";
 import Image from "next/image";
 
 const ChatNavbar = () => {
