@@ -1,75 +1,84 @@
+'use client';
+
 import { useEffect, useState } from "react";
 import ChatSidebarItem from "./chatSidebarItem";
 import Image from "next/image";
+import { User } from "@/types/user";
 
-const chats = [
-    {
-        id: 1,
-        name: "John Doe",
-        image: "62fa7b72-5fd1-46fa-ae8f-2387d09ce907.jpg",
-        status: "typing",
-        lastMessage: "Hello, how are you?",
-        lastMessageTime: "12:00 PM",
-        pinned: true,
-    },
-    {
-        id: 2,
-        name: "Jane Doe",
-        image: "c0cf1c35-20a1-4412-9b15-45429788ea25.jpg",
-        status: "online",
-        lastMessage: "Hello, how are you?",
-        lastMessageTime: "12:00 PM",
-        pinned: false,
-    },
-    {
-        id: 3,
-        name: "John Doe",
-        image: "971411da-4c27-47f7-b171-45c2b39e64c9.png",
-        status: "online",
-        lastMessage: "Hello, how are you?",
-        lastMessageTime: "12:00 PM",
-        pinned: false,
-    },
-    {
-        id: 4,
-        name: "Jane Doe",
-        image: "7e8e2ec9-db1c-441a-bb53-3c1c5a661d59.jpg",
-        status: "online",
-        lastMessage: "Hello, how are you?",
-        lastMessageTime: "12:00 PM",
-        pinned: false,
-    },    
-];
+interface ChatSidebarItemType {
+    conversation_id: string;
+    receiver: User;
+    status: string;
+    lastMessage: string;
+    lastMessageTime: Date;
+    pinned: boolean;
+    selected: boolean;
+    onChatClick: (conversation_id: string) => void;
+    onPinChat: (conversation_id: string) => void;
+    onUnpinChat: (conversation_id: string) => void;
+}
 
-const ChatSidebar = () => {
+const ChatSidebar = ({ chats }: { chats: ChatSidebarItemType[] }) => {
 
-    const [pinnedChats, setPinnedChats] = useState<typeof chats>([]);
-    const [unpinnedChats, setUnpinnedChats] = useState<typeof chats>([]);
+    const [pinnedChats, setPinnedChats] = useState<ChatSidebarItemType[]>([]);
+    const [unpinnedChats, setUnpinnedChats] = useState<ChatSidebarItemType[]>([]);
+    const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
 
     useEffect(() => {
-        setPinnedChats(chats.filter((chat) => chat.pinned).sort((a, b) => a.lastMessageTime.localeCompare(b.lastMessageTime)));
-        setUnpinnedChats(chats.filter((chat) => !chat.pinned).sort((a, b) => a.lastMessageTime.localeCompare(b.lastMessageTime)));
+        setPinnedChats(
+            chats
+                .filter((chat) => chat.pinned)
+                .sort((a, b) => a.lastMessageTime.getTime() - b.lastMessageTime.getTime())
+        );
+        setUnpinnedChats(
+            chats
+                .filter((chat) => !chat.pinned)
+                .sort((a, b) => a.lastMessageTime.getTime() - b.lastMessageTime.getTime())
+        );
     }, [chats]);
 
+    useEffect(() => {
+        if (chats.length === 0) {
+            setSelectedConversationId(null);
+            return;
+        }
+
+        const hasSelection = chats.some((chat) => chat.conversation_id === selectedConversationId);
+        if (!hasSelection) {
+            setSelectedConversationId(chats[0].conversation_id);
+        }
+    }, [chats, selectedConversationId]);
+
+
+    const handleChatClick = (conversation_id: string) => {
+        setSelectedConversationId(conversation_id);
+    };
+
     return (
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col w-full h-full max-h-[calc(100vh-8.6875rem)] overflow-y-auto hide-scrollbar border-r border-[#8F99AFCC]">
             {pinnedChats.length > 0 && (
                 <div>
                     <div className="pt-4 px-4 pb-1 w-full bg-[#2F3DF633]">
-                        <div className="flex items-center justify-center gap-2">
-                            <Image src="/images/pin.svg" alt="Pinned" width={24} height={24} />
+                        <div className="flex items-center gap-2">
+                            <Image src="/Grmps/pin.svg" alt="Pinned" width={24} height={24} />
                             <p className="text-small font-regular text-[#2F3DF6]">Pinned</p>
                         </div>
                     </div>
                     {pinnedChats.map((chat) => (
                         <ChatSidebarItem 
-                            key={chat.id} 
-                            name={chat.name} 
-                            image={chat.image} 
+                            key={chat.conversation_id} 
+                            name={chat.receiver.display_name ?? ""} 
+                            image={chat.receiver.image_id ?? ""} 
                             status={chat.status} 
                             lastMessage={chat.lastMessage} 
-                            lastMessageTime={chat.lastMessageTime} 
-                            clickHandler={() => {}} 
+                            lastMessageTime={chat.lastMessageTime.toLocaleString()} 
+                            selected={chat.conversation_id === selectedConversationId}
+                            clickHandler={ () => {
+                                handleChatClick(chat.conversation_id);
+                                chat.onChatClick(chat.conversation_id);
+                            }} 
+                            onPinChat={() => {}} 
+                            onUnpinChat={() => {}} 
                         />
                     ))}
                     <div className="w-full pb-2.5"></div>
@@ -78,20 +87,26 @@ const ChatSidebar = () => {
             {unpinnedChats.length > 0 && (
                 <div>
                     <div className="pt-4 px-4 pb-1 w-full bg-[#2F3DF633]">
-                        <div className="flex items-center justify-center gap-2">
-                            <Image src="/images/message.svg" alt="Unpinned" width={24} height={24} />
+                        <div className="flex items-center gap-2">
+                            <Image src="/Grmps/message.svg" alt="Unpinned" width={24} height={24} />
                             <p className="text-small font-regular text-[#7E3FF2]">All Messages</p>
                         </div>
                     </div>
                     {unpinnedChats.map((chat) => (
                         <ChatSidebarItem 
-                            key={chat.id} 
-                            name={chat.name} 
-                            image={chat.image} 
+                            key={chat.conversation_id} 
+                            name={chat.receiver.display_name ?? ""} 
+                            image={chat.receiver.image_id ?? ""} 
                             status={chat.status} 
                             lastMessage={chat.lastMessage} 
-                            lastMessageTime={chat.lastMessageTime} 
-                            clickHandler={() => {}} 
+                            lastMessageTime={chat.lastMessageTime.toLocaleString()} 
+                            selected={chat.conversation_id === selectedConversationId}
+                            clickHandler={ () => {
+                                handleChatClick(chat.conversation_id);
+                                chat.onChatClick(chat.conversation_id);
+                            }} 
+                            onPinChat={() => {}} 
+                            onUnpinChat={() => {}} 
                         />
                     ))}
                 </div>

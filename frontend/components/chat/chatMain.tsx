@@ -10,17 +10,17 @@ interface ChatMainProps {
     receiver: User;
     messages: Message[];
     onSendMessage: (message: Message) => void;
-    onEditMessage: (message: Message) => void;
-    onDeleteMessage: (message: Message) => void;
-    onReadMessage: (message: Message) => void;
-    onUnreadMessage: (message: Message) => void;
-    onPinMessage: (message: Message) => void;
-    onUnpinMessage: (message: Message) => void;
-    onReplyToMessage: (message: Message) => void;
-    onForwardMessage: (message: Message) => void;
-    onSaveMessage: (message: Message) => void;
-    onPhoneCall: () => void;
-    onVideoCall: () => void;
+    onEditMessage?: (message: Message) => void;
+    onDeleteMessage?: (message: Message) => void;
+    onReadMessage?: (message: Message) => void;
+    onUnreadMessage?: (message: Message) => void;
+    onPinMessage?: (message: Message) => void;
+    onUnpinMessage?: (message: Message) => void;
+    onReplyToMessage?: (message: Message) => void;
+    onForwardMessage?: (message: Message) => void;
+    onSaveMessage?: (message: Message) => void;
+    onPhoneCall?: () => void;
+    onVideoCall?: () => void;
 }
 
 const ChatMain = ({sender, receiver, messages, onSendMessage, onEditMessage, onDeleteMessage, onReadMessage, onUnreadMessage, onPinMessage, onUnpinMessage, onReplyToMessage, onForwardMessage, onSaveMessage, onPhoneCall, onVideoCall }: ChatMainProps) => {
@@ -36,11 +36,6 @@ const ChatMain = ({sender, receiver, messages, onSendMessage, onEditMessage, onD
         scrollToBottom();
     }, [messages]);
 
-    const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        onSendMessage(messages[messages.length - 1]);
-    };
-
     const handleMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const message = e.target.value;
     
@@ -48,10 +43,19 @@ const ChatMain = ({sender, receiver, messages, onSendMessage, onEditMessage, onD
         setNewMessage(message);
     };
 
+    const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setNewMessage("");
+        console.log(newMessage);
+        if (newMessage.trim()) {
+            onSendMessage(messages[messages.length - 1]);
+        }
+    };
+
     return (
         <div className="relative">
-            <div className="fixed top-0 left-0 w-full h-full">
-                <div className="flex items-center justify-center bg-linear-to-r from-[#7E3FF2] to-[#2F3DF6]">
+            <div className="absolute top-0 left-0 w-full">
+                <div className="flex items-center justify-between bg-linear-to-r from-[#7E3FF2] to-[#2F3DF6] p-4">
                     <div className="flex items-center gap-2">
                         <div className="w-9 h-9 rounded-full overflow-hidden">
                             <Image 
@@ -64,7 +68,7 @@ const ChatMain = ({sender, receiver, messages, onSendMessage, onEditMessage, onD
                         </div>
                         <p className="text-small font-regular text-[#DEE4F2]">{receiver.display_name}</p>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
                         <div className="w-10 h-10 p-2 bg-[#7E3FF2] rounded-lg">
                             <Image 
                                 src="/Grmps/video.svg"
@@ -86,87 +90,104 @@ const ChatMain = ({sender, receiver, messages, onSendMessage, onEditMessage, onD
             </div>
             <div>
                 <div className="flex-1 overflow-y-auto">
-                    <div className="p-4 space-y-2">
-                        {messages && messages.length && messages.map((message, index) => (
-                            <div
-                                key={index}
-                                className={`flex ${
-                                message.sender_id === sender.id ? "justify-end" : "justify-start"
-                                }`}
-                            >
-                                <div className="flex flex-col max-w-[80%]">
-                                    <span
-                                        className={`text-xs text-gray-400 mb-0.5 ${
-                                        message.sender_id === sender.id ? "text-right" : "text-left"
-                                        }`}
-                                    >
-                                        {message.sender_id === sender.id ? sender.display_name : receiver.display_name}
-                                    </span>
-                                    <div
-                                        className={`py-2 px-3 rounded-lg ${
-                                        message.sender_id === sender.id
-                                            ? "bg-linear-to-r from-emerald-600 to-emerald-700"
-                                            : "bg-linear-to-r from-indigo-600 to-indigo-700"
-                                        } text-white text-sm`}
-                                    >
-                                        {message.body_text}
+                    <div className="p-4 space-y-2 min-h-[calc(100vh-15rem)] bg-[#2F3DF633]">
+                        <div className="flex-1 overflow-y-auto min-h-[calc(100vh-15rem)]">
+                            {messages && messages.length && messages.map((message, index) => (
+                                <div
+                                    key={index}
+                                    className={`flex ${
+                                    message.sender_id === sender.id ? "justify-end" : "justify-start"
+                                    }`}
+                                >
+                                    <div className="flex flex-col max-w-[80%]">
+                                        <span
+                                            className={`text-xs text-gray-400 mb-0.5 ${
+                                            message.sender_id === sender.id ? "text-right" : "text-left"
+                                            }`}
+                                        >
+                                            {message.sender_id === sender.id ? sender.display_name : receiver.display_name}
+                                        </span>
+                                        <div
+                                            className={`py-2 px-3 rounded-lg ${
+                                            message.sender_id === sender.id
+                                                ? "bg-linear-to-r from-emerald-600 to-emerald-700"
+                                                : "bg-linear-to-r from-indigo-600 to-indigo-700"
+                                            } text-white text-sm`}
+                                        >
+                                            {message.body_text}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
-                        <div ref={messagesEndRef} />
-                    </div>
-
-                    <div className="flex-none bg-gray-900 border-t border-gray-800">
-                        <form 
-                            onSubmit={
-                                (e) => {
-                                    e.preventDefault(); // Add this to the form
-                                    // ... rest of your submit handler
-                                    handleSubmitMessage(e);
+                            ))}
+                            <div ref={messagesEndRef} />
+                        </div>
+                        <div className="flex-none bg-linear-to-r from-[#7E3FF2] to-[#2F3DF6] border border-[#32475B] rounded-xl p-1.5">
+                            <form 
+                                onSubmit={
+                                    (e) => {
+                                        e.preventDefault(); // Add this to the form
+                                        // ... rest of your submit handler
+                                        if (newMessage.trim()) {
+                                            handleSubmitMessage(e);
+                                        }
+                                    }
                                 }
-                            }
-                            className="p-4"
-                        >
-                            <div className="flex flex-col gap-2">
+                            >
                                 {/* {charError && (
                                     <span className="text-xs text-red-500">
                                         Message must be 50 characters or less
                                     </span>
                                 )} */}
-                                <div className="flex gap-2">
+                                <div className="flex justify-between items-center gap-2">
                                     <input
                                         type="text"
                                         value={newMessage}
                                         onChange={handleMessageChange}
-                                        placeholder="Chat here (50 characters or less)..."
+                                        placeholder="Send a message..."
                                         // maxLength={CHARACTER_LIMIT}
                                         // disabled={!selectedSide}
-                                        className={`grow px-4 py-2 bg-gray-800 border border-gray-700 
-                                                rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent 
-                                                text-gray-100 placeholder-gray-500 disabled:opacity-50
-                                                disabled:cursor-not-allowed 
-                                                ${charError ? 'border-red-500' : ''}`
-                                            }
+                                        className={`px-4 py-2 text-[#DEE4F2] w-full max-w-70% focus:outline-none ${charError ? 'border-red-500' : ''}`}
                                     />
-                                    <button
-                                        type="submit"
-                                        // disabled={!selectedSide || charError}
-                                        className="px-6 bg-linear-to-r from-indigo-600 to-emerald-600 
-                                                text-white rounded-lg hover:from-indigo-700 hover:to-emerald-700 
-                                                transform hover:scale-[1.02] transition-all duration-200
-                                                disabled:opacity-50 disabled:cursor-not-allowed
-                                                disabled:transform-none"
-                                    >
-                                        Send
-                                    </button>
+                                    <div className="flex items-center gap-5">
+                                        <div>
+                                            <Image 
+                                                src="/Grmps/paperclip.svg"
+                                                alt="Paperclip"
+                                                width={24}
+                                                height={24}
+                                                className="cursor-pointer"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Image 
+                                                src="/Grmps/face-smile.svg"
+                                                alt="Smile"
+                                                width={24}
+                                                height={24}
+                                                className="cursor-pointer"
+                                            />
+                                        </div>
+                                        <button
+                                            type="submit"
+                                            className="p-2.5 cursor-pointer bg-[#7E3FF2]"                                    
+                                        >
+                                            <Image 
+                                                src="/Grmps/send.svg"
+                                                alt="Send"
+                                                width={24}
+                                                height={24}
+                                            />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
+
                 </div>
             </div>
         </div>
     );
 }
 
+export default ChatMain

@@ -18,7 +18,7 @@ const ChatUserInfo = ({ user }: { user: User }) => {
     return (
         <div className="bg-[#7E3FF2] rounded-xl py-3.75 px-3">
             <div
-                className="flex items-center justify-center"
+                className="flex items-center justify-center flex-col"
             >
                 <div className="w-25 h-25 rounded-full overflow-hidden pb-2">
                     <Image 
