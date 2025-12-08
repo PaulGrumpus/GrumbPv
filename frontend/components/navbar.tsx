@@ -123,7 +123,7 @@ const Navbar = () => {
                                 className="relative flex items-center gap-4"
                                 ref={menuToggleRef}
                             >
-                                <div className="relative w-6 h-6">
+                                <div className="relative w-6 h-6 cursor-pointer" onClick={() => router.push("/chat")}>
                                     <Image 
                                         src={chatIcon} 
                                         alt="Chat Icon" 
