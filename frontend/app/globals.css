@@ -189,6 +189,15 @@
   border: none;
 }
 
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .container {
   @media (width >= 90rem /* 1440px */) {
     max-width: 90rem /* 1440px */;
