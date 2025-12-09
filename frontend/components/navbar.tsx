@@ -16,6 +16,7 @@ import { LoadingCtx } from "@/context/loadingContext";
 const userPhoto = "/Grmps/grmps.jpg";
 const chatIcon = "/Grmps/chat.svg";
 const bellIcon = "/Grmps/bell.svg";
+const logoImage = "/Grmps/grmps.jpg"; // Change this path to your custom logo
 
 const menuItems = [
     {
@@ -96,7 +97,7 @@ const Navbar = () => {
                         >
                             <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
                                 <Image
-                                    src="/Grmps/grmps.jpg"
+                                    src={logoImage}
                                     alt="Logo"
                                     width={40}
                                     height={40}
