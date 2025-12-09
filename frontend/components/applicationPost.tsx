@@ -67,7 +67,13 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
 
             router.push(`/reference?jobApplicationId=${job_application_id}`);
         } catch (error) {
-            toast.error(error as string, {
+            error instanceof Error ? toast.error(error.message, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            }) : toast.error(error as string, {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -96,7 +102,13 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
                 throw new Error(result.error as string);
             }
         } catch (error) {
-            toast.error(error as string, {
+            error instanceof Error ? toast.error(error.message, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            }) : toast.error(error as string, {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,

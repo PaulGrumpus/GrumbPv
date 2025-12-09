@@ -14,12 +14,12 @@ export class JobApplicationService {
 
     public async createJobApplication(jobApplication: Prisma.job_applications_docsUncheckedCreateInput): Promise<job_applications_docs> {
         try {
-            // const existingJobApplications = await this.prisma.job_applications_docs.findMany({
-            //     where: { job_id: jobApplication.job_id, freelancer_id: jobApplication.freelancer_id, client_id: jobApplication.client_id },
-            // });
-            // if (!existingJobApplications.every((application) => application.job_milestone_id !== null)) {
-            //     throw new AppError('Job application already Accepted', 400, 'JOB_APPLICATION_ALREADY_ACCEPTED');
-            // }
+            const existingJobApplications = await this.prisma.job_applications_docs.findMany({
+                where: { job_id: jobApplication.job_id, freelancer_id: jobApplication.freelancer_id, client_id: jobApplication.client_id },
+            });
+            if (!existingJobApplications.every((application) => application.job_milestone_id !== null)) {
+                throw new AppError('Job application already Accepted', 400, 'JOB_APPLICATION_ALREADY_ACCEPTED');
+            }
             const createResult = await this.prisma.job_applications_docs.create({
                 data: jobApplication,
             });

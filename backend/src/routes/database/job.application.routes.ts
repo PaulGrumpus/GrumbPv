@@ -28,7 +28,7 @@ router.post(
 );
 
 router.get(
-    '/:id',
+    '/by-id/:id',
     [param('id').isString().notEmpty()],
     validate([param('id')]),
     jobApplicationController.getJobApplicationById.bind(jobApplicationController)

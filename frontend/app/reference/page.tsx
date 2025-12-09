@@ -49,10 +49,10 @@ const referencePage = () => {
                     }
                     setJobTitle(jobApplicationInfo.data.job_info.title);
                     setDescription(jobApplicationInfo.data.job_info.description_md);
-                    setClientFullName(jobApplicationInfo.data.client_info.full_name);
-                    setBudget((jobApplicationInfo.data.job_info.budget_min_usd + jobApplicationInfo.data.job_info.budget_max_usd) / 2);
+                    setClientFullName(jobApplicationInfo.data.client_info.display_name ?? jobApplicationInfo.data.client_info.email ?? "");
+                    setBudget((Number(jobApplicationInfo.data.job_info.budget_min_usd) + Number(jobApplicationInfo.data.job_info.budget_max_usd)) / 2);
                     setCurrency(jobApplicationInfo.data.job_info.token_symbol ?? "USD");
-                    setFreelancerFullName(jobApplicationInfo.data.freelancer_info.full_name);
+                    setFreelancerFullName(jobApplicationInfo.data.freelancer_info.display_name ?? jobApplicationInfo.data.freelancer_info.email ?? "");
                     setFreelancerConfirmed(jobApplicationInfo.data.freelancer_confirm);
                     setClientConfirmed(jobApplicationInfo.data.client_confirm);
 

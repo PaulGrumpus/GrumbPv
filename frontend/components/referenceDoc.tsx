@@ -138,7 +138,7 @@ const ReferenceDoc = ({ jobId, projectName, clientFullName, freelancerFullName, 
         <div>
             <h1 className="text-display font-bold text-black pb-10.25">Project Agreement Form</h1>
             <div className="flex gap-8">
-                <div className="w-[53.87%] flex flex-col gap-6">
+                <div className="w-[53.87%] max-w-full flex flex-col gap-6">
                     <div className="flex flex-col gap-2">
                         <p className='text-normal font-medium text-[#8F99AF] text-left'>Project Title</p>
                         <input
@@ -224,14 +224,14 @@ const ReferenceDoc = ({ jobId, projectName, clientFullName, freelancerFullName, 
                     </div>
                     <div className="flex flex-col gap-2">
                         <p className='text-normal font-medium text-[#8F99AF] text-left'>Currency</p>
-                        <div ref={dropdownRef} className={`relative max-w-140 ${dropdownMenuOpen ? 'border-blue-500' : ''}`}>
+                        <div ref={dropdownRef} className={`relative cursor-pointer ${dropdownMenuOpen ? 'border-blue-500' : ''}`}>
                             <select
                                 value={currency}
                                 onChange={(e) => {
                                     setCurrency(e.target.value);
                                     setDropdownMenuOpen(false);
                                 }}
-                                className='w-full appearance-none rounded-lg border border-[#8F99AF] bg-white p-3 text-normal font-regular text-black focus:outline-none focus:border-blue-500'
+                                className='w-full appearance-none rounded-lg cursor-pointer border border-[#8F99AF] bg-white p-3 text-normal font-regular text-black focus:outline-none focus:border-blue-500'
                                 onClick={(event) => {
                                     event.stopPropagation();
                                     setDropdownMenuOpen((prev: boolean) => !prev);
@@ -241,7 +241,7 @@ const ReferenceDoc = ({ jobId, projectName, clientFullName, freelancerFullName, 
                                     Select one ...
                                 </option>
                                 {currencies.map((currency) => (
-                                    <option key={currency} value={currency} className='text-normal font-regular text-black bg-white py-2 px-3'>
+                                    <option key={currency} value={currency} className='text-normal font-regular cursor-pointer text-black bg-white py-2 px-3'>
                                         {currency}
                                     </option>
                                 ))}
@@ -371,7 +371,7 @@ const ReferenceDoc = ({ jobId, projectName, clientFullName, freelancerFullName, 
                         </Button>
                     </div>
                 </div>
-                <div>
+                <div className="max-w-[40.13%]">
                     <p className="text-subtitle font-medium text-[#2F3DF6] text-left pb-2.5">Project Agreement Form  Preview</p>
                     <div className="border-l-3 border-[#7E3FF2] rounded-lg flex flex-col gap-6 p-6">
                         <div className="flex flex-col gap-2">
@@ -389,7 +389,7 @@ const ReferenceDoc = ({ jobId, projectName, clientFullName, freelancerFullName, 
                         </div>
                         <div className="flex flex-col gap-2">
                             <p className="text-normal font-medium text-[#7E3FF2] text-left">Project Description</p>
-                            <div className="flex flex-col gap-2 p-3">
+                            <div className="flex flex-col gap-2 p-3 max-w-full">
                                 <p className="text-normal font-regular text-black text-left">{projectDescription}</p>
                             </div>
                         </div>
@@ -432,10 +432,10 @@ const ReferenceDoc = ({ jobId, projectName, clientFullName, freelancerFullName, 
                         </div>
                         <div className="flex p-3 pt-9 justify-between">
                             <div className={`border-t py-2 px-3 ${clientConfirmed ? 'border-[#7E3FF2]' : 'border-[#8F99AF]'}`}>
-                                <p className="text-normal font-regular text-black text-left">{clientName}</p>
+                                <p className={`text-normal font-regular ${freelancerConfirmed ? 'text-[#7E3FF2]' : 'text-[#8F99AF]'}`} text-left>{clientName}</p>
                             </div>
                             <div className={`border-t py-2 px-3 ${freelancerConfirmed ? 'border-[#7E3FF2]' : 'border-[#8F99AF]'}`}>
-                                <p className="text-normal font-regular text-black text-left">{freelancerName}</p>
+                                <p className={`text-normal font-regular ${clientConfirmed ? 'text-[#7E3FF2]' : 'text-[#8F99AF]'}`} text-left>{freelancerName}</p>
                             </div>
                         </div>
                     </div>
