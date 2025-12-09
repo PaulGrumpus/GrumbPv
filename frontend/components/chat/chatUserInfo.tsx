@@ -20,7 +20,7 @@ const ChatUserInfo = ({ user }: { user: User }) => {
             <div
                 className="flex items-center justify-center flex-col"
             >
-                <div className="w-25 h-25 rounded-full overflow-hidden pb-2">
+                <div className="w-25 h-25 rounded-full overflow-hidden mb-2">
                     <Image 
                         src={EscrowBackendConfig.uploadedImagesURL + user.image_id} 
                         alt="User Photo" 
