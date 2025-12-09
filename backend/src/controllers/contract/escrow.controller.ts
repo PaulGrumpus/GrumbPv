@@ -17,23 +17,15 @@ export class EscrowController {
 
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
       if (!exsitingJobMilestone) {
-        throw new AppError(
-          'Job milestone not found',
-          404,
-          'JOB_MILESTONE_NOT_FOUND'
-        );
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
       }
 
       const escrowAddress = exsitingJobMilestone.escrow;
       if (!escrowAddress) {
-        throw new AppError(
-          'Escrow not found',
-          404,
-          'ESCROW_NOT_FOUND'
-        );
+        throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
       }
       const info = await escrowService.getEscrowInfo(escrowAddress);
-      
+
       res.json({
         success: true,
         data: {
@@ -88,38 +80,22 @@ export class EscrowController {
 
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
       if (!exsitingJobMilestone) {
-        throw new AppError(
-          'Job milestone not found',
-          404,
-          'JOB_MILESTONE_NOT_FOUND'
-        );
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
       }
 
       const escrowAddress = exsitingJobMilestone.escrow;
       if (!escrowAddress) {
-        throw new AppError(
-          'Escrow not found',
-          404,
-          'ESCROW_NOT_FOUND'
-        );
+        throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
       }
 
       const escrowInfo = await escrowService.getEscrowInfo(escrowAddress);
       if (!escrowInfo) {
-        throw new AppError(
-          'Escrow info not found',
-          404,
-          'ESCROW_INFO_NOT_FOUND'
-        );
+        throw new AppError('Escrow info not found', 404, 'ESCROW_INFO_NOT_FOUND');
       }
 
-      if(ESCROW_STATES[escrowInfo.state as keyof typeof ESCROW_STATES] !== 'Funded') {
-        if(ESCROW_STATES[escrowInfo.state as keyof typeof ESCROW_STATES] === "Delivered") {
-          throw new AppError(
-            'Escrow is already delivered',
-            400,
-            'ESCROW_ALREADY_DELIVERED'
-          );
+      if (ESCROW_STATES[escrowInfo.state as keyof typeof ESCROW_STATES] !== 'Funded') {
+        if (ESCROW_STATES[escrowInfo.state as keyof typeof ESCROW_STATES] === 'Delivered') {
+          throw new AppError('Escrow is already delivered', 400, 'ESCROW_ALREADY_DELIVERED');
         } else {
           throw new AppError(
             'Escrow must be funded to deliver work',
@@ -128,9 +104,9 @@ export class EscrowController {
           );
         }
       }
-      
+
       const file = req.file as Express.Multer.File | undefined;
-      
+
       let finalCid = cid;
       let finalContentHash = contentHash;
 
@@ -139,7 +115,7 @@ export class EscrowController {
           const fileObj = new File([file.buffer], file.originalname, {
             type: file.mimetype || 'application/octet-stream',
           });
-          
+
           const uploadResult = await pinata.upload.public.file(fileObj);
 
           finalCid = uploadResult.cid;
@@ -147,19 +123,16 @@ export class EscrowController {
           // Extract multihash bytes and create a 32-byte content hash using keccak256
           const cidString = CID.parse(finalCid);
           const multihashBytes = Buffer.from(cidString.multihash.bytes);
-          
+
           // Use keccak256 to create a proper 32-byte hash from the multihash
           finalContentHash = ethers.keccak256(ethers.hexlify(multihashBytes));
 
-          const url = await pinata.gateways.public.convert(
-            finalCid
-          )
+          const url = await pinata.gateways.public.convert(finalCid);
 
           console.log('File uploaded to Pinata');
           console.log('CID:', finalCid);
           console.log('Content Hash:', finalContentHash);
           console.log('Download URL:', url);
-
         } catch (pinataError) {
           throw new AppError(
             `Failed to upload file to Pinata: ${pinataError instanceof Error ? pinataError.message : 'Unknown error'}`,
@@ -170,14 +143,15 @@ export class EscrowController {
       }
 
       if (!finalCid && !file) {
-        throw new AppError(
-          'Either a file or CID must be provided',
-          400,
-          'MISSING_FILE_OR_CID'
-        );
+        throw new AppError('Either a file or CID must be provided', 400, 'MISSING_FILE_OR_CID');
       }
 
-      const txHash = await escrowService.deliverWork(job_milestone_id, privateKey, finalCid, finalContentHash);
+      const txHash = await escrowService.deliverWork(
+        job_milestone_id,
+        privateKey,
+        finalCid,
+        finalContentHash
+      );
 
       res.json({
         success: true,
@@ -311,4 +285,3 @@ export class EscrowController {
 }
 
 export const escrowController = new EscrowController();
-

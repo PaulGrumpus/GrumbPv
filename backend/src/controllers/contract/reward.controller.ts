@@ -108,4 +108,3 @@ export class RewardController {
 }
 
 export const rewardController = new RewardController();
-

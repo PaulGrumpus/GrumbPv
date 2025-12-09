@@ -11,9 +11,9 @@ export async function checkWalletBalance(
   minBalance: bigint = ethers.parseEther('0.01')
 ): Promise<void> {
   const balance = await web3Provider.getBalance(address);
-  
+
   logger.info(`Wallet balance check: ${address} = ${ethers.formatEther(balance)} BNB`);
-  
+
   if (balance < minBalance) {
     throw new AppError(
       `Insufficient balance. Wallet ${address} has ${ethers.formatEther(balance)} BNB, needs at least ${ethers.formatEther(minBalance)} BNB for gas`,
@@ -28,7 +28,7 @@ export async function checkWalletBalance(
  */
 export function validateDeadline(deadline: number): void {
   const now = Math.floor(Date.now() / 1000);
-  
+
   if (deadline <= now) {
     throw new AppError(
       `Deadline must be in the future. Provided: ${deadline}, Current: ${now}`,
@@ -36,11 +36,13 @@ export function validateDeadline(deadline: number): void {
       'INVALID_DEADLINE'
     );
   }
-  
+
   // Warn if deadline is more than 1 year in the future
   const oneYear = 365 * 24 * 60 * 60;
   if (deadline > now + oneYear) {
-    logger.warn(`Deadline is more than 1 year in the future: ${new Date(deadline * 1000).toISOString()}`);
+    logger.warn(
+      `Deadline is more than 1 year in the future: ${new Date(deadline * 1000).toISOString()}`
+    );
   }
 }
 
@@ -59,13 +61,9 @@ export function validateFeeBps(
       'FEE_MISMATCH'
     );
   }
-  
+
   if (buyerFeeBps > 1000 || vendorFeeBps > 1000) {
-    throw new AppError(
-      'Individual fees cannot exceed 1000 bps (10%)',
-      400,
-      'FEE_TOO_HIGH'
-    );
+    throw new AppError('Individual fees cannot exceed 1000 bps (10%)', 400, 'FEE_TOO_HIGH');
   }
 }
 
@@ -74,27 +72,14 @@ export function validateFeeBps(
  */
 export function validateAddress(address: string, fieldName: string): void {
   if (!address || address === '') {
-    throw new AppError(
-      `${fieldName} is required`,
-      400,
-      'ADDRESS_REQUIRED'
-    );
+    throw new AppError(`${fieldName} is required`, 400, 'ADDRESS_REQUIRED');
   }
-  
+
   if (!ethers.isAddress(address)) {
-    throw new AppError(
-      `Invalid ${fieldName} format: ${address}`,
-      400,
-      'INVALID_ADDRESS'
-    );
+    throw new AppError(`Invalid ${fieldName} format: ${address}`, 400, 'INVALID_ADDRESS');
   }
-  
+
   if (address === ethers.ZeroAddress) {
-    throw new AppError(
-      `${fieldName} cannot be zero address`,
-      400,
-      'ZERO_ADDRESS'
-    );
+    throw new AppError(`${fieldName} cannot be zero address`, 400, 'ZERO_ADDRESS');
   }
 }
-

@@ -44,4 +44,3 @@ class Web3Provider {
 }
 
 export const web3Provider = Web3Provider.getInstance();
-

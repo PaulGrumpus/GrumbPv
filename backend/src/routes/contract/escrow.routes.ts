@@ -453,7 +453,6 @@ router.post(
   escrowController.venderPayDisputeFee.bind(escrowController)
 );
 
-
 /**
  * @swagger
  * /api/v1/contract/escrow/{job_milestone_id}/dispute/buyer-join:
@@ -462,7 +461,7 @@ router.post(
  *     description: Buyer joins the dispute
  *     tags: [Escrow]
  *     parameters:
- *       - in: path 
+ *       - in: path
  *         name: job_milestone_id
  *         required: true
  *         schema:
@@ -584,13 +583,9 @@ router.post(
  */
 router.post(
   '/:job_milestone_id/dispute/resolve',
-  [
-    param('job_milestone_id').isString().notEmpty(),    
-    body('favorBuyer').isBoolean(),
-  ],
+  [param('job_milestone_id').isString().notEmpty(), body('favorBuyer').isBoolean()],
   validate([param('job_milestone_id'), body('favorBuyer')]),
   escrowController.resolveDispute.bind(escrowController)
 );
 
 export default router;
-

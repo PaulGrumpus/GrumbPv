@@ -39,7 +39,7 @@ export const CONTRACT_ADDRESSES = {
 // Validate critical addresses on startup (only in non-test environments)
 if (process.env.NODE_ENV !== 'test') {
   const missingAddresses: string[] = [];
-  
+
   if (!CONTRACT_ADDRESSES.factory) {
     missingAddresses.push('FACTORY_ADDRESS');
   }
@@ -54,7 +54,7 @@ if (process.env.NODE_ENV !== 'test') {
   }
   if (missingAddresses.length > 0) {
     console.warn('⚠️  Warning: Missing contract addresses in .env:');
-    missingAddresses.forEach(addr => console.warn(`   - ${addr}`));
+    missingAddresses.forEach((addr) => console.warn(`   - ${addr}`));
     console.warn('   Some API endpoints will not work until these are configured.');
   }
 }
@@ -83,4 +83,3 @@ export const DEFAULT_CONFIG = {
   feeRecipient: process.env.FEE_RECIPIENT_ADDRESS || '',
   arbiter: process.env.ARBITER_ADDRESS || '',
 };
-

@@ -15,7 +15,7 @@
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
     "jsonwebtoken": "^9.0.2",
-    "next": "16.0.3",
+    "next": "^16.0.7",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-toastify": "^11.0.5"
