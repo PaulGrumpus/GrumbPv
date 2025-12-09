@@ -64,7 +64,8 @@ export class UserService {
       if (user.role !== user_role.client && user.role !== user_role.freelancer) {
         throw new AppError('Invalid role', 400, 'INVALID_ROLE');
       }
-      const existingUser = await this.prisma.users.findUnique({
+      console.log('Before find user');
+      const existingUser = await this.prisma.users.findFirst({
         where: {
           email: user.email,
         },
@@ -73,10 +74,14 @@ export class UserService {
         throw new AppError('User already exists', 400, 'USER_ALREADY_EXISTS');
       }
       const hashedPassword = await this.hashPasswordIfPresent(user.password);
+      const imageId = user.image_id ? user.image_id : "default.jpg";
+
+      console.log('Before create user');
       const newUser = await this.prisma.users.create({
         data: {
           ...user,
           ...(hashedPassword ? { password: hashedPassword } : {}),
+          image_id: imageId,
         },
       });
       const token = generateToken(newUser);
@@ -106,11 +111,17 @@ export class UserService {
         throw new AppError('User not found', 404, 'USER_NOT_FOUND');
       }
       const { image_id: rawImageInput, ...userData } = user;
+      
+      let removeExistingImage = true;
+      if (existingUser.image_id === "default.jpg") {
+        removeExistingImage = false;
+      }
 
       const normalizedImageId = await this.resolveImageId(
         existingUser.image_id,
         rawImageInput,
-        uploadedImage
+        uploadedImage,
+        removeExistingImage
       );
       const now = new Date();
 
@@ -136,7 +147,7 @@ export class UserService {
       }
 
       if (normalizedImageId !== undefined) {
-        updateData.image_id = normalizedImageId;
+        updateData.image_id = normalizedImageId as string;
       }
       
       if (updateData.address) {
@@ -397,10 +408,13 @@ export class UserService {
   private async resolveImageId(
     existingImageId: string | null,
     rawImageInput: Prisma.usersUncheckedUpdateInput['image_id'],
-    uploadedImage?: UploadedImage
+    uploadedImage?: UploadedImage,
+    removeExistingImage?: boolean
   ): Promise<string | null | undefined> {
     if (uploadedImage) {
-      await removeStoredImage(existingImageId);
+      if (removeExistingImage) {
+        await removeStoredImage(existingImageId);
+      }
       return persistUploadedImage(uploadedImage);
     }
 

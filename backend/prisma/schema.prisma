@@ -21,7 +21,7 @@ model users {
   password                String?
   address                 String?                     @unique
   chain                   chain_type                  @default(evm)
-  image_id                String?
+  image_id                String                      @default("default.jpg")
   audits                  audit_log[]                 @relation("ActorAudits")
   chain_txs               chain_txs[]
   conversations           conversation_participants[]

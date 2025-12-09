@@ -125,13 +125,13 @@ const ChatMain = ({sender, receiver, messages, onSendMessage, onEditMessage, onD
                             <form 
                                 onSubmit={
                                     (e) => {
-                                        e.preventDefault(); // Add this to the form
-                                        // ... rest of your submit handler
+                                        e.preventDefault();
                                         if (newMessage.trim()) {
                                             handleSubmitMessage(e);
                                         }
                                     }
                                 }
+                                noValidate
                             >
                                 {/* {charError && (
                                     <span className="text-xs text-red-500">

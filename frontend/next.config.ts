@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
     // or simpler for a single host:
     // domains: ['knownothing0.xyz'],
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
 };
 
 export default nextConfig;

@@ -4,12 +4,12 @@ import { UserInfoCtx } from "@/context/userContext";
 import { getJobApplicationById, getJobById, getUserById } from "@/utils/functions";
 import { LoadingCtx } from "@/context/loadingContext";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, Suspense } from "react";
 import Loading from "@/components/loading";
 import { toast } from "react-toastify";
 import ReferenceDoc from "@/components/referenceDoc";
 
-const referencePage = () => {
+const ReferencePageContent = () => {
     const param = useSearchParams();
     const jobApplicationId = param.get("jobApplicationId");
 
@@ -64,7 +64,7 @@ const referencePage = () => {
         } else if (loadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState, router])
+    }, [userInfo, loadingState, router, jobApplicationId])
 
     if (loading === "pending") {
         return <Loading />;
@@ -81,6 +81,14 @@ const referencePage = () => {
     } else {
         return <Loading />;
     }
+}
+
+const referencePage = () => {
+    return (
+        <Suspense fallback={<Loading />}>
+            <ReferencePageContent />
+        </Suspense>
+    );
 }
 
 export default referencePage
