@@ -138,16 +138,18 @@ export class UserService {
       if (normalizedImageId !== undefined) {
         updateData.image_id = normalizedImageId;
       }
-
-      const exsitingWalletAddress = await this.prisma.users.findUnique({
-        where: { address: updateData.address as string },
-      });
-      if (exsitingWalletAddress && existingUser.address !== exsitingWalletAddress.address) {
-        throw new AppError(
-          'Wallet address already exists! Connected to another wallet account!',
-          400,
-          'WALLET_ADDRESS_ALREADY_CONNECTED_TO_ANOTHER_ACCOUNT'
-        );
+      
+      if (updateData.address) {
+        const exsitingWalletAddress = await this.prisma.users.findUnique({
+          where: { address: updateData.address as string },
+        });
+        if (exsitingWalletAddress && existingUser.address !== exsitingWalletAddress.address) {
+          throw new AppError(
+            'Wallet address already exists! Connected to another wallet account!',
+            400,
+            'WALLET_ADDRESS_ALREADY_CONNECTED_TO_ANOTHER_ACCOUNT'
+          );
+        }
       }
 
       const updatedUser = await this.prisma.users.update({

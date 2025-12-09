@@ -8,53 +8,56 @@ datasource db {
 }
 
 model users {
-  id            String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email         String?                     @unique @db.Citext
-  role          user_role
-  display_name  String?
-  bio           String?
-  country_code  String?
-  is_verified   Boolean                     @default(false)
-  created_at    DateTime                    @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime                    @default(now()) @db.Timestamptz(6)
-  deleted_at    DateTime?                   @db.Timestamptz(6)
-  password      String?
-  address       String?                     @unique
-  chain         chain_type                  @default(evm)
-  image_id      String?
-  audits        audit_log[]                 @relation("ActorAudits")
-  chain_txs     chain_txs[]
-  conversations conversation_participants[]
-  bids          job_bids[]
-  milestones    job_milestones[]            @relation("MilestoneCreators")
-  jobs          jobs[]                      @relation("ClientJobs")
-  receipts      message_receipts[]
-  sent_messages messages[]                  @relation("SenderMessages")
-  notifications notifications[]
+  id                      String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                   String?                     @unique @db.Citext
+  role                    user_role
+  display_name            String?
+  bio                     String?
+  country_code            String?
+  is_verified             Boolean                     @default(false)
+  created_at              DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime                    @default(now()) @db.Timestamptz(6)
+  deleted_at              DateTime?                   @db.Timestamptz(6)
+  password                String?
+  address                 String?                     @unique
+  chain                   chain_type                  @default(evm)
+  image_id                String?
+  audits                  audit_log[]                 @relation("ActorAudits")
+  chain_txs               chain_txs[]
+  conversations           conversation_participants[]
+  bids                    job_bids[]
+  milestones              job_milestones[]            @relation("MilestoneCreators")
+  jobs                    jobs[]                      @relation("ClientJobs")
+  receipts                message_receipts[]
+  sent_messages           messages[]                  @relation("SenderMessages")
+  notifications           notifications[]
+  client_applications     job_applications_docs[]     @relation("ClientApplications")
+  freelancer_applications job_applications_docs[]     @relation("FreelancerApplications")
 
   @@map("users")
 }
 
 model jobs {
-  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  client_id      String           @db.Uuid
-  title          String
-  description_md String
-  budget_min_usd Decimal?         @db.Decimal(18, 8)
-  budget_max_usd Decimal?         @db.Decimal(18, 8)
-  token_symbol   String?
-  deadline_at    DateTime?        @db.Timestamptz(6)
-  status         job_status       @default(open)
-  is_remote      Boolean          @default(true)
-  created_at     DateTime         @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime         @default(now()) @db.Timestamptz(6)
-  image_id       String?
-  location       location_type    @default(remote)
-  tags           String[]
-  conversations  conversations[]
-  bids           job_bids[]
-  milestones     job_milestones[]
-  client         users            @relation("ClientJobs", fields: [client_id], references: [id])
+  id                  String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id           String                  @db.Uuid
+  title               String
+  description_md      String
+  budget_min_usd      Decimal?                @db.Decimal(18, 8)
+  budget_max_usd      Decimal?                @db.Decimal(18, 8)
+  token_symbol        String?
+  deadline_at         DateTime?               @db.Timestamptz(6)
+  status              job_status              @default(open)
+  is_remote           Boolean                 @default(true)
+  created_at          DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime                @default(now()) @db.Timestamptz(6)
+  image_id            String?
+  location            location_type           @default(remote)
+  tags                String[]
+  conversations       conversations[]
+  bids                job_bids[]
+  milestones          job_milestones[]
+  client              users                   @relation("ClientJobs", fields: [client_id], references: [id])
+  jobApplicationsDocs job_applications_docs[]
 
   @@index([status, created_at(sort: Desc)])
   @@map("jobs")
@@ -80,18 +83,21 @@ model gigs {
 }
 
 model job_bids {
-  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  job_id          String     @db.Uuid
-  freelancer_id   String     @db.Uuid
-  cover_letter_md String?
-  bid_amount      Decimal?   @db.Decimal(18, 8)
-  status          bid_status @default(pending)
-  created_at      DateTime   @default(now()) @db.Timestamptz(6)
-  token_symbol    String?
-  updated_at      DateTime   @default(now()) @db.Timestamptz(6)
-  period          Int?
-  freelancer      users      @relation(fields: [freelancer_id], references: [id], onDelete: Cascade)
-  job             jobs       @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  id                      String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id                  String                 @db.Uuid
+  freelancer_id           String                 @db.Uuid
+  cover_letter_md         String?
+  bid_amount              Decimal?               @db.Decimal(18, 8)
+  status                  bid_status             @default(pending)
+  created_at              DateTime               @default(now()) @db.Timestamptz(6)
+  token_symbol            String?
+  updated_at              DateTime               @default(now()) @db.Timestamptz(6)
+  period                  Int?
+  job_application_doc_id  String?                @db.Uuid
+  freelancer              users                  @relation(fields: [freelancer_id], references: [id], onDelete: Cascade)
+  job                     jobs                   @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  jobApplicationsDocs     job_applications_docs? @relation(fields: [job_applications_docsId], references: [id])
+  job_applications_docsId String?                @db.Uuid
 
   @@unique([job_id, freelancer_id])
   @@index([job_id, status])
@@ -99,23 +105,49 @@ model job_bids {
 }
 
 model job_milestones {
-  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  job_id        String           @db.Uuid
-  title         String
-  amount        Decimal          @db.Decimal(18, 8)
-  due_at        DateTime?        @db.Timestamptz(6)
-  order_index   Int              @default(1)
-  status        milestone_status @default(pending_fund)
-  created_at    DateTime         @default(now()) @db.Timestamptz(6)
-  token_symbol  String?
-  escrow        String?
-  updated_at    DateTime         @default(now()) @db.Timestamptz(6)
-  freelancer_id String           @db.Uuid
-  freelancer    users            @relation("MilestoneCreators", fields: [freelancer_id], references: [id])
-  job           jobs             @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  id                  String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id              String                  @db.Uuid
+  title               String
+  amount              Decimal                 @db.Decimal(18, 8)
+  due_at              DateTime?               @db.Timestamptz(6)
+  order_index         Int                     @default(1)
+  status              milestone_status        @default(pending_fund)
+  created_at          DateTime                @default(now()) @db.Timestamptz(6)
+  token_symbol        String?
+  escrow              String?
+  updated_at          DateTime                @default(now()) @db.Timestamptz(6)
+  freelancer_id       String                  @db.Uuid
+  freelancer          users                   @relation("MilestoneCreators", fields: [freelancer_id], references: [id])
+  job                 jobs                    @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  jobApplicationsDocs job_applications_docs[]
 
   @@unique([job_id, order_index])
   @@map("job_milestones")
+}
+
+model job_applications_docs {
+  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id             String          @db.Uuid
+  job_milestone_id   String?         @db.Uuid
+  client_id          String          @db.Uuid
+  freelancer_id      String          @db.Uuid
+  client_confirm     Boolean         @default(false)
+  freelancer_confirm Boolean         @default(false)
+  deliverables       String?
+  out_of_scope       String?
+  budget             Decimal?
+  token_symbol       String?
+  start_date         DateTime?       @db.Timestamptz(6)
+  end_date           DateTime?       @db.Timestamptz(6)
+  created_at         DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime        @default(now()) @db.Timestamptz(6)
+  job                jobs            @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  job_milestone      job_milestones? @relation(fields: [job_milestone_id], references: [id], onDelete: Cascade)
+  client             users           @relation("ClientApplications", fields: [client_id], references: [id], onDelete: Cascade)
+  freelancer         users           @relation("FreelancerApplications", fields: [freelancer_id], references: [id], onDelete: Cascade)
+  jobBids            job_bids[]
+
+  @@map("job_applications_docs")
 }
 
 model conversations {

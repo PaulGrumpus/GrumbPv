@@ -21,6 +21,7 @@ import userRoutes from './routes/database/user.routes.js';
 import jobBidRoutes from './routes/database/job.bid.routes.js';
 import chainTxRoutes from './routes/database/chainTx.routes.js';
 import gigRoutes from './routes/database/gig.routes.js';
+import jobApplicationRoutes from './routes/database/job.application.routes.js';
 
 // Load environment variables
 config();
@@ -77,6 +78,7 @@ app.use(`${API_PREFIX}/database/job-milestones`, jobMilestoneRoutes);
 app.use(`${API_PREFIX}/database/job-bids`, jobBidRoutes);
 app.use(`${API_PREFIX}/database/chain-txs`, chainTxRoutes);
 app.use(`${API_PREFIX}/database/gigs`, gigRoutes);
+app.use(`${API_PREFIX}/database/job-applications`, jobApplicationRoutes);
 
 // Error handlers (must be last)
 app.use(notFoundHandler);

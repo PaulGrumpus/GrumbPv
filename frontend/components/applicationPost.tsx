@@ -8,7 +8,8 @@ import { User } from "@/types/user";
 import { Bid, BidStatus } from "@/types/bid";
 import { EscrowBackendConfig } from "@/config/config";
 import { toast } from "react-toastify";
-import { updateBidStatus } from "@/utils/functions";
+import { createJobApplication, deleteJobApplication, getJobById, updateBidStatus } from "@/utils/functions";
+import { useRouter } from "next/navigation";
 
 interface ApplicationWithUser extends Bid {
     user: User;
@@ -20,6 +21,7 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
     const [expanded, setExpanded] = useState(false);
     const [canToggle, setCanToggle] = useState(false);
     const coverLetterRef = useRef<HTMLParagraphElement>(null);
+    const router = useRouter();
 
     useEffect(() => {
         const el = coverLetterRef.current;
@@ -32,7 +34,25 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
 
     const handleAccept = async (id: string) => {
         try {
-            const result = await updateBidStatus(id ?? "", BidStatus.ACCEPTED, job_id ?? "", freelancer_id ?? "");
+            const jobInfo = await getJobById(job_id ?? "");
+            let job_application_id = "";
+            let client_id = "";
+            if (jobInfo.success) {
+                client_id = jobInfo.data.client_id;
+            } else {
+                throw new Error(jobInfo.error as string);
+            }
+            const jobApplication = await createJobApplication({
+                job_id: job_id ?? "",
+                client_id: client_id,
+                freelancer_id: freelancer_id ?? "",
+            });
+            if (jobApplication.success) {
+                job_application_id = jobApplication.data.id;
+            } else {
+                throw new Error(jobApplication.error as string);
+            }
+            const result = await updateBidStatus(id ?? "", BidStatus.ACCEPTED, job_id ?? "", freelancer_id ?? "", job_application_id);
             if (result.success) {
                 toast.success("Bid accepted successfully", {
                     position: "top-right",
@@ -42,14 +62,10 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
                     pauseOnHover: true,
                 });
             } else {
-                toast.error(result.error as string, {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                });
+                throw new Error(result.error as string);
             }
+
+            router.push(`/reference?jobApplicationId=${job_application_id}`);
         } catch (error) {
             toast.error(error as string, {
                 position: "top-right",
@@ -63,7 +79,11 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
 
     const handleDecline = async (id: string) => {
         try {
-            const result = await updateBidStatus(id ?? "", BidStatus.DECLINED, job_id ?? "", freelancer_id ?? "");
+            const jobApplication = await deleteJobApplication(id ?? "");
+            if (!jobApplication.success) {
+                throw new Error(jobApplication.error as string);
+            }
+            const result = await updateBidStatus(id ?? "", BidStatus.DECLINED, job_id ?? "", freelancer_id ?? "", "");
             if (result.success) {
                 toast.success("Bid declined successfully", {
                     position: "top-right",
@@ -73,13 +93,7 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
                     pauseOnHover: true,
                 });
             } else {
-                toast.error(result.error as string, {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                });
+                throw new Error(result.error as string);
             }
         } catch (error) {
             toast.error(error as string, {

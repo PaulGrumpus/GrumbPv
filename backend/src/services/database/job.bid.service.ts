@@ -82,6 +82,7 @@ export class JobBidService {
       if (existingFreelancer.role !== 'freelancer') {
         throw new AppError('Bidder is not a freelancer', 400, 'BIDDER_IS_NOT_A_FREELANCER');
       }
+      console.log("job_application_doc_id", jobBid.job_application_doc_id);
       const updatedJobBid = await this.prisma.job_bids.update({
         where: { id },
         data: {
