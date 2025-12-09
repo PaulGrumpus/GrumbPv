@@ -38,7 +38,7 @@ const options: swaggerJsdoc.Options = {
             cover_letter_md: { type: 'string', nullable: true },
             bid_amount: { type: 'number', nullable: true },
             token_symbol: { type: 'string', nullable: true },
-            status: { type: 'string', enum: ['pending','accepted','rejected','withdrawn'] },
+            status: { type: 'string', enum: ['pending', 'accepted', 'rejected', 'withdrawn'] },
             created_at: { type: 'string', format: 'date-time', readOnly: true },
           },
         },
@@ -61,7 +61,7 @@ const options: swaggerJsdoc.Options = {
             cover_letter_md: { type: 'string', nullable: true },
             bid_amount: { type: 'number', nullable: true },
             token_symbol: { type: 'string', nullable: true },
-            status: { type: 'string', enum: ['pending','accepted','rejected','withdrawn'] },
+            status: { type: 'string', enum: ['pending', 'accepted', 'rejected', 'withdrawn'] },
           },
         },
         JobMilestone: {
@@ -76,7 +76,18 @@ const options: swaggerJsdoc.Options = {
             token_symbol: { type: 'string', nullable: true },
             due_at: { type: 'string', format: 'date-time', nullable: true },
             order_index: { type: 'integer', example: 1 },
-            status: { type: 'string', enum: ['pending_fund','funded','submitted','approved','released','disputed','cancelled'] },
+            status: {
+              type: 'string',
+              enum: [
+                'pending_fund',
+                'funded',
+                'submitted',
+                'approved',
+                'released',
+                'disputed',
+                'cancelled',
+              ],
+            },
             escrow: { type: 'string', nullable: true },
             created_at: { type: 'string', format: 'date-time', readOnly: true },
           },
@@ -104,12 +115,31 @@ const options: swaggerJsdoc.Options = {
             token_symbol: { type: 'string', nullable: true },
             due_at: { type: 'string', format: 'date-time', nullable: true },
             order_index: { type: 'integer' },
-            status: { type: 'string', enum: ['pending_fund','funded','submitted','approved','released','disputed','cancelled'] },
+            status: {
+              type: 'string',
+              enum: [
+                'pending_fund',
+                'funded',
+                'submitted',
+                'approved',
+                'released',
+                'disputed',
+                'cancelled',
+              ],
+            },
           },
         },
         Job: {
           type: 'object',
-          required: ['id', 'client_id', 'title', 'description_md', 'status', 'created_at', 'updated_at'],
+          required: [
+            'id',
+            'client_id',
+            'title',
+            'description_md',
+            'status',
+            'created_at',
+            'updated_at',
+          ],
           properties: {
             id: { type: 'string', format: 'uuid', readOnly: true },
             client_id: { type: 'string', format: 'uuid' },
@@ -119,7 +149,10 @@ const options: swaggerJsdoc.Options = {
             budget_max_usd: { type: 'number', nullable: true },
             token_symbol: { type: 'string', nullable: true },
             deadline_at: { type: 'string', format: 'date-time', nullable: true },
-            status: { type: 'string', enum: ['draft','open','in_review','in_progress','completed','cancelled'] },
+            status: {
+              type: 'string',
+              enum: ['draft', 'open', 'in_review', 'in_progress', 'completed', 'cancelled'],
+            },
             is_remote: { type: 'boolean' },
             created_at: { type: 'string', format: 'date-time', readOnly: true },
             updated_at: { type: 'string', format: 'date-time', readOnly: true },
@@ -137,7 +170,11 @@ const options: swaggerJsdoc.Options = {
             token_symbol: { type: 'string', nullable: true },
             deadline_at: { type: 'string', format: 'date-time', nullable: true },
             is_remote: { type: 'boolean', nullable: true },
-            status: { type: 'string', enum: ['draft','open','in_review','in_progress','completed','cancelled'], nullable: true },
+            status: {
+              type: 'string',
+              enum: ['draft', 'open', 'in_review', 'in_progress', 'completed', 'cancelled'],
+              nullable: true,
+            },
           },
         },
         UpdateJobRequest: {
@@ -151,12 +188,23 @@ const options: swaggerJsdoc.Options = {
             token_symbol: { type: 'string', nullable: true },
             deadline_at: { type: 'string', format: 'date-time', nullable: true },
             is_remote: { type: 'boolean' },
-            status: { type: 'string', enum: ['draft','open','in_review','in_progress','completed','cancelled'] },
+            status: {
+              type: 'string',
+              enum: ['draft', 'open', 'in_review', 'in_progress', 'completed', 'cancelled'],
+            },
           },
         },
         Gig: {
           type: 'object',
-          required: ['id', 'freelancer_id', 'title', 'description_md', 'status', 'created_at', 'updated_at'],
+          required: [
+            'id',
+            'freelancer_id',
+            'title',
+            'description_md',
+            'status',
+            'created_at',
+            'updated_at',
+          ],
           properties: {
             id: { type: 'string', format: 'uuid', readOnly: true },
             freelancer_id: { type: 'string', format: 'uuid' },
@@ -200,7 +248,12 @@ const options: swaggerJsdoc.Options = {
           type: 'object',
           required: ['id', 'handle', 'email', 'role', 'is_verified', 'created_at', 'updated_at'],
           properties: {
-            id: { type: 'string', format: 'uuid', readOnly: true, example: 'b9e3b0d0-4d4a-4b7d-8e5a-0c9a0d5e1a2b' },
+            id: {
+              type: 'string',
+              format: 'uuid',
+              readOnly: true,
+              example: 'b9e3b0d0-4d4a-4b7d-8e5a-0c9a0d5e1a2b',
+            },
             address: { type: 'string', example: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' },
             email: { type: 'string', format: 'email', example: 'satoshi@nchain.org' },
             role: { type: 'string', enum: ['client', 'freelancer', 'admin'], example: 'client' },
@@ -218,7 +271,11 @@ const options: swaggerJsdoc.Options = {
           required: ['address', 'role'],
           properties: {
             address: { type: 'string' },
-            role: { type: 'string', enum: ['client', 'freelancer', 'admin'], description: 'If omitted, backend may apply defaults if any' },
+            role: {
+              type: 'string',
+              enum: ['client', 'freelancer', 'admin'],
+              description: 'If omitted, backend may apply defaults if any',
+            },
             display_name: { type: 'string', nullable: true },
             bio: { type: 'string', nullable: true },
             country_code: { type: 'string', nullable: true },
@@ -230,7 +287,11 @@ const options: swaggerJsdoc.Options = {
           properties: {
             email: { type: 'string', format: 'email' },
             password: { type: 'string' },
-            role: { type: 'string', enum: ['client', 'freelancer', 'admin'], description: 'If omitted, backend may apply defaults if any' },
+            role: {
+              type: 'string',
+              enum: ['client', 'freelancer', 'admin'],
+              description: 'If omitted, backend may apply defaults if any',
+            },
             display_name: { type: 'string', nullable: true },
             bio: { type: 'string', nullable: true },
             country_code: { type: 'string', nullable: true },
@@ -260,8 +321,17 @@ const options: swaggerJsdoc.Options = {
         UserWallet: {
           type: 'object',
           properties: {
-            id: { type: 'string', format: 'uuid', readOnly: true, example: '5f47c25b-0f8d-4b6e-8b2a-7c2c1b3a1e9f' },
-            user_id: { type: 'string', format: 'uuid', example: 'b9e3b0d0-4d4a-4b7d-8e5a-0c9a0d5e1a2b' },
+            id: {
+              type: 'string',
+              format: 'uuid',
+              readOnly: true,
+              example: '5f47c25b-0f8d-4b6e-8b2a-7c2c1b3a1e9f',
+            },
+            user_id: {
+              type: 'string',
+              format: 'uuid',
+              example: 'b9e3b0d0-4d4a-4b7d-8e5a-0c9a0d5e1a2b',
+            },
             chain: { type: 'string', enum: ['evm'], example: 'evm' },
             chain_id: { type: 'integer', example: 97 },
             address: { type: 'string', example: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' },
@@ -369,7 +439,15 @@ const options: swaggerJsdoc.Options = {
             },
             state: {
               type: 'string',
-              enum: ['Unfunded', 'Funded', 'Delivered', 'Disputed', 'Releasable', 'Paid', 'Refunded'],
+              enum: [
+                'Unfunded',
+                'Funded',
+                'Delivered',
+                'Disputed',
+                'Releasable',
+                'Paid',
+                'Refunded',
+              ],
               example: 'Funded',
             },
             deadline: {
@@ -390,7 +468,8 @@ const options: swaggerJsdoc.Options = {
               type: 'string',
               format: 'uuid',
               example: 'b9e3b0d0-4d4a-4b7d-8e5a-0c9a0d5e1a2b',
-              description: 'Job milestone UUID - all other data (amount, addresses, deadline) will be fetched from database',
+              description:
+                'Job milestone UUID - all other data (amount, addresses, deadline) will be fetched from database',
             },
           },
         },
@@ -411,7 +490,15 @@ const options: swaggerJsdoc.Options = {
         },
         CreateChainTxRequest: {
           type: 'object',
-          required: ['purpose', 'chain_id', 'from_address', 'to_address', 'tx_hash', 'status', 'user_id'],
+          required: [
+            'purpose',
+            'chain_id',
+            'from_address',
+            'to_address',
+            'tx_hash',
+            'status',
+            'user_id',
+          ],
           properties: {
             purpose: { type: 'string', example: 'escrow_funding' },
             chain_id: { type: 'integer', example: 97 },
@@ -479,4 +566,3 @@ const options: swaggerJsdoc.Options = {
 };
 
 export const swaggerSpec = swaggerJsdoc(options);
-

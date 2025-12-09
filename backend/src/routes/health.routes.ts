@@ -59,7 +59,7 @@ const router = Router();
 router.get('/', async (_req: Request, res: Response) => {
   try {
     const blockNumber = await web3Provider.getBlockNumber();
-    
+
     res.json({
       success: true,
       data: {
@@ -90,4 +90,3 @@ router.get('/', async (_req: Request, res: Response) => {
 });
 
 export default router;
-

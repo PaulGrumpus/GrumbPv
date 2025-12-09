@@ -3,7 +3,12 @@ import { CONTRACT_ABIS, CONTRACT_ADDRESSES, DEFAULT_CONFIG } from '../../config/
 import { web3Provider } from '../../utils/web3Provider.js';
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { checkWalletBalance, validateDeadline, validateFeeBps, validateAddress } from '../../utils/validation.js';
+import {
+  checkWalletBalance,
+  validateDeadline,
+  validateFeeBps,
+  validateAddress,
+} from '../../utils/validation.js';
 import { jobMilestoneService } from '../database/job.milestone.service.js';
 import { jobService } from '../database/job.service.js';
 import { userService } from '../database/user.service.js';
@@ -24,7 +29,7 @@ export class FactoryService {
         'FACTORY_ADDRESS_NOT_SET'
       );
     }
-    
+
     const provider = web3Provider.getProvider();
     return new ethers.Contract(
       CONTRACT_ADDRESSES.factory,
@@ -43,7 +48,7 @@ export class FactoryService {
     try {
       // Use DEPLOYER_PRIVATE_KEY from .env
       const privateKey = CONTRACT_ADDRESSES.privateKey;
-      
+
       if (!privateKey || privateKey === '') {
         throw new AppError(
           'DEPLOYER_PRIVATE_KEY not configured in .env',
@@ -61,66 +66,43 @@ export class FactoryService {
         );
       }
       if (!DEFAULT_CONFIG.arbiter || DEFAULT_CONFIG.arbiter === '') {
-        throw new AppError(
-          'ARBITER_ADDRESS not configured in .env',
-          500,
-          'ARBITER_NOT_SET'
-        );
+        throw new AppError('ARBITER_ADDRESS not configured in .env', 500, 'ARBITER_NOT_SET');
       }
 
-      const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(params.job_milestone_id);
+      const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(
+        params.job_milestone_id
+      );
       if (!exsitingJobMilestone) {
-        throw new AppError(
-          'Job milestone not found',
-          404,
-          'JOB_MILESTONE_NOT_FOUND'
-        );
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
       }
 
-      if(exsitingJobMilestone.escrow) {
-        throw new AppError(
-          'Escrow already exists',
-          400,
-          'ESCROW_ALREADY_EXISTS'
-        );
+      if (exsitingJobMilestone.escrow) {
+        throw new AppError('Escrow already exists', 400, 'ESCROW_ALREADY_EXISTS');
       }
 
       const existingJob = await jobService.getJobById(exsitingJobMilestone.job_id);
       if (!existingJob) {
-        throw new AppError(
-          'Job not found',
-          404,
-          'JOB_NOT_FOUND'
-        );
+        throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
       }
 
       const client = await userService.getUserById(existingJob.client_id);
       if (!client || client.address === null) {
-        throw new AppError(
-          'Client wallet not found',
-          404,
-          'CLIENT_WALLET_NOT_FOUND'
-        );
+        throw new AppError('Client wallet not found', 404, 'CLIENT_WALLET_NOT_FOUND');
       }
 
       const freelancer = await userService.getUserById(exsitingJobMilestone.freelancer_id);
       if (!freelancer || freelancer.address === null) {
-        throw new AppError(
-          'Freelancer wallet not found',
-          404,
-          'FREELANCER_WALLET_NOT_FOUND'
-        );
+        throw new AppError('Freelancer wallet not found', 404, 'FREELANCER_WALLET_NOT_FOUND');
       }
 
       if (!exsitingJobMilestone.due_at) {
-        throw new AppError(
-          'Deadline not found',
-          404,
-          'DEADLINE_NOT_FOUND'
-        );
+        throw new AppError('Deadline not found', 404, 'DEADLINE_NOT_FOUND');
       }
 
-      const deadline = exsitingJobMilestone.due_at instanceof Date ? exsitingJobMilestone.due_at : new Date(exsitingJobMilestone.due_at);
+      const deadline =
+        exsitingJobMilestone.due_at instanceof Date
+          ? exsitingJobMilestone.due_at
+          : new Date(exsitingJobMilestone.due_at);
 
       // Convert deadline to Unix timestamp (seconds)
       const deadlineTimestamp = Math.floor(deadline.getTime() / 1000);
@@ -141,7 +123,7 @@ export class FactoryService {
       validateFeeBps(buyerFeeBps, vendorFeeBps, feeBps);
 
       const wallet = web3Provider.getWallet(privateKey);
-      
+
       // Check wallet has enough BNB for gas
       await checkWalletBalance(wallet.address, ethers.parseEther('0.01'));
 
@@ -187,7 +169,7 @@ export class FactoryService {
         vendorFeeBps,
         DEFAULT_CONFIG.disputeFeeBps,
         DEFAULT_CONFIG.rewardRateBps,
-        { 
+        {
           gasLimit: 3000000,
           gasPrice: ethers.parseUnits('10', 'gwei'), // BSC testnet gas price
         }
@@ -244,59 +226,40 @@ export class FactoryService {
       const factory = this.getFactoryContract(wallet);
 
       // Fetch job milestone and related data
-      const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(params.job_milestone_id);
+      const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(
+        params.job_milestone_id
+      );
       if (!exsitingJobMilestone) {
-        throw new AppError(
-          'Job milestone not found',
-          404,
-          'JOB_MILESTONE_NOT_FOUND'
-        );
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
       }
 
-      if(exsitingJobMilestone.escrow) {
-        throw new AppError(
-          'Escrow already exists',
-          400,
-          'ESCROW_ALREADY_EXISTS'
-        );
+      if (exsitingJobMilestone.escrow) {
+        throw new AppError('Escrow already exists', 400, 'ESCROW_ALREADY_EXISTS');
       }
 
       const existingJob = await jobService.getJobById(exsitingJobMilestone.job_id);
       if (!existingJob) {
-        throw new AppError(
-          'Job not found',
-          404,
-          'JOB_NOT_FOUND'
-        );
+        throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
       }
 
       const client = await userService.getUserById(existingJob.client_id);
       if (!client || client.address === null) {
-        throw new AppError(
-          'Client wallet not found',
-          404,
-          'CLIENT_WALLET_NOT_FOUND'
-        );
+        throw new AppError('Client wallet not found', 404, 'CLIENT_WALLET_NOT_FOUND');
       }
 
       const freelancer = await userService.getUserById(exsitingJobMilestone.freelancer_id);
       if (!freelancer || freelancer.address === null) {
-        throw new AppError(
-          'Freelancer wallet not found',
-          404,
-          'FREELANCER_WALLET_NOT_FOUND'
-        );
+        throw new AppError('Freelancer wallet not found', 404, 'FREELANCER_WALLET_NOT_FOUND');
       }
 
       if (!exsitingJobMilestone.due_at) {
-        throw new AppError(
-          'Deadline not found',
-          404,
-          'DEADLINE_NOT_FOUND'
-        );
+        throw new AppError('Deadline not found', 404, 'DEADLINE_NOT_FOUND');
       }
 
-      const deadline = exsitingJobMilestone.due_at instanceof Date ? exsitingJobMilestone.due_at : new Date(exsitingJobMilestone.due_at);
+      const deadline =
+        exsitingJobMilestone.due_at instanceof Date
+          ? exsitingJobMilestone.due_at
+          : new Date(exsitingJobMilestone.due_at);
 
       // Convert deadline to Unix timestamp (seconds)
       const deadlineTimestamp = Math.floor(deadline.getTime() / 1000);
@@ -308,7 +271,9 @@ export class FactoryService {
       // Convert amount from Decimal to string
       const amountString = exsitingJobMilestone.amount.toString();
 
-      logger.info(`Creating deterministic escrow for job milestone ${exsitingJobMilestone.id} with salt ${salt}`);
+      logger.info(
+        `Creating deterministic escrow for job milestone ${exsitingJobMilestone.id} with salt ${salt}`
+      );
 
       const tx = await factory.createEscrowDeterministic(
         jobIdBytes,
@@ -325,7 +290,7 @@ export class FactoryService {
         DEFAULT_CONFIG.disputeFeeBps,
         DEFAULT_CONFIG.rewardRateBps,
         saltBytes,
-        { 
+        {
           gasLimit: 3000000,
           gasPrice: ethers.parseUnits('10', 'gwei'),
         }
@@ -372,9 +337,9 @@ export class FactoryService {
     try {
       const factory = this.getFactoryContract();
       const saltBytes = ethers.id(salt);
-      
+
       const address = await factory.predictEscrowAddress(saltBytes);
-      
+
       logger.info(`Predicted escrow address for salt ${salt}: ${address}`);
       return address;
     } catch (error: any) {
@@ -390,7 +355,7 @@ export class FactoryService {
     try {
       const factory = this.getFactoryContract();
       const isCreated = await factory.isEscrowCreated(escrowAddress);
-      
+
       logger.info(`Escrow ${escrowAddress} created by factory: ${isCreated}`);
       return isCreated;
     } catch (error: any) {
@@ -439,7 +404,7 @@ export class FactoryService {
       }
 
       const wallet = web3Provider.getWallet(privateKey);
-      
+
       // Get escrow contract
       const escrowABI = CONTRACT_ABIS.Escrow;
       const escrow = new ethers.Contract(escrowAddress, escrowABI, wallet);
@@ -468,7 +433,11 @@ export class FactoryService {
 
       // Set distributor (if configured in .env)
       let setDistributorTxHash: string | undefined;
-      if (distributorAddress && distributorAddress !== ethers.ZeroAddress && distributorAddress !== '') {
+      if (
+        distributorAddress &&
+        distributorAddress !== ethers.ZeroAddress &&
+        distributorAddress !== ''
+      ) {
         logger.info('3. Setting reward distributor...');
         const tx3 = await escrow.setRewardDistributor(distributorAddress, { gasLimit: 200000 });
         await tx3.wait();
@@ -493,4 +462,3 @@ export class FactoryService {
 }
 
 export const factoryService = new FactoryService();
-

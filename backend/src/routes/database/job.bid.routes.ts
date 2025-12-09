@@ -18,28 +18,29 @@ const router = Router();
  *           schema:
  *             $ref: '#/components/schemas/CreateJobBidRequest'
  *     responses:
-  *       200:
-  *         description: Job bid created successfully
-  *         content:
-  *           application/json:
-  *             schema:
-  *               allOf:
-  *                 - $ref: '#/components/schemas/SuccessResponse'
-  *                 - type: object
-  *                   properties:
-  *                     data:
-  *                       $ref: '#/components/schemas/JobBid'
-  *       400:
-  *         description: Bad request due to validation or business rule errors
-  *         content:
-  *           application/json:
-  *             schema:
-  *               $ref: '#/components/schemas/Error'
+ *       200:
+ *         description: Job bid created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/JobBid'
+ *       400:
+ *         description: Bad request due to validation or business rule errors
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.post('/', 
-    [body('job_id').isString().notEmpty(), body('freelancer_id').isString().notEmpty()],
-    validate([body('job_id'), body('freelancer_id')]),
-    jobBidController.createJobBid.bind(jobBidController)
+router.post(
+  '/',
+  [body('job_id').isString().notEmpty(), body('freelancer_id').isString().notEmpty()],
+  validate([body('job_id'), body('freelancer_id')]),
+  jobBidController.createJobBid.bind(jobBidController)
 );
 /**
  * @openapi
@@ -61,30 +62,31 @@ router.post('/',
  *           schema:
  *             $ref: '#/components/schemas/UpdateJobBidRequest'
  *     responses:
-  *       200:
-  *         description: Job bid updated successfully
-  *         content:
-  *           application/json:
-  *             schema:
-  *               allOf:
-  *                 - $ref: '#/components/schemas/SuccessResponse'
-  *                 - type: object
-  *                   properties:
-  *                     data:
-  *                       $ref: '#/components/schemas/JobBid'
-  *       400:
-  *         description: Bad request due to validation or business rule errors
-  *         content:
-  *           application/json:
-  *             schema:
-  *               $ref: '#/components/schemas/Error'
+ *       200:
+ *         description: Job bid updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/JobBid'
+ *       400:
+ *         description: Bad request due to validation or business rule errors
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.post('/:id', 
-    [param('id').isString().notEmpty()],
-    validate([param('id')]),
-    [body('job_id').isString().notEmpty(), body('freelancer_id').isString().notEmpty()],
-    validate([body('job_id'), body('freelancer_id')]),
-    jobBidController.updateJobBid.bind(jobBidController)
+router.post(
+  '/:id',
+  [param('id').isString().notEmpty()],
+  validate([param('id')]),
+  [body('job_id').isString().notEmpty(), body('freelancer_id').isString().notEmpty()],
+  validate([body('job_id'), body('freelancer_id')]),
+  jobBidController.updateJobBid.bind(jobBidController)
 );
 /**
  * @swagger
@@ -120,12 +122,12 @@ router.post('/:id',
  *                     message: Job bid ID is required
  *                     code: JOB_BID_ID_REQUIRED
  */
-router.delete('/:id', 
-    [param('id').isString().notEmpty()],
-    validate([param('id')]),
-    jobBidController.deleteJobBid.bind(jobBidController)
+router.delete(
+  '/:id',
+  [param('id').isString().notEmpty()],
+  validate([param('id')]),
+  jobBidController.deleteJobBid.bind(jobBidController)
 );
-
 
 /**
  * @openapi
@@ -141,28 +143,29 @@ router.delete('/:id',
  *           type: string
  *           format: uuid
  *     responses:
-  *       200:
-  *         description: Job bid retrieved successfully
-  *         content:
-  *           application/json:
-  *             schema:
-  *               allOf:
-  *                 - $ref: '#/components/schemas/SuccessResponse'
-  *                 - type: object
-  *                   properties:
-  *                     data:
-  *                       $ref: '#/components/schemas/JobBid'
-  *       400:
-  *         description: Bad request or not found
-  *         content:
-  *           application/json:
-  *             schema:
-  *               $ref: '#/components/schemas/Error'
+ *       200:
+ *         description: Job bid retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/JobBid'
+ *       400:
+ *         description: Bad request or not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.get('/by-id/:id', 
-    [param('id').isString().notEmpty()],
-    validate([param('id')]),
-    jobBidController.getJobBidById.bind(jobBidController)
+router.get(
+  '/by-id/:id',
+  [param('id').isString().notEmpty()],
+  validate([param('id')]),
+  jobBidController.getJobBidById.bind(jobBidController)
 );
 /**
  * @openapi
@@ -178,30 +181,31 @@ router.get('/by-id/:id',
  *           type: string
  *           format: uuid
  *     responses:
-  *       200:
-  *         description: Job bids retrieved successfully
-  *         content:
-  *           application/json:
-  *             schema:
-  *               allOf:
-  *                 - $ref: '#/components/schemas/SuccessResponse'
-  *                 - type: object
-  *                   properties:
-  *                     data:
-  *                       type: array
-  *                       items:
-  *                         $ref: '#/components/schemas/JobBid'
-  *       400:
-  *         description: Bad request or job not found
-  *         content:
-  *           application/json:
-  *             schema:
-  *               $ref: '#/components/schemas/Error'
+ *       200:
+ *         description: Job bids retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/JobBid'
+ *       400:
+ *         description: Bad request or job not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.get('/by-job-id/:job_id', 
-    [param('job_id').isString().notEmpty()],
-    validate([param('job_id')]),
-    jobBidController.getJobBidsByJobId.bind(jobBidController)
+router.get(
+  '/by-job-id/:job_id',
+  [param('job_id').isString().notEmpty()],
+  validate([param('job_id')]),
+  jobBidController.getJobBidsByJobId.bind(jobBidController)
 );
 
 /**
@@ -218,54 +222,54 @@ router.get('/by-job-id/:job_id',
  *           type: string
  *           format: uuid
  *     responses:
-  *       200:
-  *         description: Job bids retrieved successfully
-  *         content:
-  *           application/json:
-  *             schema:
-  *               allOf:
-  *                 - $ref: '#/components/schemas/SuccessResponse'
-  *                 - type: object
-  *                   properties:
-  *                     data:
-  *                       type: array
-  *                       items:
-  *                         $ref: '#/components/schemas/JobBid'
-  *       400:
-  *         description: Bad request or freelancer not found
-  *         content:
-  *           application/json:
-  *             schema:
-  *               $ref: '#/components/schemas/Error'
+ *       200:
+ *         description: Job bids retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/JobBid'
+ *       400:
+ *         description: Bad request or freelancer not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.get('/by-freelancer-id/:freelancer_id', 
-    [param('freelancer_id').isString().notEmpty()],
-    validate([param('freelancer_id')]),
-    jobBidController.getJobBidsByFreelancerId.bind(jobBidController)
+router.get(
+  '/by-freelancer-id/:freelancer_id',
+  [param('freelancer_id').isString().notEmpty()],
+  validate([param('freelancer_id')]),
+  jobBidController.getJobBidsByFreelancerId.bind(jobBidController)
 );
 
-
- /**
-  * @openapi
-  * /api/v1/database/job-bids:
-  *   get:
-  *     tags: [Job Bids]
-  *     summary: List all job bids
-  *     responses:
-  *       200:
-  *         description: Job bids retrieved successfully
-  *         content:
-  *           application/json:
-  *             schema:
-  *               allOf:
-  *                 - $ref: '#/components/schemas/SuccessResponse'
-  *                 - type: object
-  *                   properties:
-  *                     data:
-  *                       type: array
-  *                       items:
-  *                         $ref: '#/components/schemas/JobBid'
-  */
- router.get('/', jobBidController.getJobBids.bind(jobBidController));
+/**
+ * @openapi
+ * /api/v1/database/job-bids:
+ *   get:
+ *     tags: [Job Bids]
+ *     summary: List all job bids
+ *     responses:
+ *       200:
+ *         description: Job bids retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/JobBid'
+ */
+router.get('/', jobBidController.getJobBids.bind(jobBidController));
 
 export default router;

@@ -89,10 +89,28 @@ const router = Router();
  *                     data:
  *                       $ref: '#/components/schemas/ChainTx'
  */
-router.post('/create', 
-    [body('purpose').isString().notEmpty(), body('chain_id').isInt().notEmpty(), body('from_address').isString().notEmpty(), body('to_address').isString().notEmpty(), body('tx_hash').isString().notEmpty(), body('status').isString().notEmpty(), body('user_id').isString().notEmpty()], 
-    validate([body('purpose'), body('chain_id'), body('from_address'), body('to_address'), body('tx_hash'), body('status'), body('user_id')]), 
-    chainTxsController.createChainTx.bind(chainTxsController));
+router.post(
+  '/create',
+  [
+    body('purpose').isString().notEmpty(),
+    body('chain_id').isInt().notEmpty(),
+    body('from_address').isString().notEmpty(),
+    body('to_address').isString().notEmpty(),
+    body('tx_hash').isString().notEmpty(),
+    body('status').isString().notEmpty(),
+    body('user_id').isString().notEmpty(),
+  ],
+  validate([
+    body('purpose'),
+    body('chain_id'),
+    body('from_address'),
+    body('to_address'),
+    body('tx_hash'),
+    body('status'),
+    body('user_id'),
+  ]),
+  chainTxsController.createChainTx.bind(chainTxsController)
+);
 
 /**
  * @openapi
@@ -119,9 +137,12 @@ router.post('/create',
  *                     data:
  *                       $ref: '#/components/schemas/ChainTx'
  */
-router.get('/get-by-tx-hash/:tx_hash', 
-    [param('tx_hash').isString().notEmpty().withMessage('Invalid tx hash')], validate([param('tx_hash')]), 
-chainTxsController.getChainTxByTxHash.bind(chainTxsController));
+router.get(
+  '/get-by-tx-hash/:tx_hash',
+  [param('tx_hash').isString().notEmpty().withMessage('Invalid tx hash')],
+  validate([param('tx_hash')]),
+  chainTxsController.getChainTxByTxHash.bind(chainTxsController)
+);
 
 /**
  * @openapi
@@ -149,9 +170,12 @@ chainTxsController.getChainTxByTxHash.bind(chainTxsController));
  *                     data:
  *                       $ref: '#/components/schemas/ChainTx'
  */
-router.get('/get-by-id/:id', 
-    [param('id').isString().notEmpty().withMessage('Invalid id')], validate([param('id')]), 
-    chainTxsController.getChainTxById.bind(chainTxsController));
+router.get(
+  '/get-by-id/:id',
+  [param('id').isString().notEmpty().withMessage('Invalid id')],
+  validate([param('id')]),
+  chainTxsController.getChainTxById.bind(chainTxsController)
+);
 
 /**
  * @openapi
@@ -181,9 +205,12 @@ router.get('/get-by-id/:id',
  *                       items:
  *                         $ref: '#/components/schemas/ChainTx'
  */
-router.get('/get-by-user-id/:user_id', 
-    [param('user_id').isString().notEmpty().withMessage('Invalid user id')], validate([param('user_id')]), 
-    chainTxsController.getChainTxsByUserId.bind(chainTxsController));
+router.get(
+  '/get-by-user-id/:user_id',
+  [param('user_id').isString().notEmpty().withMessage('Invalid user id')],
+  validate([param('user_id')]),
+  chainTxsController.getChainTxsByUserId.bind(chainTxsController)
+);
 
 /**
  * @openapi
@@ -206,9 +233,12 @@ router.get('/get-by-user-id/:user_id',
  *             schema:
  *               $ref: '#/components/schemas/SuccessResponse'
  */
-router.delete('/delete/:id', 
-    [param('id').isString().notEmpty().withMessage('Invalid id')], validate([param('id')]), 
-    chainTxsController.deleteChainTx.bind(chainTxsController));
+router.delete(
+  '/delete/:id',
+  [param('id').isString().notEmpty().withMessage('Invalid id')],
+  validate([param('id')]),
+  chainTxsController.deleteChainTx.bind(chainTxsController)
+);
 
 /**
  * @openapi
@@ -231,6 +261,5 @@ router.delete('/delete/:id',
  *                       items:
  *                         $ref: '#/components/schemas/ChainTx'
  */
-router.get('/', 
-    chainTxsController.getChainTxs.bind(chainTxsController));
+router.get('/', chainTxsController.getChainTxs.bind(chainTxsController));
 export default router;

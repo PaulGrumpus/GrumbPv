@@ -43,27 +43,15 @@ export class EscrowService {
    */
   private getEscrowContract(escrowAddress: string, signer?: ethers.Wallet): ethers.Contract {
     if (!escrowAddress || escrowAddress === '') {
-      throw new AppError(
-        'Escrow address is required',
-        400,
-        'ESCROW_ADDRESS_REQUIRED'
-      );
+      throw new AppError('Escrow address is required', 400, 'ESCROW_ADDRESS_REQUIRED');
     }
-    
+
     if (!ethers.isAddress(escrowAddress)) {
-      throw new AppError(
-        'Invalid escrow address format',
-        400,
-        'INVALID_ESCROW_ADDRESS'
-      );
+      throw new AppError('Invalid escrow address format', 400, 'INVALID_ESCROW_ADDRESS');
     }
-    
+
     const provider = web3Provider.getProvider();
-    return new ethers.Contract(
-      escrowAddress,
-      CONTRACT_ABIS.Escrow,
-      signer || provider
-    );
+    return new ethers.Contract(escrowAddress, CONTRACT_ABIS.Escrow, signer || provider);
   }
 
   /**
@@ -73,9 +61,9 @@ export class EscrowService {
     try {
       const contract = this.getEscrowContract(escrowAddress);
       const info = await contract.getAllInfo();
-      
+
       logger.info(`Fetched escrow info for ${escrowAddress}`);
-      
+
       return {
         buyer: info.buyer,
         vendor: info.vendor,
@@ -118,30 +106,18 @@ export class EscrowService {
     try {
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
       if (!exsitingJobMilestone) {
-        throw new AppError(
-          'Job milestone not found',
-          404,
-          'JOB_MILESTONE_NOT_FOUND'
-        );
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
       }
 
       const escrowAddress = exsitingJobMilestone.escrow;
       if (!escrowAddress) {
-        throw new AppError(
-          'Escrow not found',
-          404,
-          'ESCROW_NOT_FOUND'
-        );
-      }      
+        throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
+      }
 
       const existingJob = await jobService.getJobById(exsitingJobMilestone.job_id);
       if (!existingJob) {
-        throw new AppError(
-          'Job not found',
-          404,
-          'JOB_NOT_FOUND'
-        );
-      }      
+        throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
+      }
 
       const wallet = web3Provider.getWallet(privateKey);
       const contract = this.getEscrowContract(escrowAddress, wallet);
@@ -168,7 +144,7 @@ export class EscrowService {
         escrowAddress,
         tx.hash,
         'success',
-        existingJob.client_id,
+        existingJob.client_id
       );
 
       return tx.hash;
@@ -190,20 +166,12 @@ export class EscrowService {
     try {
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
       if (!exsitingJobMilestone) {
-        throw new AppError(
-          'Job milestone not found',
-          404,
-          'JOB_MILESTONE_NOT_FOUND'
-        );
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
       }
 
       const escrowAddress = exsitingJobMilestone.escrow;
       if (!escrowAddress) {
-        throw new AppError(
-          'Escrow not found',
-          404,
-          'ESCROW_NOT_FOUND'
-        );
+        throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
       }
 
       const wallet = web3Provider.getWallet(privateKey);
@@ -216,9 +184,11 @@ export class EscrowService {
         try {
           // Validate and convert to bytes32
           const hashBytesArray = ethers.getBytes(contentHash);
-          
+
           if (hashBytesArray.length !== 32) {
-            logger.warn(`contentHash is not 32 bytes (${hashBytesArray.length} bytes), padding/truncating`);
+            logger.warn(
+              `contentHash is not 32 bytes (${hashBytesArray.length} bytes), padding/truncating`
+            );
             if (hashBytesArray.length > 32) {
               // Truncate to first 32 bytes
               hashBytes = ethers.hexlify(hashBytesArray.slice(0, 32));
@@ -256,7 +226,7 @@ export class EscrowService {
         escrowAddress,
         tx.hash,
         'success',
-        exsitingJobMilestone.freelancer_id,
+        exsitingJobMilestone.freelancer_id
       );
 
       return tx.hash;
@@ -273,29 +243,17 @@ export class EscrowService {
     try {
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
       if (!exsitingJobMilestone) {
-        throw new AppError(
-          'Job milestone not found',
-          404,
-          'JOB_MILESTONE_NOT_FOUND'
-        );
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
       }
 
       const existingJob = await jobService.getJobById(exsitingJobMilestone.job_id);
       if (!existingJob) {
-        throw new AppError(
-          'Job not found',
-          404,
-          'JOB_NOT_FOUND'
-        );
+        throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
       }
 
       const escrowAddress = exsitingJobMilestone.escrow;
       if (!escrowAddress) {
-        throw new AppError(
-          'Escrow not found',
-          404,
-          'ESCROW_NOT_FOUND'
-        );
+        throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
       }
 
       const wallet = web3Provider.getWallet(privateKey);
@@ -319,7 +277,7 @@ export class EscrowService {
         escrowAddress,
         tx.hash,
         'success',
-        existingJob.client_id,
+        existingJob.client_id
       );
 
       return tx.hash;
@@ -332,24 +290,16 @@ export class EscrowService {
   /**
    * Withdraw funds (vendor)
    */
-  async withdrawFunds(job_milestone_id: string, privateKey: string): Promise<string> {    
+  async withdrawFunds(job_milestone_id: string, privateKey: string): Promise<string> {
     try {
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
       if (!exsitingJobMilestone) {
-        throw new AppError(
-          'Job milestone not found',
-          404,
-          'JOB_MILESTONE_NOT_FOUND'
-        );
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
       }
 
       const escrowAddress = exsitingJobMilestone.escrow;
       if (!escrowAddress) {
-        throw new AppError(
-          'Escrow not found',
-          404,
-          'ESCROW_NOT_FOUND'
-        );
+        throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
       }
 
       const wallet = web3Provider.getWallet(privateKey);
@@ -373,7 +323,7 @@ export class EscrowService {
         escrowAddress,
         tx.hash,
         'success',
-        exsitingJobMilestone.freelancer_id,
+        exsitingJobMilestone.freelancer_id
       );
 
       return tx.hash;
@@ -390,29 +340,17 @@ export class EscrowService {
     try {
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
       if (!exsitingJobMilestone) {
-        throw new AppError(
-          'Job milestone not found',
-          404,
-          'JOB_MILESTONE_NOT_FOUND'
-        );
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
       }
 
       const existingJob = await jobService.getJobById(exsitingJobMilestone.job_id);
       if (!existingJob) {
-        throw new AppError(
-          'Job not found',
-          404,
-          'JOB_NOT_FOUND'
-        );
+        throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
       }
 
       const escrowAddress = exsitingJobMilestone.escrow;
       if (!escrowAddress) {
-        throw new AppError(
-          'Escrow not found',
-          404,
-          'ESCROW_NOT_FOUND'
-        );
+        throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
       }
 
       const wallet = web3Provider.getWallet(privateKey);
@@ -421,7 +359,7 @@ export class EscrowService {
       // Get dispute fee amount
       const info = await this.getEscrowInfo(escrowAddress);
       let disputeFee = 0n;
-      if(info.buyer === wallet.address) {
+      if (info.buyer === wallet.address) {
         disputeFee = 0n;
       } else {
         disputeFee = info.disputeFeeAmount;
@@ -448,7 +386,7 @@ export class EscrowService {
         escrowAddress,
         tx.hash,
         'success',
-        wallet.address === info.buyer ? existingJob.client_id : exsitingJobMilestone.freelancer_id,
+        wallet.address === info.buyer ? existingJob.client_id : exsitingJobMilestone.freelancer_id
       );
 
       return tx.hash;
@@ -465,20 +403,12 @@ export class EscrowService {
     try {
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
       if (!exsitingJobMilestone) {
-        throw new AppError(
-          'Job milestone not found',
-          404,
-          'JOB_MILESTONE_NOT_FOUND'
-        );
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
       }
 
       const escrowAddress = exsitingJobMilestone.escrow;
       if (!escrowAddress) {
-        throw new AppError(
-          'Escrow not found',
-          404,
-          'ESCROW_NOT_FOUND'
-        );
+        throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
       }
 
       const wallet = web3Provider.getWallet(privateKey);
@@ -508,7 +438,7 @@ export class EscrowService {
         escrowAddress,
         tx.hash,
         'success',
-        exsitingJobMilestone.freelancer_id,
+        exsitingJobMilestone.freelancer_id
       );
 
       return tx.hash;
@@ -519,35 +449,23 @@ export class EscrowService {
   }
 
   /**
-   * Buyer join the 
+   * Buyer join the
    */
   async buyerJoinDispute(job_milestone_id: string, privateKey: string): Promise<string> {
     try {
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
       if (!exsitingJobMilestone) {
-        throw new AppError(
-          'Job milestone not found',
-          404,
-          'JOB_MILESTONE_NOT_FOUND'
-        );
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
       }
 
       const existingJob = await jobService.getJobById(exsitingJobMilestone.job_id);
       if (!existingJob) {
-        throw new AppError(
-          'Job not found',
-          404,
-          'JOB_NOT_FOUND'
-        );
+        throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
       }
 
       const escrowAddress = exsitingJobMilestone.escrow;
       if (!escrowAddress) {
-        throw new AppError(
-          'Escrow not found',
-          404,
-          'ESCROW_NOT_FOUND'
-        );
+        throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
       }
 
       const wallet = web3Provider.getWallet(privateKey);
@@ -574,9 +492,9 @@ export class EscrowService {
         escrowAddress,
         tx.hash,
         'success',
-        existingJob.client_id,
+        existingJob.client_id
       );
-      
+
       return tx.hash;
     } catch (error: any) {
       logger.error('Error paying dispute fee:', error);
@@ -584,33 +502,21 @@ export class EscrowService {
     }
   }
 
-
   /**
    * Resolve dispute (arbiter)
    */
-  async resolveDispute(
-    job_milestone_id: string,
-    favorBuyer: boolean
-  ): Promise<string> {
+  async resolveDispute(job_milestone_id: string, favorBuyer: boolean): Promise<string> {
     try {
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
       if (!exsitingJobMilestone) {
-        throw new AppError(
-          'Job milestone not found',
-          404,
-          'JOB_MILESTONE_NOT_FOUND'
-        );
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
       }
 
       const escrowAddress = exsitingJobMilestone.escrow;
       if (!escrowAddress) {
-        throw new AppError(
-          'Escrow not found',
-          404,
-          'ESCROW_NOT_FOUND'
-        );
+        throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
       }
-      
+
       const privateKey = CONTRACT_ADDRESSES.ArbiterPrivateKey;
       const wallet = web3Provider.getWallet(privateKey);
       const contract = this.getEscrowContract(escrowAddress, wallet);
@@ -637,4 +543,3 @@ export class EscrowService {
 }
 
 export const escrowService = new EscrowService();
-

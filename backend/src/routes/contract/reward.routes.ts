@@ -264,4 +264,3 @@ router.get(
 router.get('/info', rewardController.getInfo.bind(rewardController));
 
 export default router;
-

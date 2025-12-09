@@ -31,9 +31,11 @@ const API_PREFIX = process.env.API_PREFIX || '/api/v1';
 const REQUEST_BODY_LIMIT = process.env.REQUEST_BODY_LIMIT || '10mb';
 
 // Middlewares
-app.use(helmet({
-  contentSecurityPolicy: false, // Allow Swagger UI to load
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Allow Swagger UI to load
+  })
+);
 app.use(cors());
 app.use(compression());
 app.use(express.json({ limit: REQUEST_BODY_LIMIT }));
@@ -44,13 +46,17 @@ app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 app.use(rateLimiter);
 
 // Swagger Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'BSC Escrow API Docs',
-}));
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'BSC Escrow API Docs',
+  })
+);
 
 app.use((req, _, next) => {
-  console.log("Incoming content-type:", req.headers["content-type"]);
+  console.log('Incoming content-type:', req.headers['content-type']);
   next();
 });
 
@@ -105,4 +111,3 @@ void bootstrap();
 // Signals handled in bootstrap
 
 export default app;
-

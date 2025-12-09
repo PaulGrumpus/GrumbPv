@@ -12,11 +12,6 @@ export const validate = (validations: ValidationChain[]) => {
       return next();
     }
 
-    throw new AppError(
-      'Validation failed',
-      400,
-      'VALIDATION_ERROR'
-    );
+    throw new AppError('Validation failed', 400, 'VALIDATION_ERROR');
   };
 };
-

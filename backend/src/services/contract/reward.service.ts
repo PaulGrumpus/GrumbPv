@@ -16,7 +16,7 @@ export class RewardService {
         'REWARD_DISTRIBUTOR_ADDRESS_NOT_SET'
       );
     }
-    
+
     const provider = web3Provider.getProvider();
     return new ethers.Contract(
       CONTRACT_ADDRESSES.rewardDistributor,
@@ -30,11 +30,7 @@ export class RewardService {
    */
   private getTokenContract(tokenAddress: string, signer?: ethers.Wallet): ethers.Contract {
     const provider = web3Provider.getProvider();
-    return new ethers.Contract(
-      tokenAddress,
-      CONTRACT_ABIS.ERC20,
-      signer || provider
-    );
+    return new ethers.Contract(tokenAddress, CONTRACT_ABIS.ERC20, signer || provider);
   }
 
   /**
@@ -70,7 +66,7 @@ export class RewardService {
     try {
       const contract = this.getRewardContract();
       const allowance = await contract.getCurrentAllowance();
-      
+
       return ethers.formatEther(allowance);
     } catch (error: any) {
       logger.error('Error getting allowance:', error);
@@ -85,7 +81,7 @@ export class RewardService {
     try {
       const contract = this.getRewardContract();
       const balance = await contract.getSourceBalance();
-      
+
       return ethers.formatEther(balance);
     } catch (error: any) {
       logger.error('Error getting source balance:', error);
@@ -103,11 +99,9 @@ export class RewardService {
 
       logger.info(`Authorizing factory ${CONTRACT_ADDRESSES.factory}`);
 
-      const tx = await contract.setAuthorizedFactory(
-        CONTRACT_ADDRESSES.factory,
-        true,
-        { gasLimit: 200000 }
-      );
+      const tx = await contract.setAuthorizedFactory(CONTRACT_ADDRESSES.factory, true, {
+        gasLimit: 200000,
+      });
 
       await tx.wait();
 
@@ -165,4 +159,3 @@ export class RewardService {
 }
 
 export const rewardService = new RewardService();
-

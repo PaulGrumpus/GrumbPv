@@ -9,19 +9,19 @@ datasource db {
 
 model users {
   id            String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  address       String?                     @unique
-  chain         chain_type                  @default(evm)
   email         String?                     @unique @db.Citext
-  password      String?
   role          user_role
   display_name  String?
   bio           String?
-  image_id      String?
   country_code  String?
   is_verified   Boolean                     @default(false)
   created_at    DateTime                    @default(now()) @db.Timestamptz(6)
   updated_at    DateTime                    @default(now()) @db.Timestamptz(6)
   deleted_at    DateTime?                   @db.Timestamptz(6)
+  password      String?
+  address       String?                     @unique
+  chain         chain_type                  @default(evm)
+  image_id      String?
   audits        audit_log[]                 @relation("ActorAudits")
   chain_txs     chain_txs[]
   conversations conversation_participants[]
@@ -43,14 +43,14 @@ model jobs {
   budget_min_usd Decimal?         @db.Decimal(18, 8)
   budget_max_usd Decimal?         @db.Decimal(18, 8)
   token_symbol   String?
-  location       location_type    @default(remote)
-  tags           String[]
-  image_id       String?
   deadline_at    DateTime?        @db.Timestamptz(6)
   status         job_status       @default(open)
   is_remote      Boolean          @default(true)
   created_at     DateTime         @default(now()) @db.Timestamptz(6)
   updated_at     DateTime         @default(now()) @db.Timestamptz(6)
+  image_id       String?
+  location       location_type    @default(remote)
+  tags           String[]
   conversations  conversations[]
   bids           job_bids[]
   milestones     job_milestones[]
@@ -69,10 +69,10 @@ model gigs {
   budget_max_usd Decimal?        @db.Decimal(18, 8)
   token_symbol   String?
   tags           String[]
-  link           String?
   image_id       String?
   created_at     DateTime        @default(now()) @db.Timestamptz(6)
   updated_at     DateTime        @default(now()) @db.Timestamptz(6)
+  link           String?
   conversations  conversations[]
 
   @@index([created_at(sort: Desc)])
@@ -85,11 +85,11 @@ model job_bids {
   freelancer_id   String     @db.Uuid
   cover_letter_md String?
   bid_amount      Decimal?   @db.Decimal(18, 8)
-  token_symbol    String?
   status          bid_status @default(pending)
-  period          Int?
   created_at      DateTime   @default(now()) @db.Timestamptz(6)
+  token_symbol    String?
   updated_at      DateTime   @default(now()) @db.Timestamptz(6)
+  period          Int?
   freelancer      users      @relation(fields: [freelancer_id], references: [id], onDelete: Cascade)
   job             jobs       @relation(fields: [job_id], references: [id], onDelete: Cascade)
 
@@ -101,17 +101,17 @@ model job_bids {
 model job_milestones {
   id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   job_id        String           @db.Uuid
-  freelancer_id String           @db.Uuid
   title         String
   amount        Decimal          @db.Decimal(18, 8)
-  token_symbol  String?
   due_at        DateTime?        @db.Timestamptz(6)
   order_index   Int              @default(1)
   status        milestone_status @default(pending_fund)
   created_at    DateTime         @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime         @default(now()) @db.Timestamptz(6)
+  token_symbol  String?
   escrow        String?
-  freelancer    users?           @relation("MilestoneCreators", fields: [freelancer_id], references: [id])
+  updated_at    DateTime         @default(now()) @db.Timestamptz(6)
+  freelancer_id String           @db.Uuid
+  freelancer    users            @relation("MilestoneCreators", fields: [freelancer_id], references: [id])
   job           jobs             @relation(fields: [job_id], references: [id], onDelete: Cascade)
 
   @@unique([job_id, order_index])
@@ -123,12 +123,12 @@ model conversations {
   type         convo_type                  @default(dm)
   job_id       String?                     @db.Uuid
   created_at   DateTime                    @default(now()) @db.Timestamptz(6)
-  participants conversation_participants[]
   escrow       String?
+  gigsId       String?                     @db.Uuid
+  participants conversation_participants[]
+  gigs         gigs?                       @relation(fields: [gigsId], references: [id])
   job          jobs?                       @relation(fields: [job_id], references: [id])
   messages     messages[]
-  gigs         gigs?                       @relation(fields: [gigsId], references: [id])
-  gigsId       String?                     @db.Uuid
 
   @@map("conversations")
 }

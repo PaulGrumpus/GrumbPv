@@ -61,10 +61,15 @@ const router = Router();
  *                     code: JOB_MILESTONE_ALREADY_EXISTS
  */
 router.post(
-    '/',
-    [body('job_id').isString().notEmpty(), body('order_index').isInt().notEmpty(), body('title').isString().notEmpty(), body('freelancer_id').isString().notEmpty()],
-    validate([body('job_id'), body('order_index'), body('title'), body('freelancer_id')]),
-    jobMilestoneController.createJobMilestone.bind(jobMilestoneController)
+  '/',
+  [
+    body('job_id').isString().notEmpty(),
+    body('order_index').isInt().notEmpty(),
+    body('title').isString().notEmpty(),
+    body('freelancer_id').isString().notEmpty(),
+  ],
+  validate([body('job_id'), body('order_index'), body('title'), body('freelancer_id')]),
+  jobMilestoneController.createJobMilestone.bind(jobMilestoneController)
 );
 
 /**
@@ -137,10 +142,10 @@ router.post(
  *                     code: CREATOR_NOT_FOUND
  */
 router.post(
-    '/:id',
-    [param('id').isString().notEmpty()],
-    validate([param('id')]),
-    jobMilestoneController.updateJobMilestone.bind(jobMilestoneController)
+  '/:id',
+  [param('id').isString().notEmpty()],
+  validate([param('id')]),
+  jobMilestoneController.updateJobMilestone.bind(jobMilestoneController)
 );
 
 /**
@@ -179,10 +184,10 @@ router.post(
  *                     code: JOB_MILESTONE_ID_REQUIRED
  */
 router.delete(
-    '/:id',
-    [param('id').isString().notEmpty()],
-    validate([param('id')]),
-    jobMilestoneController.deleteJobMilestone.bind(jobMilestoneController)
+  '/:id',
+  [param('id').isString().notEmpty()],
+  validate([param('id')]),
+  jobMilestoneController.deleteJobMilestone.bind(jobMilestoneController)
 );
 
 /**
@@ -226,10 +231,10 @@ router.delete(
  *                     code: JOB_MILESTONE_NOT_FOUND
  */
 router.get(
-    '/by-id/:id',
-    [param('id').isString().notEmpty()],
-    validate([param('id')]),
-    jobMilestoneController.getJobMilestoneById.bind(jobMilestoneController)
+  '/by-id/:id',
+  [param('id').isString().notEmpty()],
+  validate([param('id')]),
+  jobMilestoneController.getJobMilestoneById.bind(jobMilestoneController)
 );
 
 /**
@@ -273,10 +278,10 @@ router.get(
  *                     code: JOB_NOT_FOUND
  */
 router.get(
-    '/by-job-id/:job_id',
-    [param('job_id').isString().notEmpty()],
-    validate([param('job_id')]),
-    jobMilestoneController.getJobMilestonesByJobId.bind(jobMilestoneController)
+  '/by-job-id/:job_id',
+  [param('job_id').isString().notEmpty()],
+  validate([param('job_id')]),
+  jobMilestoneController.getJobMilestonesByJobId.bind(jobMilestoneController)
 );
 
 /**
@@ -293,9 +298,6 @@ router.get(
  *             schema:
  *               $ref: '#/components/schemas/SuccessResponse'
  */
-router.get(
-    '/',
-    jobMilestoneController.getJobMilestones.bind(jobMilestoneController)
-);
+router.get('/', jobMilestoneController.getJobMilestones.bind(jobMilestoneController));
 
 export default router;

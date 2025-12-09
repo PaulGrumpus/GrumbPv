@@ -13,40 +13,40 @@ const IMAGE_UPLOAD_DIR = path.resolve(process.cwd(), 'uploads', 'images');
 mkdirSync(IMAGE_UPLOAD_DIR, { recursive: true });
 
 const imageStorage = multer.diskStorage({
-    destination: (_req, _file, cb) => {
-        cb(null, IMAGE_UPLOAD_DIR);
-    },
-    filename: (_req, file, cb) => {
-        const extension = path.extname(file.originalname) || '.jpg';
-        cb(null, `${randomUUID()}${extension}`);
-    },
+  destination: (_req, _file, cb) => {
+    cb(null, IMAGE_UPLOAD_DIR);
+  },
+  filename: (_req, file, cb) => {
+    const extension = path.extname(file.originalname) || '.jpg';
+    cb(null, `${randomUUID()}${extension}`);
+  },
 });
 
 const MAX_IMAGE_SIZE_BYTES = Number(process.env.IMAGE_UPLOAD_MAX_SIZE_BYTES || 5 * 1024 * 1024);
 
 const imageUpload = multer({
-    storage: imageStorage,
-    limits: {
-        fileSize: MAX_IMAGE_SIZE_BYTES,
-    },
-    fileFilter: (_req, file, cb) => {
-        if (file.mimetype && file.mimetype.startsWith('image/')) {
-            cb(null, true);
-            return;
-        }
-        cb(new AppError('Only image uploads are allowed', 400, 'INVALID_IMAGE_TYPE'));
-    },
+  storage: imageStorage,
+  limits: {
+    fileSize: MAX_IMAGE_SIZE_BYTES,
+  },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype && file.mimetype.startsWith('image/')) {
+      cb(null, true);
+      return;
+    }
+    cb(new AppError('Only image uploads are allowed', 400, 'INVALID_IMAGE_TYPE'));
+  },
 });
 
 const optionalImageUpload = (req: Request, res: Response, next: NextFunction) => {
-    const contentType = req.headers['content-type'] || '';
-    const isMultipart = contentType.includes('multipart/form-data');
+  const contentType = req.headers['content-type'] || '';
+  const isMultipart = contentType.includes('multipart/form-data');
 
-    if (!isMultipart) {
-        return next();
-    }
+  if (!isMultipart) {
+    return next();
+  }
 
-    imageUpload.single('image')(req, res, next);
+  imageUpload.single('image')(req, res, next);
 };
 
 /**
@@ -81,10 +81,10 @@ const optionalImageUpload = (req: Request, res: Response, next: NextFunction) =>
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-    '/with-address',
-    [body('address').isString().notEmpty(), body('role').isString().notEmpty()],
-    validate([body('address'), body('role')]), 
-    userController.createUserWithAddress.bind(userController)
+  '/with-address',
+  [body('address').isString().notEmpty(), body('role').isString().notEmpty()],
+  validate([body('address'), body('role')]),
+  userController.createUserWithAddress.bind(userController)
 );
 
 /**
@@ -119,10 +119,10 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-    '/with-email',
-    [body('email').isEmail().notEmpty(), body('role').isString().notEmpty()],
-    validate([body('email'), body('role')]),
-    userController.createUserWithEmail.bind(userController)
+  '/with-email',
+  [body('email').isEmail().notEmpty(), body('role').isString().notEmpty()],
+  validate([body('email'), body('role')]),
+  userController.createUserWithEmail.bind(userController)
 );
 
 /**
@@ -157,11 +157,11 @@ router.post(
  *                       $ref: '#/components/schemas/User'
  */
 router.post(
-    '/:id',
-    optionalImageUpload,
-    [param('id').isString().notEmpty()],
-    validate([param('id')]),
-    userController.updateUser.bind(userController)
+  '/:id',
+  optionalImageUpload,
+  [param('id').isString().notEmpty()],
+  validate([param('id')]),
+  userController.updateUser.bind(userController)
 );
 
 /**
@@ -185,10 +185,10 @@ router.post(
  *               $ref: '#/components/schemas/SuccessResponse'
  */
 router.delete(
-    '/:id',
-    [param('id').isString().notEmpty()],
-    validate([param('id')]),
-    userController.deleteUser.bind(userController)
+  '/:id',
+  [param('id').isString().notEmpty()],
+  validate([param('id')]),
+  userController.deleteUser.bind(userController)
 );
 
 /**
@@ -218,10 +218,7 @@ router.delete(
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get(
-    '/',
-    userController.getUsers.bind(userController)
-);
+router.get('/', userController.getUsers.bind(userController));
 
 /**
  * @openapi
@@ -255,10 +252,10 @@ router.get(
  *               $ref: '#/components/schemas/Error'
  */
 router.get(
-    '/by-id/:id',
-    [param('id').isString().notEmpty()],
-    validate([param('id')]),
-    userController.getUserById.bind(userController)
+  '/by-id/:id',
+  [param('id').isString().notEmpty()],
+  validate([param('id')]),
+  userController.getUserById.bind(userController)
 );
 
 /**
@@ -294,10 +291,10 @@ router.get(
  *               $ref: '#/components/schemas/Error'
  */
 router.get(
-    '/by-email/:email',
-    [param('email').isEmail().notEmpty()],
-    validate([param('email')]),
-    userController.getUserByEmail.bind(userController)
+  '/by-email/:email',
+  [param('email').isEmail().notEmpty()],
+  validate([param('email')]),
+  userController.getUserByEmail.bind(userController)
 );
 
 /**
@@ -332,10 +329,10 @@ router.get(
  *               $ref: '#/components/schemas/Error'
  */
 router.get(
-    '/by-address/:address',
-    [param('address').isString().notEmpty()],
-    validate([param('address')]),
-    userController.getUserByAddress.bind(userController)
+  '/by-address/:address',
+  [param('address').isString().notEmpty()],
+  validate([param('address')]),
+  userController.getUserByAddress.bind(userController)
 );
 
 /**
@@ -373,10 +370,10 @@ router.get(
  *               $ref: '#/components/schemas/Error'
  */
 router.put(
-    '/by-email-and-password',
-    [body('email').isEmail().notEmpty(), body('password').isString().notEmpty()],
-    validate([body('email'), body('password')]),
-    userController.getUserByEmailAndPassword.bind(userController)
+  '/by-email-and-password',
+  [body('email').isEmail().notEmpty(), body('password').isString().notEmpty()],
+  validate([body('email'), body('password')]),
+  userController.getUserByEmailAndPassword.bind(userController)
 );
 
 export default router;

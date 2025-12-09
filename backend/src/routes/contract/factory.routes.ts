@@ -69,12 +69,8 @@ const router = Router();
  */
 router.post(
   '/escrow',
-  [
-    body('job_milestone_id').isString().notEmpty(),
-  ],
-  validate([
-    body('job_milestone_id'),
-  ]),
+  [body('job_milestone_id').isString().notEmpty()],
+  validate([body('job_milestone_id')]),
   factoryController.createEscrow.bind(factoryController)
 );
 
@@ -85,14 +81,8 @@ router.post(
  */
 router.post(
   '/escrow/deterministic',
-  [
-    body('salt').isString().notEmpty(),
-    body('job_milestone_id').isString().notEmpty(),
-  ],
-  validate([
-    body('salt'),
-    body('job_milestone_id'),
-  ]),
+  [body('salt').isString().notEmpty(), body('job_milestone_id').isString().notEmpty()],
+  validate([body('salt'), body('job_milestone_id')]),
   factoryController.createDeterministicEscrow.bind(factoryController)
 );
 
@@ -237,13 +227,8 @@ router.post(
     body('rewardTokenAddress').isEthereumAddress(),
     body('rewardRate').isString().notEmpty(),
   ],
-  validate([
-    param('address'),
-    body('rewardTokenAddress'),
-    body('rewardRate'),
-  ]),
+  validate([param('address'), body('rewardTokenAddress'), body('rewardRate')]),
   factoryController.setupEscrowRewards.bind(factoryController)
 );
 
 export default router;
-

@@ -118,4 +118,3 @@ export class FactoryController {
 }
 
 export const factoryController = new FactoryController();
-

@@ -8,46 +8,45 @@ import { mkdirSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 
-
 const router = Router();
 const IMAGE_UPLOAD_DIR = path.resolve(process.cwd(), 'uploads', 'images');
 mkdirSync(IMAGE_UPLOAD_DIR, { recursive: true });
 
 const imageStorage = multer.diskStorage({
-    destination: (_req, _file, cb) => {
-        cb(null, IMAGE_UPLOAD_DIR);
-    },
-    filename: (_req, file, cb) => {
-        const extension = path.extname(file.originalname) || '.jpg';
-        cb(null, `${randomUUID()}${extension}`);
-    },
+  destination: (_req, _file, cb) => {
+    cb(null, IMAGE_UPLOAD_DIR);
+  },
+  filename: (_req, file, cb) => {
+    const extension = path.extname(file.originalname) || '.jpg';
+    cb(null, `${randomUUID()}${extension}`);
+  },
 });
 
 const MAX_IMAGE_SIZE_BYTES = Number(process.env.IMAGE_UPLOAD_MAX_SIZE_BYTES || 5 * 1024 * 1024);
 
 const imageUpload = multer({
-    storage: imageStorage,
-    limits: {
-        fileSize: MAX_IMAGE_SIZE_BYTES,
-    },
-    fileFilter: (_req, file, cb) => {
-        if (file.mimetype && file.mimetype.startsWith('image/')) {
-            cb(null, true);
-            return;
-        }
-        cb(new AppError('Only image uploads are allowed', 400, 'INVALID_IMAGE_TYPE'));
-    },
+  storage: imageStorage,
+  limits: {
+    fileSize: MAX_IMAGE_SIZE_BYTES,
+  },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype && file.mimetype.startsWith('image/')) {
+      cb(null, true);
+      return;
+    }
+    cb(new AppError('Only image uploads are allowed', 400, 'INVALID_IMAGE_TYPE'));
+  },
 });
 
 const optionalImageUpload = (req: Request, res: Response, next: NextFunction) => {
-    const contentType = req.headers['content-type'] || '';
-    const isMultipart = contentType.includes('multipart/form-data');
+  const contentType = req.headers['content-type'] || '';
+  const isMultipart = contentType.includes('multipart/form-data');
 
-    if (!isMultipart) {
-        return next();
-    }
+  if (!isMultipart) {
+    return next();
+  }
 
-    imageUpload.single('image')(req, res, next);
+  imageUpload.single('image')(req, res, next);
 };
 
 /**
@@ -82,11 +81,15 @@ const optionalImageUpload = (req: Request, res: Response, next: NextFunction) =>
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-    '/',
-    optionalImageUpload,
-    [body('title').isString().notEmpty(), body('description_md').isString().notEmpty(), body('freelancer_id').isString().notEmpty()],
-    validate([body('title'), body('description_md'), body('freelancer_id')]),
-    gigController.createGig.bind(gigController)
+  '/',
+  optionalImageUpload,
+  [
+    body('title').isString().notEmpty(),
+    body('description_md').isString().notEmpty(),
+    body('freelancer_id').isString().notEmpty(),
+  ],
+  validate([body('title'), body('description_md'), body('freelancer_id')]),
+  gigController.createGig.bind(gigController)
 );
 
 /**
@@ -127,11 +130,11 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 router.post(
-    '/:id',
-    optionalImageUpload,
-    [param('id').isString().notEmpty()],
-    validate([param('id')]),
-    gigController.updateGig.bind(gigController)
+  '/:id',
+  optionalImageUpload,
+  [param('id').isString().notEmpty()],
+  validate([param('id')]),
+  gigController.updateGig.bind(gigController)
 );
 
 /**
@@ -148,7 +151,7 @@ router.post(
  *           type: string
  *     responses:
  *       200:
-*         description: Gig deleted successfully
+ *         description: Gig deleted successfully
  *         content:
  *           application/json:
  *             schema:
@@ -161,10 +164,10 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 router.delete(
-    '/:id',
-    [param('id').isString().notEmpty()],
-    validate([param('id')]),
-    gigController.deleteGig.bind(gigController)
+  '/:id',
+  [param('id').isString().notEmpty()],
+  validate([param('id')]),
+  gigController.deleteGig.bind(gigController)
 );
 
 /**
@@ -199,10 +202,10 @@ router.delete(
  *               $ref: '#/components/schemas/Error'
  */
 router.get(
-    '/by-id/:id',
-    [param('id').isString().notEmpty()],
-    validate([param('id')]),
-    gigController.getGigById.bind(gigController)
+  '/by-id/:id',
+  [param('id').isString().notEmpty()],
+  validate([param('id')]),
+  gigController.getGigById.bind(gigController)
 );
 
 /**
@@ -230,7 +233,7 @@ router.get(
  *                     data:
  *                       type: array
  *                       items:
-*                         $ref: '#/components/schemas/Gig'
+ *                         $ref: '#/components/schemas/Gig'
  *       400:
  *         description: Bad request due to validation or business rule errors
  *         content:
@@ -239,10 +242,10 @@ router.get(
  *               $ref: '#/components/schemas/Error'
  */
 router.get(
-    '/by-freelancer-id/:freelancer_id',
-    [param('freelancer_id').isString().notEmpty()],
-    validate([param('freelancer_id')]),
-    gigController.getGigsByFreelancerId.bind(gigController)
+  '/by-freelancer-id/:freelancer_id',
+  [param('freelancer_id').isString().notEmpty()],
+  validate([param('freelancer_id')]),
+  gigController.getGigsByFreelancerId.bind(gigController)
 );
 
 /**
@@ -272,9 +275,6 @@ router.get(
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get(
-    '/',
-    gigController.getGigs.bind(gigController)
-);
+router.get('/', gigController.getGigs.bind(gigController));
 
 export default router;
