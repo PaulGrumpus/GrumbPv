@@ -10,18 +10,21 @@ export class ConversationParticipantService {
         this.prisma = new PrismaClient();
     }
 
-    public async createConversationParticipant(conversationParticipant: newConversationParticipantParam): Promise<conversation_participants> {
+    public async createConversationParticipant(params: newConversationParticipantParam): Promise<conversation_participants> {
         try {
             const newConversationParticipant = await this.prisma.conversation_participants.create({
                 data: {
-                    conversation_id: conversationParticipant.conversation_id,
-                    user_id: conversationParticipant.user_id,
-                    is_muted: conversationParticipant.is_muted,
-                    is_pinned: conversationParticipant.is_pinned,
-                    blocked_until: conversationParticipant.blocked_until ?? undefined,
-                    last_read_msg_id: conversationParticipant.last_read_msg_id ?? undefined,
+                    conversation_id: params.conversation_id,
+                    user_id: params.user_id,
+                    is_muted: params.is_muted,
+                    is_pinned: params.is_pinned,
+                    blocked_until: params.blocked_until ?? undefined,
+                    last_read_msg_id: params.last_read_msg_id ?? undefined,
                 },
             });
+            if (!newConversationParticipant) {
+                throw new AppError('Conversation participant not created', 400, 'CONVERSATION_PARTICIPANT_NOT_CREATED');
+            }
             return newConversationParticipant;
         }
         catch (error) {
@@ -88,17 +91,37 @@ export class ConversationParticipantService {
         }
     }
 
-    public async updateConversationParticipant(id: string, conversationParticipant: conversation_participants): Promise<conversation_participants> {
+    public async updateConversationParticipant(id: string, param: conversation_participants): Promise<conversation_participants> {
         try {
             const updatedConversationParticipant = await this.prisma.conversation_participants.update({
                 where: { id },
-                data: conversationParticipant,
+                data: {
+                    is_muted: param.is_muted,
+                    blocked_until: param.blocked_until ?? undefined,
+                    is_pinned: param.is_pinned,
+                    last_read_msg_id: param.last_read_msg_id ?? undefined,
+                },
             });
+            if (!updatedConversationParticipant) {
+                throw new AppError('Conversation participant not updated', 400, 'CONVERSATION_PARTICIPANT_NOT_UPDATED');
+            }
             return updatedConversationParticipant;
         }
         catch (error) {
             logger.error('Error updating conversation participant', { error });
             throw new AppError('Error updating conversation participant', 500, 'CONVERSATION_PARTICIPANT_UPDATE_FAILED');
+        }
+    }
+
+    public async deleteConversationParticipant(id: string): Promise<void> {
+        try {
+            await this.prisma.conversation_participants.delete({
+                where: { id },
+            });
+        }
+        catch (error) {
+            logger.error('Error deleting conversation participant', { error });
+            throw new AppError('Error deleting conversation participant', 500, 'CONVERSATION_PARTICIPANT_DELETE_FAILED');
         }
     }
 }

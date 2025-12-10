@@ -10,17 +10,20 @@ export class ConversationService {
         this.prisma = new PrismaClient();
     }
 
-    public async createConversation(conversation: newConversationParam): Promise<conversations> {
+    public async createConversation(params: newConversationParam): Promise<conversations> {
         try {
             const newConversation = await this.prisma.conversations.create({
                 data: {
-                    type: conversation.type as convo_type,
-                    job_id: conversation.job_id ?? undefined,
-                    created_at: conversation.created_at,
-                    escrow: conversation.escrow,
-                    gig_id: conversation.gig_id ?? undefined,
+                    type: params.type as convo_type,
+                    job_id: params.job_id ?? undefined,
+                    created_at: new Date(),
+                    escrow: params.escrow,
+                    gig_id: params.gig_id ?? undefined,
                 },
             });
+            if (!newConversation) {
+                throw new AppError('Conversation not created', 400, 'CONVERSATION_NOT_CREATED');
+            }
             return newConversation;
         }
         catch (error) {

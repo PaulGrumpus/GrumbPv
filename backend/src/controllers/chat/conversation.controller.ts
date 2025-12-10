@@ -1,19 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
 import { conversationService } from '../../services/database/conversation.service.js';
-import { newConversationParam } from '../../types/conversation.js';
 import { AppError } from '../../middlewares/errorHandler.js';
 
 export class ConversationController {
-    public async createConversation(params: newConversationParam) {
+    public async createConversation(req: Request, res: Response, next: NextFunction) {
         try {
+            const { ...params } = req.body;
             const result = await conversationService.createConversation(params);
             if (!result) {
                 throw new AppError('Conversation not created', 400, 'CONVERSATION_NOT_CREATED');
             }
-            return result;
+            res.json({
+                success: true,
+                data: result,
+                message: 'Conversation created successfully',
+            });
         }
         catch (error) {
-            throw new AppError('Error creating conversation', 500, 'CONVERSATION_CREATE_FAILED');
+            next(error);
         }
     }
 
@@ -21,6 +25,9 @@ export class ConversationController {
         try {
             const { id } = req.params;
             const result = await conversationService.getConversationById(id);
+            if (!result) {
+                throw new AppError('Conversation not found', 404, 'CONVERSATION_NOT_FOUND');
+            }
             res.json({
                 success: true,
                 data: result,
@@ -36,6 +43,9 @@ export class ConversationController {
         try {
             const { userId } = req.params;
             const result = await conversationService.getConversationsByUserId(userId);
+            if (!result) {
+                throw new AppError('Conversations not found', 404, 'CONVERSATIONS_NOT_FOUND');
+            }
             res.json({
                 success: true,
                 data: result,
@@ -52,6 +62,9 @@ export class ConversationController {
             const { id } = req.params;
             const { ...params } = req.body;
             const result = await conversationService.updateConversationById(id, params);
+            if (!result) {
+                throw new AppError('Conversation not updated', 400, 'CONVERSATION_NOT_UPDATED');
+            }
             res.json({
                 success: true,
                 data: result,

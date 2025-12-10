@@ -519,9 +519,9 @@ export const getJobApplicationById = async (job_application_id: string) => {
         return {
             success: false,
             error: error.response?.data?.error?.message || error.message || "Unknown error"
-            };
-        }
+        };
     }
+}
 
 export const deleteJobApplication = async (job_application_id: string) => {
     try {
@@ -532,6 +532,24 @@ export const deleteJobApplication = async (job_application_id: string) => {
         };
     }
     catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+// conversations
+export const createConversation = async () => {
+    try {
+        const response = await EscrowBackend.post('/database/conversations', {
+            type: 'dm',
+        });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    } catch (error: any) {
         return {
             success: false,
             error: error.response?.data?.error?.message || error.message || "Unknown error"
