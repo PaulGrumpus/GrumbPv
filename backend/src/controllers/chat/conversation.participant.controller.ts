@@ -1,6 +1,6 @@
-import { conversationParticipantService } from '../../services/database/conversation.participant';
-import { newConversationParticipantParam     } from '../../types/conversation.participant';
-import { AppError } from '../../middlewares/errorHandler';
+import { conversationParticipantService } from '../../services/database/conversation.participant.js';
+import { newConversationParticipantParam     } from '../../types/conversation.participant.js';
+import { AppError } from '../../middlewares/errorHandler.js';
 
 export class ConversationParticipantController {
     public async createConversationParticipant(params: newConversationParticipantParam) {

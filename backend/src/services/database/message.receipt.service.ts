@@ -1,7 +1,7 @@
-import { logger } from "../../utils/logger";
-import { AppError } from "../../middlewares/errorHandler";
+import { logger } from "../../utils/logger.js";
+import { AppError } from "../../middlewares/errorHandler.js";
 import { PrismaClient, message_receipts, read_state } from "@prisma/client";
-import { newMessageReceiptParam } from "../../types/message.receipt";
+import { newMessageReceiptParam } from "../../types/message.receipt.js";
 
 export class MessageReceiptService {
     private prisma: PrismaClient;
@@ -85,11 +85,13 @@ export class MessageReceiptService {
         }
     }
 
-    public async updateMessageReceipt(id: string, messageReceipt: message_receipts): Promise<message_receipts> {
+    public async updateMessageReceipt(message_id: string, user_id: string, state: read_state): Promise<message_receipts> {
         try {
             const updatedMessageReceipt = await this.prisma.message_receipts.update({
-                where: { id },
-                data: messageReceipt,
+                where: { message_id_user_id_state: { message_id: message_id, user_id: user_id, state: state } },
+                data: {
+                    state: state,
+                },
             });
             return updatedMessageReceipt;
         }

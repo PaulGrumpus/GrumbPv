@@ -1,7 +1,6 @@
 export interface newMessageParam {
     user_id: string;
     conversation_id: string;
-    message: string;
     kind: msg_type;
     body_text?: string;
     attachment_id?: string;

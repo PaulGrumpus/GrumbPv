@@ -1,7 +1,7 @@
-import { logger } from "../../utils/logger";
-import { AppError } from "../../middlewares/errorHandler";
+import { logger } from "../../utils/logger.js";
+import { AppError } from "../../middlewares/errorHandler.js";
 import { PrismaClient, conversation_participants } from "@prisma/client";
-import { newConversationParticipantParam } from "../../types/conversation.participant";
+import { newConversationParticipantParam } from "../../types/conversation.participant.js";
 
 export class ConversationParticipantService {
     private prisma: PrismaClient;

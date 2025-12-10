@@ -22,6 +22,9 @@ import jobBidRoutes from './routes/database/job.bid.routes.js';
 import chainTxRoutes from './routes/database/chainTx.routes.js';
 import gigRoutes from './routes/database/gig.routes.js';
 import jobApplicationRoutes from './routes/database/job.application.routes.js';
+import http from 'http'; 
+import { Server } from 'socket.io';
+import { socket_router } from './routes/socket.routes.js';
 
 // Load environment variables
 config();
@@ -56,11 +59,6 @@ app.use(
   })
 );
 
-app.use((req, _, next) => {
-  console.log('Incoming content-type:', req.headers['content-type']);
-  next();
-});
-
 // Swagger JSON
 app.get('/api-docs.json', (_req, res) => {
   res.setHeader('Content-Type', 'application/json');
@@ -89,11 +87,25 @@ async function bootstrap() {
   const db = DatabaseService.getInstance();
   await db.connect();
 
-  app.listen(PORT, () => {
-    logger.info(`🚀 Server running on port ${PORT}`);
-    logger.info(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
+  const httpServer = http.createServer(app);
+
+  const io = new Server(httpServer, {
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST'],
+    },
+  });
+
+  io.on('connection', (socket) => {
+    socket_router(socket, io);
+  });
+
+  httpServer.listen(PORT, () => {
+    logger.info(`🚀 HTTP Server running on port ${PORT}`);
+    logger.info(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
     logger.info(`🔗 API: http://localhost:${PORT}${API_PREFIX}`);
     logger.info(`📚 Swagger Docs: http://localhost:${PORT}/api-docs`);
+    logger.info(`📡 WebSocket: ws://localhost:${PORT}`);
   });
 
   // Graceful shutdown

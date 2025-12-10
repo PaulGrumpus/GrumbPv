@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { messageService } from '../../services/database/message.service';
-import { msg_type, newMessageParam } from '../../types/message';
-import { AppError } from '../../middlewares/errorHandler';
+import { messageService } from '../../services/database/message.service.js';
+import { msg_type, newMessageParam } from '../../types/message.js';
+import { AppError } from '../../middlewares/errorHandler.js';
 
 export class MessageController {
     public async createMessage(params: newMessageParam) {
@@ -9,7 +9,7 @@ export class MessageController {
             const result = await messageService.createMessage({
                 user_id: params.user_id,
                 conversation_id: params.conversation_id,
-                message: params.message as string,
+                body_text: params.body_text as string,
                 kind: params.kind as msg_type,
             });
             if (!result) {

@@ -1,7 +1,7 @@
-import { logger } from "../../utils/logger";
-import { AppError } from "../../middlewares/errorHandler";
+import { logger } from "../../utils/logger.js";
+import { AppError } from "../../middlewares/errorHandler.js";
 import { PrismaClient, messages, msg_type } from "@prisma/client";
-import { newMessageParam } from "../../types/message";
+import { newMessageParam } from "../../types/message.js";
 
 export class MessageService {
     private prisma: PrismaClient;

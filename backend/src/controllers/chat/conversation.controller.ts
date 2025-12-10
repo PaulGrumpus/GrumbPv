@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { conversationService } from '../../services/database/conversation.service';
-import { newConversationParam } from '../../types/conversation';
-import { AppError } from '../../middlewares/errorHandler';
+import { conversationService } from '../../services/database/conversation.service.js';
+import { newConversationParam } from '../../types/conversation.js';
+import { AppError } from '../../middlewares/errorHandler.js';
 
 export class ConversationController {
     public async createConversation(params: newConversationParam) {
