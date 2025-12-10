@@ -1,19 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
 import { conversationService } from '../../services/database/conversation.service';
+import { newConversationParam } from '../../types/conversation';
+import { AppError } from '../../middlewares/errorHandler';
 
 export class ConversationController {
-    public async createConversation(req: Request, res: Response, next: NextFunction) {
+    public async createConversation(params: newConversationParam) {
         try {
-            const { ...params } = req.body;
             const result = await conversationService.createConversation(params);
-            res.json({
-                success: true,
-                data: result,
-                message: 'Conversation created successfully',
-            });
+            if (!result) {
+                throw new AppError('Conversation not created', 400, 'CONVERSATION_NOT_CREATED');
+            }
+            return result;
         }
         catch (error) {
-            next(error);
+            throw new AppError('Error creating conversation', 500, 'CONVERSATION_CREATE_FAILED');
         }
     }
 
