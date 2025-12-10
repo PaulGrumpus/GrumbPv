@@ -156,9 +156,9 @@ model conversations {
   job_id       String?                     @db.Uuid
   created_at   DateTime                    @default(now()) @db.Timestamptz(6)
   escrow       String?
-  gigsId       String?                     @db.Uuid
+  gig_id       String?                     @db.Uuid
   participants conversation_participants[]
-  gigs         gigs?                       @relation(fields: [gigsId], references: [id])
+  gig          gigs?                       @relation(fields: [gig_id], references: [id])
   job          jobs?                       @relation(fields: [job_id], references: [id])
   messages     messages[]
 

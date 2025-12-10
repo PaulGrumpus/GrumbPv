@@ -3,7 +3,7 @@ export interface newConversationParam {
     job_id?: string;
     created_at: Date;
     escrow?: string;
-    gigs_id?: string;
+    gig_id?: string;
 }
 
 export enum convo_type {

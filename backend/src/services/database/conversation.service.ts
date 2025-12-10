@@ -18,7 +18,7 @@ export class ConversationService {
                     job_id: conversation.job_id ?? undefined,
                     created_at: conversation.created_at,
                     escrow: conversation.escrow,
-                    gigsId: conversation.gigs_id ?? undefined,
+                    gig_id: conversation.gig_id ?? undefined,
                 },
             });
             return newConversation;
