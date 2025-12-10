@@ -171,6 +171,7 @@ model conversation_participants {
   user_id          String        @db.Uuid
   is_muted         Boolean       @default(false)
   blocked_until    DateTime?     @db.Timestamptz(6)
+  is_pinned        Boolean       @default(false)
   last_read_msg_id String?       @db.Uuid
   conversation     conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
   last_read        messages?     @relation("LastReadPointer", fields: [last_read_msg_id], references: [id])
