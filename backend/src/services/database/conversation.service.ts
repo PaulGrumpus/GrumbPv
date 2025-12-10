@@ -1,6 +1,6 @@
 import { logger } from "../../utils/logger.js";
 import { AppError } from "../../middlewares/errorHandler.js";
-import { PrismaClient, conversation_participants, conversations, users } from "@prisma/client";
+import { PrismaClient, conversation_participants, conversations, gigs, jobs, users } from "@prisma/client";
 import { newConversationParam, convo_type } from "../../types/conversation.js";
 
 export class ConversationService {
@@ -81,7 +81,14 @@ export class ConversationService {
         }
     }
 
-    public async getConversationsByUserId(userId: string): Promise<{ conversation: conversations, participants: conversation_participants[], clientInfo: users, freelancerInfo: users | null }[]> {
+    public async getConversationsByUserId(userId: string): Promise<{ 
+        conversation: conversations, 
+        participants: conversation_participants[], 
+        clientInfo: users, 
+        freelancerInfo: users | null,
+        jobInfo: jobs | null,
+        gigInfo: gigs | null
+    }[]> {
         try {
             const conversations = await this.prisma.conversations.findMany({
                 where: { participants: { some: { user_id: userId } } },
@@ -96,6 +103,12 @@ export class ConversationService {
                 if (!jobInfo) {
                     throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
                 }
+                const gigInfo = await this.prisma.gigs.findUnique({
+                    where: { id: conversation.gig_id ?? "" },
+                });
+                if (!gigInfo) {
+                    throw new AppError('Gig not found', 404, 'GIG_NOT_FOUND');
+                }
                 const clientInfo = await this.prisma.users.findUnique({
                     where: { id: jobInfo.client_id },
                 });
@@ -108,13 +121,15 @@ export class ConversationService {
                 if (!freelancerInfo) {
                     throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
                 }
-                return { conversation, clientInfo, freelancerInfo };
+                return { conversation, clientInfo, freelancerInfo, jobInfo, gigInfo };
             }));
             return conversationsData.map((conversationData) => ({
                 conversation: conversationData.conversation,
                 participants: participants.filter((participant) => participant.conversation_id === conversationData.conversation.id),
                 clientInfo: conversationData.clientInfo,
                 freelancerInfo: conversationData.freelancerInfo,
+                jobInfo: conversationData.jobInfo,
+                gigInfo: conversationData.gigInfo,
             }));
         }
         catch (error) {
