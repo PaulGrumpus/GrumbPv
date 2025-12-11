@@ -59,13 +59,7 @@ export class MessageService {
     public async getMessagesByDateRangeAndConversationId(startDate: Date, endDate: Date, conversationIds: string[]): Promise<messages[]> {
         try {
             const messages = await this.prisma.messages.findMany({
-                where: { created_at: { gte: startDate, lte: endDate }, conversation_id: { in: conversationIds }, receipts: {
-                    some: {
-                        user_id: {
-                            not: { in: conversationIds },
-                        },
-                    },
-                } },
+                where: { created_at: { gte: startDate, lte: endDate }, conversation_id: { in: conversationIds },},
                 orderBy: { created_at: 'desc' },
                 include: {
                     receipts: true,
@@ -84,13 +78,6 @@ export class MessageService {
             const messages = await this.prisma.messages.findMany({
                 where: { 
                     conversation_id: { in: conversationIds },
-                    receipts: {
-                        some: {
-                            user_id: {
-                                not: { in: conversationIds },
-                            },
-                        },
-                    },
                 },
                 include: {
                     receipts: true,

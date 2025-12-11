@@ -64,6 +64,33 @@ const ChatPageContent = () => {
     };
 
     useEffect(() => {
+        console.log("chatSocket.isConnected =", chatSocket.isConnected);
+
+        if (chatSocket.isConnected && selectedConversationId) {
+            console.log("Joining room:", selectedConversationId);
+            chatSocket.socket?.emit("joinRoom", selectedConversationId);
+        }
+    }, [chatSocket.isConnected, selectedConversationId]);
+
+    useEffect(() => {
+        if (!chatSocket.socket) return;
+    
+        const handler = (msg: Message) => {
+            console.log("📩 Received new message:", msg);
+            setMessagesInfo((prev) => [...prev, {
+                ...msg,
+                messageReceipt: [],
+            }]);
+        };
+    
+        chatSocket.socket.on(websocket.WEBSOCKET_NEW_MESSAGE, handler);
+    
+        return () => {
+            chatSocket.socket?.off(websocket.WEBSOCKET_NEW_MESSAGE, handler);
+        };
+    }, [chatSocket.socket]);
+
+    useEffect(() => {
         if(messageLoadingState === "success") {
             if(userInfo.id === "") {
                 router.push("/");
@@ -131,7 +158,7 @@ const ChatPageContent = () => {
                             job={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.conversation.id === selectedConversationId)?.jobInfo as Job ?? null : null} 
                             clientName={``} 
                             acceptHandler={() => {}} 
-                            messages={[]} 
+                            messages={messagesInfo.filter((message) => message.conversation_id === selectedConversationId) as Message[] ?? []} 
                             onSendMessage={handleSendMessage} 
                         />
                     </div>

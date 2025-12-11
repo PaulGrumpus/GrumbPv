@@ -23,8 +23,7 @@ export interface MessageReceipt {
 
 export type ReadState = 'sent' | 'delivered' | 'read';
 
-export interface MessageInfo {
-    message: Message;
+export interface MessageInfo extends Message {
     messageReceipt: MessageReceipt[];
 }
 

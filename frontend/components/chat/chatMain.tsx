@@ -27,14 +27,37 @@ interface ChatMainProps {
 const ChatMain = ({sender, receiver, messages, conversation_id, onSendMessage, onEditMessage, onDeleteMessage, onReadMessage, onUnreadMessage, onPinMessage, onUnpinMessage, onReplyToMessage, onForwardMessage, onSaveMessage, onPhoneCall, onVideoCall }: ChatMainProps) => {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const prevMessagesLengthRef = useRef<number>(0);
+    
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+        if (messagesContainerRef.current) {
+            // Use double requestAnimationFrame to ensure DOM has been updated
+            // First RAF: wait for React to commit changes
+            // Second RAF: wait for browser to paint
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    if (messagesContainerRef.current) {
+                        const container = messagesContainerRef.current;
+                        container.scrollTo({
+                            top: container.scrollHeight,
+                            behavior: "smooth"
+                        });
+                    }
+                });
+            });
+        }
     };
+    
     const [newMessage, setNewMessage] = useState("");
     const [charError, setCharError] = useState(false);
 
     useEffect(() => {
-        scrollToBottom();
+        // Only scroll if messages actually increased (new message added)
+        if (messages.length > prevMessagesLengthRef.current) {
+            scrollToBottom();
+        }
+        prevMessagesLengthRef.current = messages.length;
     }, [messages]);
 
     const handleMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +69,6 @@ const ChatMain = ({sender, receiver, messages, conversation_id, onSendMessage, o
 
     const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setNewMessage("");
         if (newMessage.trim()) {
             onSendMessage(
                 {
@@ -56,6 +78,8 @@ const ChatMain = ({sender, receiver, messages, conversation_id, onSendMessage, o
                     kind: "text",
                 } as Message
             );
+            setNewMessage("");
+            // Don't scroll here - let useEffect handle it when messages prop updates
         }
     };
 
@@ -96,9 +120,12 @@ const ChatMain = ({sender, receiver, messages, conversation_id, onSendMessage, o
                 </div>
             </div>
             <div>
-                <div className="flex-1 overflow-y-auto">
-                    <div className="p-4 space-y-2 min-h-[calc(100vh-15rem)] bg-[#2F3DF633]">
-                        <div className="flex-1 overflow-y-auto min-h-[calc(100vh-15rem)]">
+                <div className="flex-1 overflow-y-auto pt-18">
+                    <div className="p-4 pr-1 space-y-2 min-h-[calc(100vh-19.5rem)] bg-[#2F3DF633]">
+                        <div 
+                            ref={messagesContainerRef}
+                            className="flex-1 overflow-y-auto min-h-[calc(100vh-19.5rem)] max-h-[calc(100vh-19.5rem)] decorate-scrollbar"
+                        >
                             {messages && messages.length && messages.map((message, index) => (
                                 <div
                                     key={index}

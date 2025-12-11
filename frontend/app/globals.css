@@ -198,6 +198,22 @@
   display: none;
 }
 
+.decorate-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-light-blue) transparent;
+  padding-right: 0.75rem;
+
+}
+.decorate-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.decorate-scrollbar::-webkit-scrollbar-track {
+  background: transparent;  
+}
+.decorate-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
 .container {
   @media (width >= 90rem /* 1440px */) {
     max-width: 90rem /* 1440px */;
