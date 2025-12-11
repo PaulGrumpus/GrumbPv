@@ -15,22 +15,14 @@ import { getConversationByParticipant, getJobs } from "@/utils/functions";
 import router from "next/router";
 import ChatComb from "@/components/chat/chatComb";
 import { toast } from "react-toastify";
-
-interface ConversationWithUser {
-    conversation: Conversation;
-    participants: ConversationParticipant[];
-    clientInfo: User;
-    freelancerInfo: User | null;
-    jobInfo: Job | null;
-    gigInfo: Gig | null;
-}
+import { Conversations } from "@/types/conversation";
 
 const ChatPage = () => {
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const { loadingState, setLoadingState } = useContext(LoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [jobs, setJobs] = useState<Job[]>([]);
-    const [conversations, setConversations] = useState<ConversationWithUser[]>([]);
+    const [conversations, setConversations] = useState<Conversations[]>([]);
     useEffect(() => {
         if(loadingState === "success") {
             if(userInfo.id === "") {

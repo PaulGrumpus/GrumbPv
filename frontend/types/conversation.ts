@@ -1,3 +1,8 @@
+import { ConversationParticipant } from "./conversation.participant";
+import { Gig } from "./gigs";
+import { Job } from "./jobs";
+import { User } from "./user";
+
 export interface Conversation {
     type: convo_type;
     job_application_doc_id?: string;
@@ -10,4 +15,20 @@ export interface Conversation {
 
 export enum convo_type {
     dm = "dm",
+}
+
+export interface Conversations {
+    conversation: Conversation;
+    participants: ConversationParticipant[];
+    clientInfo: User;
+    freelancerInfo: User | null;
+    jobInfo: Job | null;
+    gigInfo: Gig | null;
+}   
+
+export interface ConversationInfoContextType {
+    conversationsInfo: Conversations[];
+    setConversationsInfo: React.Dispatch<React.SetStateAction<Conversations[]>>;
+    conversationsError: string;
+    setConversationsError: React.Dispatch<React.SetStateAction<string>>;
 }
