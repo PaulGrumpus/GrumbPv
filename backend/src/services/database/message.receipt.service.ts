@@ -1,14 +1,11 @@
 import { logger } from "../../utils/logger.js";
 import { AppError } from "../../middlewares/errorHandler.js";
-import { PrismaClient, message_receipts, read_state } from "@prisma/client";
+import { message_receipts, read_state } from "@prisma/client";
 import { newMessageReceiptParam } from "../../types/message.receipt.js";
+import { prisma } from "../../prisma.js";
 
 export class MessageReceiptService {
-    private prisma: PrismaClient;
-
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
+    private prisma = prisma;
 
     public async createMessageReceipt(messageReceipt: newMessageReceiptParam): Promise<message_receipts> {
         try {

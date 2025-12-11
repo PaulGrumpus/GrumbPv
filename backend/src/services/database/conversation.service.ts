@@ -1,14 +1,11 @@
 import { logger } from "../../utils/logger.js";
 import { AppError } from "../../middlewares/errorHandler.js";
-import { PrismaClient, conversation_participants, conversations, users } from "@prisma/client";
+import { conversation_participants, conversations, users } from "@prisma/client";
 import { newConversationParam, convo_type } from "../../types/conversation.js";
+import { prisma } from "../../prisma.js";
 
 export class ConversationService {
-    private prisma: PrismaClient;
-
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
+    private prisma = prisma;
 
     public async createConversation(params: newConversationParam): Promise<conversations> {
         try {

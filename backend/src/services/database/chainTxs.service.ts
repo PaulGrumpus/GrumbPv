@@ -1,14 +1,11 @@
-import { chain_txs, PrismaClient } from '@prisma/client';
+import { chain_txs } from '@prisma/client';
 import { AppError } from '../../middlewares/errorHandler.js';
 import { userService } from './user.service.js';
 import { logger } from '../../utils/logger.js';
+import { prisma } from "../../prisma.js";
 
 export class ChainTxsService {
-  private prisma: PrismaClient;
-
-  public constructor() {
-    this.prisma = new PrismaClient();
-  }
+  private prisma = prisma;
 
   async createChainTx(
     purpose: string,

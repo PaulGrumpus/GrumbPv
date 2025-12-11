@@ -1,15 +1,12 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, PrismaClient, bid_status, job_bids } from '@prisma/client';
+import { Prisma, bid_status, job_bids } from '@prisma/client';
 import { userService } from './user.service.js';
 import { jobService } from './job.service.js';
+import { prisma } from '../../prisma.js';
 
 export class JobBidService {
-  private prisma: PrismaClient;
-
-  public constructor() {
-    this.prisma = new PrismaClient();
-  }
+  private prisma = prisma;
 
   public async createJobBid(jobBid: Prisma.job_bidsUncheckedCreateInput): Promise<job_bids> {
     try {

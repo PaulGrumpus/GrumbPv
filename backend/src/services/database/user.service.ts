@@ -1,22 +1,19 @@
 import bcrypt from 'bcryptjs';
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, PrismaClient, user_role, users } from '@prisma/client';
+import { Prisma, user_role, users } from '@prisma/client';
 import { generateToken } from '../../utils/jwt.js';
 import {
   removeStoredImage,
   persistUploadedImage,
   type UploadedImage,
 } from '../../utils/imageStorage.js';
+import { prisma } from '../../prisma.js';
 
 const PASSWORD_SALT_ROUNDS = Number(process.env.PASSWORD_SALT_ROUNDS || 10);
 
 export class UserService {
-  private prisma: PrismaClient;
-
-  public constructor() {
-    this.prisma = new PrismaClient();
-  }
+  private prisma = prisma;
 
   public async createUserWithAddress(user: Prisma.usersCreateInput): Promise<string> {
     try {

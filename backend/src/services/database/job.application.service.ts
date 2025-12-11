@@ -1,16 +1,13 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, PrismaClient, job_applications_docs, jobs, users as User } from '@prisma/client';
+import { Prisma, job_applications_docs, jobs, users as User } from '@prisma/client';
 import { jobService } from './job.service.js';
 import { jobMilestoneService } from './job.milestone.service.js';
 import { userService, } from './user.service.js';
+import { prisma } from '../../prisma.js';
 
 export class JobApplicationService {
-    private prisma: PrismaClient;
-
-    public constructor() {
-        this.prisma = new PrismaClient();
-    }
+    private prisma = prisma;
 
     public async createJobApplication(jobApplication: Prisma.job_applications_docsUncheckedCreateInput): Promise<job_applications_docs> {
         try {

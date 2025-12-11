@@ -1,19 +1,16 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, PrismaClient, jobs, job_status } from '@prisma/client';
+import { Prisma, jobs, job_status } from '@prisma/client';
 import { userService } from './user.service.js';
 import {
   persistUploadedImage,
   removeStoredImage,
   type UploadedImage,
 } from '../../utils/imageStorage.js';
+import { prisma } from '../../prisma.js';
 
 export class JobService {
-  private prisma: PrismaClient;
-
-  public constructor() {
-    this.prisma = new PrismaClient();
-  }
+  private prisma = prisma;
 
   private toNumber(value: any): number | null {
     if (value === null || value === undefined) return null;

@@ -1,14 +1,11 @@
 import { logger } from "../../utils/logger.js";
 import { AppError } from "../../middlewares/errorHandler.js";
-import { PrismaClient, messages, msg_type } from "@prisma/client";
+import { messages, msg_type } from "@prisma/client";
 import { newMessageParam } from "../../types/message.js";
+import { prisma } from "../../prisma.js";
 
 export class MessageService {
-    private prisma: PrismaClient;
-
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
+    private prisma = prisma;
 
     public async createMessage(message: newMessageParam): Promise<messages> {
         try {
