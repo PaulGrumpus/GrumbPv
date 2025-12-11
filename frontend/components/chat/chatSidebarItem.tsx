@@ -21,14 +21,14 @@ const ChatSidebarItem = ({ name, image, status, lastMessage, lastMessageTime, se
             className={`flex justify-between group hover:text-white hover:bg-linear-to-r hover:from-(--color-light-blue) hover:to-(--color-purple) ${selected ? "bg-linear-to-r from-(--color-light-blue) to-(--color-purple) text-white" : ""} p-4 border-b border-[#8F99AFCC] cursor-pointer text-black`}
             onClick={clickHandler}
         >
-            <div className="max-w-75% flex items-center gap-2">
-                <div className="w-9 h-9 rounded-full overflow-hidden">
+            <div className="max-w-[75%] flex items-center gap-2 min-w-0 flex-1">
+                <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
                     <Image src={EscrowBackendConfig.uploadedImagesURL + image} alt={name} width={36} height={36} />
                 </div>
-                <div className="flex flex-col">
-                    <p className="text-small font-regular group-hover:text-white">{name}</p>
+                <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+                    <p className="text-small font-regular group-hover:text-white truncate">{name}</p>
                     {status === "typing" ? (
-                        <p className="text-tiny font-regular text-[#2F3DF6]">{status}...</p>
+                        <p className="text-tiny font-regular text-[#2F3DF6] truncate">{status}...</p>
                     ) : (
                         <p className={`text-tiny font-regular text-[#8F99AF] truncate group-hover:text-white ${selected ? "text-white" : ""}`}>{lastMessage}</p>
                     )}

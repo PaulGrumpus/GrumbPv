@@ -275,11 +275,11 @@ const ChatMain = ({sender, receiver, messages, conversation_id, isWriting, onSen
                                             {message.sender_id === sender.id ? (
                                                 <div className="flex items-end gap-2">
                                                     <div
-                                                        className={`py-2 px-3 rounded-lg wrap-break-word whitespace-pre-wrap ${
+                                                        className={`py-2 px-3 rounded-3xl wrap-break-word whitespace-pre-wrap ${
                                                         message.sender_id === sender.id
-                                                            ? "bg-linear-to-r from-emerald-600 to-emerald-700"
-                                                            : "bg-linear-to-r from-indigo-600 to-indigo-700"
-                                                        } text-white text-sm`}
+                                                            ? "bg-[#2F3DF6]"
+                                                            : "bg-[#7E3FF2]"
+                                                        } text-white text-sm ${isLastInSequence ? "chat-bubble-sender" : ""}`}
                                                     >
                                                         {message.body_text}
                                                     </div>
@@ -313,11 +313,11 @@ const ChatMain = ({sender, receiver, messages, conversation_id, isWriting, onSen
                                                         <div className="min-w-9 w-9 h-9"></div>
                                                     )}
                                                     <div
-                                                        className={`py-2 px-3 rounded-lg wrap-break-word whitespace-pre-wrap ${
+                                                        className={`py-2 px-3 rounded-3xl wrap-break-word whitespace-pre-wrap ${
                                                         message.sender_id === sender.id
-                                                            ? "bg-linear-to-r from-emerald-600 to-emerald-700"
-                                                            : "bg-linear-to-r from-indigo-600 to-indigo-700"
-                                                        } text-white text-sm`}
+                                                            ? "bg-[#2F3DF6]"
+                                                            : "bg-[#7E3FF2]"
+                                                        } text-white text-sm ${isLastInSequence ? "chat-bubble-receiver" : ""}`}
                                                     >
                                                         {message.body_text}
                                                     </div>

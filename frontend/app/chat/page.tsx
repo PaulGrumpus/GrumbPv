@@ -58,6 +58,7 @@ const ChatPageContent = () => {
                 conversation_id: message.conversation_id,
                 body_text: message.body_text,
                 kind: message.kind,
+                created_at: new Date(),
             });
         }
     };
@@ -93,6 +94,7 @@ const ChatPageContent = () => {
     
         const handler = (message: Message) => {
             setChatSidebarItems((prev) => prev.map((chat) => chat.conversation_id === message.conversation_id && message.sender_id !== userInfo.id ? { ...chat, lastMessage: message.body_text ?? "" } : chat));
+            setChatSidebarItems((prev) => prev.map((chat) => chat.conversation_id === message.conversation_id && message.sender_id !== userInfo.id ? { ...chat, lastMessageTime: message.created_at as Date } : chat));
             setMessagesInfo((prev) => [...prev, {
                 ...message,
                 messageReceipt: [],
@@ -101,15 +103,11 @@ const ChatPageContent = () => {
     
         chatSocket.socket.on(websocket.WEBSOCKET_NEW_MESSAGE, handler);
         chatSocket.socket.on(websocket.WEBSOCKET_WRITING_MESSAGE, (param: { conversation_id: string, sender_id: string }) => {
-            console.log("test-writingMessage", param);
-            console.log("test-userInfo.id", userInfo.id);
             if(param.sender_id !== userInfo.id) {
                 setChatSidebarItems((prev) => prev.map((chat) => chat.conversation_id === param.conversation_id ? { ...chat, status: "typing" } : chat));
             }
         });
         chatSocket.socket.on(websocket.WEBSOCKET_STOP_WRITING_MESSAGE, (param: { conversation_id: string, sender_id: string }) => {
-            console.log("test-stopWritingMessage", param);
-            console.log("test-userInfo.id", userInfo.id);
             if(param.sender_id !== userInfo.id) {
                 setChatSidebarItems((prev) => prev.map((chat) => chat.conversation_id === param.conversation_id ? { ...chat, status: "idle" } : chat));
             }
@@ -132,7 +130,6 @@ const ChatPageContent = () => {
                 const loadConversations = async () => {
                     conversationsInfo.forEach((conversation) => {
                         const now = new Date();
-                        const lastMessageTime = now.getHours() + ":" + now.getMinutes();
                         setChatSidebarItems((prev) => [...prev, {
                             conversation_id: conversation.conversation.id,
                             receiver: conversation.clientInfo.id === userInfo.id ? conversation.freelancerInfo as User : conversation.clientInfo as User,

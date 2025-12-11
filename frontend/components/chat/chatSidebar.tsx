@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ChatSidebarItem from "./chatSidebarItem";
 import Image from "next/image";
 import { User } from "@/types/user";
+import { formatHourMinute } from "@/utils/functions";
 
 interface ChatSidebarItemType {
     conversation_id: string;
@@ -28,12 +29,12 @@ const ChatSidebar = ({ chats }: { chats: ChatSidebarItemType[] }) => {
         setPinnedChats(
             chats
                 .filter((chat) => chat.pinned)
-                .sort((a, b) => a.lastMessageTime.getTime() - b.lastMessageTime.getTime())
+                // .sort((a, b) => a.lastMessageTime.getTime() - b.lastMessageTime.getTime())
         );
         setUnpinnedChats(
             chats
                 .filter((chat) => !chat.pinned)
-                .sort((a, b) => a.lastMessageTime.getTime() - b.lastMessageTime.getTime())
+                // .sort((a, b) => a.lastMessageTime.getTime() - b.lastMessageTime.getTime())
         );
     }, [chats]);
 
@@ -71,7 +72,7 @@ const ChatSidebar = ({ chats }: { chats: ChatSidebarItemType[] }) => {
                             image={chat.receiver.image_id ?? ""} 
                             status={chat.status} 
                             lastMessage={chat.lastMessage} 
-                            lastMessageTime={chat.lastMessageTime.toLocaleString()} 
+                            lastMessageTime={formatHourMinute(chat.lastMessageTime.toString())} 
                             selected={chat.conversation_id === selectedConversationId}
                             clickHandler={ () => {
                                 handleChatClick(chat.conversation_id);
@@ -99,7 +100,7 @@ const ChatSidebar = ({ chats }: { chats: ChatSidebarItemType[] }) => {
                             image={chat.receiver.image_id ?? ""} 
                             status={chat.status} 
                             lastMessage={chat.lastMessage} 
-                            lastMessageTime={chat.lastMessageTime.toLocaleString()} 
+                            lastMessageTime={formatHourMinute(chat.lastMessageTime.toString())} 
                             selected={chat.conversation_id === selectedConversationId}
                             clickHandler={ () => {
                                 handleChatClick(chat.conversation_id);

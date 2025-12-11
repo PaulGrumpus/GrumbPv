@@ -12,8 +12,6 @@ import { UserInfoCtx } from "@/context/userContext";
 import { toast } from "react-toastify";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
 
-
-const userPhoto = "/Grmps/grmps.jpg";
 const chatIcon = "/Grmps/chat.svg";
 const bellIcon = "/Grmps/bell.svg";
 const logoImage = "/Grmps/grmps.jpg"; // Change this path to your custom logo
@@ -124,7 +122,7 @@ const Navbar = () => {
                                 className="relative flex items-center gap-4"
                                 ref={menuToggleRef}
                             >
-                                <div className="relative w-6 h-6 cursor-pointer" onClick={() => router.push("/chat")}>
+                                <div className="relative w-6 h-6 cursor-pointer hover:scale-110 transition-all duration-300" onClick={() => router.push("/chat")}>
                                     <Image 
                                         src={chatIcon} 
                                         alt="Chat Icon" 

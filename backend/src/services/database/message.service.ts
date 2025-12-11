@@ -17,6 +17,7 @@ export class MessageService {
                     kind: message.kind as msg_type,
                     attachment_id: message.attachment_id,
                     reply_to_msg_id: message.reply_to_msg_id,
+                    created_at: message.created_at as Date,
                 },
             });
             return newMessage;

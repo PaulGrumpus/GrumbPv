@@ -30,9 +30,10 @@ export const socket_router = (
     // User sends a message
     socket.on(websocket.WEBSOCKET_SEND_NEW_MESSAGE, async (param: newMessageParam) => {
         try {
-            const { user_id, conversation_id, body_text, kind } = param;
+            const { user_id, conversation_id, body_text, kind, created_at } = param;
 
             console.log("test-param", param);
+            console.log("created_at is Date?", created_at instanceof Date);
 
             if (!user_id || !conversation_id || !body_text) {
                 throw new Error("Invalid parameters");
@@ -44,6 +45,7 @@ export const socket_router = (
                 conversation_id: conversation_id,
                 body_text: body_text as string,
                 kind: kind as msg_type,
+                created_at: created_at || new Date(),
             });
 
             // Broadcast ONLY to users inside this room

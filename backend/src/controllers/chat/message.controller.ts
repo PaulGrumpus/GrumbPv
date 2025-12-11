@@ -11,6 +11,7 @@ export class MessageController {
                 conversation_id: params.conversation_id,
                 body_text: params.body_text as string,
                 kind: params.kind as msg_type,
+                created_at: params.created_at || new Date(),
             });
             if (!result) {
                 throw new AppError('Message not created', 400, 'MESSAGE_NOT_CREATED');

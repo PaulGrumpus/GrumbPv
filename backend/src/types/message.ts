@@ -5,6 +5,7 @@ export interface newMessageParam {
     body_text?: string;
     attachment_id?: string;
     reply_to_msg_id?: string;
+    created_at: Date;
 }
 
 export enum msg_type {

@@ -248,3 +248,37 @@ body {
 .typing-dot {
   animation: typing-dot 1.4s infinite ease-in-out;
 }
+
+/* Chat bubble tail styles - double wave tail pointing to avatar */
+.chat-bubble-sender {
+  position: relative;
+}
+
+.chat-bubble-sender:after {
+  content: "";
+  background: #2f3df6;
+  border-bottom-left-radius: 51px;
+  width: 15px;
+  height: 12px;
+  position: absolute;
+  bottom: -1px;
+  right: -3px;
+  transform: rotate(-30deg);
+}
+
+.chat-bubble-receiver {
+  position: relative;
+}
+
+.chat-bubble-receiver::after {
+  content: "";
+  background: #7e3ff2;
+  border-bottom-right-radius: 55px;
+  border-bottom-left-radius: -31px;
+  width: 15px;
+  height: 12px;
+  position: absolute;
+  bottom: -1px;
+  left: -3px;
+  transform: rotate(41deg);
+}
