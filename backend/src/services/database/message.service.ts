@@ -60,7 +60,7 @@ export class MessageService {
         try {
             const messages = await this.prisma.messages.findMany({
                 where: { created_at: { gte: startDate, lte: endDate }, conversation_id: { in: conversationIds },},
-                orderBy: { created_at: 'desc' },
+                orderBy: { created_at: 'asc' },
                 include: {
                     receipts: true,
                 },
@@ -82,7 +82,7 @@ export class MessageService {
                 include: {
                     receipts: true,
                 },
-                orderBy: { created_at: 'desc' },
+                orderBy: { created_at: 'asc' },
             });
             return messages;
         }
