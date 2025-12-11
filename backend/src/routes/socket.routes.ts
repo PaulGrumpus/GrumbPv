@@ -2,7 +2,8 @@ import { Socket } from "socket.io";
 import { msg_type, newMessageParam } from "../types/message.js";
 import { messageController } from "../controllers/chat/message.controller.js";
 import { newMessageReceiptParam } from "../types/message.receipt.js";
-import { messageReceiptController } from "../controllers/chat/message.receipt.controller.js";
+import { messageReceiptService } from "../services/database/message.receipt.service.js";
+import { websocket } from "../config/websocket.js";
 
 export const socket_router = (
     socket: Socket,
@@ -27,7 +28,7 @@ export const socket_router = (
     //   });
   
     // User sends a message
-    socket.on("sendMessage", async (param: newMessageParam) => {
+    socket.on(websocket.WEBSOCKET_SEND_NEW_MESSAGE, async (param: newMessageParam) => {
         try {
             const { user_id, conversation_id, body_text } = param;
 
@@ -44,14 +45,14 @@ export const socket_router = (
             });
 
             // Broadcast ONLY to users inside this room
-            io.to(conversation_id).emit("newMessage", result);
+            io.to(conversation_id).emit(websocket.WEBSOCKET_NEW_MESSAGE, result);
 
         } catch (error) {
             console.error("❌ Error sending message:", error);
         }
     });
 
-    socket.on("sendMessageReceipt", async (param: newMessageReceiptParam) => {
+    socket.on(websocket.WEBSOCKET_SEND_MESSAGE_RECEIPT, async (param: newMessageReceiptParam) => {
         try {
             const { message_id, user_id, state } = param;
 
@@ -59,15 +60,15 @@ export const socket_router = (
                 throw new Error("Invalid parameters");
             }
             let result
-            const existingMessageReceipt = await messageReceiptController.getMessageReceiptsByMessageIdAndUserId(message_id, user_id);
+            const existingMessageReceipt = await messageReceiptService.getMessageReceiptsByMessageIdAndUserId(message_id, user_id);
             if (existingMessageReceipt) {
-                result = await messageReceiptController.updateMessageReceipt({
-                    message_id: message_id,
-                    user_id: user_id,
-                    state: state,
-                });
+                result = await messageReceiptService.updateMessageReceipt(
+                    message_id,
+                    user_id,
+                    state,
+                );
             } else {
-                result = await messageReceiptController.createMessageReceipt({
+                result = await messageReceiptService.createMessageReceipt({
                     message_id: message_id,
                     user_id: user_id,
                     state: state,
@@ -76,7 +77,7 @@ export const socket_router = (
             if (!result) {
                 throw new Error("Message receipt not created");
             }
-            io.to(message_id).emit("messageReceipt", result);
+            io.to(message_id).emit(websocket.WEBSOCKET_MESSAGE_RECEIPT, result);
         }
         catch (error) {
             console.error("❌ Error sending message receipt:", error);

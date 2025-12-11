@@ -17,3 +17,11 @@ export const EscrowBackendConfig = {
     baseURL: process.env.NEXT_PUBLIC_ESCROW_BACKEND_URL || "http://localhost:5000/api/v1",
     uploadedImagesURL: process.env.NEXT_PUBLIC_ESCROW_BACKEND_UPLOADS_URL + "/images/",
 }
+
+export const websocket = {
+    WEBSOCKET_URI: process.env.NEXT_PUBLIC_ESCROW_WEBSOCKET_URL || "ws://localhost:5000",
+    WEBSOCKET_SEND_NEW_MESSAGE: process.env.NEXT_PUBLIC_WEBSOCKET_SEND_NEW_MESSAGE || "sendNewMessage",
+    WEBSOCKET_NEW_MESSAGE: process.env.NEXT_PUBLIC_WEBSOCKET_NEW_MESSAGE || "newMessage",
+    WEBSOCKET_SEND_MESSAGE_RECEIPT: process.env.NEXT_PUBLIC_WEBSOCKET_SEND_MESSAGE_RECEIPT || "sendMessageReceipt",
+    WEBSOCKET_MESSAGE_RECEIPT: process.env.NEXT_PUBLIC_WEBSOCKET_MESSAGE_RECEIPT || "messageReceipt",
+}

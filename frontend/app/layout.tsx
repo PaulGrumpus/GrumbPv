@@ -12,6 +12,7 @@ import { ConversationLoadingProvider } from "@/context/conversationLoadingContex
 import { ConversationsInfoProvider } from "@/context/conversationsContext";
 import { MessagesInfoProvider } from "@/context/messagesContext";
 import { MessageLoadingProvider } from "@/context/messageLoadingContext";
+import SocketContextProvider from "@/context/socketContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,18 +62,20 @@ export default function RootLayout({
       >
         <UserLoadingProvider>
           <UserInfoProvider>
-            <ConversationLoadingProvider>
-              <ConversationsInfoProvider>
-                <MessageLoadingProvider>
-                  <MessagesInfoProvider>
-                    <Navbar />
-                    {children}
-                    <Footer />
-                    <ToastContainer />
-                  </MessagesInfoProvider>
-                </MessageLoadingProvider>
-              </ConversationsInfoProvider>
-            </ConversationLoadingProvider>
+            <SocketContextProvider>
+              <ConversationLoadingProvider>
+                <ConversationsInfoProvider>
+                  <MessageLoadingProvider>
+                    <MessagesInfoProvider>
+                      <Navbar />
+                      {children}
+                      <Footer />
+                      <ToastContainer />
+                    </MessagesInfoProvider>
+                  </MessageLoadingProvider>
+                </ConversationsInfoProvider>
+              </ConversationLoadingProvider>
+            </SocketContextProvider>
           </UserInfoProvider>
         </UserLoadingProvider>
       </body>
