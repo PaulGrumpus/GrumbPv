@@ -9,6 +9,7 @@ interface ChatMainProps {
     sender: User;
     receiver: User | null;
     messages: Message[];
+    conversation_id: string;
     onSendMessage: (message: Message) => void;
     onEditMessage?: (message: Message) => void;
     onDeleteMessage?: (message: Message) => void;
@@ -23,7 +24,7 @@ interface ChatMainProps {
     onVideoCall?: () => void;
 }
 
-const ChatMain = ({sender, receiver, messages, onSendMessage, onEditMessage, onDeleteMessage, onReadMessage, onUnreadMessage, onPinMessage, onUnpinMessage, onReplyToMessage, onForwardMessage, onSaveMessage, onPhoneCall, onVideoCall }: ChatMainProps) => {
+const ChatMain = ({sender, receiver, messages, conversation_id, onSendMessage, onEditMessage, onDeleteMessage, onReadMessage, onUnreadMessage, onPinMessage, onUnpinMessage, onReplyToMessage, onForwardMessage, onSaveMessage, onPhoneCall, onVideoCall }: ChatMainProps) => {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const scrollToBottom = () => {
@@ -46,9 +47,15 @@ const ChatMain = ({sender, receiver, messages, onSendMessage, onEditMessage, onD
     const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setNewMessage("");
-        console.log(newMessage);
         if (newMessage.trim()) {
-            onSendMessage(messages[messages.length - 1]);
+            onSendMessage(
+                {
+                    conversation_id: conversation_id,
+                    body_text: newMessage,
+                    sender_id: sender.id,
+                    kind: "text",
+                } as Message
+            );
         }
     };
 
@@ -183,7 +190,6 @@ const ChatMain = ({sender, receiver, messages, onSendMessage, onEditMessage, onD
                             </form>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

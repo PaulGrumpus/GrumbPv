@@ -14,6 +14,9 @@ import { ConversationsInfoCtx } from "@/context/conversationsContext";
 import { ConversationLoadingCtx } from "@/context/conversationLoadingContext";
 import { MessagesInfoCtx } from "@/context/messagesContext";
 import { MessageLoadingCtx } from "@/context/messageLoadingContext";
+import { Message } from "@/types/message";
+import useSocket from '@/service/socket';
+import { websocket } from "@/config/config";
 
 interface ChatSidebarItem {
     conversation_id: string;
@@ -39,6 +42,7 @@ const ChatPageContent = () => {
 
     const searchParams = useSearchParams();
     const conversationId = searchParams.get("conversationId");
+    const chatSocket = useSocket();    
 
     const handleChatClick = (conversation_id: string) => {
         setSelectedConversationId(conversation_id);
@@ -46,7 +50,19 @@ const ChatPageContent = () => {
             chat.selected = chat.conversation_id === conversation_id;
         });
     };
-    
+
+    const handleSendMessage = (message: Message) => {
+        console.log("test-message", message);
+        if(chatSocket.isConnected) {
+            chatSocket.socket?.emit(websocket.WEBSOCKET_SEND_NEW_MESSAGE, {
+                user_id: userInfo.id,
+                conversation_id: message.conversation_id,
+                body_text: message.body_text,
+                kind: message.kind,
+            });
+        }
+    };
+
     useEffect(() => {
         if(messageLoadingState === "success") {
             if(userInfo.id === "") {
@@ -110,12 +126,13 @@ const ChatPageContent = () => {
                     <div className="w-[75%]">
                         <ChatComb
                             sender={userInfo} 
+                            conversation_id={selectedConversationId as string}
                             receiver={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.receiver as User ?? null : null} 
                             job={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.conversation.id === selectedConversationId)?.jobInfo as Job ?? null : null} 
                             clientName={``} 
                             acceptHandler={() => {}} 
                             messages={[]} 
-                            onSendMessage={() => {}} 
+                            onSendMessage={handleSendMessage} 
                         />
                     </div>
                 </div>

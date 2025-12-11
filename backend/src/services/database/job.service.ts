@@ -115,13 +115,6 @@ export class JobService {
         tags: this.normalizeTags(job.tags),
       } as Prisma.jobsUncheckedCreateInput;
 
-      console.log('normalizedImageId', normalizedImageId, file);
-
-      const normalizedTags = this.normalizeTags(job.tags);
-      console.log('normalizedTags', normalizedTags);
-
-      console.log('Job', job);
-
       const newJob = await this.prisma.jobs.create({
         data: createData,
       });

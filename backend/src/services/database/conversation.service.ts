@@ -9,7 +9,6 @@ export class ConversationService {
 
     public async createConversation(params: newConversationParam): Promise<conversations> {
         try {
-            console.log('params', params);
             const newConversation = await this.prisma.conversations.create({
                 data: {
                     type: params.type as convo_type,

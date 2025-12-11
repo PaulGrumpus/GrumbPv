@@ -65,16 +65,13 @@ export class ConversationParticipantService {
         gigInfo: gigs | null
     }[]> {
         try {
-            console.log('userId', userId);
             const conversationParticipants = await this.prisma.conversation_participants.findMany({
                 where: { user_id: userId },
             });
             if (!conversationParticipants) {
                 throw new AppError('Conversation participants not found', 404, 'CONVERSATION_PARTICIPANTS_NOT_FOUND');
             }
-            console.log('conversationParticipants', conversationParticipants);
             const conversationsData = await Promise.all(conversationParticipants.map(async (conversationParticipant) => {
-                console.log('conversationParticipant', conversationParticipant);
                 const conversation = await this.prisma.conversations.findFirst({
                     where: { id: conversationParticipant.conversation_id },
                 });
@@ -86,7 +83,6 @@ export class ConversationParticipantService {
                 let clientInfo: users | null = null;
                 let freelancerInfo: users | null = null;
 
-                console.log('conversation', conversation);
                 if(conversation.job_id) {
                     jobInfo = await this.prisma.jobs.findUnique({
                         where: { id: conversation.job_id },
@@ -95,7 +91,6 @@ export class ConversationParticipantService {
                         throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
                     }
                 }
-                console.log('jobInfo', jobInfo);
                 if(conversation.gig_id) {
                     gigInfo = await this.prisma.gigs.findUnique({
                         where: { id: conversation.gig_id },
@@ -104,7 +99,6 @@ export class ConversationParticipantService {
                         throw new AppError('Gig not found', 404, 'GIG_NOT_FOUND');
                     }
                 }
-                console.log('gigInfo', gigInfo);
                 if(jobInfo) {
                     clientInfo = await this.prisma.users.findUnique({
                         where: { id: jobInfo.client_id },
@@ -113,7 +107,6 @@ export class ConversationParticipantService {
                         throw new AppError('Client not found', 404, 'CLIENT_NOT_FOUND');
                     }
                 }
-                console.log('clientInfo', clientInfo);
                 const participants = await this.getConversationParticipantsByConversationId(conversation.id);
                 const freelancerId = participants.find((participant) => participant.user_id !== (jobInfo?.client_id ?? ""))?.user_id ?? "";
                 freelancerInfo = await this.prisma.users.findUnique({
@@ -122,7 +115,6 @@ export class ConversationParticipantService {
                 if (!freelancerInfo) {
                     throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
                 }
-                console.log('freelancerInfo', freelancerInfo);
                 return { conversation, clientInfo, freelancerInfo, jobInfo, gigInfo, participants };
             }));
             return conversationsData.map((conversationData) => {

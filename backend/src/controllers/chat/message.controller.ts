@@ -74,8 +74,6 @@ export class MessageController {
         try {
             const { conversationIds } = req.body;
 
-            console.log("test-conversationIds", conversationIds);
-
             const result = await messageService.getAllMessagesByConversationIds(conversationIds);
             if (!result) {
                 throw new AppError('Messages not found', 404, 'MESSAGES_NOT_FOUND');

@@ -129,10 +129,6 @@ export class EscrowController {
 
           const url = await pinata.gateways.public.convert(finalCid);
 
-          console.log('File uploaded to Pinata');
-          console.log('CID:', finalCid);
-          console.log('Content Hash:', finalContentHash);
-          console.log('Download URL:', url);
         } catch (pinataError) {
           throw new AppError(
             `Failed to upload file to Pinata: ${pinataError instanceof Error ? pinataError.message : 'Unknown error'}`,

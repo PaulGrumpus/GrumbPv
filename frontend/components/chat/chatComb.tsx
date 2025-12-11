@@ -9,17 +9,19 @@ interface ChatCombProps {
     sender: User;
     receiver: User | null;
     job: Job | null;
+    conversation_id: string;
     clientName: string;
     acceptHandler: () => void;
     messages: Message[];
     onSendMessage: (message: Message) => void;
 }
 
-const ChatComb = ({ sender, receiver, job, clientName, acceptHandler, messages, onSendMessage }: ChatCombProps) => {
+const ChatComb = ({ sender, receiver, job, conversation_id, clientName, acceptHandler, messages, onSendMessage }: ChatCombProps) => {
     return (
         <div className="flex">
             <div className="flex-1 w-[70%]">
                 <ChatMain 
+                    conversation_id={conversation_id}
                     sender={sender} 
                     receiver={receiver} 
                     messages={messages} 

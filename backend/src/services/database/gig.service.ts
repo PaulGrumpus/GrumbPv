@@ -80,8 +80,6 @@ export class GigService {
         tags: [gig.tags ?? ''],
       } as Prisma.gigsUncheckedCreateInput;
 
-      console.log('createData', createData);
-
       const newGig = await this.prisma.gigs.create({
         data: createData,
       });

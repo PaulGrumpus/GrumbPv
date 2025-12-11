@@ -12,7 +12,6 @@ export class JobMilestoneService {
     jobMilestone: Prisma.job_milestonesUncheckedCreateInput
   ): Promise<job_milestones> {
     try {
-      console.log('jobMilestone', jobMilestone);
       if (
         !jobMilestone.job_id ||
         !jobMilestone.order_index ||

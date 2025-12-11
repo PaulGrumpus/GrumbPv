@@ -105,6 +105,7 @@ async function bootstrap() {
   });
 
   io.on('connection', (socket) => {
+    console.log("test-socket-connected", socket.id);
     socket_router(socket, io);
   });
 
