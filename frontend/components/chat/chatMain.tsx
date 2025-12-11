@@ -7,7 +7,7 @@ import { EscrowBackendConfig } from "@/config/config";
 
 interface ChatMainProps {
     sender: User;
-    receiver: User;
+    receiver: User | null;
     messages: Message[];
     onSendMessage: (message: Message) => void;
     onEditMessage?: (message: Message) => void;
@@ -59,14 +59,14 @@ const ChatMain = ({sender, receiver, messages, onSendMessage, onEditMessage, onD
                     <div className="flex items-center gap-2">
                         <div className="w-9 h-9 rounded-full overflow-hidden">
                             <Image 
-                                src={EscrowBackendConfig.uploadedImagesURL + receiver.image_id}
+                                src={receiver? EscrowBackendConfig.uploadedImagesURL + receiver.image_id : EscrowBackendConfig.uploadedImagesURL + "/default.jpg"}
                                 alt="Receiver Photo"
                                 width={36}
                                 height={36}
                                 className="w-full h-full object-cover"
                             />
                         </div>
-                        <p className="text-small font-regular text-[#DEE4F2]">{receiver.display_name}</p>
+                        <p className="text-small font-regular text-[#DEE4F2]">{receiver? receiver.display_name : "No receiver"}</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-10 h-10 p-2 bg-[#7E3FF2] rounded-lg">
@@ -105,7 +105,7 @@ const ChatMain = ({sender, receiver, messages, onSendMessage, onEditMessage, onD
                                             message.sender_id === sender.id ? "text-right" : "text-left"
                                             }`}
                                         >
-                                            {message.sender_id === sender.id ? sender.display_name : receiver.display_name}
+                                            {message.sender_id === sender.id ? sender.display_name : receiver? receiver.display_name : "No receiver"}
                                         </span>
                                         <div
                                             className={`py-2 px-3 rounded-lg ${

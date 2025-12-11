@@ -17,7 +17,7 @@ export enum convo_type {
     dm = "dm",
 }
 
-export interface Conversations {
+export interface ConversationInfo {
     conversation: Conversation;
     participants: ConversationParticipant[];
     clientInfo: User;
@@ -27,8 +27,8 @@ export interface Conversations {
 }   
 
 export interface ConversationInfoContextType {
-    conversationsInfo: Conversations[];
-    setConversationsInfo: React.Dispatch<React.SetStateAction<Conversations[]>>;
+    conversationsInfo: ConversationInfo[];
+    setConversationsInfo: React.Dispatch<React.SetStateAction<ConversationInfo[]>>;
     conversationsError: string;
     setConversationsError: React.Dispatch<React.SetStateAction<string>>;
 }

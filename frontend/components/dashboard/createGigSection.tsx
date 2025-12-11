@@ -7,7 +7,7 @@ import Button from "../button";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import { UserInfoCtx } from "@/context/userContext";
-import { UserLoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { useRouter } from "next/navigation";
 import Loading from "../loading";
 import { createGig } from "@/utils/functions";

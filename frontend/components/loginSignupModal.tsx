@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 import { createUserWithAddress, createUserWithEmail, loginWithAddress, loginWithEmail } from "@/utils/functions";
 import { UserInfoCtx } from "@/context/userContext";
 import { useRouter } from "next/navigation";
-import { UserLoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 
 interface LoginSignupModalProps {
     isOpen: boolean;

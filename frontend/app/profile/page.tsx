@@ -4,7 +4,7 @@ import Button from '@/components/button'
 import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDownIcon, ChevronUpIcon, XMarkIcon } from "@heroicons/react/20/solid";
-import { UserLoadingCtx } from '@/context/loadingContext';
+import { UserLoadingCtx } from '@/context/userLoadingContext';
 import { useContext } from 'react';
 import Loading from '@/components/loading';
 import { UserInfoCtx } from '@/context/userContext';

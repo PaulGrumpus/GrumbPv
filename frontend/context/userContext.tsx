@@ -9,7 +9,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { UserContextType, User } from "@/types/user";
-import { UserLoadingCtx } from "./loadingContext";
+import { UserLoadingCtx } from "./userLoadingContext";
 import { decodeToken } from "@/utils/jwt";
 
 const defaultProvider: UserContextType = {

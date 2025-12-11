@@ -4,7 +4,7 @@ import UserJobOrGigPost from "../userJobOrGigPost";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import { UserInfoCtx } from "@/context/userContext";
-import { UserLoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { Gig } from "@/types/gigs";
 import { toast } from "react-toastify";
 import { getGigsByFreelancerId } from "@/utils/functions";

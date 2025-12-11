@@ -5,7 +5,7 @@ import { Gig } from "@/types/gigs";
 import { LocationType } from "@/types/jobs";
 import { useContext, useEffect, useState } from "react";
 import { UserInfoCtx } from "@/context/userContext";
-import { UserLoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { getGigs } from "@/utils/functions";
 import Loading from "@/components/loading";
 import { EscrowBackendConfig } from "@/config/config";

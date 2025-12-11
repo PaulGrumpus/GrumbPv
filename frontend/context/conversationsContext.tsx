@@ -7,10 +7,11 @@ import {
     useEffect,
     useState,
 } from "react";
-import { ConversationInfoContextType, Conversations } from "@/types/conversation";
-import { UserLoadingCtx } from "./loadingContext";
+import { ConversationInfoContextType, ConversationInfo } from "@/types/conversation";
+import { UserLoadingCtx } from "./userLoadingContext";
 import { getConversationByParticipant } from "@/utils/functions";
 import { UserInfoCtx } from "./userContext";
+import { ConversationLoadingCtx } from "./conversationLoadingContext";
 
 const defaultProvider: ConversationInfoContextType = {
     conversationsInfo: [],
@@ -26,26 +27,31 @@ type Props = {
 }
 
 const ConversationsInfoProvider = ({ children }: Props) => {
-    const [conversationsInfo, setConversationsInfo] = useState<Conversations[]>(defaultProvider.conversationsInfo);
+    const [conversationsInfo, setConversationsInfo] = useState<ConversationInfo[]>(defaultProvider.conversationsInfo);
     const [conversationsError, setConversationsError] = useState<string>(defaultProvider.conversationsError);
     const { userInfo } = useContext(UserInfoCtx);
-    const { setuserLoadingState } = useContext(UserLoadingCtx);
+    const { userLoadingState } = useContext(UserLoadingCtx);
+    const { conversationLoadingState, setconversationLoadingState } = useContext(ConversationLoadingCtx);
 
     const init = async () => {
-        setuserLoadingState("pending");
-        const conversations = await getConversationByParticipant(userInfo.id);
-        if(conversations.success) {
-            setConversationsInfo(conversations.data ?? []);
-            setuserLoadingState("success");
+        if(userLoadingState === "success") {
+            setconversationLoadingState("pending");
+            const conversations = await getConversationByParticipant(userInfo.id);
+            if(conversations.success) {
+                setConversationsInfo(conversations.data ?? []);
+                setconversationLoadingState("success");
+            } else {
+                setConversationsError(conversations.error as string);
+                setconversationLoadingState("failure");
+            }
         } else {
-            setConversationsError(conversations.error as string);
-            setuserLoadingState("failure");
+            setconversationLoadingState("pending");
         }
     }
 
     useEffect(() => {
         init();
-    }, []);
+    }, [userLoadingState]);
 
     return (
         <ConversationsInfoCtx.Provider value={{ conversationsInfo, setConversationsInfo, conversationsError, setConversationsError }}>

@@ -10,7 +10,7 @@ import { CONFIG, EscrowBackendConfig } from "@/config/config";
 import LoginSignupModal from "./loginSignupModal";
 import { UserInfoCtx } from "@/context/userContext";
 import { toast } from "react-toastify";
-import { UserLoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 
 
 const userPhoto = "/Grmps/grmps.jpg";

@@ -2,7 +2,7 @@
 
 import { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserLoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import Loading from "@/components/loading";
 import { UserInfoCtx } from "@/context/userContext";
 import Image from "next/image";

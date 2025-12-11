@@ -7,8 +7,8 @@ import { Message } from "@/types/message";
 
 interface ChatCombProps {
     sender: User;
-    receiver: User;
-    job: Job;
+    receiver: User | null;
+    job: Job | null;
     clientName: string;
     acceptHandler: () => void;
     messages: Message[];
@@ -33,7 +33,7 @@ const ChatComb = ({ sender, receiver, job, clientName, acceptHandler, messages, 
                     />
                     <ChatProjectInfo 
                         job={job} 
-                        clientName={clientName} 
+                        clientName={job? clientName : "No client name"} 
                         acceptHandler={acceptHandler} 
                     />
                 </div>

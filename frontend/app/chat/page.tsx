@@ -9,60 +9,72 @@ import { Conversation } from "@/types/conversation";
 import { ConversationParticipant } from "@/types/conversation.participant";
 import { useContext, useEffect, useState } from "react";
 import { UserInfoCtx } from "@/context/userContext";
-import { UserLoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import Loading from "@/components/loading";
 import { getConversationByParticipant, getJobs } from "@/utils/functions";
 import router from "next/router";
 import ChatComb from "@/components/chat/chatComb";
 import { toast } from "react-toastify";
-import { Conversations } from "@/types/conversation";
+import { ConversationInfo } from "@/types/conversation";
+import { ConversationsInfoCtx } from "@/context/conversationsContext";
+import { ConversationLoadingCtx } from "@/context/conversationLoadingContext";
+
+interface ChatSidebarItem {
+    conversation_id: string;
+    receiver: User;
+    status: string;
+    lastMessage: string;
+    lastMessageTime: Date;
+    pinned: boolean;
+    selected: boolean;
+    onChatClick: () => void;
+    onPinChat: () => void;
+    onUnpinChat: () => void;
+}
 
 const ChatPage = () => {
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [jobs, setJobs] = useState<Job[]>([]);
-    const [conversations, setConversations] = useState<Conversations[]>([]);
+    const [chatSidebarItems, setChatSidebarItems] = useState<ChatSidebarItem[]>([]);
+    const { conversationsInfo, setConversationsInfo } = useContext(ConversationsInfoCtx);
+    const { conversationLoadingState, setconversationLoadingState } = useContext(ConversationLoadingCtx);
     useEffect(() => {
-        if(userLoadingState === "success") {
+        if(conversationLoadingState === "success") {
             if(userInfo.id === "") {
                 router.push("/");
                 return;
             }
             if (userInfo && userInfo.id) {
-                const loadJobs = async () => {
-                    const jobs = await getJobs();
-                    setJobs(jobs.data ?? []);
+                const loadConversations = async () => {
+                    conversationsInfo.forEach((conversation) => {
+                        const now = new Date();
+                        const lastMessageTime = now.getHours() + ":" + now.getMinutes();
+                        setChatSidebarItems((prev) => [...prev, {
+                            conversation_id: conversation.conversation.id,
+                            receiver: conversation.clientInfo.id === userInfo.id ? conversation.freelancerInfo as User : conversation.clientInfo as User,
+                            status: "typing",
+                            lastMessage: "Hello, how are you?",
+                            lastMessageTime: now,
+                            pinned: false,
+                            selected: false,
+                            onChatClick: () => {},
+                            onPinChat: () => {},
+                            onUnpinChat: () => {},
+                        }]);
+                    });
 
-
-                    const conversations = await getConversationByParticipant(userInfo.id);
-                    if(!conversations.success) {
-                        toast.error(conversations.error as string, {
-                            position: "top-right",
-                            autoClose: 5000,
-                            hideProgressBar: false,
-                            closeOnClick: true,
-                            pauseOnHover: true,
-                            draggable: true,
-                        });
-                    }
-
-                    if(conversations.success) {
-                        setConversations(conversations.data ?? []);
-                    }
-
-                    console.log("conversations", conversations);
-
+                    console.log("test-conversationsInfo", conversationsInfo);
 
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }
-                loadJobs();
+                loadConversations();
             }
-        } else if (userLoadingState === "failure") {
+        } else if (conversationLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState, router]);
+    }, [userInfo, conversationLoadingState, router]);
 
     if(loading === "pending") {
         return <Loading />;
@@ -75,63 +87,14 @@ const ChatPage = () => {
                 <div className="flex">
                     <div className="w-[25%]">
                         <ChatSidebar
-                            chats={[
-                                {
-                                    conversation_id: "1",
-                                    receiver: userInfo,
-                                    status: "typing",
-                                    lastMessage: "Hello, how are you?",
-                                    lastMessageTime: new Date(),
-                                    pinned: true,
-                                    selected: true,
-                                    onChatClick: () => {},
-                                    onPinChat: () => {},
-                                    onUnpinChat: () => {},
-                                },
-                                {
-                                    conversation_id: "2",
-                                    receiver: userInfo,
-                                    status: "online",
-                                    lastMessage: "Hello, how are you?",
-                                    lastMessageTime: new Date(),
-                                    pinned: false,
-                                    selected: false,
-                                    onChatClick: () => {},
-                                    onPinChat: () => {},
-                                    onUnpinChat: () => {},
-                                },
-                                {
-                                    conversation_id: "3",
-                                    receiver: userInfo,
-                                    status: "online",
-                                    lastMessage: "Hello, how are you?",
-                                    lastMessageTime: new Date(),
-                                    pinned: false,
-                                    selected: false,
-                                    onChatClick: () => {},
-                                    onPinChat: () => {},
-                                    onUnpinChat: () => {},
-                                },
-                                {
-                                    conversation_id: "4",
-                                    receiver: userInfo,
-                                    status: "online",
-                                    lastMessage: "Hello, how are you?",
-                                    lastMessageTime: new Date(),
-                                    pinned: false,
-                                    selected: false,
-                                    onChatClick: () => {},
-                                    onPinChat: () => {},
-                                    onUnpinChat: () => {},
-                                }
-                            ]}
+                            chats={chatSidebarItems}
                         />
                     </div>
                     <div className="w-[75%]">
                         <ChatComb 
                             sender={userInfo} 
-                            receiver={userInfo} 
-                            job={jobs[0]} 
+                            receiver={chatSidebarItems.length > 0 ? chatSidebarItems[0].receiver : null} 
+                            job={conversationsInfo.length > 0 ? conversationsInfo[0].jobInfo as Job : null} 
                             clientName={``} 
                             acceptHandler={() => {}} 
                             messages={[]} 

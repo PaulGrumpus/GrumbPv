@@ -7,7 +7,7 @@ import ModalTemplate from "@/components/modalTemplate";
 import { useContext, useEffect, useState } from "react";
 import { Job, LocationType } from "@/types/jobs";
 import { useRouter } from "next/navigation";
-import { UserLoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { UserInfoCtx } from "@/context/userContext";
 import Loading from "@/components/loading";
 import { toast } from "react-toastify";

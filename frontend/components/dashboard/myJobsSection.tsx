@@ -3,7 +3,7 @@ import Button from "../button";
 import UserJobOrGigPost from "../userJobOrGigPost";
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { UserLoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { UserInfoCtx } from "@/context/userContext";
 import Loading from "../loading";
 import { Job, LocationType } from "@/types/jobs";

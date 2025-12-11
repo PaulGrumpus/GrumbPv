@@ -1,8 +1,7 @@
 'use client'
 
-import { createContext, ReactNode, useEffect, useState } from 'react';
+import { createContext, ReactNode, useState } from 'react';
 import { LoadingContextType, userLoadingState } from '@/types/loading';
-import { useRouter } from 'next/navigation';
 
 const defaultProvider: LoadingContextType = {
   userLoadingState: "pending",
@@ -17,7 +16,6 @@ type Props = {
 
 const UserLoadingProvider = ({ children }: Props) => {
     const [userLoadingState, setuserLoadingState] = useState<userLoadingState>("pending");
-    const router = useRouter();
 
     return (
         <UserLoadingCtx.Provider value={{ userLoadingState, setuserLoadingState }}>

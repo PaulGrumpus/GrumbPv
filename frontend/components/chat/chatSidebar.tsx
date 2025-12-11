@@ -111,6 +111,14 @@ const ChatSidebar = ({ chats }: { chats: ChatSidebarItemType[] }) => {
                     ))}
                 </div>
             )}
+            {chats.length === 0 && (
+                <div className="pt-4 px-4 pb-1 w-full bg-[#2F3DF633]">
+                    <div className="flex items-center gap-2">
+                    <Image src="/Grmps/message.svg" alt="Unpinned" width={24} height={24} />
+                        <p className="text-small font-regular text-[#7E3FF2]">All Messages</p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

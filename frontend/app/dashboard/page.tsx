@@ -11,7 +11,7 @@ import { Suspense, useMemo, useContext, useEffect, useState, type ReactNode } fr
 import { useRouter, useSearchParams } from "next/navigation";
 import { CONFIG } from "@/config/config";
 import { UserInfoCtx } from "@/context/userContext";
-import { UserLoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import Loading from "@/components/loading";
 import { getBidsByFreelancerId, getGigsByFreelancerId, getJobsByClientId } from "@/utils/functions";
 import { toast } from "react-toastify";

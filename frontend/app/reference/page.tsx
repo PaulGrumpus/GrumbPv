@@ -2,7 +2,7 @@
 
 import { UserInfoCtx } from "@/context/userContext";
 import { getJobApplicationById, getJobById, getUserById } from "@/utils/functions";
-import { UserLoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useContext, useEffect, useState, Suspense } from "react";
 import Loading from "@/components/loading";

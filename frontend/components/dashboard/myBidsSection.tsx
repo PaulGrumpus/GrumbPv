@@ -4,7 +4,7 @@ import BidPost from "../bidPost";
 import SectionPlaceholder from "./sectionPlaceholder";
 import { useRouter } from "next/navigation";
 import { UserInfoCtx } from "@/context/userContext";
-import { UserLoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { getBidsByFreelancerId, getJobById } from "@/utils/functions";
 import { toast } from "react-toastify";
 import { Bid, BidStatus } from "@/types/bid";

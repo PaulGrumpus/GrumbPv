@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 import Button from "./button";
 import Image from "next/image";
@@ -10,6 +10,7 @@ import { EscrowBackendConfig } from "@/config/config";
 import { toast } from "react-toastify";
 import { createConversationAndParticipant, createJobApplication, deleteJobApplication, getBidById, getJobById, updateBidStatus } from "@/utils/functions";
 import { useRouter } from "next/navigation";
+import { ConversationsInfoCtx } from "@/context/conversationsContext";
 
 interface ApplicationWithUser extends Bid {
     user: User;
@@ -21,6 +22,7 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
     const [expanded, setExpanded] = useState(false);
     const [canToggle, setCanToggle] = useState(false);
     const coverLetterRef = useRef<HTMLParagraphElement>(null);
+    const { setConversationsInfo } = useContext(ConversationsInfoCtx);
     const router = useRouter();
 
     useEffect(() => {
@@ -82,6 +84,15 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
             if (!conversation.success) {
                 throw new Error(conversation.error as string);
             }
+
+            setConversationsInfo((prev) => [...prev, {
+                conversation: conversation.data,
+                participants: conversation.data.participants,
+                clientInfo: jobInfo.data.client_info,
+                freelancerInfo: jobInfo.data.freelancer_info,
+                jobInfo: jobInfo.data,
+                gigInfo: null,
+            }]);
 
             router.push(`/reference?jobApplicationId=${job_application_id}&conversationId=${conversation.data}`);
         } catch (error) {

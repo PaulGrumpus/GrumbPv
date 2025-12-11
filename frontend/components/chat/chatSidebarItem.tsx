@@ -18,7 +18,7 @@ interface ChatSidebarItemProps {
 const ChatSidebarItem = ({ name, image, status, lastMessage, lastMessageTime, selected, clickHandler, onPinChat, onUnpinChat }: ChatSidebarItemProps) => {
     return (
         <div 
-            className={`flex justify-between group hover:text-white hover:bg-linear-to-r hover:from-(--color-light-blue) hover:to-(--color-purple) ${selected ? "bg-linear-to-r from-(--color-light-blue) to-(--color-purple)" : ""} p-4 border-b border-[#8F99AFCC] cursor-pointer`}
+            className={`flex justify-between group hover:text-white hover:bg-linear-to-r hover:from-(--color-light-blue) hover:to-(--color-purple) ${selected ? "bg-linear-to-r from-(--color-light-blue) to-(--color-purple) text-white" : ""} p-4 border-b border-[#8F99AFCC] cursor-pointer text-black`}
             onClick={clickHandler}
         >
             <div className="max-w-75% flex items-center gap-2">
@@ -26,7 +26,7 @@ const ChatSidebarItem = ({ name, image, status, lastMessage, lastMessageTime, se
                     <Image src={EscrowBackendConfig.uploadedImagesURL + image} alt={name} width={36} height={36} />
                 </div>
                 <div className="flex flex-col">
-                    <p className="text-small font-regular text-black group-hover:text-white">{name}</p>
+                    <p className="text-small font-regular group-hover:text-white">{name}</p>
                     {status === "typing" ? (
                         <p className="text-tiny font-regular text-[#2F3DF6]">{status}...</p>
                     ) : (
@@ -34,7 +34,7 @@ const ChatSidebarItem = ({ name, image, status, lastMessage, lastMessageTime, se
                     )}
                 </div>
             </div>
-            <p className="text-tiny font-regular text-black group-hover:text-white">{lastMessageTime}</p>
+            <p className="text-tiny font-regular group-hover:text-white">{lastMessageTime}</p>
         </div>
     );
 };
