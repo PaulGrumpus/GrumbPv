@@ -30,7 +30,7 @@ const ChatSidebarItem = ({ name, image, status, lastMessage, lastMessageTime, se
                     {status === "typing" ? (
                         <p className="text-tiny font-regular text-[#2F3DF6]">{status}...</p>
                     ) : (
-                        <p className="text-tiny font-regular text-[#8F99AF] truncate group-hover:text-white">{lastMessage}</p>
+                        <p className={`text-tiny font-regular text-[#8F99AF] truncate group-hover:text-white ${selected ? "text-white" : ""}`}>{lastMessage}</p>
                     )}
                 </div>
             </div>

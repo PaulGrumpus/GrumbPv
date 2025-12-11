@@ -259,33 +259,74 @@ const ChatMain = ({sender, receiver, messages, conversation_id, isWriting, onSen
                             ref={messagesContainerRef}
                             className="flex-1 overflow-y-auto min-h-[calc(100vh-19.5rem)] max-h-[calc(100vh-19.5rem)] decorate-scrollbar pb-2"
                         >
-                            {messages && messages.length && messages.map((message, index) => (
-                                <div
-                                    key={index}
-                                    className={`flex ${
-                                    message.sender_id === sender.id ? "justify-end" : "justify-start"
-                                    }`}
-                                >
-                                    <div className="flex flex-col max-w-[80%]">
-                                        <span
-                                            className={`text-xs text-gray-400 mb-0.5 ${
-                                            message.sender_id === sender.id ? "text-right" : "text-left"
-                                            }`}
-                                        >
-                                            {message.sender_id === sender.id ? sender.display_name : receiver? receiver.display_name : "No receiver"}
-                                        </span>
-                                        <div
-                                            className={`py-2 px-3 rounded-lg wrap-break-word whitespace-pre-wrap ${
-                                            message.sender_id === sender.id
-                                                ? "bg-linear-to-r from-emerald-600 to-emerald-700"
-                                                : "bg-linear-to-r from-indigo-600 to-indigo-700"
-                                            } text-white text-sm`}
-                                        >
-                                            {message.body_text}
+                            {messages && messages.length && messages.map((message, index) => {
+                                // Check if this is the last message in a sequence from the same sender
+                                const isLastInSequence = index === messages.length - 1 || 
+                                    messages[index + 1]?.sender_id !== message.sender_id;
+                                
+                                return (
+                                    <div
+                                        key={index}
+                                        className={`flex py-1 ${
+                                        message.sender_id === sender.id ? "justify-end" : "justify-start"
+                                        }`}
+                                    >
+                                        <div className="flex flex-col max-w-[80%]">
+                                            {message.sender_id === sender.id ? (
+                                                <div className="flex items-end gap-2">
+                                                    <div
+                                                        className={`py-2 px-3 rounded-lg wrap-break-word whitespace-pre-wrap ${
+                                                        message.sender_id === sender.id
+                                                            ? "bg-linear-to-r from-emerald-600 to-emerald-700"
+                                                            : "bg-linear-to-r from-indigo-600 to-indigo-700"
+                                                        } text-white text-sm`}
+                                                    >
+                                                        {message.body_text}
+                                                    </div>
+                                                    {isLastInSequence ? (
+                                                        <div className="min-w-9 w-9 h-9 rounded-full overflow-hidden">
+                                                            <Image 
+                                                                src={EscrowBackendConfig.uploadedImagesURL + sender.image_id}
+                                                                alt="Sender Photo"
+                                                                width={36}
+                                                                height={36}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="min-w-9 w-9 h-9"></div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-end gap-2">
+                                                    {isLastInSequence ? (
+                                                        <div className="min-w-9 w-9 h-9 rounded-full overflow-hidden">
+                                                            <Image 
+                                                                src={EscrowBackendConfig.uploadedImagesURL + receiver?.image_id || EscrowBackendConfig.uploadedImagesURL + "/default.jpg"}
+                                                                alt="Receiver Photo"
+                                                                width={36}
+                                                                height={36}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="min-w-9 w-9 h-9"></div>
+                                                    )}
+                                                    <div
+                                                        className={`py-2 px-3 rounded-lg wrap-break-word whitespace-pre-wrap ${
+                                                        message.sender_id === sender.id
+                                                            ? "bg-linear-to-r from-emerald-600 to-emerald-700"
+                                                            : "bg-linear-to-r from-indigo-600 to-indigo-700"
+                                                        } text-white text-sm`}
+                                                    >
+                                                        {message.body_text}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             
                             <div ref={messagesEndRef} />
                         </div>

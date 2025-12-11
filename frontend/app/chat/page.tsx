@@ -52,7 +52,6 @@ const ChatPageContent = () => {
     };
 
     const handleSendMessage = (message: Message) => {
-        console.log("test-message", message);
         if(chatSocket.isConnected) {
             chatSocket.socket?.emit(websocket.WEBSOCKET_SEND_NEW_MESSAGE, {
                 user_id: userInfo.id,
@@ -92,10 +91,10 @@ const ChatPageContent = () => {
     useEffect(() => {
         if (!chatSocket.socket) return;
     
-        const handler = (msg: Message) => {
-            console.log("📩 Received new message:", msg);
+        const handler = (message: Message) => {
+            setChatSidebarItems((prev) => prev.map((chat) => chat.conversation_id === message.conversation_id && message.sender_id !== userInfo.id ? { ...chat, lastMessage: message.body_text ?? "" } : chat));
             setMessagesInfo((prev) => [...prev, {
-                ...msg,
+                ...message,
                 messageReceipt: [],
             }]);
         };
@@ -121,7 +120,7 @@ const ChatPageContent = () => {
             chatSocket.socket?.off(websocket.WEBSOCKET_WRITING_MESSAGE, handler);
             chatSocket.socket?.off(websocket.WEBSOCKET_STOP_WRITING_MESSAGE, handler);
         };
-    }, [chatSocket.socket]);
+    }, [chatSocket.socket, userInfo.id]);
 
     useEffect(() => {
         if(messageLoadingState === "success") {
@@ -138,7 +137,7 @@ const ChatPageContent = () => {
                             conversation_id: conversation.conversation.id,
                             receiver: conversation.clientInfo.id === userInfo.id ? conversation.freelancerInfo as User : conversation.clientInfo as User,
                             status: "idle",
-                            lastMessage: "Hello, how are you?",
+                            lastMessage: "",
                             lastMessageTime: now,
                             pinned: false,
                             selected: false,
