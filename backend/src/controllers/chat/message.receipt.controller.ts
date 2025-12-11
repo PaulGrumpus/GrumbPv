@@ -1,3 +1,4 @@
+import { Request, Response, NextFunction } from 'express';
 import { messageReceiptService } from '../../services/database/message.receipt.service.js';
 import { newMessageReceiptParam } from '../../types/message.receipt.js';
 import { AppError } from '../../middlewares/errorHandler.js';
@@ -29,55 +30,104 @@ export class MessageReceiptController {
         }
     }
 
-    public async getMessageReceiptById(id: string) {
+    public async getMessageReceiptById(req: Request, res: Response, next: NextFunction) {
         try {
+            const { id } = req.params;
             const result = await messageReceiptService.getMessageReceiptById(id);
             if (!result) {
                 throw new AppError('Message receipt not found', 404, 'MESSAGE_RECEIPT_NOT_FOUND');
             }
-            return result;
+            res.json({
+                success: true,
+                data: result,
+            });
         }
         catch (error) {
-            throw new AppError('Error getting message receipt by id', 500, 'MESSAGE_RECEIPT_GET_BY_ID_FAILED');
+            next(error);
         }
     }
 
-    public async getMessageReceiptsByMessageId(messageId: string) {
+    public async getMessageReceiptsByMessageId(req: Request, res: Response, next: NextFunction) {
         try {
+            const { messageId } = req.params;
             const result = await messageReceiptService.getMessageReceiptsByMessageId(messageId);
             if (!result) {
                 throw new AppError('Message receipts not found', 404, 'MESSAGE_RECEIPTS_NOT_FOUND');
             }
-            return result;
+            res.json({
+                success: true,
+                data: result,
+            });
         }
         catch (error) {
-            throw new AppError('Error getting message receipts by message id', 500, 'MESSAGE_RECEIPTS_GET_BY_MESSAGE_ID_FAILED');
+            next(error);
         }
     }
 
-    public async getMessageReceiptsByUserId(userId: string) {
+    public async getMessageReceiptsByUserId(req: Request, res: Response, next: NextFunction) {
         try {
+            const { userId } = req.params;
             const result = await messageReceiptService.getMessageReceiptsByUserId(userId);
             if (!result) {
-                throw new AppError('Message receipts not found', 404, 'MESSAGE_RECEIPTS_NOT_FOUND');
+                throw new AppError('Message receipts not found', 404, 'MESSAGE_RECEIPTS_NOT_FOUND');    
             }
-            return result;
+            res.json({
+                success: true,
+                data: result,
+            });
         }
         catch (error) {
-            throw new AppError('Error getting message receipts by user id', 500, 'MESSAGE_RECEIPTS_GET_BY_USER_ID_FAILED');
+            next(error);
         }
     }
 
-    public async getMessageReceiptsByMessageIdAndUserId(messageId: string, userId: string) {
+    public async getMessageReceiptsByMessageIdAndUserId(req: Request, res: Response, next: NextFunction) {
         try {
+            const { messageId, userId } = req.params;
             const result = await messageReceiptService.getMessageReceiptsByMessageIdAndUserId(messageId, userId);
             if (!result) {
                 throw new AppError('Message receipt not found', 404, 'MESSAGE_RECEIPT_NOT_FOUND');
             }
-            return result;
+            res.json({
+                success: true,
+                data: result,
+            });
         }
         catch (error) {
-            throw new AppError('Error getting message receipt by message id and user id', 500, 'MESSAGE_RECEIPT_GET_BY_MESSAGE_ID_AND_USER_ID_FAILED');
+            next(error);
+        }
+    }
+
+    public async getMessageReceiptsByDateRange(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { startDate, endDate } = req.params;
+            const result = await messageReceiptService.getMessageReceiptsByDateRange(new Date(startDate), new Date(endDate));
+            if (!result) {
+                throw new AppError('Message receipts not found', 404, 'MESSAGE_RECEIPTS_NOT_FOUND');
+            }
+            res.json({
+                success: true,
+                data: result,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+
+    public async getAllMessageReceipts(_req: Request, res: Response, next: NextFunction) {
+        try {
+            const result = await messageReceiptService.getAllMessageReceipts();
+            if (!result) {
+                throw new AppError('Message receipts not found', 404, 'MESSAGE_RECEIPTS_NOT_FOUND');
+            }
+            res.json({
+                success: true,
+                data: result,
+            });
+        }
+        catch (error) {
+            next(error);
         }
     }
 }

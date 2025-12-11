@@ -10,6 +10,8 @@ import { UserInfoProvider } from "@/context/userContext";
 import { UserLoadingProvider } from "@/context/userLoadingContext";
 import { ConversationLoadingProvider } from "@/context/conversationLoadingContext";
 import { ConversationsInfoProvider } from "@/context/conversationsContext";
+import { MessagesInfoProvider } from "@/context/messagesContext";
+import { MessageLoadingProvider } from "@/context/messageLoadingContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,10 +63,14 @@ export default function RootLayout({
           <UserInfoProvider>
             <ConversationLoadingProvider>
               <ConversationsInfoProvider>
-                <Navbar />
-                {children}
-                <Footer />
-                <ToastContainer />
+                <MessageLoadingProvider>
+                  <MessagesInfoProvider>
+                    <Navbar />
+                    {children}
+                    <Footer />
+                    <ToastContainer />
+                  </MessagesInfoProvider>
+                </MessageLoadingProvider>
               </ConversationsInfoProvider>
             </ConversationLoadingProvider>
           </UserInfoProvider>

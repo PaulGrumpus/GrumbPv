@@ -12,3 +12,25 @@ export interface Message {
 }
 
 export type MessageKind = 'text' | 'image' | 'file' | 'system';
+
+export interface MessageReceipt {
+    id: string;
+    message_id: string;
+    user_id: string;
+    state: ReadState;
+    created_at: Date;
+}
+
+export type ReadState = 'sent' | 'delivered' | 'read';
+
+export interface MessageInfo {
+    message: Message;
+    messageReceipt: MessageReceipt[];
+}
+
+export interface MessageContextType {
+    messagesInfo: MessageInfo[];
+    setMessagesInfo: React.Dispatch<React.SetStateAction<MessageInfo[]>>;
+    messagesError: string;
+    setMessagesError: React.Dispatch<React.SetStateAction<string>>;
+}

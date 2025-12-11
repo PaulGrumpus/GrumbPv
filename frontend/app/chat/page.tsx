@@ -1,23 +1,19 @@
 'use client';
 
+import { useSearchParams } from "next/navigation";
 import ChatNavbar from "@/components/chat/chatNavbar";
 import ChatSidebar from "@/components/chat/chatSidebar";
 import { User } from "@/types/user";
 import { Job } from "@/types/jobs";
-import { Gig } from "@/types/gigs";
-import { Conversation } from "@/types/conversation";
-import { ConversationParticipant } from "@/types/conversation.participant";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, Suspense } from "react";
 import { UserInfoCtx } from "@/context/userContext";
-import { UserLoadingCtx } from "@/context/userLoadingContext";
 import Loading from "@/components/loading";
-import { getConversationByParticipant, getJobs } from "@/utils/functions";
 import router from "next/router";
 import ChatComb from "@/components/chat/chatComb";
-import { toast } from "react-toastify";
-import { ConversationInfo } from "@/types/conversation";
 import { ConversationsInfoCtx } from "@/context/conversationsContext";
 import { ConversationLoadingCtx } from "@/context/conversationLoadingContext";
+import { MessagesInfoCtx } from "@/context/messagesContext";
+import { MessageLoadingCtx } from "@/context/messageLoadingContext";
 
 interface ChatSidebarItem {
     conversation_id: string;
@@ -32,15 +28,27 @@ interface ChatSidebarItem {
     onUnpinChat: () => void;
 }
 
-const ChatPage = () => {
+const ChatPageContent = () => {
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const [loading, setLoading] = useState("pending");
-    const [jobs, setJobs] = useState<Job[]>([]);
     const [chatSidebarItems, setChatSidebarItems] = useState<ChatSidebarItem[]>([]);
     const { conversationsInfo, setConversationsInfo } = useContext(ConversationsInfoCtx);
-    const { conversationLoadingState, setconversationLoadingState } = useContext(ConversationLoadingCtx);
+    const { messagesInfo, setMessagesInfo } = useContext(MessagesInfoCtx);
+    const { messageLoadingState, setmessageLoadingState } = useContext(MessageLoadingCtx);
+    const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+
+    const searchParams = useSearchParams();
+    const conversationId = searchParams.get("conversationId");
+
+    const handleChatClick = (conversation_id: string) => {
+        setSelectedConversationId(conversation_id);
+        chatSidebarItems.forEach((chat) => {
+            chat.selected = chat.conversation_id === conversation_id;
+        });
+    };
+    
     useEffect(() => {
-        if(conversationLoadingState === "success") {
+        if(messageLoadingState === "success") {
             if(userInfo.id === "") {
                 router.push("/");
                 return;
@@ -58,23 +66,32 @@ const ChatPage = () => {
                             lastMessageTime: now,
                             pinned: false,
                             selected: false,
-                            onChatClick: () => {},
+                            onChatClick: () => {
+                                handleChatClick(conversation.conversation.id);
+                            },
                             onPinChat: () => {},
                             onUnpinChat: () => {},
                         }]);
                     });
 
+                    if(conversationId) {
+                        handleChatClick(conversationId as string);
+                    } else {
+                        handleChatClick(conversationsInfo[0].conversation.id);
+                    }
+
                     console.log("test-conversationsInfo", conversationsInfo);
+                    console.log("test-messagesInfo", messagesInfo);
 
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }
                 loadConversations();
             }
-        } else if (conversationLoadingState === "failure") {
+        } else if (messageLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, conversationLoadingState, router]);
+    }, [userInfo, messageLoadingState, router]);
 
     if(loading === "pending") {
         return <Loading />;
@@ -91,10 +108,10 @@ const ChatPage = () => {
                         />
                     </div>
                     <div className="w-[75%]">
-                        <ChatComb 
+                        <ChatComb
                             sender={userInfo} 
-                            receiver={chatSidebarItems.length > 0 ? chatSidebarItems[0].receiver : null} 
-                            job={conversationsInfo.length > 0 ? conversationsInfo[0].jobInfo as Job : null} 
+                            receiver={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.receiver as User ?? null : null} 
+                            job={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.conversation.id === selectedConversationId)?.jobInfo as Job ?? null : null} 
                             clientName={``} 
                             acceptHandler={() => {}} 
                             messages={[]} 
@@ -107,6 +124,14 @@ const ChatPage = () => {
     } else {
         return <Loading />;
     }
+}
+
+const ChatPage = () => {
+    return (
+        <Suspense fallback={<Loading />}>
+            <ChatPageContent />
+        </Suspense>
+    );
 }
 
 export default ChatPage;

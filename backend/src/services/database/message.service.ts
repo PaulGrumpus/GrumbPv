@@ -56,6 +56,55 @@ export class MessageService {
         }
     }
 
+    public async getMessagesByDateRangeAndConversationId(startDate: Date, endDate: Date, conversationIds: string[]): Promise<messages[]> {
+        try {
+            const messages = await this.prisma.messages.findMany({
+                where: { created_at: { gte: startDate, lte: endDate }, conversation_id: { in: conversationIds }, receipts: {
+                    some: {
+                        user_id: {
+                            not: { in: conversationIds },
+                        },
+                    },
+                } },
+                orderBy: { created_at: 'desc' },
+                include: {
+                    receipts: true,
+                },
+            });
+            return messages;
+        }
+        catch (error) {
+            logger.error('Error getting messages by latest period', { error });
+            throw new AppError('Error getting messages by latest period', 500, 'MESSAGES_GET_BY_LATEST_PERIOD_FAILED');
+        }
+    }
+
+    public async getAllMessagesByConversationIds(conversationIds: string[]): Promise<messages[]> {
+        try {
+            const messages = await this.prisma.messages.findMany({
+                where: { 
+                    conversation_id: { in: conversationIds },
+                    receipts: {
+                        some: {
+                            user_id: {
+                                not: { in: conversationIds },
+                            },
+                        },
+                    },
+                },
+                include: {
+                    receipts: true,
+                },
+                orderBy: { created_at: 'desc' },
+            });
+            return messages;
+        }
+        catch (error) {
+            logger.error('Error getting all messages', { error });
+            throw new AppError('Error getting all messages', 500, 'MESSAGES_GET_ALL_FAILED');
+        }
+    }
+
     public async updateMessage(id: string, message: messages): Promise<messages> {
         try {
             const updatedMessage = await this.prisma.messages.update({

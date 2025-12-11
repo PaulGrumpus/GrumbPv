@@ -52,6 +52,44 @@ export class MessageController {
         }
     }
 
+    public async getMessagesByDateRangeAndConversationIds(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { startDate, endDate } = req.params;
+            const { conversationIds } = req.body;
+            const result = await messageService.getMessagesByDateRangeAndConversationId(new Date(startDate), new Date(endDate), conversationIds);
+            if (!result) {
+                throw new AppError('Messages not found', 404, 'MESSAGES_NOT_FOUND');
+            }
+            res.json({
+                success: true,
+                data: result,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+
+    public async getAllMessagesByConversationIds(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { conversationIds } = req.body;
+
+            console.log("test-conversationIds", conversationIds);
+
+            const result = await messageService.getAllMessagesByConversationIds(conversationIds);
+            if (!result) {
+                throw new AppError('Messages not found', 404, 'MESSAGES_NOT_FOUND');
+            }
+            res.json({
+                success: true,
+                data: result,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+
     public async updateMessageById(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;

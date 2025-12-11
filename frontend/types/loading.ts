@@ -11,3 +11,10 @@ export type ConversationLoadingContextType = {
   conversationLoadingState: conversationLoadingState;
   setconversationLoadingState: React.Dispatch<React.SetStateAction<conversationLoadingState>>;
 };
+
+export type messageLoadingState = "pending" | "failure" | "success";
+
+export type MessageLoadingContextType = {
+  messageLoadingState: messageLoadingState;
+  setmessageLoadingState: React.Dispatch<React.SetStateAction<messageLoadingState>>;
+};

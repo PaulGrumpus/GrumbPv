@@ -82,6 +82,33 @@ export class MessageReceiptService {
         }
     }
 
+    public async getMessageReceiptsByDateRange(startDate: Date, endDate: Date): Promise<message_receipts[]> {
+        try {
+            const messageReceipts = await this.prisma.message_receipts.findMany({
+                where: { created_at: { gte: startDate, lte: endDate } },
+                orderBy: { created_at: 'desc' },
+            });
+            return messageReceipts;
+        }
+        catch (error) {
+            logger.error('Error getting message receipts by date range', { error });
+            throw new AppError('Error getting message receipts by date range', 500, 'MESSAGE_RECEIPTS_GET_BY_DATE_RANGE_FAILED');
+        }
+    }
+
+    public async getAllMessageReceipts(): Promise<message_receipts[]> {
+        try {
+            const messageReceipts = await this.prisma.message_receipts.findMany({
+                orderBy: { created_at: 'desc' },
+            });
+            return messageReceipts;
+        }
+        catch (error) {
+            logger.error('Error getting all message receipts', { error });
+            throw new AppError('Error getting all message receipts', 500, 'MESSAGE_RECEIPTS_GET_ALL_FAILED');
+        }
+    }
+
     public async updateMessageReceipt(message_id: string, user_id: string, state: read_state): Promise<message_receipts> {
         try {
             const updatedMessageReceipt = await this.prisma.message_receipts.update({

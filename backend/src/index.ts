@@ -24,6 +24,8 @@ import gigRoutes from './routes/database/gig.routes.js';
 import jobApplicationRoutes from './routes/database/job.application.routes.js';
 import conversationRoutes from './routes/chat/conversation.routes.js';
 import conversationParticipantRoutes from './routes/chat/conversation.participant.routes.js';
+import messageRoutes from './routes/chat/message.routes.js';
+import messageReceiptRoutes from './routes/chat/message.receipt.routes.js';
 import http from 'http'; 
 import { Server } from 'socket.io';
 import { socket_router } from './routes/socket.routes.js';
@@ -81,6 +83,8 @@ app.use(`${API_PREFIX}/database/gigs`, gigRoutes);
 app.use(`${API_PREFIX}/database/job-applications`, jobApplicationRoutes);
 app.use(`${API_PREFIX}/database/conversations`, conversationRoutes);
 app.use(`${API_PREFIX}/database/conversation-participants`, conversationParticipantRoutes);
+app.use(`${API_PREFIX}/database/messages`, messageRoutes);
+app.use(`${API_PREFIX}/database/message-receipts`, messageReceiptRoutes);
 
 // Error handlers (must be last)
 app.use(notFoundHandler);
