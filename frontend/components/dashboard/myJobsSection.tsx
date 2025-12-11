@@ -3,7 +3,7 @@ import Button from "../button";
 import UserJobOrGigPost from "../userJobOrGigPost";
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/loadingContext";
 import { UserInfoCtx } from "@/context/userContext";
 import Loading from "../loading";
 import { Job, LocationType } from "@/types/jobs";
@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 const MyJobsSection = () => {
     const router = useRouter();
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [jobs, setJobs] = useState<Job[]>([]);
 
@@ -41,15 +41,15 @@ const MyJobsSection = () => {
     }
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
-                setLoadingState("failure");
+                setuserLoadingState("failure");
                 return;
             }
             if (userInfo && userInfo.id) {
                 const loadJobs = async () => {
                     if (!userInfo?.id) {
-                        setLoadingState("failure");
+                        setuserLoadingState("failure");
                         return;
                     }
                     await getJobsPerClientId(userInfo.id);
@@ -57,10 +57,10 @@ const MyJobsSection = () => {
         
                 loadJobs();
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState])
+    }, [userInfo, userLoadingState])
 
     if (loading === "pending") {
         return <Loading />;
@@ -105,7 +105,7 @@ const MyJobsSection = () => {
                         </div>
                     </div>
                 ) : (
-                    loadingState === "success" && (<div className="flex flex-col items-center justify-center gap-20 mb-38">
+                    userLoadingState === "success" && (<div className="flex flex-col items-center justify-center gap-20 mb-38">
                         <p className="text-normal font-regular text-black">No jobs found.</p>
                         <Button
                             padding='px-7 py-3'

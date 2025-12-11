@@ -2,24 +2,24 @@
 
 import { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/loadingContext";
 import Loading from "@/components/loading";
 import { UserInfoCtx } from "@/context/userContext";
 import Image from "next/image";
 
 const Home = () => {
-  const { loadingState } = useContext(LoadingCtx);
+  const { userLoadingState } = useContext(UserLoadingCtx);
   const [loading, setLoading] = useState("pending");
 
   useEffect(() => {
-    if(loadingState !== "pending") {
+    if(userLoadingState !== "pending") {
         const load = async () => {
             await new Promise(resolve => setTimeout(resolve, 3000));
             setLoading("success");
         }
         load();
     }
-}, [loadingState])
+}, [userLoadingState])
 
   if (loading === "pending") {
     return <Loading />;

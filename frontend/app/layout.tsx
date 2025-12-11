@@ -7,7 +7,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { UserInfoProvider } from "@/context/userContext";
-import { LoadingProvider } from "@/context/loadingContext";
+import { UserLoadingProvider } from "@/context/loadingContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,14 +55,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${roboto.variable} ${poppins.variable} ${inter.variable} antialiased bg-white`}
       >
-        <LoadingProvider>
+        <UserLoadingProvider>
           <UserInfoProvider>
             <Navbar />
             {children}
             <Footer />
             <ToastContainer />
           </UserInfoProvider>
-        </LoadingProvider>
+        </UserLoadingProvider>
       </body>
     </html>
   );

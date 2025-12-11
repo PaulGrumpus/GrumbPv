@@ -5,7 +5,7 @@ import { Gig } from "@/types/gigs";
 import { LocationType } from "@/types/jobs";
 import { useContext, useEffect, useState } from "react";
 import { UserInfoCtx } from "@/context/userContext";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/loadingContext";
 import { getGigs } from "@/utils/functions";
 import Loading from "@/components/loading";
 import { EscrowBackendConfig } from "@/config/config";
@@ -72,12 +72,12 @@ const gigs = [
 const GigsPage = () => {
 
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [gigs, setGigs] = useState<Gig[]>([]);
     
     useEffect(() => {
-        if(loadingState !== "pending") {
+        if(userLoadingState !== "pending") {
             const loadGigs = async () => {
                 const result = await getGigs();
                 if(result.success) {
@@ -88,7 +88,7 @@ const GigsPage = () => {
             }
             loadGigs();
         }
-    }, [userInfo, loadingState])
+    }, [userInfo, userLoadingState])
 
     if (loading === "pending") {
         return <Loading />;

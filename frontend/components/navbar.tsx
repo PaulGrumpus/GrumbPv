@@ -10,7 +10,7 @@ import { CONFIG, EscrowBackendConfig } from "@/config/config";
 import LoginSignupModal from "./loginSignupModal";
 import { UserInfoCtx } from "@/context/userContext";
 import { toast } from "react-toastify";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/loadingContext";
 
 
 const userPhoto = "/Grmps/grmps.jpg";
@@ -199,10 +199,10 @@ const Navbar = () => {
 const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
     const { setUserInfo } = useContext(UserInfoCtx);
     const router = useRouter();
-    const { setLoadingState } = useContext(LoadingCtx);
+    const { setuserLoadingState } = useContext(UserLoadingCtx);
     
     const handleLogOut = () => {
-        setLoadingState("pending");
+        setuserLoadingState("pending");
         window.localStorage.removeItem('token');
         toast.success("Logged out successfully", {
             position: "top-right",
@@ -225,7 +225,7 @@ const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
             created_at: '',
             updated_at: ''
         });
-        setLoadingState("pending");
+        setuserLoadingState("pending");
         router.push('/');
     }
     return (

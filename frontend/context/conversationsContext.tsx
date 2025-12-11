@@ -8,7 +8,7 @@ import {
     useState,
 } from "react";
 import { ConversationInfoContextType, Conversations } from "@/types/conversation";
-import { LoadingCtx } from "./loadingContext";
+import { UserLoadingCtx } from "./loadingContext";
 import { getConversationByParticipant } from "@/utils/functions";
 import { UserInfoCtx } from "./userContext";
 
@@ -29,17 +29,17 @@ const ConversationsInfoProvider = ({ children }: Props) => {
     const [conversationsInfo, setConversationsInfo] = useState<Conversations[]>(defaultProvider.conversationsInfo);
     const [conversationsError, setConversationsError] = useState<string>(defaultProvider.conversationsError);
     const { userInfo } = useContext(UserInfoCtx);
-    const { setLoadingState } = useContext(LoadingCtx);
+    const { setuserLoadingState } = useContext(UserLoadingCtx);
 
     const init = async () => {
-        setLoadingState("pending");
+        setuserLoadingState("pending");
         const conversations = await getConversationByParticipant(userInfo.id);
         if(conversations.success) {
             setConversationsInfo(conversations.data ?? []);
-            setLoadingState("success");
+            setuserLoadingState("success");
         } else {
             setConversationsError(conversations.error as string);
-            setLoadingState("failure");
+            setuserLoadingState("failure");
         }
     }
 

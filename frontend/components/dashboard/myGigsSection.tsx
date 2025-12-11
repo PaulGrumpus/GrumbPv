@@ -4,7 +4,7 @@ import UserJobOrGigPost from "../userJobOrGigPost";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import { UserInfoCtx } from "@/context/userContext";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/loadingContext";
 import { Gig } from "@/types/gigs";
 import { toast } from "react-toastify";
 import { getGigsByFreelancerId } from "@/utils/functions";
@@ -15,7 +15,7 @@ import { LocationType } from "@/types/jobs";
 const MyGigsSection = () => {
     const router = useRouter();
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [gigs, setGigs] = useState<Gig[]>([]);
 
@@ -42,15 +42,15 @@ const MyGigsSection = () => {
     }
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
-                setLoadingState("failure");
+                setuserLoadingState("failure");
                 return;
             }
             if (userInfo && userInfo.id) {
                 const loadGigs = async () => {
                     if (!userInfo?.id) {
-                        setLoadingState("failure");
+                        setuserLoadingState("failure");
                         return;
                     }
                     await getGigsPerFreelancerId(userInfo.id);
@@ -58,10 +58,10 @@ const MyGigsSection = () => {
         
                 loadGigs();
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState])
+    }, [userInfo, userLoadingState])
 
         if (loading === "pending") {
         return <Loading />;

@@ -6,7 +6,7 @@ import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon } fro
 import Button from "../button";
 import Image from "next/image";
 import { toast } from "react-toastify";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/loadingContext";
 import { useRouter } from "next/navigation";
 import { UserInfoCtx } from "@/context/userContext";
 import Loading from "../loading";
@@ -36,7 +36,7 @@ const CreateJobSection = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploadedFileName, setUploadedFileName] = useState<string>("");
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const router = useRouter();
@@ -185,9 +185,9 @@ const CreateJobSection = () => {
     }
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
-                setLoadingState("failure");
+                setuserLoadingState("failure");
                 return;
             }
             if (userInfo && userInfo.id) {
@@ -197,10 +197,10 @@ const CreateJobSection = () => {
                 }
                 loadCreateJob();
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState, router])
+    }, [userInfo, userLoadingState, router])
 
     if (loading === "pending") {
         return <Loading />;

@@ -1,6 +1,6 @@
-export type LoadingState = "pending" | "failure" | "success";
+export type userLoadingState = "pending" | "failure" | "success";
 
 export type LoadingContextType = {
-  loadingState: LoadingState;
-  setLoadingState: React.Dispatch<React.SetStateAction<LoadingState>>;
+  userLoadingState: userLoadingState;
+  setuserLoadingState: React.Dispatch<React.SetStateAction<userLoadingState>>;
 };

@@ -2,7 +2,7 @@
 
 import { UserInfoCtx } from "@/context/userContext";
 import { getJobApplicationById, getJobById, getUserById } from "@/utils/functions";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/loadingContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useContext, useEffect, useState, Suspense } from "react";
 import Loading from "@/components/loading";
@@ -14,7 +14,7 @@ const ReferencePageContent = () => {
     const jobApplicationId = param.get("jobApplicationId");
 
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const router = useRouter();
 
@@ -28,7 +28,7 @@ const ReferencePageContent = () => {
     const [currency, setCurrency] = useState("USD");
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
                 router.push("/");
                 return;
@@ -61,10 +61,10 @@ const ReferencePageContent = () => {
                 }
                 getJob();
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState, router, jobApplicationId])
+    }, [userInfo, userLoadingState, router, jobApplicationId])
 
     if (loading === "pending") {
         return <Loading />;

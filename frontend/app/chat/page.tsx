@@ -9,7 +9,7 @@ import { Conversation } from "@/types/conversation";
 import { ConversationParticipant } from "@/types/conversation.participant";
 import { useContext, useEffect, useState } from "react";
 import { UserInfoCtx } from "@/context/userContext";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/loadingContext";
 import Loading from "@/components/loading";
 import { getConversationByParticipant, getJobs } from "@/utils/functions";
 import router from "next/router";
@@ -19,12 +19,12 @@ import { Conversations } from "@/types/conversation";
 
 const ChatPage = () => {
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [jobs, setJobs] = useState<Job[]>([]);
     const [conversations, setConversations] = useState<Conversations[]>([]);
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
                 router.push("/");
                 return;
@@ -59,10 +59,10 @@ const ChatPage = () => {
                 }
                 loadJobs();
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState, router]);
+    }, [userInfo, userLoadingState, router]);
 
     if(loading === "pending") {
         return <Loading />;

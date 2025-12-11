@@ -2,7 +2,7 @@
 
 import DashboardPosts from "@/components/dashboardPosts";
 import Loading from "@/components/loading";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/loadingContext";
 import { UserInfoCtx } from "@/context/userContext";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -66,20 +66,20 @@ const DashboardOverview = () => {
     const completedJobPosts = myCompletedJobs;
     const visibleCompletedJobPosts = showAllCompletedJobs ? completedJobPosts : completedJobPosts.slice(0, 2);
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const router = useRouter();
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
-                setLoadingState("failure");
+                setuserLoadingState("failure");
                 return;
             }
             if (userInfo && userInfo.id) {
                 const loadDashboardPosts = async () => {
                     if (!userInfo?.id) {
-                        setLoadingState("failure");
+                        setuserLoadingState("failure");
                         return;
                     }
                     // await getGigsPerFreelancerId(userInfo.id);
@@ -89,10 +89,10 @@ const DashboardOverview = () => {
         
                 loadDashboardPosts();
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState])
+    }, [userInfo, userLoadingState])
 
         if (loading === "pending") {
         return <Loading />;

@@ -4,7 +4,7 @@ import Button from '@/components/button'
 import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDownIcon, ChevronUpIcon, XMarkIcon } from "@heroicons/react/20/solid";
-import { LoadingCtx } from '@/context/loadingContext';
+import { UserLoadingCtx } from '@/context/loadingContext';
 import { useContext } from 'react';
 import Loading from '@/components/loading';
 import { UserInfoCtx } from '@/context/userContext';
@@ -56,7 +56,7 @@ const ProfilePage = () => {
         selectedLanguage: "",
     });  
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const router = useRouter();
 
@@ -274,7 +274,7 @@ const ProfilePage = () => {
     }, [dropdownMenuOpen]);
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
                 router.push("/");
                 return;
@@ -302,10 +302,10 @@ const ProfilePage = () => {
                 }
                 loadProfile();
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState, router])
+    }, [userInfo, userLoadingState, router])
 
     if (loading === "pending") {
         return <Loading />;

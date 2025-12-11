@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 import { createUserWithAddress, createUserWithEmail, loginWithAddress, loginWithEmail } from "@/utils/functions";
 import { UserInfoCtx } from "@/context/userContext";
 import { useRouter } from "next/navigation";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/loadingContext";
 
 interface LoginSignupModalProps {
     isOpen: boolean;
@@ -152,7 +152,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     const [isWalletConnecting, setIsWalletConnecting] = useState(false);
     const [isMetaMaskAvailable, setIsMetaMaskAvailable] = useState(true);
     const { setUserInfo } = useContext(UserInfoCtx);
-    const { setLoadingState } = useContext(LoadingCtx);
+    const { setuserLoadingState } = useContext(UserLoadingCtx);
     const [error, setError] = useState("");
 
     useEffect(() => {
@@ -415,7 +415,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
         }
         setIsOpen(false);
         router.push("/profile");
-        setLoadingState("pending");
+        setuserLoadingState("pending");
     };
 
     const handleRegisterWithMetamask = async () => {
@@ -485,7 +485,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
         setRememberMe(false);
         setTermsAndPolicy(false);
         router.push("/profile");
-        setLoadingState("pending");
+        setuserLoadingState("pending");
     }
 
     const handleRegister = () => {
@@ -585,7 +585,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
         setRegisterProcessing(false);
         setIsOpen(false);
         router.push("/profile");
-        setLoadingState("pending");
+        setuserLoadingState("pending");
         setEmail("");
         setPassword("");
         setShowPassword(false);

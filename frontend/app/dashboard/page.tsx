@@ -11,7 +11,7 @@ import { Suspense, useMemo, useContext, useEffect, useState, type ReactNode } fr
 import { useRouter, useSearchParams } from "next/navigation";
 import { CONFIG } from "@/config/config";
 import { UserInfoCtx } from "@/context/userContext";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/loadingContext";
 import Loading from "@/components/loading";
 import { getBidsByFreelancerId, getGigsByFreelancerId, getJobsByClientId } from "@/utils/functions";
 import { toast } from "react-toastify";
@@ -77,7 +77,7 @@ const DashboardPageContent = () => {
     const selectedSidebarLabel = SLUG_TO_SIDEBAR_LABEL[normalizedSlug] ?? activeSection.label;
     const [userRole, setUserRole] = useState("client");
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const router = useRouter();
     const [myBidsCount, setMyBidsCount] = useState(0);
@@ -187,7 +187,7 @@ const DashboardPageContent = () => {
     }
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
                 router.push("/");
                 return;
@@ -206,10 +206,10 @@ const DashboardPageContent = () => {
                 }
                 loadCounts();
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState, router])
+    }, [userInfo, userLoadingState, router])
 
     if (loading === "pending") {
         return <Loading />;

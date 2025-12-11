@@ -7,7 +7,7 @@ import Button from "../button";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import { UserInfoCtx } from "@/context/userContext";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/loadingContext";
 import { useRouter } from "next/navigation";
 import Loading from "../loading";
 import { createGig } from "@/utils/functions";
@@ -27,7 +27,7 @@ const CreateGigSection = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploadedFileName, setUploadedFileName] = useState<string>("");
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const [error, setError] = useState("");
@@ -145,9 +145,9 @@ const CreateGigSection = () => {
     }
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
-                setLoadingState("failure");
+                setuserLoadingState("failure");
                 return;
             }
             if (userInfo && userInfo.id) {
@@ -157,10 +157,10 @@ const CreateGigSection = () => {
                 }
                 loadCreateGig();
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState, router])
+    }, [userInfo, userLoadingState, router])
 
     if (loading === "pending") {
         return <Loading />;

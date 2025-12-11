@@ -4,7 +4,7 @@ import BidPost from "../bidPost";
 import SectionPlaceholder from "./sectionPlaceholder";
 import { useRouter } from "next/navigation";
 import { UserInfoCtx } from "@/context/userContext";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/loadingContext";
 import { getBidsByFreelancerId, getJobById } from "@/utils/functions";
 import { toast } from "react-toastify";
 import { Bid, BidStatus } from "@/types/bid";
@@ -15,7 +15,7 @@ import { BidPostProps } from "@/types/bid";
 const MyBidsSection = () => {
     const router = useRouter();
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [bids, setBids] = useState<BidPostProps[]>([]);
 
@@ -100,15 +100,15 @@ const MyBidsSection = () => {
     }
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
-                setLoadingState("failure");
+                setuserLoadingState("failure");
                 return;
             }
             if (userInfo && userInfo.id) {
                 const loadBids = async () => {
                     if (!userInfo?.id) {
-                        setLoadingState("failure");
+                        setuserLoadingState("failure");
                         return;
                     }
                     await getBidsPerFreelancerId(userInfo.id);
@@ -116,10 +116,10 @@ const MyBidsSection = () => {
         
                 loadBids();
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState])
+    }, [userInfo, userLoadingState])
 
     if (loading === "pending") {
         return <Loading />;
