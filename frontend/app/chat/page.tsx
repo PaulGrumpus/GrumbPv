@@ -63,6 +63,23 @@ const ChatPageContent = () => {
         }
     };
 
+    const handleWritingMessage = (conversation_id: string) => {
+        if(chatSocket.isConnected) {
+            chatSocket.socket?.emit(websocket.WEBSOCKET_SEND_WRITING_MESSAGE, {
+                conversation_id: conversation_id,
+                sender_id: userInfo.id,
+            });
+        }
+    };
+
+    const handleStopWritingMessage = (conversation_id: string) => {
+        if(chatSocket.isConnected) {
+            chatSocket.socket?.emit(websocket.WEBSOCKET_SEND_STOP_WRITING_MESSAGE, {
+                conversation_id: conversation_id,
+                sender_id: userInfo.id,
+            });
+        }
+    };
     useEffect(() => {
         console.log("chatSocket.isConnected =", chatSocket.isConnected);
 
@@ -84,9 +101,25 @@ const ChatPageContent = () => {
         };
     
         chatSocket.socket.on(websocket.WEBSOCKET_NEW_MESSAGE, handler);
+        chatSocket.socket.on(websocket.WEBSOCKET_WRITING_MESSAGE, (param: { conversation_id: string, sender_id: string }) => {
+            console.log("test-writingMessage", param);
+            console.log("test-userInfo.id", userInfo.id);
+            if(param.sender_id !== userInfo.id) {
+                setChatSidebarItems((prev) => prev.map((chat) => chat.conversation_id === param.conversation_id ? { ...chat, status: "typing" } : chat));
+            }
+        });
+        chatSocket.socket.on(websocket.WEBSOCKET_STOP_WRITING_MESSAGE, (param: { conversation_id: string, sender_id: string }) => {
+            console.log("test-stopWritingMessage", param);
+            console.log("test-userInfo.id", userInfo.id);
+            if(param.sender_id !== userInfo.id) {
+                setChatSidebarItems((prev) => prev.map((chat) => chat.conversation_id === param.conversation_id ? { ...chat, status: "idle" } : chat));
+            }
+        });
     
         return () => {
             chatSocket.socket?.off(websocket.WEBSOCKET_NEW_MESSAGE, handler);
+            chatSocket.socket?.off(websocket.WEBSOCKET_WRITING_MESSAGE, handler);
+            chatSocket.socket?.off(websocket.WEBSOCKET_STOP_WRITING_MESSAGE, handler);
         };
     }, [chatSocket.socket]);
 
@@ -104,7 +137,7 @@ const ChatPageContent = () => {
                         setChatSidebarItems((prev) => [...prev, {
                             conversation_id: conversation.conversation.id,
                             receiver: conversation.clientInfo.id === userInfo.id ? conversation.freelancerInfo as User : conversation.clientInfo as User,
-                            status: "typing",
+                            status: "idle",
                             lastMessage: "Hello, how are you?",
                             lastMessageTime: now,
                             pinned: false,
@@ -159,7 +192,10 @@ const ChatPageContent = () => {
                             clientName={``} 
                             acceptHandler={() => {}} 
                             messages={messagesInfo.filter((message) => message.conversation_id === selectedConversationId) as Message[] ?? []} 
+                            isWriting={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.status === "typing" ? true : false : false}
                             onSendMessage={handleSendMessage} 
+                            onWritingMessage={handleWritingMessage}
+                            onStopWritingMessage={handleStopWritingMessage}
                         />
                     </div>
                 </div>

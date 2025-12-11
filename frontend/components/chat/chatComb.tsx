@@ -13,10 +13,13 @@ interface ChatCombProps {
     clientName: string;
     acceptHandler: () => void;
     messages: Message[];
+    isWriting: boolean;
     onSendMessage: (message: Message) => void;
+    onWritingMessage: (conversation_id: string) => void;
+    onStopWritingMessage: (conversation_id: string) => void;
 }
 
-const ChatComb = ({ sender, receiver, job, conversation_id, clientName, acceptHandler, messages, onSendMessage }: ChatCombProps) => {
+const ChatComb = ({ sender, receiver, job, conversation_id, clientName, acceptHandler, messages, isWriting, onSendMessage, onWritingMessage, onStopWritingMessage }: ChatCombProps) => {
     return (
         <div className="flex">
             <div className="flex-1 w-[70%]">
@@ -25,7 +28,10 @@ const ChatComb = ({ sender, receiver, job, conversation_id, clientName, acceptHa
                     sender={sender} 
                     receiver={receiver} 
                     messages={messages} 
+                    isWriting={isWriting}
                     onSendMessage={onSendMessage}
+                    onWritingMessage={onWritingMessage}
+                    onStopWritingMessage={onStopWritingMessage}
                 />
             </div>
             <div className="flex-end max-w-[30%]">

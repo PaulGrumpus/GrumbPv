@@ -10,6 +10,7 @@ interface ChatMainProps {
     receiver: User | null;
     messages: Message[];
     conversation_id: string;
+    isWriting: boolean;
     onSendMessage: (message: Message) => void;
     onEditMessage?: (message: Message) => void;
     onDeleteMessage?: (message: Message) => void;
@@ -22,9 +23,11 @@ interface ChatMainProps {
     onSaveMessage?: (message: Message) => void;
     onPhoneCall?: () => void;
     onVideoCall?: () => void;
+    onWritingMessage: (conversation_id: string) => void;
+    onStopWritingMessage: (conversation_id: string) => void;
 }
 
-const ChatMain = ({sender, receiver, messages, conversation_id, onSendMessage, onEditMessage, onDeleteMessage, onReadMessage, onUnreadMessage, onPinMessage, onUnpinMessage, onReplyToMessage, onForwardMessage, onSaveMessage, onPhoneCall, onVideoCall }: ChatMainProps) => {
+const ChatMain = ({sender, receiver, messages, conversation_id, isWriting, onSendMessage, onEditMessage, onDeleteMessage, onReadMessage, onUnreadMessage, onPinMessage, onUnpinMessage, onReplyToMessage, onForwardMessage, onSaveMessage, onPhoneCall, onVideoCall, onWritingMessage, onStopWritingMessage }: ChatMainProps) => {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -35,6 +38,8 @@ const ChatMain = ({sender, receiver, messages, conversation_id, onSendMessage, o
     const prevTextareaHeightRef = useRef<number>(0);
     const initialTextareaHeightRef = useRef<number>(0);
     const initialMessagesContainerMaxHeightRef = useRef<number>(0);
+    const stopWritingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const prevMessageRef = useRef<string>('');
     
     const scrollToBottom = () => {
         if (messagesContainerRef.current) {
@@ -92,14 +97,55 @@ const ChatMain = ({sender, receiver, messages, conversation_id, onSendMessage, o
             
             prevTextareaHeightRef.current = resetHeight;
             initialTextareaHeightRef.current = resetHeight;
+            
+            // Clear stop writing timeout and emit stop signal when message is cleared (but not on initial mount)
+            if (prevMessageRef.current !== '') {
+                if (stopWritingTimeoutRef.current) {
+                    clearTimeout(stopWritingTimeoutRef.current);
+                    stopWritingTimeoutRef.current = null;
+                }
+                if (onStopWritingMessage && conversation_id && sender?.id) {
+                    onStopWritingMessage(conversation_id);
+                }
+            }
         }
-    }, [newMessage]);
+        prevMessageRef.current = newMessage;
+    }, [newMessage, conversation_id, sender.id, onStopWritingMessage]);
+
+    // Cleanup timeout on component unmount
+    useEffect(() => {
+        return () => {
+            if (stopWritingTimeoutRef.current) {
+                clearTimeout(stopWritingTimeoutRef.current);
+                stopWritingTimeoutRef.current = null;
+            }
+        };
+    }, []);
 
     const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const message = e.target.value;
     
         // setCharError(message.length > CHARACTER_LIMIT);
         setNewMessage(message);
+        
+        // Clear existing timeout if user is still typing
+        if (stopWritingTimeoutRef.current) {
+            clearTimeout(stopWritingTimeoutRef.current);
+            stopWritingTimeoutRef.current = null;
+        }
+        
+        // Emit writing signal immediately when user types
+        if (onWritingMessage && conversation_id && sender?.id) {
+            onWritingMessage(conversation_id);
+        }
+        
+        // Set timeout to emit stop writing signal after 3 seconds of inactivity
+        if (onStopWritingMessage && conversation_id && sender?.id) {
+            stopWritingTimeoutRef.current = setTimeout(() => {
+                onStopWritingMessage(conversation_id);
+                stopWritingTimeoutRef.current = null;
+            }, 3000);
+        }
         
         // Auto-resize textarea and adjust messages container (Discord-like behavior)
         if (textareaRef.current && textareaWrapperRef.current && messagesContainerRef.current) {
@@ -148,6 +194,15 @@ const ChatMain = ({sender, receiver, messages, conversation_id, onSendMessage, o
     const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (newMessage.trim()) {
+            // Clear stop writing timeout and emit stop signal when message is sent
+            if (stopWritingTimeoutRef.current) {
+                clearTimeout(stopWritingTimeoutRef.current);
+                stopWritingTimeoutRef.current = null;
+            }
+            if (onStopWritingMessage && conversation_id) {
+                onStopWritingMessage(conversation_id);
+            }
+            
             onSendMessage(
                 {
                     conversation_id: conversation_id,
@@ -231,11 +286,27 @@ const ChatMain = ({sender, receiver, messages, conversation_id, onSendMessage, o
                                     </div>
                                 </div>
                             ))}
+                            
                             <div ref={messagesEndRef} />
                         </div>
+
+                        {isWriting && (
+                            <div className="flex justify-start items-center py-1 max-h-2">
+                                <p className="text-xs text-gray-400">{receiver? receiver.display_name : "No receiver"} is typing...</p>
+                                <div className="flex items-center gap-1.5 px-3">
+                                    <div className="w-2 h-2 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: '0ms' }}></div>
+                                    <div className="w-2 h-2 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: '200ms' }}></div>
+                                    <div className="w-2 h-2 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: '400ms' }}></div>
+                                </div>
+                                
+                            </div>
+                        )}
+
+                        {!isWriting && <div className="h-2 py-1"></div>}
+                        
                         <div 
                             ref={formContainerRef}
-                            className="flex-none bg-linear-to-r from-[#7E3FF2] to-[#2F3DF6] border border-[#32475B] rounded-xl p-1.5 mr-3 mt-4"
+                            className="flex-none bg-linear-to-r from-[#7E3FF2] to-[#2F3DF6] border border-[#32475B] rounded-xl p-1.5 mr-3"
                         >
                             <form 
                                 onSubmit={

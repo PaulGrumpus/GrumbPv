@@ -7,4 +7,8 @@ export const websocket = {
     WEBSOCKET_NEW_MESSAGE: process.env.WEBSOCKET_NEW_MESSAGE || "newMessage",
     WEBSOCKET_SEND_MESSAGE_RECEIPT: process.env.WEBSOCKET_SEND_MESSAGE_RECEIPT || "sendMessageReceipt",
     WEBSOCKET_MESSAGE_RECEIPT: process.env.WEBSOCKET_MESSAGE_RECEIPT || "messageReceipt",
+    WEBSOCKET_WRITING_MESSAGE: process.env.WEBSOCKET_WRITING_MESSAGE || "writingMessage",
+    WEBSOCKET_SEND_WRITING_MESSAGE: process.env.WEBSOCKET_SEND_WRITING_MESSAGE || "sendWritingMessage",
+    WEBSOCKET_SEND_STOP_WRITING_MESSAGE: process.env.WEBSOCKET_SEND_STOP_WRITING_MESSAGE || "sendStopWritingMessage",
+    WEBSOCKET_STOP_WRITING_MESSAGE: process.env.WEBSOCKET_STOP_WRITING_MESSAGE || "stopWritingMessage",
 }

@@ -86,6 +86,38 @@ export const socket_router = (
         }
     });
 
+    socket.on(websocket.WEBSOCKET_SEND_WRITING_MESSAGE, async (param: { conversation_id: string, sender_id: string }) => {
+        try {
+            const { conversation_id, sender_id } = param;
+            if (!conversation_id || !sender_id) {
+                throw new Error("Invalid parameters");
+            }
+            io.to(conversation_id).emit(websocket.WEBSOCKET_WRITING_MESSAGE, {
+                conversation_id: conversation_id,
+                sender_id: sender_id,
+            });
+        }
+        catch (error) {
+            console.error("❌ Error sending writing message:", error);
+        }
+    });
+
+    socket.on(websocket.WEBSOCKET_SEND_STOP_WRITING_MESSAGE, async (param: { conversation_id: string, sender_id: string }) => {
+        try {
+            const { conversation_id, sender_id } = param;
+            if (!conversation_id || !sender_id) {
+                throw new Error("Invalid parameters");
+            }
+            io.to(conversation_id).emit(websocket.WEBSOCKET_STOP_WRITING_MESSAGE, {
+                conversation_id: conversation_id,
+                sender_id: sender_id,
+            });
+        }
+        catch (error) {
+            console.error("❌ Error sending stop writing message:", error);
+        }
+    });
+
     // Cleanup
     socket.on("disconnect", () => {
         console.log(`User ${socket.id} disconnected`);
