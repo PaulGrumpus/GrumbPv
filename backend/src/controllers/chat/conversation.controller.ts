@@ -6,6 +6,15 @@ export class ConversationController {
     public async createConversation(req: Request, res: Response, next: NextFunction) {
         try {
             const { ...params } = req.body;
+            if(params.job_id === "") {
+                params.job_id = null;
+            }
+            if(params.gig_id === "") {
+                params.gig_id = null;
+            }
+            if(params.job_application_doc_id === "") {
+                params.job_application_doc_id = null;
+            }
             const result = await conversationService.createConversation(params);
             if (!result) {
                 throw new AppError('Conversation not created', 400, 'CONVERSATION_NOT_CREATED');
@@ -27,24 +36,6 @@ export class ConversationController {
             const result = await conversationService.getConversationById(id);
             if (!result) {
                 throw new AppError('Conversation not found', 404, 'CONVERSATION_NOT_FOUND');
-            }
-            res.json({
-                success: true,
-                data: result,
-                message: 'Conversation retrieved successfully',
-            });
-        }
-        catch (error) {
-            next(error);
-        }
-    }
-
-    public async getConversationsByUserId(req: Request, res: Response, next: NextFunction) {
-        try {
-            const { userId } = req.params;
-            const result = await conversationService.getConversationsByUserId(userId);
-            if (!result) {
-                throw new AppError('Conversations not found', 404, 'CONVERSATIONS_NOT_FOUND');
             }
             res.json({
                 success: true,

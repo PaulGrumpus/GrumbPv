@@ -420,14 +420,13 @@ export const getGigs = async () => {
     }
 }
 
-export const updateBidStatus = async (bid_id: string, status: BidStatus, job_id: string, freelancer_id: string, job_application_id: string) => {
+
+
+// Bids
+export const createBid = async (bid: Bid) => {
     try {
-        const response = await EscrowBackend.post(`/database/job-bids/${bid_id}`, { 
-            status,
-            job_id,
-            freelancer_id,
-            job_application_doc_id: job_application_id,
-        });
+        const response = await EscrowBackend.post('/database/job-bids', bid);
+        console.log(response.data);
         return {
             success: true,
             data: response.data.data,
@@ -441,11 +440,9 @@ export const updateBidStatus = async (bid_id: string, status: BidStatus, job_id:
     }
 }
 
-// Bids
-export const createBid = async (bid: Bid) => {
+export const getBidById = async (bid_id: string) => {
     try {
-        const response = await EscrowBackend.post('/database/job-bids', bid);
-        console.log(response.data);
+        const response = await EscrowBackend.get(`/database/job-bids/by-id/${bid_id}`);
         return {
             success: true,
             data: response.data.data,
@@ -478,6 +475,26 @@ export const getBidsByFreelancerId = async (freelancer_id: string) => {
 export const getBidsByJobId = async (job_id: string) => {
     try {
         const response = await EscrowBackend.get(`/database/job-bids/by-job-id/${job_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const updateBidStatus = async (bid_id: string, status: BidStatus, job_id: string, freelancer_id: string) => {
+    try {
+        const response = await EscrowBackend.post(`/database/job-bids/${bid_id}`, { 
+            status,
+            job_id,
+            freelancer_id,
+        });
         return {
             success: true,
             data: response.data.data,
@@ -540,16 +557,64 @@ export const deleteJobApplication = async (job_application_id: string) => {
 }
 
 // conversations
-export const createConversation = async () => {
+export const createConversationAndParticipant = async (job_application_doc_id: string, job_id: string, gig_id: string, client_id: string, freelancer_id: string) => {
     try {
         const response = await EscrowBackend.post('/database/conversations', {
             type: 'dm',
+            job_id: job_id === "" ? null : job_id,
+            gig_id: gig_id === "" ? null : gig_id,
+            job_application_doc_id: job_application_doc_id === "" ? null : job_application_doc_id,
         });
+
+        if (!response.data.success) {
+            throw new Error(response.data.error);
+        }
+
+        const clientParticipant = await EscrowBackend.post('/database/conversation-participants', {
+            conversation_id: response.data.data.id,
+            user_id: client_id,
+            is_muted: false,
+            is_pinned: false,
+            last_read_msg_id: null,
+        });
+
+        if (!clientParticipant.data.success) {
+            throw new Error(clientParticipant.data.error);
+        }
+
+        const freelancerParticipant = await EscrowBackend.post('/database/conversation-participants', {
+            conversation_id: response.data.data.id,
+            user_id: freelancer_id,
+            is_muted: false,
+            is_pinned: false,
+            last_read_msg_id: null,
+        });
+
+        if (!freelancerParticipant.data.success) {
+            throw new Error(freelancerParticipant.data.error);
+        }
+
+        return {
+            success: true,
+            data: response.data.data.id,
+        };
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const getConversationByParticipant = async (user_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/conversation-participants/by-user-id/${user_id}`);
         return {
             success: true,
             data: response.data.data,
         };
-    } catch (error: any) {
+    }
+    catch (error: any) {
         return {
             success: false,
             error: error.response?.data?.error?.message || error.message || "Unknown error"

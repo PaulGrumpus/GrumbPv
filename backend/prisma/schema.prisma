@@ -83,21 +83,18 @@ model gigs {
 }
 
 model job_bids {
-  id                      String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  job_id                  String                 @db.Uuid
-  freelancer_id           String                 @db.Uuid
-  cover_letter_md         String?
-  bid_amount              Decimal?               @db.Decimal(18, 8)
-  status                  bid_status             @default(pending)
-  created_at              DateTime               @default(now()) @db.Timestamptz(6)
-  token_symbol            String?
-  updated_at              DateTime               @default(now()) @db.Timestamptz(6)
-  period                  Int?
-  job_application_doc_id  String?                @db.Uuid
-  freelancer              users                  @relation(fields: [freelancer_id], references: [id], onDelete: Cascade)
-  job                     jobs                   @relation(fields: [job_id], references: [id], onDelete: Cascade)
-  jobApplicationsDocs     job_applications_docs? @relation(fields: [job_applications_docsId], references: [id])
-  job_applications_docsId String?                @db.Uuid
+  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id          String     @db.Uuid
+  freelancer_id   String     @db.Uuid
+  cover_letter_md String?
+  bid_amount      Decimal?   @db.Decimal(18, 8)
+  status          bid_status @default(pending)
+  created_at      DateTime   @default(now()) @db.Timestamptz(6)
+  token_symbol    String?
+  updated_at      DateTime   @default(now()) @db.Timestamptz(6)
+  period          Int?
+  freelancer      users      @relation(fields: [freelancer_id], references: [id], onDelete: Cascade)
+  job             jobs       @relation(fields: [job_id], references: [id], onDelete: Cascade)
 
   @@unique([job_id, freelancer_id])
   @@index([job_id, status])
@@ -145,22 +142,24 @@ model job_applications_docs {
   job_milestone      job_milestones? @relation(fields: [job_milestone_id], references: [id], onDelete: Cascade)
   client             users           @relation("ClientApplications", fields: [client_id], references: [id], onDelete: Cascade)
   freelancer         users           @relation("FreelancerApplications", fields: [freelancer_id], references: [id], onDelete: Cascade)
-  jobBids            job_bids[]
+  chats              conversations[]
 
   @@map("job_applications_docs")
 }
 
 model conversations {
-  id           String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  type         convo_type                  @default(dm)
-  job_id       String?                     @db.Uuid
-  created_at   DateTime                    @default(now()) @db.Timestamptz(6)
-  escrow       String?
-  gig_id       String?                     @db.Uuid
-  participants conversation_participants[]
-  gig          gigs?                       @relation(fields: [gig_id], references: [id])
-  job          jobs?                       @relation(fields: [job_id], references: [id])
-  messages     messages[]
+  id                     String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type                   convo_type                  @default(dm)
+  job_id                 String?                     @db.Uuid
+  created_at             DateTime                    @default(now()) @db.Timestamptz(6)
+  escrow                 String?
+  gig_id                 String?                     @db.Uuid
+  job_application_doc_id String?                     @db.Uuid
+  participants           conversation_participants[]
+  gig                    gigs?                       @relation(fields: [gig_id], references: [id])
+  job                    jobs?                       @relation(fields: [job_id], references: [id])
+  messages               messages[]
+  jobApplicationsDocs    job_applications_docs?      @relation(fields: [job_application_doc_id], references: [id])
 
   @@map("conversations")
 }

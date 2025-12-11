@@ -1,6 +1,6 @@
 import { logger } from "../../utils/logger.js";
 import { AppError } from "../../middlewares/errorHandler.js";
-import { PrismaClient, conversation_participants, conversations, gigs, jobs, users } from "@prisma/client";
+import { PrismaClient, conversation_participants, conversations, users } from "@prisma/client";
 import { newConversationParam, convo_type } from "../../types/conversation.js";
 
 export class ConversationService {
@@ -12,13 +12,15 @@ export class ConversationService {
 
     public async createConversation(params: newConversationParam): Promise<conversations> {
         try {
+            console.log('params', params);
             const newConversation = await this.prisma.conversations.create({
                 data: {
                     type: params.type as convo_type,
-                    job_id: params.job_id ?? undefined,
+                    job_id: params.job_id ?? null,
                     created_at: new Date(),
                     escrow: params.escrow,
-                    gig_id: params.gig_id ?? undefined,
+                    gig_id: params.gig_id ?? null,
+                    job_application_doc_id: params.job_application_doc_id ?? null,
                 },
             });
             if (!newConversation) {
@@ -81,63 +83,6 @@ export class ConversationService {
         catch (error) {
             logger.error('Error updating conversation by id', { error });
             throw new AppError('Error updating conversation by id', 500, 'CONVERSATION_UPDATE_BY_ID_FAILED');
-        }
-    }
-
-    public async getConversationsByUserId(userId: string): Promise<{ 
-        conversation: conversations, 
-        participants: conversation_participants[], 
-        clientInfo: users, 
-        freelancerInfo: users | null,
-        jobInfo: jobs | null,
-        gigInfo: gigs | null
-    }[]> {
-        try {
-            const conversations = await this.prisma.conversations.findMany({
-                where: { participants: { some: { user_id: userId } } },
-            });
-            const participants = await this.prisma.conversation_participants.findMany({
-                where: { conversation_id: { in: conversations.map((conversation) => conversation.id) } },
-            });
-            const conversationsData = await Promise.all(conversations.map(async (conversation) => {
-                const jobInfo = await this.prisma.jobs.findUnique({
-                    where: { id: conversation.job_id ?? "" },
-                });
-                if (!jobInfo) {
-                    throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
-                }
-                const gigInfo = await this.prisma.gigs.findUnique({
-                    where: { id: conversation.gig_id ?? "" },
-                });
-                if (!gigInfo) {
-                    throw new AppError('Gig not found', 404, 'GIG_NOT_FOUND');
-                }
-                const clientInfo = await this.prisma.users.findUnique({
-                    where: { id: jobInfo.client_id },
-                });
-                if (!clientInfo) {
-                    throw new AppError('Client not found', 404, 'CLIENT_NOT_FOUND');
-                }
-                const freelancerInfo = await this.prisma.users.findUnique({
-                    where: { id: participants.find((participant) => participant.conversation_id === conversation.id && participant.user_id !== jobInfo.client_id)?.user_id ?? "" },
-                });
-                if (!freelancerInfo) {
-                    throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
-                }
-                return { conversation, clientInfo, freelancerInfo, jobInfo, gigInfo };
-            }));
-            return conversationsData.map((conversationData) => ({
-                conversation: conversationData.conversation,
-                participants: participants.filter((participant) => participant.conversation_id === conversationData.conversation.id),
-                clientInfo: conversationData.clientInfo,
-                freelancerInfo: conversationData.freelancerInfo,
-                jobInfo: conversationData.jobInfo,
-                gigInfo: conversationData.gigInfo,
-            }));
-        }
-        catch (error) {
-            logger.error('Error getting conversations by user id', { error });
-            throw new AppError('Error getting conversations by user id', 500, 'CONVERSATIONS_GET_BY_USER_ID_FAILED');
         }
     }
 

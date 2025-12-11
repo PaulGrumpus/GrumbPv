@@ -4,21 +4,33 @@ import ChatNavbar from "@/components/chat/chatNavbar";
 import ChatSidebar from "@/components/chat/chatSidebar";
 import { User } from "@/types/user";
 import { Job } from "@/types/jobs";
-import { Message } from "@/types/message";
+import { Gig } from "@/types/gigs";
+import { Conversation } from "@/types/conversation";
+import { ConversationParticipant } from "@/types/conversation.participant";
 import { useContext, useEffect, useState } from "react";
 import { UserInfoCtx } from "@/context/userContext";
 import { LoadingCtx } from "@/context/loadingContext";
 import Loading from "@/components/loading";
-import { getJobs } from "@/utils/functions";
+import { getConversationByParticipant, getJobs } from "@/utils/functions";
 import router from "next/router";
 import ChatComb from "@/components/chat/chatComb";
+import { toast } from "react-toastify";
+
+interface ConversationWithUser {
+    conversation: Conversation;
+    participants: ConversationParticipant[];
+    clientInfo: User;
+    freelancerInfo: User | null;
+    jobInfo: Job | null;
+    gigInfo: Gig | null;
+}
 
 const ChatPage = () => {
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const { loadingState, setLoadingState } = useContext(LoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [jobs, setJobs] = useState<Job[]>([]);
-    
+    const [conversations, setConversations] = useState<ConversationWithUser[]>([]);
     useEffect(() => {
         if(loadingState === "success") {
             if(userInfo.id === "") {
@@ -29,6 +41,27 @@ const ChatPage = () => {
                 const loadJobs = async () => {
                     const jobs = await getJobs();
                     setJobs(jobs.data ?? []);
+
+
+                    const conversations = await getConversationByParticipant(userInfo.id);
+                    if(!conversations.success) {
+                        toast.error(conversations.error as string, {
+                            position: "top-right",
+                            autoClose: 5000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                        });
+                    }
+
+                    if(conversations.success) {
+                        setConversations(conversations.data ?? []);
+                    }
+
+                    console.log("conversations", conversations);
+
+
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }

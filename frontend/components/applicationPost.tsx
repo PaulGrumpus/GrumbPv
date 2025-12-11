@@ -8,7 +8,7 @@ import { User } from "@/types/user";
 import { Bid, BidStatus } from "@/types/bid";
 import { EscrowBackendConfig } from "@/config/config";
 import { toast } from "react-toastify";
-import { createJobApplication, deleteJobApplication, getJobById, updateBidStatus } from "@/utils/functions";
+import { createConversationAndParticipant, createJobApplication, deleteJobApplication, getBidById, getJobById, updateBidStatus } from "@/utils/functions";
 import { useRouter } from "next/navigation";
 
 interface ApplicationWithUser extends Bid {
@@ -34,6 +34,19 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
 
     const handleAccept = async (id: string) => {
         try {
+            const bid = await getBidById(id ?? "");
+            if (!bid.success) {
+                throw new Error(bid.error as string);
+            }
+            if(bid.data.status === BidStatus.ACCEPTED) {
+                throw new Error("Job bid is already accepted");
+            }
+            if(bid.data.status === BidStatus.DECLINED) {
+                throw new Error("Job bid is already declined");
+            }
+            if(bid.data.status === BidStatus.WITHDRAWN) {
+                throw new Error("Job bid is already withdrawn");
+            }
             const jobInfo = await getJobById(job_id ?? "");
             let job_application_id = "";
             let client_id = "";
@@ -52,7 +65,7 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
             } else {
                 throw new Error(jobApplication.error as string);
             }
-            const result = await updateBidStatus(id ?? "", BidStatus.ACCEPTED, job_id ?? "", freelancer_id ?? "", job_application_id);
+            const result = await updateBidStatus(id ?? "", BidStatus.ACCEPTED, job_id ?? "", freelancer_id ?? "");
             if (result.success) {
                 toast.success("Bid accepted successfully", {
                     position: "top-right",
@@ -65,7 +78,12 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
                 throw new Error(result.error as string);
             }
 
-            router.push(`/reference?jobApplicationId=${job_application_id}`);
+            const conversation = await createConversationAndParticipant(job_application_id, job_id ?? "", "", client_id, freelancer_id ?? "");
+            if (!conversation.success) {
+                throw new Error(conversation.error as string);
+            }
+
+            router.push(`/reference?jobApplicationId=${job_application_id}&conversationId=${conversation.data}`);
         } catch (error) {
             error instanceof Error ? toast.error(error.message, {
                 position: "top-right",
@@ -85,11 +103,11 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
 
     const handleDecline = async (id: string) => {
         try {
-            const jobApplication = await deleteJobApplication(id ?? "");
-            if (!jobApplication.success) {
-                throw new Error(jobApplication.error as string);
-            }
-            const result = await updateBidStatus(id ?? "", BidStatus.DECLINED, job_id ?? "", freelancer_id ?? "", "");
+            // const jobApplication = await deleteJobApplication(id ?? "");
+            // if (!jobApplication.success) {
+            //     throw new Error(jobApplication.error as string);
+            // }
+            const result = await updateBidStatus(id ?? "", BidStatus.DECLINED, job_id ?? "", freelancer_id ?? "");
             if (result.success) {
                 toast.success("Bid declined successfully", {
                     position: "top-right",

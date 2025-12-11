@@ -22,6 +22,8 @@ import jobBidRoutes from './routes/database/job.bid.routes.js';
 import chainTxRoutes from './routes/database/chainTx.routes.js';
 import gigRoutes from './routes/database/gig.routes.js';
 import jobApplicationRoutes from './routes/database/job.application.routes.js';
+import conversationRoutes from './routes/chat/conversation.routes.js';
+import conversationParticipantRoutes from './routes/chat/conversation.participant.routes.js';
 import http from 'http'; 
 import { Server } from 'socket.io';
 import { socket_router } from './routes/socket.routes.js';
@@ -77,6 +79,8 @@ app.use(`${API_PREFIX}/database/job-bids`, jobBidRoutes);
 app.use(`${API_PREFIX}/database/chain-txs`, chainTxRoutes);
 app.use(`${API_PREFIX}/database/gigs`, gigRoutes);
 app.use(`${API_PREFIX}/database/job-applications`, jobApplicationRoutes);
+app.use(`${API_PREFIX}/database/conversations`, conversationRoutes);
+app.use(`${API_PREFIX}/database/conversation-participants`, conversationParticipantRoutes);
 
 // Error handlers (must be last)
 app.use(notFoundHandler);

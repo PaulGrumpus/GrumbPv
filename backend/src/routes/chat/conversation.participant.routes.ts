@@ -9,18 +9,10 @@ router.post('/',
     [
         body('conversation_id').isString().notEmpty(),
         body('user_id').isString().notEmpty(),
-        body('is_muted').isBoolean().optional(),
-        body('blocked_until').isDate().optional(),
-        body('is_pinned').isBoolean().optional(),
-        body('last_read_msg_id').isString().optional(),
     ], 
     validate([
         body('conversation_id'),
         body('user_id'),
-        body('is_muted'),
-        body('blocked_until'),
-        body('is_pinned'),
-        body('last_read_msg_id'),
     ]),
     conversationParticipantController.createConversationParticipant.bind(conversationParticipantController)
 );
@@ -45,7 +37,7 @@ router.get('/conversation/:conversationId',
     conversationParticipantController.getConversationParticipantsByConversationId.bind(conversationParticipantController)
 );
 
-router.get('/user/:userId', 
+router.get('/by-user-id/:userId', 
     [
         param('userId').isString().notEmpty(),
     ],

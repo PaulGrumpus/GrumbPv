@@ -8,9 +8,11 @@ const router = Router();
 router.post('/', 
     [
         body('type').isString().notEmpty(),
+        body('job_application_doc_id').isString().notEmpty(),
     ], 
     validate([
         body('type'),
+        body('job_application_doc_id'),
     ]),
     conversationController.createConversation.bind(conversationController)
 );
@@ -33,16 +35,6 @@ router.get('/:id',
         param('id'),
     ]),
     conversationController.getConversationById.bind(conversationController)
-);
-
-router.get('/user/:userId', 
-    [
-        param('userId').isString().notEmpty(),
-    ],
-    validate([
-        param('userId'),
-    ]),
-    conversationController.getConversationsByUserId.bind(conversationController)
 );
 
 router.delete('/:id', 

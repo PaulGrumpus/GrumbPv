@@ -1,6 +1,6 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, PrismaClient, job_bids } from '@prisma/client';
+import { Prisma, PrismaClient, bid_status, job_bids } from '@prisma/client';
 import { userService } from './user.service.js';
 import { jobService } from './job.service.js';
 
@@ -64,6 +64,12 @@ export class JobBidService {
       if (!existingJobBid) {
         throw new AppError('Job bid not found', 404, 'JOB_BID_NOT_FOUND');
       }
+      if(existingJobBid.status === bid_status.declined) {
+        throw new AppError('Job bid is already declined', 400, 'JOB_BID_IS_ALREADY_DECLINED');
+      }
+      if(existingJobBid.status === bid_status.withdrawn) {
+        throw new AppError('Job bid is already withdrawn', 400, 'JOB_BID_IS_ALREADY_WITHDRAWN');
+      }
       if (!jobBid.job_id || !jobBid.freelancer_id) {
         throw new AppError(
           'Job ID and freelancer ID are required',
@@ -82,7 +88,6 @@ export class JobBidService {
       if (existingFreelancer.role !== 'freelancer') {
         throw new AppError('Bidder is not a freelancer', 400, 'BIDDER_IS_NOT_A_FREELANCER');
       }
-      console.log("job_application_doc_id", jobBid.job_application_doc_id);
       const updatedJobBid = await this.prisma.job_bids.update({
         where: { id },
         data: {
