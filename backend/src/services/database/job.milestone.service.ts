@@ -61,13 +61,13 @@ export class JobMilestoneService {
             'DUE_DATE_MORE_THAN_1_YEAR_IN_FUTURE'
           );
         }
-        if (existingJob.deadline_at && dueDate >= existingJob.deadline_at) {
-          throw new AppError(
-            'Due date is greater than the job deadline',
-            400,
-            'DUE_DATE_GREATER_THAN_JOB_DEADLINE'
-          );
-        }
+        // if (existingJob.deadline_at && dueDate >= existingJob.deadline_at) {
+        //   throw new AppError(
+        //     'Due date is greater than the job deadline',
+        //     400,
+        //     'DUE_DATE_GREATER_THAN_JOB_DEADLINE'
+        //   );
+        // }
         if (existingJob.created_at && dueDate <= existingJob.created_at) {
           throw new AppError(
             'Due date is less than the job creation date',

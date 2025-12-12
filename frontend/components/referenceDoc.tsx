@@ -138,16 +138,13 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
             return;
         }
 
-        const clientConfirmation = userInfo.id === clientId ? true : false;
-        const freelancerConfirmation = userInfo.id === freelancerId ? true : false;
-
         try{
             const result = await updateJobApplication(jobApplicationId, {
                 job_id: jobId,
                 client_id: clientId,
                 freelancer_id: freelancerId,
-                client_confirm: clientConfirmation,
-                freelancer_confirm: freelancerConfirmation,
+                client_confirm: userInfo.id === clientId ? true : clientConfirmed,
+                freelancer_confirm: userInfo.id === freelancerId ? true : freelancerConfirmed,
                 deliverables: deliverables,
                 out_of_scope: outOfScope,
                 budget: budget,
@@ -283,6 +280,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                         <p className='text-normal font-medium text-[#8F99AF] text-left'>Budget</p>
                         <input
                             value={budget}
+                            type="number"
                             onChange={(e) => setBudget(Number(e.target.value))}
                             className='w-full border border-[#8F99AF] rounded-lg p-3 flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none'
                             placeholder='Budget'
@@ -434,6 +432,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                         </Button>
                         <Button
                             padding="px-6 py-3"
+                            variant={freelancerConfirmed && clientConfirmed ? "disable" : "primary"}
                             onClick={handleConfirm}
                         >
                             <p className="text-normal font-regular">Confirm</p>
@@ -501,10 +500,10 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                         </div>
                         <div className="flex p-3 pt-9 justify-between">
                             <div className={`border-t py-2 px-3 ${clientConfirmed ? 'border-[#7E3FF2] border-t-2' : 'border-[#8F99AF]'}`}>
-                                <p className={`text-normal font-regular ${clientConfirmed ? 'text-[#7E3FF2] font-bold text-light-large' : 'text-[#8F99AF]'}`} text-left>{clientName}</p>
+                                <p className={`text-normal font-regular text-left ${clientConfirmed ? 'text-[#7E3FF2] font-bold text-light-large' : 'text-[#8F99AF]'}`} >{clientName}</p>
                             </div>
                             <div className={`border-t py-2 px-3 ${freelancerConfirmed ? 'border-[#7E3FF2] border-t-2' : 'border-[#8F99AF]'}`}>
-                                <p className={`text-normal font-regular ${freelancerConfirmed ? 'text-[#7E3FF2] font-bold text-light-large' : 'text-[#8F99AF]'}`} text-left>{freelancerName}</p>
+                                <p className={`text-normal font-regular text-left ${freelancerConfirmed ? 'text-[#7E3FF2] font-bold text-light-large' : 'text-[#8F99AF]'}`} >{freelancerName}</p>
                             </div>
                         </div>
                     </div>

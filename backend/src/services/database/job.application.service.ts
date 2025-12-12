@@ -5,6 +5,11 @@ import { jobService } from './job.service.js';
 import { jobMilestoneService } from './job.milestone.service.js';
 import { userService, } from './user.service.js';
 import { prisma } from '../../prisma.js';
+import { factoryService } from '../contract/factory.service.js';
+
+interface UpdateJobApplicationResult extends job_applications_docs {
+    escrow_address: string;
+}
 
 export class JobApplicationService {
     private prisma = prisma;
@@ -30,7 +35,7 @@ export class JobApplicationService {
         }
     }
 
-    public async updateJobApplication(id: string, jobApplication: Prisma.job_applications_docsUncheckedUpdateInput): Promise<job_applications_docs> {
+    public async updateJobApplication(id: string, jobApplication: Prisma.job_applications_docsUncheckedUpdateInput): Promise<UpdateJobApplicationResult> {
         try {
             if (!id) {
                 throw new AppError('Job application ID is required', 400, 'JOB_APPLICATION_ID_REQUIRED');
@@ -45,7 +50,49 @@ export class JobApplicationService {
                 where: { id },
                 data: jobApplication,
             });
-            return updateResult;
+            let escrow;
+            let milestone;
+            if(updateResult.freelancer_confirm && updateResult.client_confirm) {
+                const jobInfo = await jobService.getJobById(updateResult.job_id);
+                if(!jobInfo) {
+                    throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
+                }
+                const jobMilestones = await jobMilestoneService.getJobMilestonesByJobId(updateResult.job_id);
+                const lastOrderIndex = jobMilestones.length > 0 ? jobMilestones[jobMilestones.length - 1].order_index : 0;
+                milestone = await jobMilestoneService.createJobMilestone({
+                    job_id: updateResult.job_id,
+                    title: `Agreement - ${jobInfo.title}`,
+                    amount: updateResult.budget ?? (Number(jobInfo.budget_min_usd) + Number(jobInfo.budget_max_usd)) / 2,
+                    due_at: new Date(updateResult.end_date ?? new Date(jobInfo.deadline_at ?? new Date())),
+                    freelancer_id: updateResult.freelancer_id,
+                    token_symbol: updateResult.token_symbol ?? jobInfo.token_symbol ?? 'BNB',
+                    order_index: lastOrderIndex + 1,
+                });
+                if(!milestone) {
+                    throw new AppError('Failed to create milestone', 500, 'FAILED_TO_CREATE_MILESTONE');
+                }
+                await this.prisma.job_applications_docs.update({
+                    where: { id },
+                    data: { job_milestone_id: milestone.id },
+                });
+                if(milestone.token_symbol !== 'BNB') {
+                    throw new AppError('Only BNB is supported for now', 400, 'ONLY_BNB_SUPPORTED');
+                }
+                escrow = await factoryService.createEscrow({
+                    job_milestone_id: milestone.id,
+                });
+                if(!escrow) {
+                    throw new AppError('Failed to create escrow', 500, 'FAILED_TO_CREATE_ESCROW');
+                }
+                await jobMilestoneService.updateJobMilestone(milestone.id, {
+                    escrow: escrow.escrowAddress,
+                });                
+            }
+            return {
+                ...updateResult as job_applications_docs,
+                job_milestone_id: milestone?.id ?? null,
+                escrow_address: escrow?.escrowAddress ?? '',
+            };
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
