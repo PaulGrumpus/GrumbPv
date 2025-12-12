@@ -40,6 +40,7 @@ const ChatMain = ({sender, receiver, messages, conversation_id, isWriting, onSen
     const initialMessagesContainerMaxHeightRef = useRef<number>(0);
     const stopWritingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const prevMessageRef = useRef<string>('');
+    const initialScrollDoneRef = useRef<boolean>(false);
     
     const scrollToBottom = () => {
         if (messagesContainerRef.current) {
@@ -64,6 +65,16 @@ const ChatMain = ({sender, receiver, messages, conversation_id, isWriting, onSen
     const [charError, setCharError] = useState(false);
 
     useEffect(() => {
+        if (!messagesContainerRef.current) return;
+
+        // First visit to this conversation: jump to bottom without smooth effect
+        if (!initialScrollDoneRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+            initialScrollDoneRef.current = true;
+            prevMessagesLengthRef.current = messages.length;
+            return;
+        }
+
         // Only scroll if messages actually increased (new message added)
         if (messages.length > prevMessagesLengthRef.current) {
             scrollToBottom();
@@ -83,6 +94,15 @@ const ChatMain = ({sender, receiver, messages, conversation_id, isWriting, onSen
             initialMessagesContainerMaxHeightRef.current = messagesContainerRef.current.clientHeight;
         }
     }, []);
+
+    useEffect(() => {
+        // Reset scroll state when switching conversations and jump to bottom instantly
+        initialScrollDoneRef.current = false;
+        prevMessagesLengthRef.current = messages.length;
+        if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+    }, [conversation_id]);
 
     useEffect(() => {
         // Reset textarea and wrapper height when message is cleared
@@ -275,7 +295,7 @@ const ChatMain = ({sender, receiver, messages, conversation_id, isWriting, onSen
                                             {message.sender_id === sender.id ? (
                                                 <div className="flex items-end gap-2">
                                                     <div
-                                                        className={`py-2 px-3 rounded-3xl wrap-break-word whitespace-pre-wrap ${
+                                                        className={`py-4 px-5 rounded-[1.125rem] wrap-break-word whitespace-pre-wrap ${
                                                         message.sender_id === sender.id
                                                             ? "bg-[#2F3DF6]"
                                                             : "bg-[#7E3FF2]"
@@ -313,7 +333,7 @@ const ChatMain = ({sender, receiver, messages, conversation_id, isWriting, onSen
                                                         <div className="min-w-9 w-9 h-9"></div>
                                                     )}
                                                     <div
-                                                        className={`py-2 px-3 rounded-3xl wrap-break-word whitespace-pre-wrap ${
+                                                        className={`py-4 px-5 rounded-[1.125rem] wrap-break-word whitespace-pre-wrap ${
                                                         message.sender_id === sender.id
                                                             ? "bg-[#2F3DF6]"
                                                             : "bg-[#7E3FF2]"

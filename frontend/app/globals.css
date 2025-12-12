@@ -259,11 +259,11 @@ body {
   background: #2f3df6;
   border-bottom-left-radius: 51px;
   width: 15px;
-  height: 12px;
+  height: 14px;
   position: absolute;
-  bottom: -1px;
-  right: -3px;
-  transform: rotate(-30deg);
+  bottom: -2px;
+  right: -2px;
+  transform: rotate(-45deg);
 }
 
 .chat-bubble-receiver {
