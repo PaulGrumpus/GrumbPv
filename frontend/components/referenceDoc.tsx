@@ -5,9 +5,18 @@ import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
 import { formatISODate, parseISODate, formatDisplayDate, calendarIcon, CalendarDropdown } from "@/utils/calendar";
 import Image from "next/image";
 import Button from "./button";
+import { updateJobApplication } from "@/utils/functions";
+import { User } from "@/types/user";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 interface ReferenceDocProps {
     jobId: string;
+    jobApplicationId: string;
+    conversationId: string;
+    userInfo: User;
+    clientId: string;
+    freelancerId: string;
     projectName: string;
     clientFullName: string;
     freelancerFullName: string;
@@ -16,19 +25,23 @@ interface ReferenceDocProps {
     clientConfirmed: boolean;
     initialBudget: number;
     initialCurrency: string;
+    initialDeliverables: string;
+    initialOutOfScope: string;
+    initialStartDate: Date;
+    initialEndDate: Date;
 }
 
 const currencies = ["USD", "USDT", "USDC", "BNB", "ETH"];
 const charCount = 300;
 
-const ReferenceDoc = ({ jobId, projectName, clientFullName, freelancerFullName, description, freelancerConfirmed, clientConfirmed, initialBudget, initialCurrency }: ReferenceDocProps) => {
+const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clientId, freelancerId, projectName, clientFullName, freelancerFullName, description, freelancerConfirmed, clientConfirmed, initialBudget, initialCurrency, initialDeliverables, initialOutOfScope, initialStartDate, initialEndDate }: ReferenceDocProps) => {
     const [projectTitle, setProjectTitle] = useState(projectName);
     const [clientName, setClientName] = useState(clientFullName);
     const [freelancerName, setFreelancerName] = useState(freelancerFullName);
     const [projectDescription, setProjectDescription] = useState(description);
-    const [deliverables, setDeliverables] = useState("");
+    const [deliverables, setDeliverables] = useState(initialDeliverables);
     const [deliverablesList, setDeliverablesList] = useState<string[]>([]);
-    const [outOfScope, setOutOfScope] = useState("");
+    const [outOfScope, setOutOfScope] = useState(initialOutOfScope);
     const [budget, setBudget] = useState<number>(initialBudget);
     const [currency, setCurrency] = useState(initialCurrency);
     const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
@@ -37,12 +50,13 @@ const ReferenceDoc = ({ jobId, projectName, clientFullName, freelancerFullName, 
     const endDatePickerRef = useRef<HTMLDivElement | null>(null);
     const [isStartDateCalendarOpen, setIsStartDateCalendarOpen] = useState(false);
     const [isEndDateCalendarOpen, setIsEndDateCalendarOpen] = useState(false);
-    const [startDate, setStartDate] = useState(formatISODate(new Date()));
-    const [endDate, setEndDate] = useState(formatISODate(new Date()));
+    const [startDate, setStartDate] = useState(formatISODate(initialStartDate));
+    const [endDate, setEndDate] = useState(formatISODate(initialEndDate));
     const [startDateCalendarMonth, setStartDateCalendarMonth] = useState(parseISODate(startDate) ?? new Date());
     const [endDateCalendarMonth, setEndDateCalendarMonth] = useState(parseISODate(endDate) ?? new Date());
     const [agreeToTerms, setAgreeToTerms] = useState(false);
     const [error, setError] = useState("");
+    const router = useRouter();
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -103,7 +117,7 @@ const ReferenceDoc = ({ jobId, projectName, clientFullName, freelancerFullName, 
     const handlePrint = () => {
         console.log("print");
     }
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (!agreeToTerms) {
             setError("Please agree to the terms and conditions");
             return;
@@ -124,9 +138,61 @@ const ReferenceDoc = ({ jobId, projectName, clientFullName, freelancerFullName, 
             return;
         }
 
-        console.log("confirm");
+        const clientConfirmation = userInfo.id === clientId ? true : false;
+        const freelancerConfirmation = userInfo.id === freelancerId ? true : false;
 
-        setError("");
+        try{
+            const result = await updateJobApplication(jobApplicationId, {
+                job_id: jobId,
+                client_id: clientId,
+                freelancer_id: freelancerId,
+                client_confirm: clientConfirmation,
+                freelancer_confirm: freelancerConfirmation,
+                deliverables: deliverables,
+                out_of_scope: outOfScope,
+                budget: budget,
+                token_symbol: currency,
+                start_date: new Date(startDate).toISOString(),
+                end_date: new Date(endDate).toISOString(),
+            });
+    
+            if (!result.success) {
+                throw new Error(result.error as string);
+            }
+    
+            toast.success("Job application updated successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+    
+            router.push(`/chat?conversationId=${conversationId}`);
+            setError("");
+        } catch (error) {
+            error instanceof Error ? toast.error(error.message, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            }) : toast.error(error as string, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            toast.error(error as string, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
+
     }
 
     useEffect(() => {
@@ -346,7 +412,10 @@ const ReferenceDoc = ({ jobId, projectName, clientFullName, freelancerFullName, 
                         </div>
                     </div>
                     <div className="flex gap-4 p-2.5">
-                        <input type="checkbox" id="agree-to-terms" className="w-4 h-4 text-gray-300 checked:bg-[#34C759]" 
+                        <input
+                            type="checkbox"
+                            id="agree-to-terms"
+                            className="w-4 h-4 accent-[#34C759] text-gray-300"
                             checked={agreeToTerms}
                             onChange={(e) => setAgreeToTerms(e.target.checked)}
                         />
@@ -397,8 +466,8 @@ const ReferenceDoc = ({ jobId, projectName, clientFullName, freelancerFullName, 
                             <p className="text-normal font-medium text-[#7E3FF2] text-left">Deliverables</p>
                             <div className="flex flex-col gap-2 p-3">
                                 <ul>
-                                    {deliverablesList.map((item) => (
-                                        <li className="text-normal font-regular text-black text-left">{item}</li>
+                                    {deliverablesList.map((item, index) => (
+                                        <li key={index} className="text-normal font-regular text-black text-left">{item}</li>
                                     ))}
                                 </ul>
                             </div>
@@ -425,17 +494,17 @@ const ReferenceDoc = ({ jobId, projectName, clientFullName, freelancerFullName, 
                         <div className="flex flex-col gap-2">
                             <p className="text-normal font-medium text-[#7E3FF2] text-left">Aggrement</p>
                             <div className="flex flex-col gap-2 p-3">
-                                {freelancerConfirmed && <p className="text-normal font-regular text-black text-left">{freelancerName} - Freelancer</p>}
-                                {clientConfirmed && <p className="text-normal font-regular text-black text-left">{clientName} - Client</p>}
-                                {freelancerConfirmed && clientConfirmed && <p className="text-normal font-regular text-black text-left">Both Parties Agree</p>}
+                                {freelancerConfirmed && <p className="text-normal font-regular text-black text-left">✅ {freelancerName} - Freelancer</p>}
+                                {clientConfirmed && <p className="text-normal font-regular text-black text-left">✅ {clientName} - Client</p>}
+                                {freelancerConfirmed && clientConfirmed && <p className="text-normal font-regular text-black text-left">✅ Both Parties Agree</p>}
                             </div>
                         </div>
                         <div className="flex p-3 pt-9 justify-between">
-                            <div className={`border-t py-2 px-3 ${clientConfirmed ? 'border-[#7E3FF2]' : 'border-[#8F99AF]'}`}>
-                                <p className={`text-normal font-regular ${freelancerConfirmed ? 'text-[#7E3FF2]' : 'text-[#8F99AF]'}`} text-left>{clientName}</p>
+                            <div className={`border-t py-2 px-3 ${clientConfirmed ? 'border-[#7E3FF2] border-t-2' : 'border-[#8F99AF]'}`}>
+                                <p className={`text-normal font-regular ${clientConfirmed ? 'text-[#7E3FF2] font-bold text-light-large' : 'text-[#8F99AF]'}`} text-left>{clientName}</p>
                             </div>
-                            <div className={`border-t py-2 px-3 ${freelancerConfirmed ? 'border-[#7E3FF2]' : 'border-[#8F99AF]'}`}>
-                                <p className={`text-normal font-regular ${clientConfirmed ? 'text-[#7E3FF2]' : 'text-[#8F99AF]'}`} text-left>{freelancerName}</p>
+                            <div className={`border-t py-2 px-3 ${freelancerConfirmed ? 'border-[#7E3FF2] border-t-2' : 'border-[#8F99AF]'}`}>
+                                <p className={`text-normal font-regular ${freelancerConfirmed ? 'text-[#7E3FF2] font-bold text-light-large' : 'text-[#8F99AF]'}`} text-left>{freelancerName}</p>
                             </div>
                         </div>
                     </div>

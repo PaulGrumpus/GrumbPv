@@ -525,6 +525,22 @@ export const createJobApplication = async (jobApplication: JobApplication) => {
     }
 }
 
+export const updateJobApplication = async (job_application_id: string, jobApplication: JobApplication) => {
+    try {
+        const response = await EscrowBackend.post(`/database/job-applications/${job_application_id}`, jobApplication);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 export const getJobApplicationById = async (job_application_id: string) => {
     try {
         const response = await EscrowBackend.get(`/database/job-applications/by-id/${job_application_id}`);

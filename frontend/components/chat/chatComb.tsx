@@ -11,7 +11,7 @@ interface ChatCombProps {
     job: Job | null;
     conversation_id: string;
     clientName: string;
-    acceptHandler: () => void;
+    acceptHandler: (conversation_id: string) => void;
     messages: Message[];
     isWriting: boolean;
     onSendMessage: (message: Message) => void;
@@ -42,7 +42,7 @@ const ChatComb = ({ sender, receiver, job, conversation_id, clientName, acceptHa
                     <ChatProjectInfo 
                         job={job} 
                         clientName={job? clientName : "No client name"} 
-                        acceptHandler={acceptHandler} 
+                        acceptHandler={() => acceptHandler(conversation_id)} 
                     />
                 </div>
             </div>

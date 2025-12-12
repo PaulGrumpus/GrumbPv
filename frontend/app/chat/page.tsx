@@ -8,7 +8,7 @@ import { Job } from "@/types/jobs";
 import { useContext, useEffect, useState, Suspense } from "react";
 import { UserInfoCtx } from "@/context/userContext";
 import Loading from "@/components/loading";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 import ChatComb from "@/components/chat/chatComb";
 import { ConversationsInfoCtx } from "@/context/conversationsContext";
 import { ConversationLoadingCtx } from "@/context/conversationLoadingContext";
@@ -42,13 +42,17 @@ const ChatPageContent = () => {
 
     const searchParams = useSearchParams();
     const conversationId = searchParams.get("conversationId");
-    const chatSocket = useSocket();    
+    const chatSocket = useSocket();   
+    const router = useRouter();
 
     const handleChatClick = (conversation_id: string) => {
         setSelectedConversationId(conversation_id);
-        chatSidebarItems.forEach((chat) => {
-            chat.selected = chat.conversation_id === conversation_id;
-        });
+        setChatSidebarItems((prev) =>
+            prev.map((chat) => ({
+                ...chat,
+                selected: chat.conversation_id === conversation_id,
+            }))
+        );
     };
 
     const handleSendMessage = (message: Message) => {
@@ -80,6 +84,13 @@ const ChatPageContent = () => {
             });
         }
     };
+
+    const handleAcceptHandler = (conversation_id: string) => {
+        console.log("handleAcceptHandler");
+        const job_application_doc_id = conversationsInfo.find((conversation) => conversation.conversation.id === conversation_id)?.conversation.job_application_doc_id;
+        router.push(`/reference?jobApplicationId=${job_application_doc_id}&conversationId=${conversation_id}`);
+    };
+
     useEffect(() => {
         console.log("chatSocket.isConnected =", chatSocket.isConnected);
 
@@ -128,23 +139,25 @@ const ChatPageContent = () => {
             }
             if (userInfo && userInfo.id) {
                 const loadConversations = async () => {
-                    conversationsInfo.forEach((conversation) => {
-                        const now = new Date();
-                        setChatSidebarItems((prev) => [...prev, {
-                            conversation_id: conversation.conversation.id,
-                            receiver: conversation.clientInfo.id === userInfo.id ? conversation.freelancerInfo as User : conversation.clientInfo as User,
-                            status: "idle",
-                            lastMessage: "",
-                            lastMessageTime: now,
-                            pinned: false,
-                            selected: false,
-                            onChatClick: () => {
-                                handleChatClick(conversation.conversation.id);
-                            },
-                            onPinChat: () => {},
-                            onUnpinChat: () => {},
-                        }]);
-                    });
+                    if (!conversationsInfo.length) return;
+
+                    const now = new Date();
+                    const builtChats: ChatSidebarItem[] = conversationsInfo.map((conversation) => ({
+                        conversation_id: conversation.conversation.id,
+                        receiver: conversation.clientInfo.id === userInfo.id ? conversation.freelancerInfo as User : conversation.clientInfo as User,
+                        status: "idle",
+                        lastMessage: "",
+                        lastMessageTime: now,
+                        pinned: false,
+                        selected: false,
+                        onChatClick: () => {
+                            handleChatClick(conversation.conversation.id);
+                        },
+                        onPinChat: () => {},
+                        onUnpinChat: () => {},
+                    }));
+
+                    setChatSidebarItems(builtChats);
 
                     if(conversationId) {
                         handleChatClick(conversationId as string);
@@ -186,12 +199,12 @@ const ChatPageContent = () => {
                             receiver={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.receiver as User ?? null : null} 
                             job={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.conversation.id === selectedConversationId)?.jobInfo as Job ?? null : null} 
                             clientName={``} 
-                            acceptHandler={() => {}} 
                             messages={messagesInfo.filter((message) => message.conversation_id === selectedConversationId) as Message[] ?? []} 
                             isWriting={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.status === "typing" ? true : false : false}
                             onSendMessage={handleSendMessage} 
                             onWritingMessage={handleWritingMessage}
                             onStopWritingMessage={handleStopWritingMessage}
+                            acceptHandler={handleAcceptHandler}
                         />
                     </div>
                 </div>

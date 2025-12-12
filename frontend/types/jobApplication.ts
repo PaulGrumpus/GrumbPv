@@ -3,6 +3,8 @@ export interface JobApplication {
     job_id: string;
     client_id: string;
     freelancer_id: string;
+    client_confirm: boolean;
+    freelancer_confirm: boolean;
     deliverables?: string;
     out_of_scope?: string;
     budget?: number;
