@@ -1,15 +1,24 @@
+'use client';
+
 import { User } from "@/types/user";
 import { Job } from "@/types/jobs";
 import ChatMain from "./chatMain";
 import ChatProjectInfo from "./chatProjectInfo";
 import ChatUserInfo from "./chatUserInfo";
 import { Message } from "@/types/message";
+import { useEffect, useState } from "react";
+import { getJobApplicationById, getJobMilestoneById } from "@/utils/functions";
+import { toast } from "react-toastify";
+import ChatProjectStatus from "./chatProjectStatus";
+import { userLoadingState } from "@/types/loading";
+import SmallLoading from "../smallLoading";
 
 interface ChatCombProps {
     sender: User;
     receiver: User | null;
     job: Job | null;
     conversation_id: string;
+    job_application_doc_id: string;
     clientName: string;
     acceptHandler: (conversation_id: string) => void;
     messages: Message[];
@@ -19,7 +28,53 @@ interface ChatCombProps {
     onStopWritingMessage: (conversation_id: string) => void;
 }
 
-const ChatComb = ({ sender, receiver, job, conversation_id, clientName, acceptHandler, messages, isWriting, onSendMessage, onWritingMessage, onStopWritingMessage }: ChatCombProps) => {
+const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_id, clientName, acceptHandler, messages, isWriting, onSendMessage, onWritingMessage, onStopWritingMessage }: ChatCombProps) => {
+    const [jobMilestoneId, setJobMilestoneId] = useState<string | null>(null);
+    const [ status, setStatus] = useState<number>(0);
+    const [loading, setLoading] = useState<userLoadingState>("pending");
+
+    useEffect(() => {
+        let isMounted = true;
+        const fetchJobMilestoneId = async () => {
+            setLoading("pending");
+            try {
+                const jobApplicationInfo = await getJobApplicationById(job_application_doc_id);
+                if(!jobApplicationInfo.success) {
+                    toast.error(jobApplicationInfo.error as string, {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                    });
+                    return;
+                }
+                if(!isMounted) return;
+
+                if(jobApplicationInfo.data.job_application_info.job_milestone_id){
+                    setJobMilestoneId(jobApplicationInfo.data.job_application_info.job_milestone_id);
+                    const jobMilestoneInfo = await getJobMilestoneById(jobApplicationInfo.data.job_application_info.job_milestone_id);
+                    if(!jobMilestoneInfo.success) {
+                        toast.error(jobMilestoneInfo.error as string, {
+                            position: "top-right",
+                            autoClose: 5000,
+                            hideProgressBar: false,
+                        });
+                        return;
+                    }
+                    if(!isMounted) return;
+
+                    const nextStatus = Number(jobMilestoneInfo.data.status ?? 0);
+                    setStatus(Number.isFinite(nextStatus) ? nextStatus : 0);
+                } else {
+                    setJobMilestoneId(null);
+                    setStatus(0);
+                }
+            } finally {
+                if(isMounted) setLoading("success");
+            }
+        };
+        fetchJobMilestoneId();
+        return () => { isMounted = false; };
+    }, [job_application_doc_id]);
     return (
         <div className="flex">
             <div className="flex-1 w-[70%]">
@@ -35,15 +90,29 @@ const ChatComb = ({ sender, receiver, job, conversation_id, clientName, acceptHa
                 />
             </div>
             <div className="flex-end max-w-[30%]">
-                <div className="flex flex-col gap-4.25 px-3.5 max-h-[calc(100vh-10rem)] overflow-y-auto hide-scrollbar">
+                <div className="flex flex-col gap-4.25 px-3.5 max-h-[calc(100vh-9rem)] overflow-y-auto hide-scrollbar">
                     <ChatUserInfo 
                         user={receiver} 
                     />
-                    <ChatProjectInfo 
-                        job={job} 
-                        clientName={job? clientName : "No client name"} 
-                        acceptHandler={() => acceptHandler(conversation_id)} 
-                    />
+                    {loading === "pending" ? 
+                        <div className="flex items-center justify-center pt-30">
+                            <SmallLoading />
+                        </div>
+                    : (
+                        <div className="mb-10">
+                            {!jobMilestoneId && <ChatProjectInfo 
+                                job={job} 
+                                clientName={job? clientName : "No client name"} 
+                                acceptHandler={() => acceptHandler(conversation_id)} 
+                            />}
+                            {jobMilestoneId && <ChatProjectStatus 
+                                status={status}
+                                jobMilestoneId={jobMilestoneId} 
+                                conversationId={conversation_id} 
+                                jobApplicationDocId={job_application_doc_id} 
+                            />}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -184,7 +184,7 @@ const ChatPageContent = () => {
 
     if(loading === "success") {
         return (
-            <div>
+            <div className="max-h-screen overflow-hidden">
                 <ChatNavbar />
                 <div className="flex">
                     <div className="w-[25%]">
@@ -196,6 +196,7 @@ const ChatPageContent = () => {
                         <ChatComb
                             sender={userInfo} 
                             conversation_id={selectedConversationId as string}
+                            job_application_doc_id={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.conversation.id === selectedConversationId)?.conversation.job_application_doc_id as string ?? "" : ""}
                             receiver={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.receiver as User ?? null : null} 
                             job={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.conversation.id === selectedConversationId)?.jobInfo as Job ?? null : null} 
                             clientName={``} 

@@ -61,6 +61,8 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
                 job_id: job_id ?? "",
                 client_id: client_id,
                 freelancer_id: freelancer_id ?? "",
+                client_confirm: false,
+                freelancer_confirm: false,
             });
             if (jobApplication.success) {
                 job_application_id = jobApplication.data.id;

@@ -11,7 +11,7 @@ import { Bid } from "@/types/bid";
 import { toast } from "react-toastify";
 import { User } from "@/types/user";
 import ApplicationPost from "./applicationPost";
-import Loading from "./loading";
+import SmallLoading from "./smallLoading";
 
 interface userJobOrGigPostProps {
     job_id?: string;
@@ -97,7 +97,7 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
             <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
                 <div className="linear-border__inner rounded-[0.4375rem] p-6 bg-white">
                     {loading === "pending" ? (
-                        <Loading />
+                        <SmallLoading />
                     ) : (
                         <div className="text-black">
                             <div className="flex justify-between gap-6">

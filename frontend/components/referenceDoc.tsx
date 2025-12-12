@@ -138,6 +138,8 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
             return;
         }
 
+        setError("");
+
         try{
             const result = await updateJobApplication(jobApplicationId, {
                 job_id: jobId,
@@ -156,17 +158,26 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
             if (!result.success) {
                 throw new Error(result.error as string);
             }
-    
-            toast.success("Job application updated successfully", {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-            });
-    
+
+            if(result.data.job_milestone_id) {
+                toast.success(`Escrow Contract deployed successfully - ${result.data.escrow_address}`, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                });
+            } else {
+                toast.success("Job application updated successfully", {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                });
+            }
+            
             router.push(`/chat?conversationId=${conversationId}`);
-            setError("");
         } catch (error) {
             error instanceof Error ? toast.error(error.message, {
                 position: "top-right",
