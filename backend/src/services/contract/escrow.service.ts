@@ -6,6 +6,7 @@ import { AppError } from '../../middlewares/errorHandler.js';
 import { jobMilestoneService } from '../database/job.milestone.service.js';
 import { chainTxsService } from '../database/chainTxs.service.js';
 import { jobService } from '../database/job.service.js';
+import { EscrowTxData } from '../../types/escrow.js';
 
 export interface EscrowInfo {
   buyer: string;
@@ -152,6 +153,47 @@ export class EscrowService {
       logger.error('Error funding escrow:', error);
       throw new AppError(`Failed to fund escrow: ${error.message}`, 500);
     }
+  }
+
+  async buildFundEscrowTx(
+    job_milestone_id: string,
+    userId: string,
+    chainId: number
+  ): Promise<EscrowTxData> {
+    const exsitingJobMilestone =
+      await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    if (!exsitingJobMilestone) {
+      throw new AppError('Job milestone not found', 404);
+    }
+
+    const amount = exsitingJobMilestone.amount.toString();
+  
+    const escrowAddress = exsitingJobMilestone.escrow;
+    if (!escrowAddress) {
+      throw new AppError('Escrow not found', 404);
+    }
+  
+    const existingJob =
+      await jobService.getJobById(exsitingJobMilestone.job_id);
+    if (!existingJob) {
+      throw new AppError('Job not found', 404);
+    }
+  
+    // OPTIONAL: enforce who can fund
+    if (existingJob.client_id !== userId) {
+      throw new AppError('Unauthorized', 403);
+    }
+  
+    const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
+  
+    const data = iface.encodeFunctionData('fund', []);
+  
+    return {
+      to: escrowAddress,
+      data,
+      value: ethers.parseEther(amount).toString(),
+      chainId: chainId
+    };
   }
 
   /**

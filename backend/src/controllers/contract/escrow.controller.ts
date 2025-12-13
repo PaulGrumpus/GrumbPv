@@ -56,13 +56,13 @@ export class EscrowController {
   async fund(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
-      const { privateKey, value } = req.body;
+      const { userId, chainId } = req.body;
 
-      const txHash = await escrowService.fundEscrow(job_milestone_id, privateKey, value);
+      const txData = await escrowService.buildFundEscrowTx(job_milestone_id, userId, chainId);
 
       res.json({
         success: true,
-        data: { transactionHash: txHash },
+        data: txData,
         message: 'Escrow funded successfully',
       });
     } catch (error) {

@@ -17,10 +17,11 @@ import {
 
 type WalletTransaction = {
   to: string;
-  value?: string; // hex value in wei
+  value?: string; // expected hex wei string (0x...) or decimal wei to be normalized
   data?: string;
-  gas?: string;
-  gasPrice?: string;
+  gas?: string; // hex or decimal, will be normalized
+  gasPrice?: string; // hex or decimal, will be normalized
+  chainId?: number | string; // optional override
 };
 
 type WalletContextValue = {
@@ -146,6 +147,16 @@ export const WalletProvider = ({ children }: Props) => {
 
   const sendTransaction = useCallback(
     async (tx: WalletTransaction) => {
+      const normalizeHex = (raw?: string) => {
+        if (!raw) return undefined;
+        if (raw.startsWith("0x") || raw.startsWith("0X")) return raw;
+        try {
+          return `0x${BigInt(raw).toString(16)}`;
+        } catch {
+          return raw;
+        }
+      };
+
       const eth = provider ?? getEthereumProvider();
       if (!eth) {
         throw new Error("Wallet provider not available. Connect MetaMask first.");
@@ -154,9 +165,22 @@ export const WalletProvider = ({ children }: Props) => {
         throw new Error("No connected account. Connect MetaMask first.");
       }
 
+      const value = normalizeHex(tx.value);
+      const gas = normalizeHex(tx.gas);
+      const gasPrice = normalizeHex(tx.gasPrice);
+      const txChainId = tx.chainId ?? chainId;
+      const normalizedChainId =
+        typeof txChainId === "number"
+          ? `0x${txChainId.toString(16)}`
+          : txChainId;
+
       const txParams = {
         from: address,
         ...tx,
+        value,
+        gas,
+        gasPrice,
+        chainId: normalizedChainId,
       };
 
       const hash = await eth.request({
@@ -166,7 +190,7 @@ export const WalletProvider = ({ children }: Props) => {
 
       return hash as string;
     },
-    [address, provider]
+    [address, chainId, provider]
   );
 
   return (

@@ -118,10 +118,10 @@ router.post(
   '/:job_milestone_id/fund',
   [
     param('job_milestone_id').isString().notEmpty(),
-    body('privateKey').isString().notEmpty(),
-    body('value').isString().notEmpty(),
+    body('userId').isString().notEmpty(),
+    body('chainId').isInt().notEmpty(),
   ],
-  validate([param('job_milestone_id'), body('privateKey'), body('value')]),
+  validate([param('job_milestone_id'), body('userId'), body('chainId')]),
   escrowController.fund.bind(escrowController)
 );
 

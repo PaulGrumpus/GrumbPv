@@ -695,6 +695,27 @@ export const getAllMessagesByConversationIds = async (conversationIds: string[])
     }
 }
 
+// web3
+
+export const fundEscrow = async (userId: string, job_milestone_id: string, chainId: number) => {
+    try {
+        const response = await EscrowBackend.post(`/contract/escrow/${job_milestone_id}/fund`, {
+            userId,
+            chainId,
+        });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 // Utils
 export const formatDueDate = (deadline: number | string | undefined) => {
     if (deadline === null || deadline === undefined) {

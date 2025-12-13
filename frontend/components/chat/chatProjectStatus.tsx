@@ -1,8 +1,13 @@
+"use client";
+
 import Button from "../button";
 import Link from "next/link";
 import { User } from "@/types/user";
 import Image from "next/image";
 import { toast } from "react-toastify";
+import { fundEscrow } from "@/utils/functions";
+import { useWallet } from "@/context/walletContext";
+import { CONFIG } from "@/config/config";
 
 interface ChatProjectStatusProps {
     status: number; // 1-4
@@ -25,6 +30,8 @@ const steps = [
 const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId, conversationId, jobApplicationDocId, user, ipfsUrl }: ChatProjectStatusProps) => {
     const safeStatus = Math.min(Math.max(status, 1), steps.length);
     const activeIndex = safeStatus - 1;
+
+    const { sendTransaction } = useWallet();
 
     const handleDownload = async (url: string) => {
         try {
@@ -58,6 +65,23 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
                     pauseOnHover: true,
                 }
             );
+        }
+    }
+
+    const handleFundEscrow = async () => {
+        const result = await fundEscrow(user.id, jobMilestoneId, Number(CONFIG.chainId));
+        console.log("test-result", result);
+        const txHash = await sendTransaction({
+            to: result.data.to,
+            data: result.data.data,
+            value: result.data.value,
+            chainId: Number(result.data.chainId),
+        });
+        console.log("test-txHash", txHash);
+        if (result.success) {
+            toast.success("Escrow funded successfully");
+        } else {
+            toast.error(result.error);
         }
     }
 
@@ -119,7 +143,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
                     {status === 1 && ( 
                         <div className="pb-20.5">
                             {user.role === "client" ? (
-                                <Button padding="px-6 py-1.5" onClick={actionHandler}>
+                                <Button padding="px-6 py-1.5" onClick={handleFundEscrow}>
                                     <p className="text-normal font-regular text-[#FFFFFF]">
                                         Escrow Fund
                                     </p>
