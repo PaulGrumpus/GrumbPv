@@ -83,3 +83,5 @@ export const DEFAULT_CONFIG = {
   feeRecipient: process.env.FEE_RECIPIENT_ADDRESS || '',
   arbiter: process.env.ARBITER_ADDRESS || '',
 };
+
+export const MEDIATOR_ID = process.env.MEDIATOR_ID || '';

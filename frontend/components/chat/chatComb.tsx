@@ -32,6 +32,7 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
     const [jobMilestoneId, setJobMilestoneId] = useState<string | null>(null);
     const [ status, setStatus] = useState<number>(0);
     const [loading, setLoading] = useState<userLoadingState>("pending");
+    const [ipfsUrl, setIpfsUrl] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -64,9 +65,11 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
 
                     const nextStatus = Number(jobMilestoneInfo.data.status ?? 0);
                     setStatus(Number.isFinite(nextStatus) ? nextStatus : 0);
+                    setIpfsUrl(jobMilestoneInfo.data.ipfs ?? null);
                 } else {
                     setJobMilestoneId(null);
                     setStatus(0);
+                    setIpfsUrl(null);
                 }
             } finally {
                 if(isMounted) setLoading("success");
@@ -106,10 +109,12 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
                                 acceptHandler={() => acceptHandler(conversation_id)} 
                             />}
                             {jobMilestoneId && <ChatProjectStatus 
-                                status={status}
+                                user={sender}
+                                status={4}
                                 jobMilestoneId={jobMilestoneId} 
                                 conversationId={conversation_id} 
                                 jobApplicationDocId={job_application_doc_id} 
+                                ipfsUrl={"https://brown-decisive-tyrannosaurus-507.mypinata.cloud/ipfs/bafybeifjc4r5emdr7r"}
                             />}
                         </div>
                     )}

@@ -112,6 +112,7 @@ model job_milestones {
   created_at          DateTime                @default(now()) @db.Timestamptz(6)
   token_symbol        String?
   escrow              String?
+  ipfs                String?
   updated_at          DateTime                @default(now()) @db.Timestamptz(6)
   freelancer_id       String                  @db.Uuid
   freelancer          users                   @relation("MilestoneCreators", fields: [freelancer_id], references: [id])

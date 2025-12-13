@@ -83,10 +83,7 @@ export class JobApplicationService {
                 });
                 if(!escrow) {
                     throw new AppError('Failed to create escrow', 500, 'FAILED_TO_CREATE_ESCROW');
-                }
-                await jobMilestoneService.updateJobMilestone(milestone.id, {
-                    escrow: escrow.escrowAddress,
-                });                
+                }                               
             }
             return {
                 ...updateResult as job_applications_docs,

@@ -1,5 +1,8 @@
 import Button from "../button";
 import Link from "next/link";
+import { User } from "@/types/user";
+import Image from "next/image";
+import { toast } from "react-toastify";
 
 interface ChatProjectStatusProps {
     status: number; // 1-4
@@ -8,6 +11,8 @@ interface ChatProjectStatusProps {
     jobMilestoneId: string;
     conversationId: string;
     jobApplicationDocId: string;
+    user: User;
+    ipfsUrl: string | null;
 }
 
 const steps = [
@@ -17,9 +22,44 @@ const steps = [
     "Approved payment",
 ];
 
-const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId, conversationId, jobApplicationDocId }: ChatProjectStatusProps) => {
+const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId, conversationId, jobApplicationDocId, user, ipfsUrl }: ChatProjectStatusProps) => {
     const safeStatus = Math.min(Math.max(status, 1), steps.length);
     const activeIndex = safeStatus - 1;
+
+    const handleDownload = async (url: string) => {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to download file: ${response.statusText}`);
+            }
+            const blob = await response.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            const fileName = url.split("/").pop() ?? "ipfs_file.txt";
+
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = fileName;
+            link.target = "_blank";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            window.open(objectUrl, "_blank");
+
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 15000);
+        } catch (error) {
+            toast.error(
+                "Failed to download file",
+                {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                }
+            );
+        }
+    }
 
     return (
         <div className="py-3 px-3.75 bg-linear-to-b from-[#7E3FF2] to-[#6A32E8] rounded-xl shadow-[0_10px_35px_rgba(55,0,132,0.35)]">
@@ -75,20 +115,133 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
                     </div>
                 </div>
 
-                <div className="flex items-center justify-center pb-20.5">
-                    <Button padding="px-6 py-1.5" onClick={actionHandler}>
-                        <p className="text-normal font-regular text-[#FFFFFF]">
-                            {actionLabel ?? "Escrow Fund"}
-                        </p>
-                    </Button>
+                <div className="flex items-center justify-center">
+                    {status === 1 && ( 
+                        <div className="pb-20.5">
+                            {user.role === "client" ? (
+                                <Button padding="px-6 py-1.5" onClick={actionHandler}>
+                                    <p className="text-normal font-regular text-[#FFFFFF]">
+                                        Escrow Fund
+                                    </p>
+                                </Button>
+                            ) : (
+                                <div className="h-9"></div>
+                            )}
+                        </div>
+                    )}
+                    {status === 2 && ( 
+                        <div className="pb-20.5">
+                            {user.role === "client" ? (
+                                <div className="h-9"></div>
+                            ) : (
+                                <Button padding="px-6 py-1.5" onClick={actionHandler}>
+                                    <p className="text-normal font-regular text-[#FFFFFF]">
+                                        Deliver Product
+                                    </p>
+                                </Button>
+                            )}
+                        </div>
+                    )}
+                    {status === 3 && ( 
+                        <div>
+                            {user.role === "client" ? (
+                                <div className="flex flex-col items-center justify-center pb-7">
+                                    <div className="flex items-center justify-center gap-3 pb-3">
+                                        <Link href={`${ipfsUrl}`} className="max-w-[25%] truncate">
+                                            <p className="text-normal font-regular text-[#2F3DF6] text-left truncate">{ipfsUrl}</p>
+                                        </Link>
+                                        <Button
+                                            onClick={() => handleDownload(ipfsUrl ?? "")}
+                                            padding="p-1"
+                                            variant="secondary"
+                                        >
+                                            <Image
+                                                src="/Grmps/download.svg"
+                                                alt="ipfs url"
+                                                width={24}
+                                                height={24}
+                                            />
+                                        </Button>
+                                    </div>
+                                    <Button padding="px-6 py-1.5" onClick={actionHandler}>
+                                        <p className="text-normal font-regular text-[#FFFFFF]">
+                                            Approve Result
+                                        </p>
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="h-9 pb-20.5"></div>
+                            )}
+                        </div>
+                    )}
+                    {status === 4 && ( 
+                        <div className="pb-20.5">
+                            {user.role === "client" ? (
+                                <div className="h-9"></div>
+                            ) : (
+                                <Button padding="px-6 py-1.5" onClick={actionHandler}>
+                                    <p className="text-normal font-regular text-[#FFFFFF]">
+                                        Withdraw Payment
+                                    </p>
+                                </Button>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center justify-center pb-6">
-                    <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`} className="w-full flex justify-center">
-                        <Button padding="px-4 py-1.5" variant="secondary">
-                            <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
-                        </Button>
-                    </Link>
+                    {status === 1 && ( 
+                        <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
+                            <Button padding="px-4 py-1.5" variant="secondary">
+                                <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
+                            </Button>
+                        </Link>
+                    )}  
+                    {status === 2 && ( 
+                        <div>
+                            {user.role === "client" ? (
+                                <div className="flex gap-2.5 justify-center w-full">
+                                    <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
+                                        <Button padding="px-4 py-1.5" variant="secondary">
+                                            <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
+                                        </Button>
+                                    </Link>
+                                    <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
+                                        <Button padding="px-5.5 py-1.5" variant="primary">
+                                            <p className="text-normal font-regular text-white">Dispute</p>
+                                        </Button>
+                                    </Link>
+                                </div>
+                            ) : (
+                                <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
+                                    <Button padding="px-4 py-1.5" variant="secondary">
+                                        <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
+                                    </Button>
+                                </Link>
+                            )}
+                        </div>
+                    )}      
+                    {status === 3 && ( 
+                        <div className="flex gap-2.5 justify-center w-full">
+                            <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
+                                <Button padding="px-4 py-1.5" variant="secondary">
+                                    <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
+                                </Button>
+                            </Link>
+                            <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
+                                <Button padding="px-5.5 py-1.5" variant="primary">
+                                    <p className="text-normal font-regular text-white">Dispute</p>
+                                </Button>
+                            </Link>
+                        </div>
+                    )}   
+                    {status === 4 && ( 
+                        <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
+                            <Button padding="px-4 py-1.5" variant="secondary">
+                                <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
+                            </Button>
+                        </Link>
+                    )}           
                 </div>
             </div>
         </div>
