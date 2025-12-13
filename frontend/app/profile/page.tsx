@@ -14,6 +14,7 @@ import { User } from '@/types/user';
 import { updateUser } from '@/utils/functions';
 import { EscrowBackendConfig } from '@/config/config';
 import { connectMetaMaskWallet } from '@/utils/walletConnnect';
+import { useWallet } from '@/context/walletContext';
 
 type FormState = {
     userName: string;
@@ -47,6 +48,7 @@ const ProfilePage = () => {
     const [uploadedFileName, setUploadedFileName] = useState("");
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const { connect, address, isConnected } = useWallet();
 
     const initialFormState = useRef<FormState>({
         userName: "",
@@ -222,11 +224,10 @@ const ProfilePage = () => {
     }
 
     const handleConnectWallet = async () => {
-        const connection = await connectMetaMaskWallet(userEmail);
-        if(!connection) {
-            return;
+        const result = await connect(userEmail);
+        if (result?.address) {
+            setUserWaletAddress(result.address);
         }
-        setUserWaletAddress(connection.address);
     }
 
     const resetForm = () => {
@@ -288,15 +289,13 @@ const ProfilePage = () => {
                         userPhoto: userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "",
                         selectedLanguage,
                     };
-                    console.log("test-initialFormState", initialFormState.current);
-                    console.log("test-userInfo", userInfo);
                     setUserBio(userInfo.bio || "")
                     setSelectedLanguage("")
                     setUserName(userInfo.display_name || "")
                     setUserPhoto(userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "")
                     setUserRole(userInfo.role || "")
                     setUserEmail(userInfo.email || "")
-                    setUserWaletAddress(userInfo.address || "")
+                    setUserWaletAddress(isConnected ? userInfo.address || null : null)
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }
@@ -306,6 +305,18 @@ const ProfilePage = () => {
             router.push("/");
         }
     }, [userInfo, userLoadingState, router])
+
+    useEffect(() => {
+        if (address) {
+            setUserWaletAddress(address);
+        }
+    }, [address]);
+
+    useEffect(() => {
+        if (!isConnected) {
+            setUserWaletAddress(null);
+        }
+    }, [isConnected]);
 
     if (loading === "pending") {
         return <Loading />;

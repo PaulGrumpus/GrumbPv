@@ -13,6 +13,7 @@ import { ConversationsInfoProvider } from "@/context/conversationsContext";
 import { MessagesInfoProvider } from "@/context/messagesContext";
 import { MessageLoadingProvider } from "@/context/messageLoadingContext";
 import SocketContextProvider from "@/context/socketContext";
+import { WalletProvider } from "@/context/walletContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,24 +61,26 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${roboto.variable} ${poppins.variable} ${inter.variable} antialiased bg-white`}
       >
-        <UserLoadingProvider>
-          <UserInfoProvider>
-            <SocketContextProvider>
-              <ConversationLoadingProvider>
-                <ConversationsInfoProvider>
-                  <MessageLoadingProvider>
-                    <MessagesInfoProvider>
-                      <Navbar />
-                      {children}
-                      <FooterToggle />
-                      <ToastContainer />
-                    </MessagesInfoProvider>
-                  </MessageLoadingProvider>
-                </ConversationsInfoProvider>
-              </ConversationLoadingProvider>
-            </SocketContextProvider>
-          </UserInfoProvider>
-        </UserLoadingProvider>
+        <WalletProvider>
+          <UserLoadingProvider>
+            <UserInfoProvider>
+              <SocketContextProvider>
+                <ConversationLoadingProvider>
+                  <ConversationsInfoProvider>
+                    <MessageLoadingProvider>
+                      <MessagesInfoProvider>
+                        <Navbar />
+                        {children}
+                        <FooterToggle />
+                        <ToastContainer />
+                      </MessagesInfoProvider>
+                    </MessageLoadingProvider>
+                  </ConversationsInfoProvider>
+                </ConversationLoadingProvider>
+              </SocketContextProvider>
+            </UserInfoProvider>
+          </UserLoadingProvider>
+        </WalletProvider>
       </body>
     </html>
   );

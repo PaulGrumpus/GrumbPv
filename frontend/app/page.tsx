@@ -7,13 +7,21 @@ import Loading from "@/components/loading";
 import { UserInfoCtx } from "@/context/userContext";
 import Image from "next/image";
 
+import { useWallet } from '@/context/walletContext';
+
 const Home = () => {
   const { userLoadingState } = useContext(UserLoadingCtx);
   const [loading, setLoading] = useState("pending");
+  const { address, chainId, provider, isConnecting, isConnected, connect, disconnect, sendTransaction } = useWallet();
 
   useEffect(() => {
     if(userLoadingState !== "pending") {
         const load = async () => {
+          console.log("test-address", address);
+          console.log("test-chainId", chainId);
+          console.log("test-provider", provider);
+          console.log("test-isConnecting", isConnecting);
+          console.log("test-isConnected", isConnected);
             await new Promise(resolve => setTimeout(resolve, 3000));
             setLoading("success");
         }
