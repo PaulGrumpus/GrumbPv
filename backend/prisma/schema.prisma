@@ -30,7 +30,8 @@ model users {
   jobs                    jobs[]                      @relation("ClientJobs")
   receipts                message_receipts[]
   sent_messages           messages[]                  @relation("SenderMessages")
-  notifications           notifications[]
+  notifications           notifications[]             @relation("NotificationRecipient")
+  notifications_as_actor  notifications[]             @relation("NotificationActor")
   client_applications     job_applications_docs[]     @relation("ClientApplications")
   freelancer_applications job_applications_docs[]     @relation("FreelancerApplications")
 
@@ -234,14 +235,27 @@ model chain_txs {
 }
 
 model notifications {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String    @db.Uuid
-  kind       String
-  payload    Json
+  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id String @db.Uuid
+
+  type        notification_type
+  entity_type notification_entity
+  entity_id   String              @db.Uuid
+
+  actor_user_id String? @db.Uuid
+
+  title   String
+  body    String
+  payload Json?
+
   read_at    DateTime? @db.Timestamptz(6)
   created_at DateTime  @default(now()) @db.Timestamptz(6)
-  user       users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  user  users  @relation("NotificationRecipient", fields: [user_id], references: [id], onDelete: Cascade)
+  actor users? @relation("NotificationActor", fields: [actor_user_id], references: [id])
+
+  @@index([user_id, read_at])
+  @@index([entity_type, entity_id])
   @@map("notifications")
 }
 
@@ -344,4 +358,27 @@ enum read_state {
   sent
   delivered
   read
+}
+
+enum notification_type {
+  JOB_POSTED
+  BID_RECEIVED
+  BID_ACCEPTED
+  JOB_STARTED
+  MILESTONE_FUNDED
+  MILESTONE_DELIVERED
+  MILESTONE_APPROVED
+  FUNDS_RELEASED
+  DISPUTE_STARTED
+  DISPUTE_RESOLVED
+  MESSAGE_RECEIVED
+}
+
+enum notification_entity {
+  job
+  bid
+  milestone
+  escrow
+  dispute
+  conversation
 }
