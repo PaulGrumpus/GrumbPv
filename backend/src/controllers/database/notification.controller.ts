@@ -22,7 +22,10 @@ export class NotificationController {
         try {
             const { id } = req.params;
             const { read_at } = req.body;
-            const result = await notificationService.updateNotification(id, read_at);
+            console.log("read_at", read_at);
+            const read_at_date = new Date(read_at);
+            console.log("read_at_date", read_at_date);
+            const result = await notificationService.updateNotification(id, read_at_date);
             res.json({
                 success: true,
                 data: result,

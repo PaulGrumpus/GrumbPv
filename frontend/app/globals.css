@@ -202,7 +202,9 @@
   scrollbar-width: thin;
   scrollbar-color: var(--color-light-blue) transparent;
   padding-right: 0.75rem;
-
+}
+.notification-scrollbar {
+  padding-right: 0;
 }
 .decorate-scrollbar::-webkit-scrollbar {
   width: 4px;

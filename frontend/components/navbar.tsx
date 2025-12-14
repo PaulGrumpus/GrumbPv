@@ -11,6 +11,9 @@ import LoginSignupModal from "./loginSignupModal";
 import { UserInfoCtx } from "@/context/userContext";
 import { toast } from "react-toastify";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
+import { NotificationCtx } from "@/context/notificationContext";
+import { Notification } from "@/types/notification";
+import { formatHourMinute, updateNotification } from "@/utils/functions";
 
 const chatIcon = "/Grmps/chat.svg";
 const bellIcon = "/Grmps/bell.svg";
@@ -37,15 +40,21 @@ const menuItems = [
 const Navbar = () => {
     const router = useRouter();
     const { userInfo } = useContext(UserInfoCtx);
+    const { notifications } = useContext(NotificationCtx);
     const [userRole, setUserRole] = useState("client");
     const [loggedIn, setLoggedIn] = useState(false);
     const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
-    const [notifications] = useState(0);
+    const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
     const [messages] = useState(2);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const menuToggleRef = useRef<HTMLDivElement>(null);
+    const notificationDropdownRef = useRef<HTMLDivElement>(null);
+    const notificationToggleRef = useRef<HTMLDivElement>(null);
     const [loginSignupModalOpen, setLoginSignupModalOpen] = useState(false);
     const [username, setUsername] = useState("");
+
+    const [notificationCount, setNotificationCount] = useState(0);
+    const [messageCount, setMessageCount] = useState(0);
 
     useEffect(() => {
         if(userInfo.id) {
@@ -57,33 +66,54 @@ const Navbar = () => {
             } else if(userInfo.address) {
                 setUsername(userInfo.address.slice(0, 4) + "..." + userInfo.address.slice(-4));
             }
-            setLoggedIn(true);
+            setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
+            setLoggedIn(true);            
         } else {
             setUserRole('client');
             setLoggedIn(false);
         }
     }, [userInfo]);
 
+    useEffect(() => {
+        setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
+    }, [notifications]);
+
     const handleDropdownMenuOpen = () => {
-        setDropdownMenuOpen(!dropdownMenuOpen);
+        setDropdownMenuOpen((prev) => !prev);
+        setNotificationDropdownOpen(false);
     }
+
+    const handleNotificationClick = () => {
+        setNotificationDropdownOpen((prev) => !prev);
+        setDropdownMenuOpen(false);
+    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (!dropdownMenuOpen) return;
-
             const target = event.target as Node;
-            const clickedInsideMenu = dropdownRef.current?.contains(target);
-            const clickedToggle = menuToggleRef.current?.contains(target);
 
-            if (!clickedInsideMenu && !clickedToggle) {
-                setDropdownMenuOpen(false);
+            if (dropdownMenuOpen) {
+                const clickedInsideMenu = dropdownRef.current?.contains(target);
+                const clickedToggle = menuToggleRef.current?.contains(target);
+
+                if (!clickedInsideMenu && !clickedToggle) {
+                    setDropdownMenuOpen(false);
+                }
+            }
+
+            if (notificationDropdownOpen) {
+                const clickedInsideMenu = notificationDropdownRef.current?.contains(target);
+                const clickedToggle = notificationToggleRef.current?.contains(target);
+
+                if (!clickedInsideMenu && !clickedToggle) {
+                    setNotificationDropdownOpen(false);
+                }
             }
         };
 
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [dropdownMenuOpen]);
+    }, [dropdownMenuOpen, notificationDropdownOpen]);
     return (
         <div>
             <div className="fixed top-0 left-0 right-0 z-50 bg-white px-16 py-[15.5px] shadow-xl">
@@ -130,21 +160,32 @@ const Navbar = () => {
                                         height={24} 
                                         className="h-full w-full object-cover"
                                     />
-                                    {messages >= 1 && (
+                                    {messageCount >= 1 && (
                                         <span 
                                             className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
                                     )}
                                 </div>
-                                <div className="relative w-6 h-6">
-                                    <Image 
-                                        src={bellIcon} 
-                                        alt="Bell Icon" 
-                                        width={24} 
-                                        height={24} 
-                                        className="h-full w-full object-cover"
-                                    />
-                                    {notifications >= 1 && (
-                                        <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
+                                <div className="relative" ref={notificationToggleRef}>
+                                    <div
+                                        className="relative w-6 h-6 cursor-pointer hover:scale-110 transition-all duration-300"
+                                        onClick={handleNotificationClick}
+                                    >
+                                        <Image
+                                            src={bellIcon}
+                                            alt="Bell Icon"
+                                            width={24}
+                                            height={24}
+                                            className="h-full w-full object-cover"
+                                        />
+                                        {notificationCount >= 1 && (
+                                            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
+                                        )}
+                                    </div>
+                                    {notificationDropdownOpen && (
+                                        <NotificationDropdownMenu
+                                            ref={notificationDropdownRef}
+                                            notifications={notifications}
+                                        />
                                     )}
                                 </div>
                                 <div 
@@ -271,5 +312,84 @@ const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
 });
 
 DropdownMenu.displayName = "DropdownMenu";
+
+type NotificationDropdownMenuProps = {
+    notifications: Notification[];
+};
+
+const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdownMenuProps>(({ notifications }, ref) => {
+    const { setNotifications } = useContext(NotificationCtx);
+
+    const formatDate = (value?: Date | string) => {
+        if (!value) return null;
+        const parsedDate = typeof value === "string" ? new Date(value) : value;
+        if (!parsedDate || Number.isNaN(parsedDate.getTime())) return null;
+        return parsedDate.toLocaleString();
+    };
+
+    const unreadNotifications = notifications
+        .filter((notification) => !notification.read_at)
+        .sort((a, b) => {
+            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return bTime - aTime;
+        });
+
+    const handleMarkAsRead = async (notificationId: string) => {
+        try {
+            await updateNotification(notificationId, new Date());
+        }
+        catch (error) {
+            console.error("Unable to mark notification as read", error);
+        }
+        finally {
+            const updatedNotifications = notifications.map((notification) =>
+                notification.id === notificationId ? { ...notification, readAt: new Date().toISOString() } : notification
+            );
+            setNotifications(updatedNotifications);
+        }
+    };
+
+    return (
+        <div
+            ref={ref}
+            className="absolute right-0 mt-2 w-72 rounded-lg border border-[#8F99AF66] bg-white shadow-md z-50 transition-all duration-200"
+        >
+            <div className="border-b px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-500">
+                Notifications
+            </div>
+            <ul className="max-h-72 overflow-y-auto decorate-scrollbar notification-scrollbar">
+                {unreadNotifications.length === 0 && (
+                    <li className="px-4 py-3 text-sm text-gray-500">You're all caught up!</li>
+                )}
+                {unreadNotifications.map((notification) => {
+                    const formattedDate = formatDate(notification.created_at);
+                    return (
+                        <li
+                            key={notification.id}
+                            onClick={() => handleMarkAsRead(notification.id)}
+                            className="cursor-pointer border-b last:border-b-0 px-4 py-3 hover:bg-[#2F3DF633]"
+                        >
+                            <div className="flex justify-between">
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-800">{notification.title}</p>
+                                    <p className="text-xs text-gray-600">{notification.body}</p>
+                                    {formattedDate && (
+                                        <p className="mt-1 text-[11px] text-gray-400">{formattedDate}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-600">{formatHourMinute(notification.created_at ?? "")}</p>
+                                </div>
+                            </div>
+                        </li>
+                    );
+                })}
+            </ul>
+        </div>
+    );
+});
+
+NotificationDropdownMenu.displayName = "NotificationDropdownMenu";
 
 export default Navbar;

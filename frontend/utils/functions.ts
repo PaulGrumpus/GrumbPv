@@ -869,6 +869,10 @@ export const updateNotification = async (notification_id: string, read_at: Date)
         const response = await EscrowBackend.post(`/database/notifications/${notification_id}`, {
             read_at: read_at,
         });
+        return {
+            success: true,
+            data: response.data,
+        };
     }
     catch (error: any) {
         return {
@@ -909,5 +913,8 @@ export const formatDueDate = (deadline: number | string | undefined) => {
 };
 
 export const formatHourMinute = (date: string) => {
+    if(new Date(date).getTime() < (new Date().getTime() - 60 * 60 * 24 * 1000)) {
+        return new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric'});
+    }
     return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 };

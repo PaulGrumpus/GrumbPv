@@ -1,15 +1,15 @@
 export interface Notification {
     id: string;
-    userId: string;
+    user_id: string;
     type: NotificationType;
-    entityType: NotificationEntity;
-    entityId: string;
-    actorUserId?: string;
+    entity_type: NotificationEntity;
+    entity_id: string;
+    actor_user_id?: string;
     title: string;
     body: string;
     payload?: any;
-    readAt?: Date;
-    createdAt?: Date;
+    read_at?: string;
+    created_at?: string;
 }
 
 export enum NotificationType {

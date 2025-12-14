@@ -17,7 +17,7 @@ router.post('/by-user-id/:user_id',
 router.post('/:id', 
     [
         param('id').isString().notEmpty(),
-        body('read_at').isDate().notEmpty(),
+        body('read_at').isString().notEmpty(),
     ],
     validate([param('id'), body('read_at')]),
     notificationController.updateNotification.bind(notificationController)

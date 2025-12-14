@@ -58,6 +58,10 @@ export const NotificationProvider = ({ children }: Props) => {
         }
     }, [notificationSocket.isConnected]);
 
+    useEffect(() => {
+        console.log("notifications", notifications);
+    }, [notifications]);
+
     return (
         <NotificationCtx.Provider value={{ notifications, setNotifications, notificationsError, setNotificationsError }}>
             {children}

@@ -1,8 +1,8 @@
 import { Prisma, notifications } from "@prisma/client";
-import { prisma } from "../../prisma";
-import { logger } from "../../utils/logger";
-import { AppError } from "../../middlewares/errorHandler";
-import { emitNotification } from "../../routes/notification.socket.route";
+import { prisma } from "../../prisma.js";
+import { logger } from "../../utils/logger.js";
+import { AppError } from "../../middlewares/errorHandler.js";
+import { emitNotification } from "../../routes/notification.socket.route.js";
 
 export class NotificationService {
     private prisma = prisma;
