@@ -18,3 +18,10 @@ export type MessageLoadingContextType = {
   messageLoadingState: messageLoadingState;
   setmessageLoadingState: React.Dispatch<React.SetStateAction<messageLoadingState>>;
 };
+
+export type projectInfoLoadingState = "pending" | "failure" | "success";
+
+export type ProjectInfoLoadingContextType = {
+  projectInfoLoadingState: projectInfoLoadingState;
+  setprojectInfoLoadingState: React.Dispatch<React.SetStateAction<projectInfoLoadingState>>;
+};

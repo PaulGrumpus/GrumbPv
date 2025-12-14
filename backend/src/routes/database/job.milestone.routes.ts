@@ -284,6 +284,13 @@ router.get(
   jobMilestoneController.getJobMilestonesByJobId.bind(jobMilestoneController)
 );
 
+router.get(
+  '/by-user-id/:user_id',
+  [param('user_id').isString().notEmpty()],
+  validate([param('user_id')]),
+  jobMilestoneController.getJobMilestonesByUserId.bind(jobMilestoneController)
+);
+
 /**
  * @swagger
  * /api/v1/database/job-milestones:

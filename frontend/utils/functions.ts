@@ -373,6 +373,22 @@ export const updateJobMilestone = async (job_milestone_id: string, jobMilestone:
     }
 }
 
+export const getJobMilestonesByUserId = async (user_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/job-milestones/by-user-id/${user_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 // Gigs
 export const createGig = async (gig: Gig, imageFile?: File | null) => {
     try {
@@ -453,7 +469,6 @@ export const getGigs = async () => {
         };
     }
 }
-
 
 // Bids
 export const createBid = async (bid: Bid) => {
@@ -558,9 +573,9 @@ export const createJobApplication = async (jobApplication: JobApplication) => {
     }
 }
 
-export const updateJobApplication = async (job_application_id: string, jobApplication: JobApplication) => {
+export const updateJobApplication = async (job_application_id: string, user_id: string, jobApplication: JobApplication) => {
     try {
-        const response = await EscrowBackend.post(`/database/job-applications/${job_application_id}`, jobApplication);
+        const response = await EscrowBackend.post(`/database/job-applications/${job_application_id}/${user_id}`, jobApplication);
         return {
             success: true,
             data: response.data.data,
@@ -592,6 +607,22 @@ export const getJobApplicationById = async (job_application_id: string) => {
 export const deleteJobApplication = async (job_application_id: string) => {
     try {
         const response = await EscrowBackend.delete(`/database/job-applications/${job_application_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const getJobApplicationsByUserId = async (user_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/job-applications/by-user-id/${user_id}`);
         return {
             success: true,
             data: response.data.data,

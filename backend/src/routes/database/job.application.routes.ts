@@ -41,6 +41,13 @@ router.get(
     jobApplicationController.getJobApplicationByJobMilestoneId.bind(jobApplicationController)
 );
 
+router.get(
+    '/by-user-id/:user_id',
+    [param('user_id').isString().notEmpty()],
+    validate([param('user_id')]),
+    jobApplicationController.getJobApplicationsByUserId.bind(jobApplicationController)
+);
+
 router.delete(
     '/:id',
     [param('id').isString().notEmpty()],

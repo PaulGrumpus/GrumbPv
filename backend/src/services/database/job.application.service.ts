@@ -229,6 +229,22 @@ export class JobApplicationService {
         }
     }
 
+    public async getJobApplicationsByUserId(user_id: string): Promise<job_applications_docs[]> {
+        try {
+            const existingJobApplications = await this.prisma.job_applications_docs.findMany({
+                where: { freelancer_id: user_id },
+            });
+            return existingJobApplications;
+        }
+        catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            logger.error('Error getting job applications by user id', { error });
+            throw new AppError('Error getting job applications by user id', 500, 'DB_JOB_APPLICATIONS_GET_BY_USER_ID_FAILED');
+        }
+    }
+
     public async deleteJobApplication(id: string): Promise<void> {
         try {
             if (!id) {

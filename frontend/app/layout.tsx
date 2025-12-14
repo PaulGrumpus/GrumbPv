@@ -14,6 +14,8 @@ import { MessagesInfoProvider } from "@/context/messagesContext";
 import { MessageLoadingProvider } from "@/context/messageLoadingContext";
 import SocketContextProvider from "@/context/socketContext";
 import { WalletProvider } from "@/context/walletContext";
+import { ProjectInfoLoadingProvider } from "@/context/projectInfoLoadingContext";
+import { ProjectInfoProvider } from "@/context/projectInfoContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,18 +67,22 @@ export default function RootLayout({
           <UserLoadingProvider>
             <UserInfoProvider>
               <SocketContextProvider>
-                <ConversationLoadingProvider>
-                  <ConversationsInfoProvider>
-                    <MessageLoadingProvider>
-                      <MessagesInfoProvider>
-                        <Navbar />
-                        {children}
-                        <FooterToggle />
-                        <ToastContainer />
-                      </MessagesInfoProvider>
-                    </MessageLoadingProvider>
-                  </ConversationsInfoProvider>
-                </ConversationLoadingProvider>
+                <ProjectInfoLoadingProvider>
+                  <ProjectInfoProvider>
+                    <ConversationLoadingProvider>
+                      <ConversationsInfoProvider>
+                        <MessageLoadingProvider>
+                          <MessagesInfoProvider>
+                            <Navbar />
+                            {children}
+                            <FooterToggle />
+                            <ToastContainer />
+                          </MessagesInfoProvider>
+                        </MessageLoadingProvider>
+                      </ConversationsInfoProvider>
+                    </ConversationLoadingProvider>
+                  </ProjectInfoProvider>
+                </ProjectInfoLoadingProvider>
               </SocketContextProvider>
             </UserInfoProvider>
           </UserLoadingProvider>

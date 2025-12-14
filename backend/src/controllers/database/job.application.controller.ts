@@ -59,6 +59,21 @@ export class JobApplicationController {
         }
     }
 
+    async getJobApplicationsByUserId(req: Request, res: Response, next: NextFunction) {
+
+        try {
+            const { user_id } = req.params;
+            const result = await jobApplicationService.getJobApplicationsByUserId(user_id);
+            res.json({
+                success: true,
+                data: result,
+                message: 'Job applications retrieved successfully',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+    
     async deleteJobApplication(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;

@@ -350,5 +350,21 @@ export class JobMilestoneService {
       throw new AppError('Error getting job milestones', 500, 'DB_JOB_MILESTONES_GET_FAILED');
     }
   }
+
+  public async getJobMilestonesByUserId(user_id: string): Promise<job_milestones[]> {
+    try {
+      const existingJobMilestones = await this.prisma.job_milestones.findMany({
+        where: { freelancer_id: user_id },
+      });
+      return existingJobMilestones;
+    }
+    catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      logger.error('Error getting job milestones by user id', { error });
+      throw new AppError('Error getting job milestones by user id', 500, 'DB_JOB_MILESTONES_GET_BY_USER_ID_FAILED');
+    }
+  }
 }
 export const jobMilestoneService = new JobMilestoneService();

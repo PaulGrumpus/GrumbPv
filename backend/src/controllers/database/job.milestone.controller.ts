@@ -86,6 +86,20 @@ export class JobMilestoneController {
       next(error);
     }
   }
+
+  async getJobMilestonesByUserId(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { user_id } = req.params;
+      const result = await jobMilestoneService.getJobMilestonesByUserId(user_id);
+      res.json({
+        success: true,
+        data: result,
+        message: 'Job milestones retrieved successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const jobMilestoneController = new JobMilestoneController();

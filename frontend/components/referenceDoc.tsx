@@ -141,7 +141,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
         setError("");
 
         try{
-            const result = await updateJobApplication(jobApplicationId, {
+            const result = await updateJobApplication(jobApplicationId, userInfo.id, {
                 job_id: jobId,
                 client_id: clientId,
                 freelancer_id: freelancerId,
