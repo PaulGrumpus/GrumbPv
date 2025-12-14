@@ -5,7 +5,7 @@ import Link from "next/link";
 import { User } from "@/types/user";
 import Image from "next/image";
 import { toast } from "react-toastify";
-import { fundEscrow, deliverWork } from "@/utils/functions";
+import { fundEscrow, deliverWork, approveWork, updateJobMilestone, withdrawFunds } from "@/utils/functions";
 import { useWallet } from "@/context/walletContext";
 import { CONFIG } from "@/config/config";
 import ModalTemplate from "../modalTemplate";
@@ -19,7 +19,7 @@ interface ChatProjectStatusProps {
     conversationId: string;
     jobApplicationDocId: string;
     user: User;
-    ipfsUrl: string | null;
+    ipfs: string | null;
 }
 
 const steps = [
@@ -29,7 +29,7 @@ const steps = [
     "Approved payment",
 ];
 
-const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId, conversationId, jobApplicationDocId, user, ipfsUrl }: ChatProjectStatusProps) => {
+const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId, conversationId, jobApplicationDocId, user, ipfs }: ChatProjectStatusProps) => {
     const safeStatus = Math.min(Math.max(status, 1), steps.length);
     const activeIndex = safeStatus - 1;
     const [isOpen, setIsOpen] = useState(false);
@@ -83,11 +83,33 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
             value: result.data.value,
             chainId: Number(result.data.chainId),
         });
-        console.log("test-txHash", txHash);
-        if (result.success) {
-            toast.success("Escrow funded successfully");
+        if (!txHash) {
+            toast.error("Failed to fund escrow", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: "funded" });
+        if (updatedJobMilestone.success) {
+            toast.success("Escrow funded successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
         } else {
-            toast.error(result.error);
+            toast.error(updatedJobMilestone.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
         }
     }
 
@@ -100,11 +122,33 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
             value: result.data.value,
             chainId: Number(result.data.chainId),
         });
-        console.log("test-txHash", txHash);
-        if (result.success) {
-            toast.success("Work delivered successfully");
+        if (!txHash) {
+            toast.error("Failed to deliver work", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: "delivered", ipfs: result.data.cid });
+        if (updatedJobMilestone.success) {
+            toast.success("Work delivered successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
         } else {
-            toast.error(result.error);
+            toast.error(updatedJobMilestone.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
         }
     }
 
@@ -143,6 +187,82 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
             closeOnClick: true,
             pauseOnHover: true,
         });
+    }
+
+    const handleApproveWork = async () => {
+        const result = await approveWork(user.id, jobMilestoneId, Number(CONFIG.chainId), ipfs ?? "");
+        const txHash = await sendTransaction({
+            to: result.data.to,
+            data: result.data.data,
+            value: result.data.value,
+            chainId: Number(result.data.chainId),
+        });
+        if (!txHash) {
+            toast.error("Failed to approve work", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: "approved" });
+        if (updatedJobMilestone.success) {
+            toast.success("Work approved successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.error(updatedJobMilestone.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
+    }
+
+    const handleWithdrawFunds = async () => {
+        const result = await withdrawFunds(user.id, jobMilestoneId, Number(CONFIG.chainId));
+        const txHash = await sendTransaction({
+            to: result.data.to,
+            data: result.data.data,
+            value: result.data.value,
+            chainId: Number(result.data.chainId),
+        });
+        if (!txHash) {
+            toast.error("Failed to withdraw funds", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: "released" });
+        if (updatedJobMilestone.success) {
+            toast.success("Funds withdrawn successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.error(updatedJobMilestone.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
     }
 
     return (
@@ -231,11 +351,11 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
                             {user.role === "client" ? (
                                 <div className="flex flex-col items-center justify-center pb-7">
                                     <div className="flex items-center justify-center gap-3 pb-3">
-                                        <Link href={`${ipfsUrl}`} className="max-w-[25%] truncate">
-                                            <p className="text-normal font-regular text-[#2F3DF6] text-left truncate">{ipfsUrl}</p>
+                                        <Link href={`${CONFIG.ipfsGateWay}/${ipfs}`} className="max-w-[15%] truncate">
+                                            <p className="text-normal font-regular text-[#2F3DF6] text-left truncate">{CONFIG.ipfsGateWay}/{ipfs}</p>
                                         </Link>
                                         <Button
-                                            onClick={() => handleDownload(ipfsUrl ?? "")}
+                                            onClick={() => handleDownload(`${CONFIG.ipfsGateWay}/${ipfs}`)}
                                             padding="p-1"
                                             variant="secondary"
                                         >
@@ -247,7 +367,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
                                             />
                                         </Button>
                                     </div>
-                                    <Button padding="px-6 py-1.5" onClick={actionHandler}>
+                                    <Button padding="px-6 py-1.5" onClick={handleApproveWork}>
                                         <p className="text-normal font-regular text-[#FFFFFF]">
                                             Approve Result
                                         </p>
@@ -263,7 +383,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
                             {user.role === "client" ? (
                                 <div className="h-9"></div>
                             ) : (
-                                <Button padding="px-6 py-1.5" onClick={actionHandler}>
+                                <Button padding="px-6 py-1.5" onClick={handleWithdrawFunds}>
                                     <p className="text-normal font-regular text-[#FFFFFF]">
                                         Withdraw Payment
                                     </p>

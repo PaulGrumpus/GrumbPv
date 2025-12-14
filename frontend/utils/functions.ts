@@ -6,6 +6,7 @@ import { Job } from "@/types/jobs";
 import { Gig } from "@/types/gigs";
 import { Bid, BidStatus } from "@/types/bid";
 import { JobApplication } from "@/types/jobApplication";
+import { JobMilestone } from "@/types/jobMilestone";
 
 // Users
 export const createUserWithAddress = async (address: string, role: string) => {
@@ -339,9 +340,26 @@ export const getJobById = async (job_id: string) => {
     }
 }
 
+// Job Milestones
 export const getJobMilestoneById = async (job_milestone_id: string) => {
     try {
         const response = await EscrowBackend.get(`/database/job-milestones/by-id/${job_milestone_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const updateJobMilestone = async (job_milestone_id: string, jobMilestone: JobMilestone) => {
+    try {
+        const response = await EscrowBackend.post(`/database/job-milestones/${job_milestone_id}`, jobMilestone);
         return {
             success: true,
             data: response.data.data,
@@ -751,6 +769,45 @@ export const deliverWork = async (userId: string, job_milestone_id: string, chai
             data: response.data.data,
         };
     } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const approveWork = async (userId: string, job_milestone_id: string, chainId: number, cid: string) => {
+    try {
+        const response = await EscrowBackend.post(`/contract/escrow/${job_milestone_id}/approve`, {
+            userId,
+            chainId,
+            cid,
+        });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const withdrawFunds = async (userId: string, job_milestone_id: string, chainId: number) => {
+    try {
+        const response = await EscrowBackend.post(`/contract/escrow/${job_milestone_id}/withdraw`, {
+            userId,
+            chainId,
+        });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
         return {
             success: false,
             error: error.response?.data?.error?.message || error.message || "Unknown error"

@@ -3,4 +3,5 @@ export interface EscrowTxData {
   data: string;
   value: string;
   chainId: number;
+  cid?: string;
 }

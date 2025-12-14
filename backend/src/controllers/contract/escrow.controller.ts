@@ -177,13 +177,13 @@ export class EscrowController {
   async approve(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
-      const { privateKey, cid } = req.body;
+      const { userId, chainId, cid } = req.body;
 
-      const txHash = await escrowService.approveWork(job_milestone_id, privateKey, cid);
+      const txData = await escrowService.buildApproveWorkTx(job_milestone_id, userId, chainId, cid);
 
       res.json({
         success: true,
-        data: { transactionHash: txHash },
+        data: txData,
         message: 'Work approved successfully',
       });
     } catch (error) {
@@ -197,13 +197,13 @@ export class EscrowController {
   async withdraw(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
-      const { privateKey } = req.body;
+      const { userId, chainId } = req.body;
 
-      const txHash = await escrowService.withdrawFunds(job_milestone_id, privateKey);
+      const txData = await escrowService.buildWithdrawFundsTx(job_milestone_id, userId, chainId);
 
       res.json({
         success: true,
-        data: { transactionHash: txHash },
+        data: txData,
         message: 'Funds withdrawn successfully',
       });
     } catch (error) {

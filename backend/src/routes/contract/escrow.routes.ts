@@ -279,10 +279,11 @@ router.post(
   '/:job_milestone_id/approve',
   [
     param('job_milestone_id').isString().notEmpty(),
-    body('privateKey').isString().notEmpty(),
+    body('userId').isString().notEmpty(),
+    body('chainId').isInt().notEmpty(),
     body('cid').isString().notEmpty(),
   ],
-  validate([param('job_milestone_id'), body('privateKey'), body('cid')]),
+  validate([param('job_milestone_id'), body('userId'), body('chainId'), body('cid')]),
   escrowController.approve.bind(escrowController)
 );
 
@@ -337,8 +338,8 @@ router.post(
  */
 router.post(
   '/:job_milestone_id/withdraw',
-  [param('job_milestone_id').isString().notEmpty(), body('privateKey').isString().notEmpty()],
-  validate([param('job_milestone_id'), body('privateKey')]),
+  [param('job_milestone_id').isString().notEmpty(), body('userId').isString().notEmpty(), body('chainId').isInt().notEmpty()],
+  validate([param('job_milestone_id'), body('userId'), body('chainId')]),
   escrowController.withdraw.bind(escrowController)
 );
 

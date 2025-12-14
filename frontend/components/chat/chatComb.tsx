@@ -110,11 +110,11 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
                             />}
                             {jobMilestoneId && <ChatProjectStatus 
                                 user={sender}
-                                status={2}
+                                status={4}
                                 jobMilestoneId={jobMilestoneId} 
                                 conversationId={conversation_id} 
                                 jobApplicationDocId={job_application_doc_id} 
-                                ipfsUrl={"https://brown-decisive-tyrannosaurus-507.mypinata.cloud/ipfs/bafybeifjc4r5emdr7r"}
+                                ipfs={ipfsUrl}
                             />}
                         </div>
                     )}

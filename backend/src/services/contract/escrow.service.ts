@@ -339,7 +339,8 @@ export class EscrowService {
       to: escrowAddress,
       data,
       value: '0',
-      chainId
+      chainId,
+      cid
     };
   }
 
@@ -394,6 +395,41 @@ export class EscrowService {
     }
   }
 
+  async buildApproveWorkTx(
+    job_milestone_id: string,
+    userId: string,
+    chainId: number,
+    cid: string
+  ): Promise<EscrowTxData> {
+    const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    if (!exsitingJobMilestone) {
+      throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
+  }
+    const escrowAddress = exsitingJobMilestone.escrow;
+    if (!escrowAddress) {
+      throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
+    }
+
+    const existingJob = await jobService.getJobById(exsitingJobMilestone.job_id);
+    if (!existingJob) {
+      throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
+    }
+
+    // OPTIONAL: enforce who can approve
+    if (existingJob.client_id !== userId) {
+      throw new AppError('Unauthorized', 403);
+    }
+
+    const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
+    const data = iface.encodeFunctionData('approve', [cid]);
+
+    return {
+      to: escrowAddress,
+      data,
+      value: '0',
+      chainId
+    };
+  }
   /**
    * Withdraw funds (vendor)
    */
@@ -438,6 +474,34 @@ export class EscrowService {
       logger.error('Error withdrawing funds:', error);
       throw new AppError(`Failed to withdraw funds: ${error.message}`, 500);
     }
+  }
+
+  async buildWithdrawFundsTx(
+    job_milestone_id: string,
+    userId: string,
+    chainId: number
+  ): Promise<EscrowTxData> {
+    const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    if (!exsitingJobMilestone) {
+      throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
+  }
+    const escrowAddress = exsitingJobMilestone.escrow;
+    if (!escrowAddress) {
+      throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
+    }
+
+    if (exsitingJobMilestone.freelancer_id !== userId) {
+      throw new AppError('Unauthorized', 403);
+    }
+
+    const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
+    const data = iface.encodeFunctionData('withdraw', []);
+    return {
+      to: escrowAddress,
+      data,
+      value: '0',
+      chainId
+    };
   }
 
   /**
