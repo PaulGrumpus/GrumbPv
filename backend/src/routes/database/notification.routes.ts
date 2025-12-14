@@ -5,7 +5,7 @@ import { validate } from '../../middlewares/validateRequest.js';
 
 const router = Router();
 
-router.get('/by-user-id/:user_id', 
+router.post('/by-user-id/:user_id', 
     [
         param('user_id').isString().notEmpty(),
         body('read').isBoolean().optional(),

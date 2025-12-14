@@ -25,3 +25,10 @@ export type ProjectInfoLoadingContextType = {
   projectInfoLoadingState: projectInfoLoadingState;
   setprojectInfoLoadingState: React.Dispatch<React.SetStateAction<projectInfoLoadingState>>;
 };
+
+export type notificationLoadingState = "pending" | "failure" | "success";
+
+export type NotificationLoadingContextType = {
+  notificationLoadingState: notificationLoadingState;
+  setnotificationLoadingState: React.Dispatch<React.SetStateAction<notificationLoadingState>>;
+};

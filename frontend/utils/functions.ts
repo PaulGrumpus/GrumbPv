@@ -846,6 +846,38 @@ export const withdrawFunds = async (userId: string, job_milestone_id: string, ch
     }
 }
 
+export const getNotificationsByUserIdWithFilters = async (user_id: string, read?: boolean) => {
+    try {
+        const response = await EscrowBackend.post(`/database/notifications/by-user-id/${user_id}`, {
+            read: read ?? undefined,
+        });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const updateNotification = async (notification_id: string, read_at: Date) => {
+    try {
+        const response = await EscrowBackend.post(`/database/notifications/${notification_id}`, {
+            read_at: read_at,
+        });
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 // Utils
 export const formatDueDate = (deadline: number | string | undefined) => {
     if (deadline === null || deadline === undefined) {

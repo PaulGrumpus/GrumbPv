@@ -5,7 +5,8 @@ let ioInstance: Server | null = null;
 
 export const emitNotification = (userId: string, notification: notifications) => {
     if (!ioInstance) return;
-    ioInstance.to(`user:${userId}`).emit("notification", notification);
+    console.log("test-emitNotification", notification);
+    ioInstance.to(`user:${userId}`).emit("newNotification", notification);
 };
 
 export const notification_socket_route = (

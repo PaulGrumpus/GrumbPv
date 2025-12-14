@@ -16,6 +16,8 @@ import SocketContextProvider from "@/context/socketContext";
 import { WalletProvider } from "@/context/walletContext";
 import { ProjectInfoLoadingProvider } from "@/context/projectInfoLoadingContext";
 import { ProjectInfoProvider } from "@/context/projectInfoContext";
+import { NotificationProvider } from "@/context/notificationContext";
+import { NotificationLoadingProvider } from "@/context/notificationLoadingContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -67,22 +69,26 @@ export default function RootLayout({
           <UserLoadingProvider>
             <UserInfoProvider>
               <SocketContextProvider>
-                <ProjectInfoLoadingProvider>
-                  <ProjectInfoProvider>
-                    <ConversationLoadingProvider>
-                      <ConversationsInfoProvider>
-                        <MessageLoadingProvider>
-                          <MessagesInfoProvider>
-                            <Navbar />
-                            {children}
-                            <FooterToggle />
-                            <ToastContainer />
-                          </MessagesInfoProvider>
-                        </MessageLoadingProvider>
-                      </ConversationsInfoProvider>
-                    </ConversationLoadingProvider>
-                  </ProjectInfoProvider>
-                </ProjectInfoLoadingProvider>
+                <NotificationLoadingProvider>
+                  <NotificationProvider>
+                    <ProjectInfoLoadingProvider>
+                      <ProjectInfoProvider>
+                        <ConversationLoadingProvider>
+                          <ConversationsInfoProvider>
+                            <MessageLoadingProvider>
+                              <MessagesInfoProvider>
+                                <Navbar />
+                                {children}
+                                <FooterToggle />
+                                <ToastContainer />
+                              </MessagesInfoProvider>
+                            </MessageLoadingProvider>
+                          </ConversationsInfoProvider>
+                        </ConversationLoadingProvider>
+                      </ProjectInfoProvider>
+                    </ProjectInfoLoadingProvider>
+                  </NotificationProvider>
+                </NotificationLoadingProvider>
               </SocketContextProvider>
             </UserInfoProvider>
           </UserLoadingProvider>
