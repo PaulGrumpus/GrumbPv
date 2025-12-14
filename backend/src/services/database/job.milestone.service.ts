@@ -1,9 +1,10 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, job_milestones } from '@prisma/client';
+import { Prisma, job_milestones, milestone_status, notification_entity, notification_type } from '@prisma/client';
 import { userService } from './user.service.js';
 import { jobService } from './job.service.js';
 import { prisma } from '../../prisma.js';
+import { notificationService } from './notification.service.js';
 
 export class JobMilestoneService {
   private prisma = prisma;
@@ -85,6 +86,30 @@ export class JobMilestoneService {
       const newJobMilestone = await this.prisma.job_milestones.create({
         data: jobMilestone,
       });
+      await notificationService.createNotification({
+        user_id: existingJob.client_id,
+        actor_user_id: newJobMilestone.freelancer_id,
+        type: notification_type.MILESTONE_STARTED,
+        entity_type: notification_entity.milestone,
+        entity_id: newJobMilestone.id,
+        title: 'Milestone started',
+        body: 'Your milestone has been started',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
+      });
+      await notificationService.createNotification({
+        user_id: newJobMilestone.freelancer_id,
+        actor_user_id: existingJob.client_id,
+        type: notification_type.MILESTONE_STARTED,
+        entity_type: notification_entity.milestone,
+        entity_id: newJobMilestone.id,
+        title: 'Milestone started',
+        body: 'Your milestone has been started',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
+      });
       return newJobMilestone;
     } catch (error) {
       if (error instanceof AppError) {
@@ -154,6 +179,78 @@ export class JobMilestoneService {
           ...jobMilestone,
           updated_at: new Date(),
         },
+      });
+      await notificationService.createNotification({
+        user_id: existingJob.client_id,
+        actor_user_id: updatedJobMilestone.freelancer_id,
+        type: updatedJobMilestone.status === milestone_status.funded ? notification_type.MILESTONE_FUNDED 
+        : updatedJobMilestone.status === milestone_status.delivered ? notification_type.MILESTONE_DELIVERED 
+        : updatedJobMilestone.status === milestone_status.approved ? notification_type.MILESTONE_APPROVED 
+        : updatedJobMilestone.status === milestone_status.released ? notification_type.MILESTONE_FUNDS_RELEASED 
+        : updatedJobMilestone.status === milestone_status.disputedWithoutCounterSide ? notification_type.DISPUTE_STARTED 
+        : updatedJobMilestone.status === milestone_status.disputedWithCounterSide ? notification_type.DISPUTE_STARTED 
+        : updatedJobMilestone.status === milestone_status.resolvedToBuyer ? notification_type.DISPUTE_RESOLVED 
+        : updatedJobMilestone.status === milestone_status.resolvedToVendor ? notification_type.DISPUTE_RESOLVED 
+        : notification_type.MILESTONE_STARTED,
+        entity_type: notification_entity.milestone,
+        entity_id: updatedJobMilestone.id,
+        title: updatedJobMilestone.status === milestone_status.funded ? 'Milestone funded' 
+        : updatedJobMilestone.status === milestone_status.delivered ? 'Milestone delivered' 
+        : updatedJobMilestone.status === milestone_status.approved ? 'Milestone approved' 
+        : updatedJobMilestone.status === milestone_status.released ? 'Milestone funds released' 
+        : updatedJobMilestone.status === milestone_status.disputedWithoutCounterSide ? 'Dispute started without counter side' 
+        : updatedJobMilestone.status === milestone_status.disputedWithCounterSide ? 'Dispute started with counter side' 
+        : updatedJobMilestone.status === milestone_status.resolvedToBuyer ? 'Dispute resolved to buyer' 
+        : updatedJobMilestone.status === milestone_status.resolvedToVendor ? 'Dispute resolved to vendor' 
+        : 'Milestone started',
+        body: updatedJobMilestone.status === milestone_status.funded ? 'Your milestone has been funded' 
+        : updatedJobMilestone.status === milestone_status.delivered ? 'Your milestone has been delivered' 
+        : updatedJobMilestone.status === milestone_status.approved ? 'Your milestone has been approved' 
+        : updatedJobMilestone.status === milestone_status.released ? 'Your milestone funds have been released' 
+        : updatedJobMilestone.status === milestone_status.disputedWithoutCounterSide ? 'Your dispute has been started without counter side' 
+        : updatedJobMilestone.status === milestone_status.disputedWithCounterSide ? 'Your dispute has been started with counter side' 
+        : updatedJobMilestone.status === milestone_status.resolvedToBuyer ? 'Your dispute has been resolved to buyer' 
+        : updatedJobMilestone.status === milestone_status.resolvedToVendor ? 'Your dispute has been resolved to vendor' 
+        : 'Your milestone has been started',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
+      });
+      await notificationService.createNotification({
+        user_id: updatedJobMilestone.freelancer_id,
+        actor_user_id: existingJob.client_id,
+        type: updatedJobMilestone.status === milestone_status.funded ? notification_type.MILESTONE_FUNDED 
+        : updatedJobMilestone.status === milestone_status.delivered ? notification_type.MILESTONE_DELIVERED 
+        : updatedJobMilestone.status === milestone_status.approved ? notification_type.MILESTONE_APPROVED 
+        : updatedJobMilestone.status === milestone_status.released ? notification_type.MILESTONE_FUNDS_RELEASED 
+        : updatedJobMilestone.status === milestone_status.disputedWithoutCounterSide ? notification_type.DISPUTE_STARTED 
+        : updatedJobMilestone.status === milestone_status.disputedWithCounterSide ? notification_type.DISPUTE_STARTED 
+        : updatedJobMilestone.status === milestone_status.resolvedToBuyer ? notification_type.DISPUTE_RESOLVED 
+        : updatedJobMilestone.status === milestone_status.resolvedToVendor ? notification_type.DISPUTE_RESOLVED 
+        : notification_type.MILESTONE_STARTED,
+        entity_type: notification_entity.milestone,
+        entity_id: updatedJobMilestone.id,
+        title: updatedJobMilestone.status === milestone_status.funded ? 'Milestone funded' 
+        : updatedJobMilestone.status === milestone_status.delivered ? 'Milestone delivered' 
+        : updatedJobMilestone.status === milestone_status.approved ? 'Milestone approved' 
+        : updatedJobMilestone.status === milestone_status.released ? 'Milestone funds released' 
+        : updatedJobMilestone.status === milestone_status.disputedWithoutCounterSide ? 'Dispute started without counter side' 
+        : updatedJobMilestone.status === milestone_status.disputedWithCounterSide ? 'Dispute started with counter side' 
+        : updatedJobMilestone.status === milestone_status.resolvedToBuyer ? 'Dispute resolved to buyer' 
+        : updatedJobMilestone.status === milestone_status.resolvedToVendor ? 'Dispute resolved to vendor' 
+        : 'Milestone started',
+        body: updatedJobMilestone.status === milestone_status.funded ? 'Your milestone has been funded' 
+        : updatedJobMilestone.status === milestone_status.delivered ? 'Your milestone has been delivered' 
+        : updatedJobMilestone.status === milestone_status.approved ? 'Your milestone has been approved' 
+        : updatedJobMilestone.status === milestone_status.released ? 'Your milestone funds have been released' 
+        : updatedJobMilestone.status === milestone_status.disputedWithoutCounterSide ? 'Your dispute has been started without counter side' 
+        : updatedJobMilestone.status === milestone_status.disputedWithCounterSide ? 'Your dispute has been started with counter side' 
+        : updatedJobMilestone.status === milestone_status.resolvedToBuyer ? 'Your dispute has been resolved to buyer' 
+        : updatedJobMilestone.status === milestone_status.resolvedToVendor ? 'Your dispute has been resolved to vendor' 
+        : 'Your milestone has been started',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
       });
       return updatedJobMilestone;
     } catch (error) {

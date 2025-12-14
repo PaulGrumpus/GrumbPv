@@ -1,11 +1,12 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, job_applications_docs, jobs, users as User } from '@prisma/client';
+import { Prisma, job_applications_docs, jobs, users as User, notification_entity, notification_type } from '@prisma/client';
 import { jobService } from './job.service.js';
 import { jobMilestoneService } from './job.milestone.service.js';
 import { userService, } from './user.service.js';
 import { prisma } from '../../prisma.js';
 import { factoryService } from '../contract/factory.service.js';
+import { notificationService } from './notification.service.js';
 
 interface UpdateJobApplicationResult extends job_applications_docs {
     escrow_address: string;
@@ -25,6 +26,30 @@ export class JobApplicationService {
             const createResult = await this.prisma.job_applications_docs.create({
                 data: jobApplication,
             });
+            await notificationService.createNotification({
+                user_id: jobApplication.client_id,
+                actor_user_id: jobApplication.freelancer_id,
+                type: notification_type.REQUIREMENT_DOCS_CONFIRMED,
+                entity_type: notification_entity.job_application_doc,
+                entity_id: createResult.id,
+                title: 'Job Requirement Docs created',
+                body: 'Your job requirement docs have been created',
+                payload: Prisma.JsonNull,
+                read_at: null,
+                created_at: new Date(),
+            });
+            await notificationService.createNotification({
+                user_id: jobApplication.freelancer_id,
+                actor_user_id: jobApplication.client_id,
+                type: notification_type.REQUIREMENT_DOCS_CREATED,
+                entity_type: notification_entity.job_application_doc,
+                entity_id: createResult.id,
+                title: 'Job Requirement Docs created',
+                body: 'Your job requirement docs have been created',
+                payload: Prisma.JsonNull,
+                read_at: null,
+                created_at: new Date(),
+            });
             return createResult;
         } catch (error) {
             if (error instanceof AppError) {
@@ -35,10 +60,13 @@ export class JobApplicationService {
         }
     }
 
-    public async updateJobApplication(id: string, jobApplication: Prisma.job_applications_docsUncheckedUpdateInput): Promise<UpdateJobApplicationResult> {
+    public async updateJobApplication(id: string, userId: string, jobApplication: Prisma.job_applications_docsUncheckedUpdateInput): Promise<UpdateJobApplicationResult> {
         try {
             if (!id) {
                 throw new AppError('Job application ID is required', 400, 'JOB_APPLICATION_ID_REQUIRED');
+            }
+            if (!userId) {
+                throw new AppError('User ID is required', 400, 'USER_ID_REQUIRED');
             }
             const existingJobApplication = await this.prisma.job_applications_docs.findUnique({
                 where: { id },
@@ -83,7 +111,19 @@ export class JobApplicationService {
                 });
                 if(!escrow) {
                     throw new AppError('Failed to create escrow', 500, 'FAILED_TO_CREATE_ESCROW');
-                }                               
+                }   
+                await notificationService.createNotification({
+                    user_id: userId === updateResult.client_id ? updateResult.freelancer_id : updateResult.client_id,
+                    actor_user_id: userId,
+                    type: notification_type.REQUIREMENT_DOCS_CONFIRMED,
+                    entity_type: notification_entity.job_application_doc,
+                    entity_id: updateResult.id,
+                    title: 'Job Requirement Docs Confirmed',
+                    body: 'Your job requirement docs have been confirmed by the client',
+                    payload: Prisma.JsonNull,
+                    read_at: null,
+                    created_at: new Date(),
+                });
             }
             return {
                 ...updateResult as job_applications_docs,

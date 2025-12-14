@@ -4,6 +4,8 @@ import { Prisma, bid_status, job_bids } from '@prisma/client';
 import { userService } from './user.service.js';
 import { jobService } from './job.service.js';
 import { prisma } from '../../prisma.js';
+import { notification_entity, notification_type } from "@prisma/client";
+import { notificationService } from './notification.service.js';
 
 export class JobBidService {
   private prisma = prisma;
@@ -36,6 +38,18 @@ export class JobBidService {
       }
       const newJobBid = await this.prisma.job_bids.create({
         data: jobBid,
+      });
+      await notificationService.createNotification({
+        user_id: existingJob.client_id,
+        actor_user_id: newJobBid.freelancer_id,
+        type: notification_type.BID_RECEIVED,
+        entity_type: notification_entity.bid,
+        entity_id: newJobBid.id,
+        title: 'New job bid received',
+        body: 'You have received a new job bid',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
       });
       return newJobBid;
     } catch (error) {
@@ -91,6 +105,18 @@ export class JobBidService {
           ...jobBid,
           updated_at: new Date(),
         },
+      });
+      await notificationService.createNotification({
+        user_id: existingFreelancer.id,
+        actor_user_id: existingJob.client_id,
+        type: updatedJobBid.status === bid_status.accepted ? notification_type.BID_ACCEPTED : updatedJobBid.status === bid_status.declined ? notification_type.BID_DECLIEND : notification_type.BID_WITHDRAWN,
+        entity_type: notification_entity.bid,
+        entity_id: updatedJobBid.id,
+        title: updatedJobBid.status === bid_status.accepted ? 'Job bid accepted' : updatedJobBid.status === bid_status.declined ? 'Job bid declined' : 'Job bid withdrawn',
+        body: updatedJobBid.status === bid_status.accepted ? 'Your job bid has been accepted by the client.' : updatedJobBid.status === bid_status.declined ? 'Your job bid has been declined by the client.' : 'Your job bid has been withdrawn.',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
       });
       return updatedJobBid;
     } catch (error) {

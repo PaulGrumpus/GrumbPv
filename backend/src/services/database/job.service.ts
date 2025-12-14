@@ -1,6 +1,6 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, jobs, job_status } from '@prisma/client';
+import { Prisma, jobs, job_status, notification_entity, notification_type } from '@prisma/client';
 import { userService } from './user.service.js';
 import {
   persistUploadedImage,
@@ -8,6 +8,7 @@ import {
   type UploadedImage,
 } from '../../utils/imageStorage.js';
 import { prisma } from '../../prisma.js';
+import { notificationService } from './notification.service.js';
 
 export class JobService {
   private prisma = prisma;
@@ -117,6 +118,18 @@ export class JobService {
 
       const newJob = await this.prisma.jobs.create({
         data: createData,
+      });
+      await notificationService.createNotification({
+        user_id: newJob.client_id,
+        actor_user_id: newJob.client_id,
+        type: notification_type.JOB_POSTED,
+        entity_type: notification_entity.job,
+        entity_id: newJob.id,
+        title: 'Job posted',
+        body: 'Your job has been posted',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
       });
       return newJob;
     } catch (error) {

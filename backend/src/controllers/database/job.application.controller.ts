@@ -18,9 +18,9 @@ export class JobApplicationController {
 
     async updateJobApplication(req: Request, res: Response, next: NextFunction) {
         try {
-            const { id } = req.params;
+            const { id, user_id } = req.params;
             const { ...params } = req.body;
-            const result = await jobApplicationService.updateJobApplication(id, params);
+            const result = await jobApplicationService.updateJobApplication(id, user_id, params);
             res.json({
                 success: true,
                 data: result,

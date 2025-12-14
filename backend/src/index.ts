@@ -30,6 +30,7 @@ import notificationRoutes from './routes/database/notification.routes.js';
 import http from 'http'; 
 import { Server } from 'socket.io';
 import { socket_router } from './routes/socket.routes.js';
+import { notification_socket_route } from './routes/notification.socket.route.js';  
 
 // Load environment variables
 config();
@@ -109,6 +110,7 @@ async function bootstrap() {
   io.on('connection', (socket) => {
     console.log("test-socket-connected", socket.id);
     socket_router(socket, io);
+    notification_socket_route(socket, io);
   });
 
   httpServer.listen(PORT, () => {

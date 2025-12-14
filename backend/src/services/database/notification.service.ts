@@ -2,11 +2,12 @@ import { Prisma, notifications } from "@prisma/client";
 import { prisma } from "../../prisma";
 import { logger } from "../../utils/logger";
 import { AppError } from "../../middlewares/errorHandler";
+import { emitNotification } from "../../routes/notification.socket.route";
 
 export class NotificationService {
     private prisma = prisma;
 
-    public async createNotification(notification: notifications): Promise<notifications> {
+    public async createNotification(notification: Prisma.notificationsUncheckedCreateInput): Promise<notifications> {
         try {
             const newNotification = await this.prisma.notifications.create({ data: {
                 user_id: notification.user_id,
@@ -23,6 +24,7 @@ export class NotificationService {
             if (!newNotification) {
                 throw new AppError('Notification not created', 400, 'NOTIFICATION_NOT_CREATED');
             }
+            emitNotification(newNotification.user_id, newNotification);
             return newNotification;
         }
         catch (error) {

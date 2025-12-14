@@ -17,7 +17,7 @@ router.post(
 );
 
 router.post(
-    '/:id',
+    '/:id/:user_id',
     [
         body('job_id').isString().notEmpty(),
         body('client_id').isString().notEmpty(),
