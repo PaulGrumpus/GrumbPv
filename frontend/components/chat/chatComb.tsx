@@ -110,7 +110,7 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
                             />}
                             {jobMilestoneId && <ChatProjectStatus 
                                 user={sender}
-                                status={1}
+                                status={2}
                                 jobMilestoneId={jobMilestoneId} 
                                 conversationId={conversation_id} 
                                 jobApplicationDocId={job_application_doc_id} 

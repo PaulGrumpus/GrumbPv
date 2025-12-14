@@ -5,9 +5,11 @@ import Link from "next/link";
 import { User } from "@/types/user";
 import Image from "next/image";
 import { toast } from "react-toastify";
-import { fundEscrow } from "@/utils/functions";
+import { fundEscrow, deliverWork } from "@/utils/functions";
 import { useWallet } from "@/context/walletContext";
 import { CONFIG } from "@/config/config";
+import ModalTemplate from "../modalTemplate";
+import { useState } from "react";
 
 interface ChatProjectStatusProps {
     status: number; // 1-4
@@ -30,6 +32,10 @@ const steps = [
 const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId, conversationId, jobApplicationDocId, user, ipfsUrl }: ChatProjectStatusProps) => {
     const safeStatus = Math.min(Math.max(status, 1), steps.length);
     const activeIndex = safeStatus - 1;
+    const [isOpen, setIsOpen] = useState(false);
+    const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+    const [projectDescription, setProjectDescription] = useState<string>("");
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const { sendTransaction } = useWallet();
 
@@ -83,6 +89,60 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
         } else {
             toast.error(result.error);
         }
+    }
+
+    const handleDeliverWork = async () => {
+        const result = await deliverWork(user.id, jobMilestoneId, Number(CONFIG.chainId), selectedFile);
+        console.log("test-result", result);
+        const txHash = await sendTransaction({
+            to: result.data.to,
+            data: result.data.data,
+            value: result.data.value,
+            chainId: Number(result.data.chainId),
+        });
+        console.log("test-txHash", txHash);
+        if (result.success) {
+            toast.success("Work delivered successfully");
+        } else {
+            toast.error(result.error);
+        }
+    }
+
+    const handleUploadFile = () => {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = "*/*";
+        fileInput.onchange = () => {
+            const file = fileInput.files?.[0];
+            if (!file) {
+                return;
+            }
+
+            setUploadedFileName(file.name);
+            setSelectedFile(file);
+
+            toast.success(`Selected ${file.name}`, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        };
+
+        fileInput.click();
+    };
+
+    const removeUploadedFile = () => {
+        setUploadedFileName("");
+        setSelectedFile(null);
+        toast.success("Uploaded file removed", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        });
     }
 
     return (
@@ -158,7 +218,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
                             {user.role === "client" ? (
                                 <div className="h-9"></div>
                             ) : (
-                                <Button padding="px-6 py-1.5" onClick={actionHandler}>
+                                <Button padding="px-6 py-1.5" onClick={() => setIsOpen(true)}>
                                     <p className="text-normal font-regular text-[#FFFFFF]">
                                         Deliver Product
                                     </p>
@@ -268,6 +328,64 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
                     )}           
                 </div>
             </div>
+            <ModalTemplate
+                isOpen={isOpen}
+                onClose={() => setIsOpen(false)}
+                title={"Deliver Product"}
+                subtitle={"Deliver your product to the client"}
+                actionLabel="Confirm"
+                className="p-10.5"
+                onAction={() => {
+                    setIsOpen(false);
+                    handleDeliverWork();
+                }}
+            >
+                <div className="mt-6">
+                    <div className="flex justify-end">
+                        <div className="flex items-center gap-2.5">
+                            { uploadedFileName 
+                            ? 
+                            <p 
+                                className="text-light-large font-regular text-[#2F3DF6] underline cursor-pointer"
+                                onClick={removeUploadedFile}
+                            >
+                                {uploadedFileName}
+                            </p> 
+                            : 
+                            <div>
+                                <Button
+                                    padding="p-3"
+                                    variant="secondary"
+                                    onClick={() => handleUploadFile()}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <div>
+                                            <Image
+                                                src="/Grmps/upload.svg"
+                                                alt="upload"
+                                                width={24}
+                                                height={24}
+                                            />
+                                        </div>
+                                        <p className="text-light-large font-regular text-[#7E3FF2]">Upload Project</p>
+                                    </div>
+                                </Button>
+                            </div>
+                        }
+                            
+                        </div>
+                    </div>
+                    <div className="my-6">
+                        <p className="text-normal font-regular text-black pb-2">Project Description</p>
+                        <textarea
+                            className="w-full h-20 border border-[#8F99AF] text-normal font-regular text-black text-left focus:outline-none rounded-lg p-3 min-h-33.5 resize-none"
+                            placeholder="About your product or anything"
+                            value={projectDescription}
+                            onChange={(e) => setProjectDescription(e.target.value)}
+                        />
+                    </div>
+                </div>
+            </ModalTemplate>
         </div>
     );
 };

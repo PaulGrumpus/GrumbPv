@@ -76,7 +76,7 @@ export class EscrowController {
   async deliver(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
-      const { privateKey, cid, contentHash } = req.body;
+      const { userId, chainId, cid, contentHash } = req.body;
 
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
       if (!exsitingJobMilestone) {
@@ -110,6 +110,19 @@ export class EscrowController {
       let finalCid = cid;
       let finalContentHash = contentHash;
 
+      async function testPinata() {
+        try {
+          const res = await pinata.testAuthentication();
+          console.log("✅ Pinata connected successfully");
+          console.log(res);
+        } catch (err) {
+          console.error("❌ Pinata auth failed");
+          console.error(err);
+        }
+      }
+      
+      testPinata();
+
       if (file) {
         try {
           const fileObj = new File([file.buffer], file.originalname, {
@@ -127,8 +140,6 @@ export class EscrowController {
           // Use keccak256 to create a proper 32-byte hash from the multihash
           finalContentHash = ethers.keccak256(ethers.hexlify(multihashBytes));
 
-          const url = await pinata.gateways.public.convert(finalCid);
-
         } catch (pinataError) {
           throw new AppError(
             `Failed to upload file to Pinata: ${pinataError instanceof Error ? pinataError.message : 'Unknown error'}`,
@@ -142,16 +153,17 @@ export class EscrowController {
         throw new AppError('Either a file or CID must be provided', 400, 'MISSING_FILE_OR_CID');
       }
 
-      const txHash = await escrowService.deliverWork(
+      const txData = await escrowService.buildDeliverWorkTx(
         job_milestone_id,
-        privateKey,
+        userId,
+        chainId,
         finalCid,
         finalContentHash
       );
 
       res.json({
         success: true,
-        data: { transactionHash: txHash, cid: finalCid },
+        data: txData,
         message: 'Work delivered successfully',
       });
     } catch (error) {

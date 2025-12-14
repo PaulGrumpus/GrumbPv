@@ -716,6 +716,48 @@ export const fundEscrow = async (userId: string, job_milestone_id: string, chain
     }
 }
 
+export const deliverWork = async (userId: string, job_milestone_id: string, chainId: number, file?: File | null, cid?: string, contentHash?: string) => {
+    try {
+        const formData = new FormData();
+        formData.append('userId', userId);
+        formData.append('chainId', chainId.toString());
+        if (file) {
+            formData.append('file', file);
+        }
+        if (cid) {
+            formData.append('cid', cid);
+        }
+        if (contentHash) {
+            formData.append('contentHash', contentHash);
+        }
+
+        const response = await EscrowBackend.post(
+            `/contract/escrow/${job_milestone_id}/deliver`,
+            formData,
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+            // {
+            //     headers: {
+            //         Authorization: `Bearer ${localStorage.getItem('token')}`,
+            //     },
+            // }
+        );
+
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 // Utils
 export const formatDueDate = (deadline: number | string | undefined) => {
     if (deadline === null || deadline === undefined) {

@@ -278,6 +278,71 @@ export class EscrowService {
     }
   }
 
+  async buildDeliverWorkTx(
+    job_milestone_id: string,
+    userId: string,
+    chainId: number,
+    cid: string,
+    contentHash?: string
+  ): Promise<EscrowTxData> {
+    const exsitingJobMilestone =
+      await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    if (!exsitingJobMilestone) {
+      throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
+    }
+
+    const escrowAddress = exsitingJobMilestone.escrow;
+    if (!escrowAddress) {
+      throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
+    }
+
+    // OPTIONAL: enforce who can deliver
+    if (exsitingJobMilestone.freelancer_id !== userId) {
+      throw new AppError('Unauthorized', 403);
+    }
+
+    // Convert contentHash to bytes32 format
+    // contentHash should already be a 32-byte keccak256 hash from the controller
+    let hashBytes: string;
+    if (contentHash) {
+      try {
+        // Validate and convert to bytes32
+        const hashBytesArray = ethers.getBytes(contentHash);
+
+        if (hashBytesArray.length !== 32) {
+          logger.warn(
+            `contentHash is not 32 bytes (${hashBytesArray.length} bytes), padding/truncating`
+          );
+          if (hashBytesArray.length > 32) {
+            // Truncate to first 32 bytes
+            hashBytes = ethers.hexlify(hashBytesArray.slice(0, 32));
+          } else {
+            // Pad to 32 bytes
+            hashBytes = ethers.zeroPadValue(ethers.hexlify(hashBytesArray), 32);
+          }
+        } else {
+          // Already 32 bytes, use as-is
+          hashBytes = ethers.hexlify(hashBytesArray);
+        }
+      } catch (error) {
+        logger.warn(`Invalid contentHash format, using ZeroHash: ${contentHash}`);
+        hashBytes = ethers.ZeroHash;
+      }
+    } else {
+      hashBytes = ethers.ZeroHash;
+    }
+
+    const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
+    const data = iface.encodeFunctionData('deliver', [cid, hashBytes]);
+
+    return {
+      to: escrowAddress,
+      data,
+      value: '0',
+      chainId
+    };
+  }
+
   /**
    * Approve work (buyer)
    */

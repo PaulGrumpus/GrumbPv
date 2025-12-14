@@ -214,11 +214,12 @@ router.post(
   upload.single('file'), // Handle single file upload with field name 'file'
   [
     param('job_milestone_id').isString().notEmpty(),
-    body('privateKey').isString().notEmpty(),
+    body('userId').isString().notEmpty(),
+    body('chainId').isInt().notEmpty(),
     body('cid').optional().isString(),
     body('contentHash').optional().isString(),
   ],
-  validate([param('job_milestone_id'), body('privateKey')]),
+  validate([param('job_milestone_id'), body('userId'), body('chainId')]),
   escrowController.deliver.bind(escrowController)
 );
 
