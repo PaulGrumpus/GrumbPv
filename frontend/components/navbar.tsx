@@ -14,6 +14,7 @@ import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { NotificationCtx } from "@/context/notificationContext";
 import { Notification } from "@/types/notification";
 import { formatHourMinute, updateNotification } from "@/utils/functions";
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const chatIcon = "/Grmps/chat.svg";
 const bellIcon = "/Grmps/bell.svg";
@@ -56,6 +57,9 @@ const Navbar = () => {
     const [notificationCount, setNotificationCount] = useState(0);
     const [messageCount, setMessageCount] = useState(0);
 
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+    const [ placehoder, setPlacehoder] = useState(true);
+
     useEffect(() => {
         if(userInfo.id) {
             setUserRole(userInfo.role);
@@ -71,8 +75,17 @@ const Navbar = () => {
         } else {
             setUserRole('client');
             setLoggedIn(false);
+            setPlacehoder(false);
         }
     }, [userInfo]);
+
+    useEffect(() => {
+        if(notificationLoadingState === "success") {
+            setPlacehoder(false);
+        } else {
+            setPlacehoder(true);
+        }
+    }, [notificationLoadingState]);
 
     useEffect(() => {
         setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
@@ -114,114 +127,156 @@ const Navbar = () => {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [dropdownMenuOpen, notificationDropdownOpen]);
+    
+    const placeholderLinks = userRole === "freelancer"
+        ? ["Jobs", "Gigs", "Post Gig"]
+        : ["Jobs", "Gigs", "Post Job"];
+
     return (
         <div>
             <div className="fixed top-0 left-0 right-0 z-50 bg-white px-16 py-[15.5px] shadow-xl">
                 <div className="container mx-auto"> 
                     <div className="flex items-center justify-between">
-                        <div 
-                            className="flex gap-0.75 items-center cursor-pointer"
-                            onClick={() => router.push('/')}
-                        >
-                            <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
-                                <Image
-                                    src={logoImage}
-                                    alt="Logo"
-                                    width={40}
-                                    height={40}
-                                    className="h-full w-full rounded-full object-cover"
-                                />
-                            </div>
-                            <p className="text-logo font-poppins font-bold text-black">Grumpus</p>
-                        </div>
-                        {userRole === "freelancer" ? (  
-                            <div className="flex gap-8 text-normal font-regular text-black">    
-                                <Link className="hover:text-purple" href="/jobs">Featured Jobs</Link>
-                                <Link className="hover:text-purple" href="/gigs">Gigs</Link>
-                                <Link className="hover:text-purple" href="/dashboard?view=create-gig">Post Gig</Link>
-                            </div>
-                        ) : (
-                            <div className="flex gap-8 text-normal font-regular text-black">    
-                                <Link className="hover:text-purple" href="/jobs">Featured Jobs</Link>
-                                <Link className="hover:text-purple" href="/gigs">Gigs</Link>
-                                <Link className="hover:text-purple" href="/dashboard?view=create-job">Post Job</Link>
-                            </div>
-                        )}
-                        {loggedIn ? ( 
-                            <div 
-                                className="relative flex items-center gap-4"
-                                ref={menuToggleRef}
-                            >
-                                <div className="relative w-6 h-6 cursor-pointer hover:scale-110 transition-all duration-300" onClick={() => router.push("/chat")}>
-                                    <Image 
-                                        src={chatIcon} 
-                                        alt="Chat Icon" 
-                                        width={24} 
-                                        height={24} 
-                                        className="h-full w-full object-cover"
-                                    />
-                                    {messageCount >= 1 && (
-                                        <span 
-                                            className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
-                                    )}
-                                </div>
-                                <div className="relative" ref={notificationToggleRef}>
-                                    <div
-                                        className="relative w-6 h-6 cursor-pointer hover:scale-110 transition-all duration-300"
-                                        onClick={handleNotificationClick}
-                                    >
-                                        <Image
-                                            src={bellIcon}
-                                            alt="Bell Icon"
-                                            width={24}
-                                            height={24}
-                                            className="h-full w-full object-cover"
-                                        />
-                                        {notificationCount >= 1 && (
-                                            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
-                                        )}
-                                    </div>
-                                    {notificationDropdownOpen && (
-                                        <NotificationDropdownMenu
-                                            ref={notificationDropdownRef}
-                                            notifications={notifications}
-                                        />
-                                    )}
-                                </div>
+                        { !placehoder && (
+                            <>
                                 <div 
-                                    className="flex items-center gap-2 cursor-pointer select-none"
-                                    onClick={handleDropdownMenuOpen}
+                                    className="flex gap-0.75 items-center cursor-pointer"
+                                    onClick={() => router.push('/')}
                                 >
-                                    {
-                                        userInfo.image_id && <div className="w-9 h-9 overflow-hidden rounded-full">
-                                            <Image 
-                                                src={EscrowBackendConfig.uploadedImagesURL + userInfo.image_id} 
-                                                alt="User Photo" 
-                                                width={36} 
-                                                height={36} 
-                                                className="h-full w-full rounded-full object-cover"
-                                            />
-                                        </div>
-                                    }
-                                    <p className="text-normal font-regular text-black">{username}</p>
-                                    {dropdownMenuOpen ? (
-                                        <ChevronUpIcon className="w-5 h-5 text-black" />
-                                    ) : (
-                                        <ChevronDownIcon className="w-5 h-5 text-black" />
-                                    )}
+                                    <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
+                                        <Image
+                                            src={logoImage}
+                                            alt="Logo"
+                                            width={40}
+                                            height={40}
+                                            className="h-full w-full rounded-full object-cover"
+                                        />
+                                    </div>
+                                    <p className="text-logo font-poppins font-bold text-black">Grumpus</p>
                                 </div>
-                                {dropdownMenuOpen && <DropdownMenu ref={dropdownRef} />}
-                            </div>
-                        ) : (
-                            <Button
-                                padding="px-6 py-2"
-                                onClick={() => {
-                                    router.push("/");
-                                    setLoginSignupModalOpen(true)
-                                }}
-                            >
-                                <p>Login</p>
-                            </Button>
+                                {userRole === "freelancer" ? (  
+                                    <div className="flex gap-8 text-normal font-regular text-black">    
+                                        <Link className="hover:text-purple uppercase" href="/jobs">Featured Jobs</Link>
+                                        <Link className="hover:text-purple uppercase" href="/gigs">Gigs</Link>
+                                        <Link className="hover:text-purple" href="/dashboard?view=create-gig">Post Gig</Link>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-8 text-normal font-regular text-black">    
+                                        <Link className="hover:text-purple uppercase" href="/jobs">Featured Jobs</Link>
+                                        <Link className="hover:text-purple uppercase" href="/gigs">Gigs</Link>
+                                        <Link className="hover:text-purple uppercase" href="/dashboard?view=create-job">Post Job</Link>
+                                    </div>
+                                )}
+                                {loggedIn ? ( 
+                                    <div 
+                                        className="relative flex items-center gap-4"
+                                        ref={menuToggleRef}
+                                    >
+                                        <div className="relative w-6 h-6 cursor-pointer hover:scale-110 transition-all duration-300" onClick={() => router.push("/chat")}>
+                                            <Image 
+                                                src={chatIcon} 
+                                                alt="Chat Icon" 
+                                                width={24} 
+                                                height={24} 
+                                                className="h-full w-full object-cover"
+                                            />
+                                            {messageCount >= 1 && (
+                                                <span 
+                                                    className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
+                                            )}
+                                        </div>
+                                        <div className="relative" ref={notificationToggleRef}>
+                                            <div
+                                                className="relative w-6 h-6 cursor-pointer hover:scale-110 transition-all duration-300"
+                                                onClick={handleNotificationClick}
+                                            >
+                                                <Image
+                                                    src={bellIcon}
+                                                    alt="Bell Icon"
+                                                    width={24}
+                                                    height={24}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                                {notificationCount >= 1 && (
+                                                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
+                                                )}
+                                            </div>
+                                            {notificationDropdownOpen && (
+                                                <NotificationDropdownMenu
+                                                    ref={notificationDropdownRef}
+                                                    notifications={notifications}
+                                                />
+                                            )}
+                                        </div>
+                                        <div 
+                                            className="flex items-center gap-2 cursor-pointer select-none"
+                                            onClick={handleDropdownMenuOpen}
+                                        >
+                                            {
+                                                userInfo.image_id && <div className="w-9 h-9 overflow-hidden rounded-full">
+                                                    <Image 
+                                                        src={EscrowBackendConfig.uploadedImagesURL + userInfo.image_id} 
+                                                        alt="User Photo" 
+                                                        width={36} 
+                                                        height={36} 
+                                                        className="h-full w-full rounded-full object-cover"
+                                                    />
+                                                </div>
+                                            }
+                                            <p className="text-normal font-regular text-black">{username}</p>
+                                            {dropdownMenuOpen ? (
+                                                <ChevronUpIcon className="w-5 h-5 text-black" />
+                                            ) : (
+                                                <ChevronDownIcon className="w-5 h-5 text-black" />
+                                            )}
+                                        </div>
+                                        {dropdownMenuOpen && <DropdownMenu ref={dropdownRef} />}
+                                    </div>
+                                ) : (
+                                    <Button
+                                        padding="px-6 py-2"
+                                        onClick={() => {
+                                            router.push("/");
+                                            setLoginSignupModalOpen(true)
+                                        }}
+                                    >
+                                        <p>Login</p>
+                                    </Button>
+                                )}
+                            </>
+                        )}
+                        { placehoder && (
+                            <>
+                                <div className="flex items-center gap-0.75">
+                                    <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
+                                        <Image
+                                            src={logoImage}
+                                            alt="Logo"
+                                            width={40}
+                                            height={40}
+                                            className="h-full w-full rounded-full object-cover"
+                                        />
+                                    </div>
+                                    <div
+                                        className="h-11 w-28 animate-pulse flex items-center justify-left text-xl font-semibold uppercase tracking-wide text-gray-400"
+                                    >
+                                        Grumpus
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    {placeholderLinks.map((label) => (
+                                        <div
+                                            key={`placeholder-${label}`}
+                                            className="h-11 w-28 rounded-2xl border border-white/30 bg-linear-to-br from-white via-slate-100 to-slate-200 shadow-lg animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-gray-400"
+                                        >
+                                            {label}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="h-11 w-28 rounded-2xl bg-linear-to-br from-[#2F3DF6] via-[#7E3FF2] to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
+                                    Login
+                                </div>
+                            </>
                         )}
                     </div>
                 </div>
@@ -367,7 +422,7 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
                     const formattedDate = formatDate(notification.created_at);
                     return (
                         <li
-                            key={notification.id}
+                            key={`${notification.id}-${notification.created_at ?? ""}-${notification.read_at ?? ""}`}
                             onClick={() => handleMarkAsRead(notification.id)}
                             className="cursor-pointer border-b last:border-b-0 px-4 py-3 hover:bg-[#2F3DF633]"
                         >

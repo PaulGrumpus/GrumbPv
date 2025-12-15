@@ -139,7 +139,11 @@ const ChatPageContent = () => {
             }
             if (userInfo && userInfo.id) {
                 const loadConversations = async () => {
-                    if (!conversationsInfo.length) return;
+                    if (!conversationsInfo.length) {
+                        setChatSidebarItems([]);
+                        setLoading("success");
+                        return;
+                    }
 
                     const now = new Date();
                     const builtChats: ChatSidebarItem[] = conversationsInfo.map((conversation) => ({
@@ -159,10 +163,9 @@ const ChatPageContent = () => {
 
                     setChatSidebarItems(builtChats);
 
-                    if(conversationId) {
-                        handleChatClick(conversationId as string);
-                    } else {
-                        handleChatClick(conversationsInfo[0].conversation.id);
+                    const targetConversationId = conversationId ?? conversationsInfo[0]?.conversation.id;
+                    if (targetConversationId) {
+                        handleChatClick(targetConversationId);
                     }
 
                     console.log("test-conversationsInfo", conversationsInfo);
@@ -178,7 +181,7 @@ const ChatPageContent = () => {
         } else if (messageLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, messageLoadingState, router, notificationLoadingState]);
+    }, [userInfo, messageLoadingState, router, notificationLoadingState, conversationsInfo]);
 
     if(loading === "pending") {
         return <Loading />;

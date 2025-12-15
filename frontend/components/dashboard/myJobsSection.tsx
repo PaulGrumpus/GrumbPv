@@ -26,28 +26,6 @@ const MyJobsSection = () => {
     const { jobsInfo } = useContext(ProjectInfoCtx);
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
-    const getJobsPerClientId = async (client_id: string) => {
-        try {
-            const result = await getJobsByClientId(client_id);
-            if (result.success) {
-                setJobs(result.data ?? []);
-                await new Promise(resolve => setTimeout(resolve, 3000));
-                setLoading("success");
-            } else {
-                toast.error(result.error as string, {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                });
-            }
-        } catch (error) {
-            toast.error(error as string);
-        }
-    }
-
     useEffect(() => {
         if(conversationLoadingState === "success") {
             if(userInfo.id === "") {
@@ -55,13 +33,9 @@ const MyJobsSection = () => {
                 return;
             }
             if (userInfo && userInfo.id) {
-                const loadJobs = async () => {
-                    console.log("test-loadJobs");
-                    
-                    console.log("test-jobsInfo", jobsInfo);
-                    setJobs(jobsInfo);
+                const loadJobs = () => {
+                    setJobs(jobsInfo.sort((a: Job, b: Job) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
                     setLoading("success");
-                    // await getJobsPerClientId(userInfo.id);
                 };
         
                 if(notificationLoadingState === "success") {

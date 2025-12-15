@@ -4,15 +4,19 @@ import { JobApplication } from "./jobApplication";
 import { JobMilestone } from "./jobMilestone";
 import { Bid } from "./bid";
 
+export interface BidWithJob extends Bid {
+    job: Job;
+}
+
 export interface ProjectInfoContextType {
     jobsInfo: Job[];
     gigsInfo: Gig[];
-    bidsInfo: Bid[];
+    bidsInfo: BidWithJob[];
     jobApplicationsInfo: JobApplication[];
     jobMilestonesInfo: JobMilestone[];
     setJobsInfo: React.Dispatch<React.SetStateAction<Job[]>>;
     setGigsInfo: React.Dispatch<React.SetStateAction<Gig[]>>;
-    setBidsInfo: React.Dispatch<React.SetStateAction<Bid[]>>;
+    setBidsInfo: React.Dispatch<React.SetStateAction<BidWithJob[]>>;
     setJobApplicationsInfo: React.Dispatch<React.SetStateAction<JobApplication[]>>;
     setJobMilestonesInfo: React.Dispatch<React.SetStateAction<JobMilestone[]>>;
     projectInfoError: string;

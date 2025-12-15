@@ -25,28 +25,6 @@ const MyGigsSection = () => {
     const { gigsInfo } = useProjectInfo();
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
-    const getGigsPerFreelancerId = async (freelancer_id: string) => {
-        try {
-            const result = await getGigsByFreelancerId(freelancer_id);
-            if (result.success) {
-                setGigs(result.data ?? []);
-                await new Promise(resolve => setTimeout(resolve, 3000));
-                setLoading("success");
-            } else {
-                toast.error(result.error as string, {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                });
-            }
-        } catch (error) {
-            toast.error(error as string);
-        }
-    }
-
     useEffect(() => {
         if(projectInfoLoadingState === "success") {
             if(userInfo.id === "") {
@@ -54,12 +32,9 @@ const MyGigsSection = () => {
                 return;
             }
             if (userInfo && userInfo.id) {
-                const loadGigs = async () => {
-                    console.log("test-loadGigs");
-                    console.log("test-gigsInfo", gigsInfo);
-                    setGigs(gigsInfo);
+                const loadGigs = () => {
+                    setGigs(gigsInfo.sort((a: Gig, b: Gig) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()));
                     setLoading("success");
-                    // await getGigsPerFreelancerId(userInfo.id);
                 };
         
                 if(notificationLoadingState === "success") {

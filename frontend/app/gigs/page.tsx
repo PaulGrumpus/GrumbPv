@@ -10,65 +10,6 @@ import { getGigs } from "@/utils/functions";
 import Loading from "@/components/loading";
 import { EscrowBackendConfig } from "@/config/config";
 
-const gigs = [
-    {
-        id: 1,
-        title: "Escrow Smart Contract Deployment",
-        description: "Deploy an escrow smart contract for a job. The escrow smart contract will be used to hold the funds for the job. I need a smart contract that is secure and can be used to hold the funds for the job.",
-        location: "Remote",
-        tags: ["Smart Contract", "Deployment", "Escrow"],
-        price: 1000,
-        currency: "USD",
-        deadline: 1737936000,
-        createdAt: 1737936000,
-    },
-    {
-        id: 2,
-        title: "Design a new logo for my company",
-        description: "I need a new logo for my company. The logo should be modern and stylish. I need a logo that is easy to remember and that I can use on my website and marketing materials.",
-        location: "Remote",
-        tags: ["Design", "Logo", "Branding"],
-        price: 1000,
-        currency: "USD",
-        deadline: 1737936000,
-        createdAt: 1737936000,
-    },
-    {
-        id: 3,
-        title: "Develop a new website for my company",
-        description: "I need a new website for my company. The website should be modern and stylish. I need a website that is easy to use and that I can use on my website and marketing materials.",
-        location: "Remote",
-        tags: ["Development", "Website", "Frontend"],
-        price: 1000,
-        currency: "USD",
-        deadline: 1737936000,
-        createdAt: 1737936000,
-    },
-    {
-        id: 4,
-        title: "Develop a new mobile app for my company",
-        description: "I need a new mobile app for my company. The mobile app should be modern and stylish. I need a mobile app that is easy to use and that I can use on my website and marketing materials.",
-        location: "Remote",
-        tags: ["Development", "Mobile App", "Backend"],
-        price: 1000,
-        currency: "USD",
-        deadline: 1737936000,
-        createdAt: 1737936000,
-    },
-    {
-        id: 5,
-        title: "Develop a new backend for my company",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        location: "Remote",
-        tags: ["Development", "Backend", "Database"],
-        price: 1000,
-        currency: "USD",
-        image: "/Grmps/profile-image.jpg",
-        deadline: 1737936000,
-        createdAt: 1737936000,
-    },
-]
-
 const GigsPage = () => {
 
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
@@ -81,7 +22,7 @@ const GigsPage = () => {
             const loadGigs = async () => {
                 const result = await getGigs();
                 if(result.success) {
-                    setGigs(result.data ?? []);
+                    setGigs(result.data.sort((a: Gig, b: Gig) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()) ?? []);
                 }
                 await new Promise(resolve => setTimeout(resolve, 3000));
                 setLoading("success");

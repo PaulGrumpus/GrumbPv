@@ -31,7 +31,7 @@ router.post('/:id',
     conversationController.updateConversation.bind(conversationController)
 );
 
-router.get('/:id', 
+router.get('/by-id/:id', 
     [
         param('id').isString().notEmpty(),
     ],

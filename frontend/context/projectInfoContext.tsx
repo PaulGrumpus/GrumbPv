@@ -5,7 +5,7 @@ import { Gig } from "@/types/gigs";
 import { JobApplication } from "@/types/jobApplication";
 import { JobMilestone } from "@/types/jobMilestone";
 import { Job } from "@/types/jobs";
-import { ProjectInfoContextType } from "@/types/projectInfo";
+import { ProjectInfoContextType, BidWithJob } from "@/types/projectInfo";
 import { getBidsByFreelancerId, getJobApplicationsByUserId, getJobMilestonesByUserId, getJobsByClientId, getGigsByFreelancerId, getJobMilestonesByJobId } from "@/utils/functions";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { UserInfoCtx } from "./userContext";
@@ -36,7 +36,7 @@ type Props = {
 export const ProjectInfoProvider = ({ children }: Props) => {  
     const [jobsInfo, setJobsInfo] = useState<Job[]>(defaultProvider.jobsInfo);
     const [gigsInfo, setGigsInfo] = useState<Gig[]>(defaultProvider.gigsInfo);
-    const [bidsInfo, setBidsInfo] = useState<Bid[]>(defaultProvider.bidsInfo);
+    const [bidsInfo, setBidsInfo] = useState<BidWithJob[]>(defaultProvider.bidsInfo);
     const [jobApplicationsInfo, setJobApplicationsInfo] = useState<JobApplication[]>(defaultProvider.jobApplicationsInfo);
     const [jobMilestonesInfo, setJobMilestonesInfo] = useState<JobMilestone[]>(defaultProvider.jobMilestonesInfo);
     const [projectInfoError, setProjectInfoError] = useState<string>(defaultProvider.projectInfoError);

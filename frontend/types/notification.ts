@@ -15,6 +15,7 @@ export interface Notification {
 export enum NotificationType {
     jobPosted = "JOB_POSTED",
     gigPosted = "GIG_POSTED",
+    bidSent = "BID_SENT",
     bidReceived = "BID_RECEIVED",
     bidAccepted = "BID_ACCEPTED",
     bidDeclined = "BID_DECLIEND",

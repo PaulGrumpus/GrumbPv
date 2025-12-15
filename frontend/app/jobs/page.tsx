@@ -28,7 +28,7 @@ const JobsPage = () => {
             const loadJobs = async () => {
                 const result = await getJobs();
                 if(result.success) {
-                    setJobs(result.data ?? []);
+                    setJobs(result.data.sort((a: Job, b: Job) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()) ?? []);
                 }
                 await new Promise(resolve => setTimeout(resolve, 3000));
                 setLoading("success");

@@ -51,6 +51,17 @@ export class JobBidService {
         read_at: null,
         created_at: new Date(),
       });
+      await notificationService.createNotification({
+        user_id: newJobBid.freelancer_id,
+        type: notification_type.BID_SENT,
+        entity_type: notification_entity.bid,
+        entity_id: newJobBid.id,
+        title: 'Job bid sent',
+        body: 'You have sent a job bid',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
+      });
       return newJobBid;
     } catch (error) {
       if (error instanceof AppError) {
@@ -190,6 +201,11 @@ export class JobBidService {
             select: {
               id: true,
               display_name: true,
+              email: true,
+              role: true,
+              bio: true,
+              address: true,
+              chain: true,
               image_id: true,
               country_code: true,
             },

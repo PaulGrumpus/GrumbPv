@@ -3,7 +3,7 @@
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import { NotificationContextType, Notification, NotificationEntity, NotificationType } from "../types/notification";
 import useSocket from "@/service/socket";
-import { getConversationById, getGigsByFreelancerId, getJobMilestoneById, getJobsByClientId, getNotificationsByUserIdWithFilters } from "@/utils/functions";
+import { getBidsByFreelancerId, getConversationById, getGigsByFreelancerId, getJobMilestoneById, getJobsByClientId, getNotificationsByUserIdWithFilters } from "@/utils/functions";
 import { UserInfoCtx } from "./userContext";
 import { NotificationLoadingCtx } from "./notificationLoadingContext";
 import { UserLoadingCtx } from "./userLoadingContext";
@@ -12,6 +12,7 @@ import { useProjectInfo } from "./projectInfoContext";
 import { ProjectInfoLoadingCtx } from "./projectInfoLoadingContext";
 import { ConversationsInfoCtx } from "./conversationsContext";
 import { MessageLoadingCtx } from "./messageLoadingContext";
+import { ConversationInfo } from "@/types/conversation";
 
 const defaultProvider: NotificationContextType = {
     notifications: [],
@@ -33,8 +34,22 @@ export const NotificationProvider = ({ children }: Props) => {
     const { userInfo } = useContext(UserInfoCtx);
     const { messageLoadingState } = useContext(MessageLoadingCtx);
     const { setnotificationLoadingState } = useContext(NotificationLoadingCtx);
-    const { setJobMilestonesInfo, jobsInfo, setJobsInfo, gigsInfo, setGigsInfo } = useProjectInfo();
+    const { setJobMilestonesInfo, jobsInfo, setJobsInfo, gigsInfo, setGigsInfo, bidsInfo, setBidsInfo } = useProjectInfo();
     const { conversationsInfo, setConversationsInfo } = useContext(ConversationsInfoCtx);
+
+    const upsertConversationInfo = (newConversationInfo: ConversationInfo) => {
+        setConversationsInfo((prev) => {
+            const existingIndex = prev.findIndex(
+                (conversationInfo) => conversationInfo.conversation.id === newConversationInfo.conversation.id
+            );
+            if (existingIndex === -1) {
+                return [...prev, newConversationInfo];
+            }
+            const next = [...prev];
+            next[existingIndex] = newConversationInfo;
+            return next;
+        });
+    };
 
     const init = async () => {
         if(messageLoadingState === "success") {
@@ -62,7 +77,9 @@ export const NotificationProvider = ({ children }: Props) => {
         if(notificationSocket.isConnected) {
             notificationSocket.socket?.emit("joinUserRoom", userInfo.id);
             notificationSocket.socket?.on(websocket.WEBSOCKET_NEW_NOTIFICATION, async (notification: Notification) => {
+
                 setNotifications((prev) => [...prev, notification]);
+
                 if (notification.entity_type === NotificationEntity.milestone) {
                     const updatedMilestoneInfo = await getJobMilestoneById(notification.entity_id);                    
                     if (updatedMilestoneInfo.success && updatedMilestoneInfo.data) {
@@ -87,6 +104,7 @@ export const NotificationProvider = ({ children }: Props) => {
                     }
 
                 }
+
                 if(notification.entity_type === NotificationEntity.job) {
                     if(notification.type === NotificationType.jobPosted) {
                         const userJobs = await getJobsByClientId(userInfo.id);
@@ -105,34 +123,29 @@ export const NotificationProvider = ({ children }: Props) => {
                         setGigsInfo([]);
                     }
                 }
+                
                 if(notification.entity_type === NotificationEntity.conversation) {
-                    if(notification.type === NotificationType.chatCreated) {
+                    if (
+                        notification.type === NotificationType.chatCreated ||
+                        notification.type === NotificationType.chatUpdated
+                    ) {
                         const conversationInfo = await getConversationById(notification.entity_id);
-                        if(conversationInfo.success) {
-                            setConversationsInfo([...conversationsInfo, conversationInfo.data ?? []]);
-                        } else {
-                            setConversationsInfo([]);
+                        if (conversationInfo.success && conversationInfo.data) {
+                            upsertConversationInfo(conversationInfo.data);
                         }
                     }
-                    if(notification.type === NotificationType.chatUpdated) {
-                        const conversationInfo = await getConversationById(notification.entity_id);
-                        if(conversationInfo.success) {
-                            conversationsInfo.forEach((conversation) => {
-                                if(conversation.conversation.id === notification.entity_id) {
-                                    conversation.conversation = conversationInfo.data.conversation;
-                                    conversation.participants = conversationInfo.data.participants;
-                                    conversation.clientInfo = conversationInfo.data.clientInfo;
-                                    conversation.freelancerInfo = conversationInfo.data.freelancerInfo;
-                                    conversation.jobInfo = conversationInfo.data.jobInfo;
-                                    conversation.gigInfo = conversationInfo.data.gigInfo;
-                                }
-                            });
-                            setConversationsInfo(conversationsInfo);
+                }   
+                
+                if(notification.entity_type === NotificationEntity.bid) {
+                    if(notification.type === NotificationType.bidSent) {
+                        const userBids = await getBidsByFreelancerId(userInfo.id);
+                        if(userBids.success) {
+                            setBidsInfo(userBids.data ?? []);
                         } else {
-                            setConversationsInfo([]);
+                            setBidsInfo([]);
                         }
                     }
-                }                
+                }
             });
         }
     }, [notificationSocket.isConnected]);
