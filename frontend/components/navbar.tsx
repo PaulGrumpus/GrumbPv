@@ -18,6 +18,7 @@ import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const chatIcon = "/Grmps/chat.svg";
 const bellIcon = "/Grmps/bell.svg";
+const defaultProfileImage = "/Grmps/default.jpg";
 const logoImage = "/Grmps/grmps.jpg"; // Change this path to your custom logo
 
 const menuItems = [
@@ -38,6 +39,12 @@ const menuItems = [
     },
 ]
 
+const mobileMenuItems = [
+    { label: "Freelance Jobs", href: "/jobs" },
+    { label: "Post Job", href: "/dashboard?view=create-job" },
+    { label: "Gigs", href: "/gigs" },
+];
+
 const Navbar = () => {
     const router = useRouter();
     const { userInfo } = useContext(UserInfoCtx);
@@ -56,6 +63,7 @@ const Navbar = () => {
 
     const [notificationCount, setNotificationCount] = useState(0);
     const [messageCount, setMessageCount] = useState(0);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
@@ -90,6 +98,12 @@ const Navbar = () => {
         setNotificationDropdownOpen((prev) => !prev);
         setDropdownMenuOpen(false);
     };
+
+    const [ isMobile, setIsMobile ] = useState(false);
+
+    useEffect(() => {
+        setIsMobile(window.innerWidth < 768);
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -126,153 +140,287 @@ const Navbar = () => {
 
     return (
         <div>
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white px-16 py-[15.5px] shadow-xl">
-                <div className="container mx-auto"> 
-                    <div className="flex items-center justify-between">
-                        { !showPlaceholder && (
-                            <>
-                                <div 
-                                    className="flex gap-0.75 items-center cursor-pointer"
-                                    onClick={() => router.push('/')}
-                                >
-                                    <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
-                                        <Image
-                                            src={logoImage}
-                                            alt="Logo"
-                                            width={40}
-                                            height={40}
-                                            className="h-full w-full rounded-full object-cover"
-                                        />
-                                    </div>
-                                    <p className="text-logo font-poppins font-bold text-black">Grumpus</p>
-                                </div>
-                                {userRole === "freelancer" ? (  
-                                    <div className="flex gap-8 text-normal font-regular text-black">    
-                                        <Link className="hover:text-purple uppercase" href="/jobs">Featured Jobs</Link>
-                                        <Link className="hover:text-purple uppercase" href="/gigs">Gigs</Link>
-                                        <Link className="hover:text-purple" href="/dashboard?view=create-gig">Post Gig</Link>
-                                    </div>
-                                ) : (
-                                    <div className="flex gap-8 text-normal font-regular text-black">    
-                                        <Link className="hover:text-purple uppercase" href="/jobs">Featured Jobs</Link>
-                                        <Link className="hover:text-purple uppercase" href="/gigs">Gigs</Link>
-                                        <Link className="hover:text-purple uppercase" href="/dashboard?view=create-job">Post Job</Link>
-                                    </div>
-                                )}
-                                {loggedIn ? ( 
+            {!isMobile && (
+                <div className="fixed top-0 left-0 right-0 z-50 bg-white px-16 py-[15.5px] shadow-xl">
+                    <div className="container mx-auto"> 
+                        <div className="flex items-center justify-between">
+                            { !showPlaceholder && (
+                                <>
                                     <div 
-                                        className="relative flex items-center gap-4"
-                                        ref={menuToggleRef}
+                                        className="flex gap-0.75 items-center cursor-pointer"
+                                        onClick={() => router.push('/')}
                                     >
-                                        <div className="relative w-6 h-6 cursor-pointer hover:scale-110 transition-all duration-300" onClick={() => router.push("/chat")}>
-                                            <Image 
-                                                src={chatIcon} 
-                                                alt="Chat Icon" 
-                                                width={24} 
-                                                height={24} 
-                                                className="h-full w-full object-cover"
+                                        <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
+                                            <Image
+                                                src={logoImage}
+                                                alt="Logo"
+                                                width={40}
+                                                height={40}
+                                                className="h-full w-full rounded-full object-cover"
                                             />
-                                            {messageCount >= 1 && (
-                                                <span 
-                                                    className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
-                                            )}
                                         </div>
-                                        <div className="relative" ref={notificationToggleRef}>
-                                            <div
-                                                className="relative w-6 h-6 cursor-pointer hover:scale-110 transition-all duration-300"
-                                                onClick={handleNotificationClick}
-                                            >
-                                                <Image
-                                                    src={bellIcon}
-                                                    alt="Bell Icon"
-                                                    width={24}
-                                                    height={24}
+                                        <p className="text-logo font-poppins font-bold text-black">Grumpus</p>
+                                    </div>
+                                    {userRole === "freelancer" ? (  
+                                        <div className="flex gap-8 text-normal font-regular text-black">    
+                                            <Link className="hover:text-purple uppercase" href="/jobs">Featured Jobs</Link>
+                                            <Link className="hover:text-purple uppercase" href="/gigs">Gigs</Link>
+                                            <Link className="hover:text-purple" href="/dashboard?view=create-gig">Post Gig</Link>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-8 text-normal font-regular text-black">    
+                                            <Link className="hover:text-purple uppercase" href="/jobs">Featured Jobs</Link>
+                                            <Link className="hover:text-purple uppercase" href="/gigs">Gigs</Link>
+                                            <Link className="hover:text-purple uppercase" href="/dashboard?view=create-job">Post Job</Link>
+                                        </div>
+                                    )}
+                                    {loggedIn ? ( 
+                                        <div 
+                                            className="relative flex items-center gap-4"
+                                            ref={menuToggleRef}
+                                        >
+                                            <div className="relative w-6 h-6 cursor-pointer hover:scale-110 transition-all duration-300" onClick={() => router.push("/chat")}>
+                                                <Image 
+                                                    src={chatIcon} 
+                                                    alt="Chat Icon" 
+                                                    width={24} 
+                                                    height={24} 
                                                     className="h-full w-full object-cover"
                                                 />
-                                                {notificationCount >= 1 && (
-                                                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
+                                                {messageCount >= 1 && (
+                                                    <span 
+                                                        className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
                                                 )}
                                             </div>
-                                            {notificationDropdownOpen && (
-                                                <NotificationDropdownMenu
-                                                    ref={notificationDropdownRef}
-                                                    notifications={notifications}
-                                                />
-                                            )}
-                                        </div>
-                                        <div 
-                                            className="flex items-center gap-2 cursor-pointer select-none"
-                                            onClick={handleDropdownMenuOpen}
-                                        >
-                                            {
-                                                userInfo.image_id && <div className="w-9 h-9 overflow-hidden rounded-full">
-                                                    <Image 
-                                                        src={EscrowBackendConfig.uploadedImagesURL + userInfo.image_id} 
-                                                        alt="User Photo" 
-                                                        width={36} 
-                                                        height={36} 
-                                                        className="h-full w-full rounded-full object-cover"
+                                            <div className="relative" ref={notificationToggleRef}>
+                                                <div
+                                                    className="relative w-6 h-6 cursor-pointer hover:scale-110 transition-all duration-300"
+                                                    onClick={handleNotificationClick}
+                                                >
+                                                    <Image
+                                                        src={bellIcon}
+                                                        alt="Bell Icon"
+                                                        width={24}
+                                                        height={24}
+                                                        className="h-full w-full object-cover"
                                                     />
+                                                    {notificationCount >= 1 && (
+                                                        <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
+                                                    )}
                                                 </div>
-                                            }
-                                            <p className="text-normal font-regular text-black">{username}</p>
-                                            {dropdownMenuOpen ? (
-                                                <ChevronUpIcon className="w-5 h-5 text-black" />
-                                            ) : (
-                                                <ChevronDownIcon className="w-5 h-5 text-black" />
-                                            )}
+                                                {notificationDropdownOpen && (
+                                                    <NotificationDropdownMenu
+                                                        ref={notificationDropdownRef}
+                                                        notifications={notifications}
+                                                    />
+                                                )}
+                                            </div>
+                                            <div 
+                                                className="flex items-center gap-2 cursor-pointer select-none"
+                                                onClick={handleDropdownMenuOpen}
+                                            >
+                                                {
+                                                    userInfo.image_id && <div className="w-9 h-9 overflow-hidden rounded-full">
+                                                        <Image 
+                                                            src={EscrowBackendConfig.uploadedImagesURL + userInfo.image_id} 
+                                                            alt="User Photo" 
+                                                            width={36} 
+                                                            height={36} 
+                                                            className="h-full w-full rounded-full object-cover"
+                                                        />
+                                                    </div>
+                                                }
+                                                <p className="text-normal font-regular text-black">{username}</p>
+                                                {dropdownMenuOpen ? (
+                                                    <ChevronUpIcon className="w-5 h-5 text-black" />
+                                                ) : (
+                                                    <ChevronDownIcon className="w-5 h-5 text-black" />
+                                                )}
+                                            </div>
+                                            {dropdownMenuOpen && <DropdownMenu ref={dropdownRef} />}
                                         </div>
-                                        {dropdownMenuOpen && <DropdownMenu ref={dropdownRef} />}
-                                    </div>
-                                ) : (
-                                    <Button
-                                        padding="px-6 py-2"
-                                        onClick={() => {
-                                            router.push("/");
-                                            setLoginSignupModalOpen(true)
-                                        }}
-                                    >
-                                        <p>Login</p>
-                                    </Button>
-                                )}
-                            </>
-                        )}
-                        { showPlaceholder && (
-                            <>
-                                <div className="flex items-center gap-0.75">
-                                    <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
-                                        <Image
-                                            src={logoImage}
-                                            alt="Logo"
-                                            width={40}
-                                            height={40}
-                                            className="h-full w-full rounded-full object-cover"
-                                        />
-                                    </div>
-                                    <div
-                                        className="h-11 w-28 animate-pulse flex items-center justify-left text-xl font-semibold uppercase tracking-wide text-gray-400"
-                                    >
-                                        Grumpus
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    {placeholderLinks.map((label) => (
-                                        <div
-                                            key={`placeholder-${label}`}
-                                            className="h-11 w-28 rounded-2xl border border-white/30 bg-linear-to-br from-white via-slate-100 to-slate-200 shadow-lg animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-gray-400"
+                                    ) : (
+                                        <Button
+                                            padding="px-6 py-2"
+                                            onClick={() => {
+                                                router.push("/");
+                                                setLoginSignupModalOpen(true)
+                                            }}
                                         >
-                                            {label}
+                                            <p>Login</p>
+                                        </Button>
+                                    )}
+                                </>
+                            )}
+                            { showPlaceholder && (
+                                <>
+                                    <div className="flex items-center gap-0.75">
+                                        <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
+                                            <Image
+                                                src={logoImage}
+                                                alt="Logo"
+                                                width={40}
+                                                height={40}
+                                                className="h-full w-full rounded-full object-cover"
+                                            />
                                         </div>
-                                    ))}
-                                </div>
-                                <div className="h-11 w-28 rounded-2xl bg-linear-to-br from-[#2F3DF6] via-[#7E3FF2] to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
-                                    Login
-                                </div>
-                            </>
-                        )}
+                                        <div
+                                            className="h-11 w-28 animate-pulse flex items-center justify-left text-xl font-semibold uppercase tracking-wide text-gray-400"
+                                        >
+                                            Grumpus
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        {placeholderLinks.map((label) => (
+                                            <div
+                                                key={`placeholder-${label}`}
+                                                className="h-11 w-28 rounded-2xl border border-white/30 bg-linear-to-br from-white via-slate-100 to-slate-200 shadow-lg animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-gray-400"
+                                            >
+                                                {label}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="h-11 w-28 rounded-2xl bg-linear-to-br from-[#2F3DF6] via-[#7E3FF2] to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
+                                        Login
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
+
+            {/* Mobile footer nav */}
+            {isMobile && (
+                <div className="fixed top-0 left-0 right-0 z-50 border-t border-[#d6d6d6] bg-white px-4 py-3 lg:hidden">
+                    <div className="flex items-center justify-between">
+                        <div
+                            className="flex items-center gap-2 cursor-pointer"                            
+                        >
+                            <div className="w-8 h-8 overflow-hidden rounded-full">
+                                <Image
+                                    src={userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : EscrowBackendConfig.uploadedImagesURL + defaultProfileImage}
+                                    alt="User Photo"
+                                    width={32}
+                                    height={32}
+                                    className="h-full w-full object-cover"
+                                />
+                            </div>
+                            {userInfo.display_name ? (
+                                <p className="text-normal font-regular text-black">{userInfo.display_name}</p>
+                            ) : (
+                                <p className="text-normal font-regular text-black"></p>
+                            )}
+                        </div>
+                        <div className="flex items-center">
+                            <button
+                                type="button"
+                                onClick={() => router.push("/chat")}
+                                className="focus:outline-none pr-3"
+                            >
+                                <div className="w-6 h-6">
+                                    <Image src={chatIcon} alt="Chat Icon" width={24} height={24} className="h-6 w-6" />
+                                </div>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleNotificationClick}
+                                className="relative focus:outline-none pr-1"
+                            >
+                                <div>
+                                    <Image src={bellIcon} alt="Bell Icon" width={24} height={24} className="h-6 w-6" />
+                                </div>
+                                {notificationCount >= 1 && (
+                                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
+                                )}
+                                {notificationDropdownOpen && (
+                                    <NotificationDropdownMenu
+                                        ref={notificationDropdownRef}
+                                        notifications={notifications}
+                                    />
+                                )}
+                            </button>
+                            <button
+                                type="button"
+                                className="focus:outline-none"
+                                onClick={() => setMobileMenuOpen((prev) => !prev)}
+                            >
+                                <div className="w-6 h-6">
+                                    <Image src="/Grmps/pink-three-dots.svg" alt="pink three dots" width={24} height={24} className="h-full w-full object-cover" />
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isMobile && mobileMenuOpen && (
+                <div className="fixed inset-0 z-50 flex">
+                    {/* Overlay */}
+                    <div
+                        className="absolute inset-0 transparent"
+                        onClick={() => setMobileMenuOpen(false)}
+                    />
+
+                    {/* Drawer */}
+                    <div className="relative h-full w-full max-w-sm bg-black/40 backdrop-blur-xl shadow-2xl transform transition-transform duration-300 translate-x-0">
+                    
+                    {/* Header */}
+                    <div className="flex items-center justify-between bg-white py-3 px-5">
+                        <div className="flex items-center gap-2">
+                            <div
+                                className="flex items-center gap-2 cursor-pointer"
+                                onClick={() => router.push('/')}
+                            >
+                                <div className="w-9 h-9 overflow-hidden rounded-full">
+                                    <Image
+                                        src={logoImage}
+                                        alt="Logo"
+                                        width={36}
+                                        height={36}
+                                        className="h-full w-full object-cover"
+                                    />
+                                </div>
+                                <p className="text-logo font-poppins font-bold text-black">Grumpus</p>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="text-2xl font-medium text-black"
+                        >
+                        ×
+                        </button>
+                    </div>
+
+                    {/* Menu */}
+                    <div className="mt-12 flex flex-col gap-4 px-6 py-6">
+                        {mobileMenuItems.map((item) => (
+                        <Link
+                            key={item.label}
+                            href={item.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="w-full rounded-xl py-3 text-center text-sm font-medium text-black transition hover:bg-[#F4F5FA]"
+                        >
+                            {item.label}
+                        </Link>
+                        ))}
+
+                        {/* Login Button */}
+                        <button
+                        onClick={() => {
+                            router.push("/");
+                            setLoginSignupModalOpen(true);
+                            setMobileMenuOpen(false);
+                        }}
+                        className="mt-4 w-full rounded-xl bg-linear-to-r from-[#5B5BFF] to-[#7E3FF2] py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:opacity-90"
+                        >
+                        Login
+                        </button>
+                    </div>
+                    </div>
+                </div>
+            )}
             <LoginSignupModal
                 isOpen={loginSignupModalOpen} 
                 setIsOpen={setLoginSignupModalOpen} 
@@ -403,12 +551,12 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
             ref={ref}
             className="absolute right-0 mt-2 w-72 rounded-lg border border-[#8F99AF66] bg-white shadow-md z-50 transition-all duration-200"
         >
-            <div className="border-b px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-500">
+            <div className="border-b px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-500 text-left">
                 Notifications
             </div>
             <ul className="max-h-72 overflow-y-auto decorate-scrollbar notification-scrollbar">
                 {unreadNotifications.length === 0 && (
-                    <li className="px-4 py-3 text-sm text-gray-500">You're all caught up!</li>
+                    <li className="px-4 py-3 text-sm text-gray-500 text-left">You're all caught up!</li>
                 )}
                 {unreadNotifications.map((notification) => {
                     const formattedDate = formatDate(notification.created_at);
@@ -420,14 +568,14 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
                         >
                             <div className="flex justify-between">
                                 <div>
-                                    <p className="text-sm font-semibold text-gray-800">{notification.title}</p>
-                                    <p className="text-xs text-gray-600">{notification.body}</p>
-                                    {formattedDate && (
+                                    <p className="text-sm font-semibold text-gray-800 text-left">{notification.title}</p>
+                                    <p className="text-xs text-gray-600 text-left">{notification.body}</p>
+                                    {/* {formattedDate && (
                                         <p className="mt-1 text-[11px] text-gray-400">{formattedDate}</p>
-                                    )}
+                                    )} */}
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-600">{formatHourMinute(notification.created_at ?? "")}</p>
+                                    <p className="text-xs text-gray-600 text-left">{formatHourMinute(notification.created_at ?? "")}</p>
                                 </div>
                             </div>
                         </li>
