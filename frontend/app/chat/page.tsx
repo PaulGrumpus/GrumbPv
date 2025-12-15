@@ -41,7 +41,7 @@ const ChatPageContent = () => {
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
     const searchParams = useSearchParams();
-    const conversationId = searchParams.get("conversationId");
+    const conversationId = searchParams.get("conversation_id");
     const chatSocket = useSocket();   
     const router = useRouter();
 

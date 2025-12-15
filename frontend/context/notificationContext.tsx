@@ -56,14 +56,12 @@ export const NotificationProvider = ({ children }: Props) => {
     }, [messageLoadingState]);
 
     useEffect(() => {
-        console.log("test-notifications", notifications);
     }, [notifications]);
 
     useEffect(() => {
         if(notificationSocket.isConnected) {
             notificationSocket.socket?.emit("joinUserRoom", userInfo.id);
             notificationSocket.socket?.on(websocket.WEBSOCKET_NEW_NOTIFICATION, async (notification: Notification) => {
-                console.log("test-notification", notification);
                 setNotifications((prev) => [...prev, notification]);
                 if (notification.entity_type === NotificationEntity.milestone) {
                     const updatedMilestoneInfo = await getJobMilestoneById(notification.entity_id);                    
@@ -138,10 +136,6 @@ export const NotificationProvider = ({ children }: Props) => {
             });
         }
     }, [notificationSocket.isConnected]);
-
-    useEffect(() => {
-        console.log("notifications", notifications);
-    }, [notifications]);
 
     return (
         <NotificationCtx.Provider value={{ notifications, setNotifications, notificationsError, setNotificationsError }}>

@@ -87,6 +87,16 @@ const ApplicationPost = ({ freelancer, id, cover_letter_md, bid_amount, token_sy
                 throw new Error(conversation.error as string);
             }
 
+            toast.success(`Conversation ${conversation.data.id} created`, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+
+            console.log("-------------------test-conversation", conversation);
+
             const existingConversationInfo = conversationsInfo.find((conversationInfo) => conversationInfo.conversation.id === conversation.data.id);
 
             if(existingConversationInfo) {
@@ -109,7 +119,7 @@ const ApplicationPost = ({ freelancer, id, cover_letter_md, bid_amount, token_sy
                 }]);
             }
 
-            router.push(`/chat/conversationId=${conversation.data.id}`);
+            router.push(`/chat?conversation_id=${conversation.data.id}`);
         } catch (error) {
             error instanceof Error ? toast.error(error.message, {
                 position: "top-right",

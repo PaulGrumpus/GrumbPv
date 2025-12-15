@@ -692,9 +692,11 @@ export const createConversationAndParticipant = async (job_application_doc_id: s
             throw new Error(freelancerParticipant.data.error);
         }
 
+        const conversationData = response.data.data;
+
         return {
             success: true,
-            data: response.data,
+            data: conversationData,
         };
     } catch (error: any) {
         return {

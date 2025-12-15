@@ -70,7 +70,6 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
                     // const nextStatus = Number(jobMilestoneInfo.data.status ?? 0);
                     // setStatus(Number.isFinite(nextStatus) ? nextStatus : 0);
                     // setIpfsUrl(jobMilestoneInfo.data.ipfs ?? null);
-                    console.log("test-jobMilestoneInfo", jobMilestoneInfo);
                     let nextStatus = 0;
                     if(jobMilestoneInfo?.status === JobMilestoneStatus.PENDING_FUND) {
                         nextStatus = 1;
@@ -93,7 +92,6 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
                     } else if(jobMilestoneInfo?.status === JobMilestoneStatus.CANCELLED) {
                         nextStatus = 10;
                     }
-                    console.log("test-nextStatus", nextStatus);
                     setStatus(Number.isFinite(nextStatus) ? nextStatus : 0);
                     setIpfsUrl(jobMilestoneInfo?.ipfs ?? null);
                 } else {

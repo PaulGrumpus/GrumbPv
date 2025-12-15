@@ -78,7 +78,6 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
 
     const handleFundEscrow = async () => {
         const result = await fundEscrow(user.id, jobMilestoneId, Number(CONFIG.chainId));
-        console.log("test-result", result);
         const txHash = await sendTransaction({
             to: result.data.to,
             data: result.data.data,
@@ -118,7 +117,6 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
 
     const handleDeliverWork = async () => {
         const result = await deliverWork(user.id, jobMilestoneId, Number(CONFIG.chainId), selectedFile);
-        console.log("test-result", result);
         const txHash = await sendTransaction({
             to: result.data.to,
             data: result.data.data,
