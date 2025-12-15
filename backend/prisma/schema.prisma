@@ -377,6 +377,8 @@ enum notification_type {
   MESSAGE_RECEIVED
   REQUIREMENT_DOCS_CREATED
   REQUIREMENT_DOCS_CONFIRMED
+  CHAT_CREATED
+  CHAT_UPDATED
 }
 
 enum notification_entity {

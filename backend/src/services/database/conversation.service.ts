@@ -1,8 +1,9 @@
 import { logger } from "../../utils/logger.js";
 import { AppError } from "../../middlewares/errorHandler.js";
-import { conversation_participants, conversations, users } from "@prisma/client";
+import { conversation_participants, conversations, gigs, jobs, notification_entity, notification_type, Prisma, users } from "@prisma/client";
 import { newConversationParam, convo_type } from "../../types/conversation.js";
 import { prisma } from "../../prisma.js";
+import { notificationService } from "./notification.service.js";
 
 export class ConversationService {
     private prisma = prisma;
@@ -51,6 +52,16 @@ export class ConversationService {
                     data: updatePayload,
                 });
 
+                await notificationService.createNotification({
+                    user_id: params.freelancer_id,
+                    actor_user_id: params.client_id,
+                    type: notification_type.CHAT_UPDATED,
+                    entity_type: notification_entity.conversation,
+                    entity_id: updatedConversation.id,
+                    title: 'Chat updated',
+                    body: 'You have a chat updated',
+                });
+
                 return updatedConversation;
             }
 
@@ -69,6 +80,19 @@ export class ConversationService {
                 throw new AppError('Conversation not created', 400, 'CONVERSATION_NOT_CREATED');
             }
 
+            await notificationService.createNotification({
+                user_id: params.freelancer_id,
+                actor_user_id: params.client_id,
+                type: notification_type.CHAT_CREATED,
+                entity_type: notification_entity.conversation,
+                entity_id: newConversation.id,
+                title: 'New conversation started',
+                body: 'You have a new conversation started',
+                payload: Prisma.JsonNull,
+                read_at: null,
+                created_at: new Date(),
+            });
+
             return newConversation;
         }
         catch (error) {
@@ -77,41 +101,68 @@ export class ConversationService {
         }
     }
 
-    public async getConversationById(id: string): Promise<
-    { conversation: conversations, participants: conversation_participants[], clientInfo: users, freelancerInfo: users | null }> {
+    public async getConversationById(id: string): Promise<{
+        conversation: conversations;
+        participants: conversation_participants[];
+        clientInfo: users;
+        freelancerInfo: users | null;
+        jobInfo: jobs | null;
+        gigInfo: gigs | null;
+    }> {
         try {
             const conversation = await this.prisma.conversations.findUnique({
                 where: { id },
+                include: {
+                    job: {
+                        include: {
+                            client: true, // users table
+                        },
+                    },
+                    gig: true,
+                    participants: {
+                        include: {
+                            user: true,
+                        },
+                    },
+                },
             });
+        
             if (!conversation) {
-                throw new AppError('Conversation not found', 404, 'CONVERSATION_NOT_FOUND');
+                throw new AppError("Conversation not found", 404, "CONVERSATION_NOT_FOUND");
             }
-            const jobInfo = await this.prisma.jobs.findUnique({
-                where: { id: conversation.job_id ?? "" },
-            });
-            if (!jobInfo) {
-                throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
-            }
-            const participants = await this.prisma.conversation_participants.findMany({
-                where: { conversation_id: id },
-            });
-            const clientInfo = await this.prisma.users.findUnique({
-                where: { id: jobInfo.client_id },
-            });
+        
+            const jobInfo = conversation.job ?? null;
+            const gigInfo = conversation.gig ?? null;
+        
+            const clientInfo = jobInfo?.client;
             if (!clientInfo) {
-                throw new AppError('Client not found', 404, 'CLIENT_NOT_FOUND');
+                throw new AppError("Client not found", 404, "CLIENT_NOT_FOUND");
             }
-            const freelancerInfo = await this.prisma.users.findUnique({
-                where: { id: participants.find((participant) => participant.user_id !== jobInfo.client_id)?.user_id ?? "" },
-            });
+        
+            const freelancerInfo =
+                conversation.participants
+                .map(p => p.user)
+                .find(u => u.id !== clientInfo.id) ?? null;
+        
             if (!freelancerInfo) {
-                throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
+                throw new AppError("Freelancer not found", 404, "FREELANCER_NOT_FOUND");
             }
-            return { conversation, participants, clientInfo, freelancerInfo };
-        }
-        catch (error) {
-            logger.error('Error getting conversation by id', { error });
-            throw new AppError('Error getting conversation by id', 500, 'CONVERSATION_GET_BY_ID_FAILED');
+        
+            return {
+                conversation,
+                participants: conversation.participants,
+                clientInfo,
+                freelancerInfo,
+                jobInfo,
+                gigInfo,
+            };
+        } catch (error) {
+            logger.error("Error getting conversation by id", { error });
+            throw new AppError(
+                "Error getting conversation by id",
+                500,
+                "CONVERSATION_GET_BY_ID_FAILED"
+            );
         }
     }
 

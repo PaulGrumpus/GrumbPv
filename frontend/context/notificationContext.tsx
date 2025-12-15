@@ -3,13 +3,14 @@
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import { NotificationContextType, Notification, NotificationEntity, NotificationType } from "../types/notification";
 import useSocket from "@/service/socket";
-import { getGigsByFreelancerId, getJobMilestoneById, getJobsByClientId, getNotificationsByUserIdWithFilters } from "@/utils/functions";
+import { getConversationById, getGigsByFreelancerId, getJobMilestoneById, getJobsByClientId, getNotificationsByUserIdWithFilters } from "@/utils/functions";
 import { UserInfoCtx } from "./userContext";
 import { NotificationLoadingCtx } from "./notificationLoadingContext";
 import { UserLoadingCtx } from "./userLoadingContext";
 import { websocket } from "@/config/config";
 import { useProjectInfo } from "./projectInfoContext";
 import { ProjectInfoLoadingCtx } from "./projectInfoLoadingContext";
+import { ConversationsInfoCtx } from "./conversationsContext";
 
 const defaultProvider: NotificationContextType = {
     notifications: [],
@@ -32,6 +33,7 @@ export const NotificationProvider = ({ children }: Props) => {
     const { projectInfoLoadingState } = useContext(ProjectInfoLoadingCtx);
     const { setnotificationLoadingState } = useContext(NotificationLoadingCtx);
     const { jobMilestonesInfo, setJobMilestonesInfo, jobsInfo, setJobsInfo, gigsInfo, setGigsInfo } = useProjectInfo();
+    const { conversationsInfo, setConversationsInfo } = useContext(ConversationsInfoCtx);
     
     const init = async () => {
         if(projectInfoLoadingState === "success") {
@@ -91,6 +93,34 @@ export const NotificationProvider = ({ children }: Props) => {
                         setGigsInfo(userGigs.data ?? []);
                     } else {
                         setGigsInfo([]);
+                    }
+                }
+                if(notification.entity_type === NotificationEntity.conversation) {
+                    if(notification.type === NotificationType.chatCreated) {
+                        const conversationInfo = await getConversationById(notification.entity_id);
+                        if(conversationInfo.success) {
+                            setConversationsInfo([...conversationsInfo, conversationInfo.data ?? []]);
+                        } else {
+                            setConversationsInfo([]);
+                        }
+                    }
+                    if(notification.type === NotificationType.chatUpdated) {
+                        const conversationInfo = await getConversationById(notification.entity_id);
+                        if(conversationInfo.success) {
+                            conversationsInfo.forEach((conversation) => {
+                                if(conversation.conversation.id === notification.entity_id) {
+                                    conversation.conversation = conversationInfo.data.conversation;
+                                    conversation.participants = conversationInfo.data.participants;
+                                    conversation.clientInfo = conversationInfo.data.clientInfo;
+                                    conversation.freelancerInfo = conversationInfo.data.freelancerInfo;
+                                    conversation.jobInfo = conversationInfo.data.jobInfo;
+                                    conversation.gigInfo = conversationInfo.data.gigInfo;
+                                }
+                            });
+                            setConversationsInfo(conversationsInfo);
+                        } else {
+                            setConversationsInfo([]);
+                        }
                     }
                 }
             });

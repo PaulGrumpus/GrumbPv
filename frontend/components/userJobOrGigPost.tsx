@@ -32,7 +32,7 @@ interface userJobOrGigPostProps {
 }
 
 interface ApplicationWithUser extends Bid {
-    user: User;
+    freelancer?: User;
 }
 
 const editIcon = "/Grmps/lucide_edit.svg";

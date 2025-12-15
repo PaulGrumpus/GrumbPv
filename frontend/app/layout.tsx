@@ -71,10 +71,10 @@ export default function RootLayout({
               <ProjectInfoLoadingProvider>
                 <ProjectInfoProvider>
                   <SocketContextProvider>
-                    <NotificationLoadingProvider>
-                      <NotificationProvider>
-                        <ConversationLoadingProvider>
-                          <ConversationsInfoProvider>
+                    <ConversationLoadingProvider>
+                      <ConversationsInfoProvider>
+                        <NotificationLoadingProvider>
+                          <NotificationProvider>
                             <MessageLoadingProvider>
                               <MessagesInfoProvider>
                                 <Navbar />
@@ -83,10 +83,10 @@ export default function RootLayout({
                                 <ToastContainer />
                               </MessagesInfoProvider>
                             </MessageLoadingProvider>
-                          </ConversationsInfoProvider>
-                        </ConversationLoadingProvider>
-                      </NotificationProvider>
-                    </NotificationLoadingProvider>
+                          </NotificationProvider>
+                        </NotificationLoadingProvider>
+                      </ConversationsInfoProvider>
+                    </ConversationLoadingProvider>
                   </SocketContextProvider>
                 </ProjectInfoProvider>
               </ProjectInfoLoadingProvider>

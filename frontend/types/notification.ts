@@ -25,6 +25,8 @@ export enum NotificationType {
     disputeStarted = "DISPUTE_STARTED",
     disputeResolved = "DISPUTE_RESOLVED",
     messageReceived = "MESSAGE_RECEIVED",
+    chatCreated = "CHAT_CREATED",
+    chatUpdated = "CHAT_UPDATED",
   }
 
 export enum NotificationEntity {

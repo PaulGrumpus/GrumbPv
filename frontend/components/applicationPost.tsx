@@ -13,12 +13,12 @@ import { useRouter } from "next/navigation";
 import { ConversationsInfoCtx } from "@/context/conversationsContext";
 
 interface ApplicationWithUser extends Bid {
-    user: User;
+    freelancer?: User;
 }
 
 const COLLAPSED_MAX_HEIGHT = 120;
 
-const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, status, period, job_id, freelancer_id }: ApplicationWithUser) => {
+const ApplicationPost = ({ freelancer, id, cover_letter_md, bid_amount, token_symbol, status, period, job_id, freelancer_id }: ApplicationWithUser) => {
     const [expanded, setExpanded] = useState(false);
     const [canToggle, setCanToggle] = useState(false);
     const coverLetterRef = useRef<HTMLParagraphElement>(null);
@@ -92,6 +92,7 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
             if(existingConversationInfo) {
                 const newConversationsInfo = conversationsInfo.map((conversationInfo) => conversationInfo.conversation.id === conversation.data.id ? {
                     ...conversationInfo,
+                    conversation: conversation.data,
                     jobInfo: jobInfo.data,
                     gigInfo: null,
                 } : conversationInfo);
@@ -108,7 +109,7 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
                 }]);
             }
 
-            router.push(`/chat/${conversation.data.id}`);
+            router.push(`/chat/conversationId=${conversation.data.id}`);
         } catch (error) {
             error instanceof Error ? toast.error(error.message, {
                 position: "top-right",
@@ -165,23 +166,21 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
         <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
             <div className="linear-border__inner rounded-[0.4375rem] p-6 bg-white">
                 <div className="text-black">
-                    {user.image_id && (
-                        <div className='flex items-center justify-center'>
-                            <div className="w-25 h-25 rounded-full overflow-hidden">
-                                <Image 
-                                    src={EscrowBackendConfig.uploadedImagesURL + user.image_id}
-                                    alt="job image"
-                                    width={100}
-                                    height={100}
-                                    className="h-full w-full rounded-full object-cover"
-                                />
-                            </div>
+                    <div className='flex items-center justify-center'>
+                        <div className="w-25 h-25 rounded-full overflow-hidden">
+                            <Image 
+                                src={freelancer?.image_id ? EscrowBackendConfig.uploadedImagesURL + freelancer.image_id : EscrowBackendConfig.uploadedImagesURL + "/default.jpg"}
+                                alt="job image"
+                                width={100}
+                                height={100}
+                                className="h-full w-full rounded-full object-cover"
+                            />
                         </div>
-                    )}
+                    </div>
                     <div className="flex flex-col pb-6">
-                        <h1 className="text-normal font-bold text-black truncate">Name: {user.display_name}</h1>
-                        <p className="text-light-large font-regular text-black truncate">Email: {user.email}</p>
-                        <p className="text-light-large font-regular text-black truncate">Address: {user.address}</p>
+                        <h1 className="text-normal font-bold text-black truncate">Name: {freelancer?.display_name}</h1>
+                        <p className="text-light-large font-regular text-black truncate">Email: {freelancer?.email}</p>
+                        <p className="text-light-large font-regular text-black truncate">Address: {freelancer?.address}</p>
                     </div>
 
                     <div

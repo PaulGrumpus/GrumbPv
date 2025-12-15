@@ -87,11 +87,13 @@ const DashboardPageContent = () => {
 
     const { gigsInfo } = useProjectInfo();
     const { jobsInfo } = useProjectInfo();
+    const { bidsInfo } = useProjectInfo();
 
     useEffect(() => {
         setMyGigsCount(gigsInfo.length);
         setMyJobsCount(jobsInfo.length);
-    }, [gigsInfo, jobsInfo]);
+        setMyBidsCount(bidsInfo.length);
+    }, [gigsInfo, jobsInfo, bidsInfo]);
 
     const freelancerSidebarItems = useMemo(() => ([
         {
