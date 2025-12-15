@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 import { Job } from "@/types/jobs";
 import { Gig } from "@/types/gigs";
 import { Bid, BidStatus } from "@/types/bid";
+import { JobApplication } from "@/types/jobApplication";
+import { JobMilestone } from "@/types/jobMilestone";
 
 // Users
 export const createUserWithAddress = async (address: string, role: string) => {
@@ -338,6 +340,71 @@ export const getJobById = async (job_id: string) => {
     }
 }
 
+// Job Milestones
+export const getJobMilestoneById = async (job_milestone_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/job-milestones/by-id/${job_milestone_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const getJobMilestonesByJobId = async (job_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/job-milestones/by-job-id/${job_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const updateJobMilestone = async (job_milestone_id: string, jobMilestone: JobMilestone) => {
+    try {
+        const response = await EscrowBackend.post(`/database/job-milestones/${job_milestone_id}`, jobMilestone);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const getJobMilestonesByUserId = async (user_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/job-milestones/by-user-id/${user_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 // Gigs
 export const createGig = async (gig: Gig, imageFile?: File | null) => {
     try {
@@ -419,13 +486,11 @@ export const getGigs = async () => {
     }
 }
 
-export const updateBidStatus = async (bid_id: string, status: BidStatus, job_id: string, freelancer_id: string) => {
+// Bids
+export const createBid = async (bid: Bid) => {
     try {
-        const response = await EscrowBackend.post(`/database/job-bids/${bid_id}`, { 
-            status,
-            job_id,
-            freelancer_id,
-        });
+        const response = await EscrowBackend.post('/database/job-bids', bid);
+        console.log(response.data);
         return {
             success: true,
             data: response.data.data,
@@ -439,11 +504,9 @@ export const updateBidStatus = async (bid_id: string, status: BidStatus, job_id:
     }
 }
 
-// Bids
-export const createBid = async (bid: Bid) => {
+export const getBidById = async (bid_id: string) => {
     try {
-        const response = await EscrowBackend.post('/database/job-bids', bid);
-        console.log(response.data);
+        const response = await EscrowBackend.get(`/database/job-bids/by-id/${bid_id}`);
         return {
             success: true,
             data: response.data.data,
@@ -489,6 +552,372 @@ export const getBidsByJobId = async (job_id: string) => {
     }
 }
 
+export const updateBidStatus = async (bid_id: string, status: BidStatus, job_id: string, freelancer_id: string) => {
+    try {
+        const response = await EscrowBackend.post(`/database/job-bids/${bid_id}`, { 
+            status,
+            job_id,
+            freelancer_id,
+        });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+// Job Applications
+export const createJobApplication = async (jobApplication: JobApplication) => {
+    try {
+        const response = await EscrowBackend.post('/database/job-applications', jobApplication);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const updateJobApplication = async (job_application_id: string, user_id: string, jobApplication: JobApplication) => {
+    try {
+        const response = await EscrowBackend.post(`/database/job-applications/${job_application_id}/${user_id}`, jobApplication);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const getJobApplicationById = async (job_application_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/job-applications/by-id/${job_application_id}`);
+        return {
+            success: true,
+                data: response.data.data,
+            };
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const deleteJobApplication = async (job_application_id: string) => {
+    try {
+        const response = await EscrowBackend.delete(`/database/job-applications/${job_application_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const getJobApplicationsByUserId = async (user_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/job-applications/by-user-id/${user_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+// conversations
+export const createConversationAndParticipant = async (job_application_doc_id: string, job_id: string, gig_id: string, client_id: string, freelancer_id: string) => {
+    try {
+        const response = await EscrowBackend.post('/database/conversations', {
+            type: 'dm',
+            job_id: job_id === "" ? null : job_id,
+            gig_id: gig_id === "" ? null : gig_id,
+            job_application_doc_id: job_application_doc_id === "" ? null : job_application_doc_id,
+            client_id,
+            freelancer_id,
+        });
+
+        if (!response.data.success) {
+            throw new Error(response.data.error);
+        }
+
+        const clientParticipant = await EscrowBackend.post('/database/conversation-participants', {
+            conversation_id: response.data.data.id,
+            user_id: client_id,
+            is_muted: false,
+            is_pinned: false,
+            last_read_msg_id: null,
+        });
+
+        if (!clientParticipant.data.success) {
+            throw new Error(clientParticipant.data.error);
+        }
+
+        const freelancerParticipant = await EscrowBackend.post('/database/conversation-participants', {
+            conversation_id: response.data.data.id,
+            user_id: freelancer_id,
+            is_muted: false,
+            is_pinned: false,
+            last_read_msg_id: null,
+        });
+
+        if (!freelancerParticipant.data.success) {
+            throw new Error(freelancerParticipant.data.error);
+        }
+
+        const conversationData = response.data.data;
+
+        return {
+            success: true,
+            data: conversationData,
+        };
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const getConversationByParticipant = async (user_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/conversation-participants/by-user-id/${user_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const getConversationById = async (conversation_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/conversations/by-id/${conversation_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+// Messages
+export const getMessagesByDateRangeAndConversationIds = async (startDate: string, endDate: string, conversationIds: string[]) => {
+    try {
+        const response = await EscrowBackend.post(`/database/messages/date-range/${startDate}/${endDate}`,
+            {
+                conversationIds,
+            }
+        );
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const getAllMessagesByConversationIds = async (conversationIds: string[]) => {
+
+    try {
+        const response = await EscrowBackend.post('/database/messages/all',
+            {
+                conversationIds,
+            }
+        );
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+// web3
+
+export const fundEscrow = async (userId: string, job_milestone_id: string, chainId: number) => {
+    try {
+        const response = await EscrowBackend.post(`/contract/escrow/${job_milestone_id}/fund`, {
+            userId,
+            chainId,
+        });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const deliverWork = async (userId: string, job_milestone_id: string, chainId: number, file?: File | null, cid?: string, contentHash?: string) => {
+    try {
+        const formData = new FormData();
+        formData.append('userId', userId);
+        formData.append('chainId', chainId.toString());
+        if (file) {
+            formData.append('file', file);
+        }
+        if (cid) {
+            formData.append('cid', cid);
+        }
+        if (contentHash) {
+            formData.append('contentHash', contentHash);
+        }
+
+        const response = await EscrowBackend.post(
+            `/contract/escrow/${job_milestone_id}/deliver`,
+            formData,
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+            // {
+            //     headers: {
+            //         Authorization: `Bearer ${localStorage.getItem('token')}`,
+            //     },
+            // }
+        );
+
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const approveWork = async (userId: string, job_milestone_id: string, chainId: number, cid: string) => {
+    try {
+        const response = await EscrowBackend.post(`/contract/escrow/${job_milestone_id}/approve`, {
+            userId,
+            chainId,
+            cid,
+        });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const withdrawFunds = async (userId: string, job_milestone_id: string, chainId: number) => {
+    try {
+        const response = await EscrowBackend.post(`/contract/escrow/${job_milestone_id}/withdraw`, {
+            userId,
+            chainId,
+        });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const getNotificationsByUserIdWithFilters = async (user_id: string, read?: boolean) => {
+    try {
+        const response = await EscrowBackend.post(`/database/notifications/by-user-id/${user_id}`, {
+            read: read ?? undefined,
+        });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const updateNotification = async (notification_id: string, read_at: Date) => {
+    try {
+        const response = await EscrowBackend.post(`/database/notifications/${notification_id}`, {
+            read_at: read_at,
+        });
+        return {
+            success: true,
+            data: response.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 // Utils
 export const formatDueDate = (deadline: number | string | undefined) => {
     if (deadline === null || deadline === undefined) {
@@ -517,4 +946,11 @@ export const formatDueDate = (deadline: number | string | undefined) => {
         day: "2-digit",
         timeZone: "UTC",
     }).format(new Date(timestamp));
+};
+
+export const formatHourMinute = (date: string) => {
+    if(new Date(date).getTime() < (new Date().getTime() - 60 * 60 * 24 * 1000)) {
+        return new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric'});
+    }
+    return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 };

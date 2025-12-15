@@ -3,64 +3,54 @@ import Button from "../button";
 import UserJobOrGigPost from "../userJobOrGigPost";
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { UserInfoCtx } from "@/context/userContext";
 import Loading from "../loading";
 import { Job, LocationType } from "@/types/jobs";
 import { EscrowBackendConfig } from "@/config/config";
 import { getJobsByClientId } from "@/utils/functions";
 import { toast } from "react-toastify";
+import { ConversationLoadingCtx } from "@/context/conversationLoadingContext";
+import { ProjectInfoCtx } from "@/context/projectInfoContext";
+import { ProjectInfoLoadingCtx } from "@/context/projectInfoLoadingContext";
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const MyJobsSection = () => {
     const router = useRouter();
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
+    const { conversationLoadingState } = useContext(ConversationLoadingCtx);    
+    const { projectInfoLoadingState } = useContext(ProjectInfoLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [jobs, setJobs] = useState<Job[]>([]);
-
-    const getJobsPerClientId = async (client_id: string) => {
-        try {
-            const result = await getJobsByClientId(client_id);
-            if (result.success) {
-                setJobs(result.data ?? []);
-                await new Promise(resolve => setTimeout(resolve, 3000));
-                setLoading("success");
-            } else {
-                toast.error(result.error as string, {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                });
-            }
-        } catch (error) {
-            toast.error(error as string);
-        }
-    }
+    const { jobsInfo } = useContext(ProjectInfoCtx);
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(conversationLoadingState === "success") {
             if(userInfo.id === "") {
-                setLoadingState("failure");
+                setuserLoadingState("failure");
                 return;
             }
             if (userInfo && userInfo.id) {
-                const loadJobs = async () => {
-                    if (!userInfo?.id) {
-                        setLoadingState("failure");
-                        return;
-                    }
-                    await getJobsPerClientId(userInfo.id);
+                const loadJobs = () => {
+                    setJobs(jobsInfo.sort((a: Job, b: Job) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
+                    setLoading("success");
                 };
         
-                loadJobs();
+                if(notificationLoadingState === "success") {
+                    loadJobs();
+                }
             }
-        } else if (loadingState === "failure") {
+        } else if (conversationLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState])
+    }, [userInfo, conversationLoadingState, notificationLoadingState])
+
+    useEffect(() => {
+        console.log("test-jobsInfo", jobsInfo);
+        setJobs(jobsInfo);
+    }, [jobsInfo]);
 
     if (loading === "pending") {
         return <Loading />;
@@ -105,7 +95,7 @@ const MyJobsSection = () => {
                         </div>
                     </div>
                 ) : (
-                    loadingState === "success" && (<div className="flex flex-col items-center justify-center gap-20 mb-38">
+                    userLoadingState === "success" && (<div className="flex flex-col items-center justify-center gap-20 mb-38">
                         <p className="text-normal font-regular text-black">No jobs found.</p>
                         <Button
                             padding='px-7 py-3'

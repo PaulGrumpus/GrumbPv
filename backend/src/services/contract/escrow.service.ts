@@ -6,6 +6,7 @@ import { AppError } from '../../middlewares/errorHandler.js';
 import { jobMilestoneService } from '../database/job.milestone.service.js';
 import { chainTxsService } from '../database/chainTxs.service.js';
 import { jobService } from '../database/job.service.js';
+import { EscrowTxData } from '../../types/escrow.js';
 
 export interface EscrowInfo {
   buyer: string;
@@ -154,6 +155,47 @@ export class EscrowService {
     }
   }
 
+  async buildFundEscrowTx(
+    job_milestone_id: string,
+    userId: string,
+    chainId: number
+  ): Promise<EscrowTxData> {
+    const exsitingJobMilestone =
+      await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    if (!exsitingJobMilestone) {
+      throw new AppError('Job milestone not found', 404);
+    }
+
+    const amount = exsitingJobMilestone.amount.toString();
+  
+    const escrowAddress = exsitingJobMilestone.escrow;
+    if (!escrowAddress) {
+      throw new AppError('Escrow not found', 404);
+    }
+  
+    const existingJob =
+      await jobService.getJobById(exsitingJobMilestone.job_id);
+    if (!existingJob) {
+      throw new AppError('Job not found', 404);
+    }
+  
+    // OPTIONAL: enforce who can fund
+    if (existingJob.client_id !== userId) {
+      throw new AppError('Unauthorized', 403);
+    }
+  
+    const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
+  
+    const data = iface.encodeFunctionData('fund', []);
+  
+    return {
+      to: escrowAddress,
+      data,
+      value: ethers.parseEther(amount).toString(),
+      chainId: chainId
+    };
+  }
+
   /**
    * Deliver work (vendor)
    */
@@ -236,6 +278,72 @@ export class EscrowService {
     }
   }
 
+  async buildDeliverWorkTx(
+    job_milestone_id: string,
+    userId: string,
+    chainId: number,
+    cid: string,
+    contentHash?: string
+  ): Promise<EscrowTxData> {
+    const exsitingJobMilestone =
+      await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    if (!exsitingJobMilestone) {
+      throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
+    }
+
+    const escrowAddress = exsitingJobMilestone.escrow;
+    if (!escrowAddress) {
+      throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
+    }
+
+    // OPTIONAL: enforce who can deliver
+    if (exsitingJobMilestone.freelancer_id !== userId) {
+      throw new AppError('Unauthorized', 403);
+    }
+
+    // Convert contentHash to bytes32 format
+    // contentHash should already be a 32-byte keccak256 hash from the controller
+    let hashBytes: string;
+    if (contentHash) {
+      try {
+        // Validate and convert to bytes32
+        const hashBytesArray = ethers.getBytes(contentHash);
+
+        if (hashBytesArray.length !== 32) {
+          logger.warn(
+            `contentHash is not 32 bytes (${hashBytesArray.length} bytes), padding/truncating`
+          );
+          if (hashBytesArray.length > 32) {
+            // Truncate to first 32 bytes
+            hashBytes = ethers.hexlify(hashBytesArray.slice(0, 32));
+          } else {
+            // Pad to 32 bytes
+            hashBytes = ethers.zeroPadValue(ethers.hexlify(hashBytesArray), 32);
+          }
+        } else {
+          // Already 32 bytes, use as-is
+          hashBytes = ethers.hexlify(hashBytesArray);
+        }
+      } catch (error) {
+        logger.warn(`Invalid contentHash format, using ZeroHash: ${contentHash}`);
+        hashBytes = ethers.ZeroHash;
+      }
+    } else {
+      hashBytes = ethers.ZeroHash;
+    }
+
+    const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
+    const data = iface.encodeFunctionData('deliver', [cid, hashBytes]);
+
+    return {
+      to: escrowAddress,
+      data,
+      value: '0',
+      chainId,
+      cid
+    };
+  }
+
   /**
    * Approve work (buyer)
    */
@@ -287,6 +395,41 @@ export class EscrowService {
     }
   }
 
+  async buildApproveWorkTx(
+    job_milestone_id: string,
+    userId: string,
+    chainId: number,
+    cid: string
+  ): Promise<EscrowTxData> {
+    const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    if (!exsitingJobMilestone) {
+      throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
+  }
+    const escrowAddress = exsitingJobMilestone.escrow;
+    if (!escrowAddress) {
+      throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
+    }
+
+    const existingJob = await jobService.getJobById(exsitingJobMilestone.job_id);
+    if (!existingJob) {
+      throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
+    }
+
+    // OPTIONAL: enforce who can approve
+    if (existingJob.client_id !== userId) {
+      throw new AppError('Unauthorized', 403);
+    }
+
+    const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
+    const data = iface.encodeFunctionData('approve', [cid]);
+
+    return {
+      to: escrowAddress,
+      data,
+      value: '0',
+      chainId
+    };
+  }
   /**
    * Withdraw funds (vendor)
    */
@@ -331,6 +474,34 @@ export class EscrowService {
       logger.error('Error withdrawing funds:', error);
       throw new AppError(`Failed to withdraw funds: ${error.message}`, 500);
     }
+  }
+
+  async buildWithdrawFundsTx(
+    job_milestone_id: string,
+    userId: string,
+    chainId: number
+  ): Promise<EscrowTxData> {
+    const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    if (!exsitingJobMilestone) {
+      throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
+  }
+    const escrowAddress = exsitingJobMilestone.escrow;
+    if (!escrowAddress) {
+      throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
+    }
+
+    if (exsitingJobMilestone.freelancer_id !== userId) {
+      throw new AppError('Unauthorized', 403);
+    }
+
+    const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
+    const data = iface.encodeFunctionData('withdraw', []);
+    return {
+      to: escrowAddress,
+      data,
+      value: '0',
+      chainId
+    };
   }
 
   /**

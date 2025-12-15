@@ -11,10 +11,11 @@ import { Suspense, useMemo, useContext, useEffect, useState, type ReactNode } fr
 import { useRouter, useSearchParams } from "next/navigation";
 import { CONFIG } from "@/config/config";
 import { UserInfoCtx } from "@/context/userContext";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import Loading from "@/components/loading";
 import { getBidsByFreelancerId, getGigsByFreelancerId, getJobsByClientId } from "@/utils/functions";
 import { toast } from "react-toastify";
+import { useProjectInfo } from "@/context/projectInfoContext";
 
 type SectionSlug = "dashboard" | "my-gigs" | "create-gig" | "my-bids" | "my-jobs" | "create-job";
 
@@ -77,12 +78,22 @@ const DashboardPageContent = () => {
     const selectedSidebarLabel = SLUG_TO_SIDEBAR_LABEL[normalizedSlug] ?? activeSection.label;
     const [userRole, setUserRole] = useState("client");
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const router = useRouter();
     const [myBidsCount, setMyBidsCount] = useState(0);
     const [myGigsCount, setMyGigsCount] = useState(0);
     const [myJobsCount, setMyJobsCount] = useState(0);
+
+    const { gigsInfo } = useProjectInfo();
+    const { jobsInfo } = useProjectInfo();
+    const { bidsInfo } = useProjectInfo();
+
+    useEffect(() => {
+        setMyGigsCount(gigsInfo.length);
+        setMyJobsCount(jobsInfo.length);
+        setMyBidsCount(bidsInfo.length);
+    }, [gigsInfo, jobsInfo, bidsInfo]);
 
     const freelancerSidebarItems = useMemo(() => ([
         {
@@ -187,7 +198,7 @@ const DashboardPageContent = () => {
     }
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
                 router.push("/");
                 return;
@@ -206,10 +217,10 @@ const DashboardPageContent = () => {
                 }
                 loadCounts();
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState, router])
+    }, [userInfo, userLoadingState, router])
 
     if (loading === "pending") {
         return <Loading />;

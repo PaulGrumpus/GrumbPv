@@ -7,7 +7,7 @@ import ModalTemplate from "@/components/modalTemplate";
 import { useContext, useEffect, useState } from "react";
 import { Job, LocationType } from "@/types/jobs";
 import { useRouter } from "next/navigation";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { UserInfoCtx } from "@/context/userContext";
 import Loading from "@/components/loading";
 import { toast } from "react-toastify";
@@ -19,23 +19,23 @@ const JobsPage = () => {
     const [selectedJobId, setSelectedJobId] = useState<string | undefined>(undefined);
 
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [jobs, setJobs] = useState<Job[]>([]);
     
     useEffect(() => {
-        if(loadingState !== "pending") {
+        if(userLoadingState !== "pending") {
             const loadJobs = async () => {
                 const result = await getJobs();
                 if(result.success) {
-                    setJobs(result.data ?? []);
+                    setJobs(result.data.sort((a: Job, b: Job) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()) ?? []);
                 }
                 await new Promise(resolve => setTimeout(resolve, 3000));
                 setLoading("success");
             }
             loadJobs();
         }
-    }, [userInfo, loadingState])
+    }, [userInfo, userLoadingState])
 
     const handleApplyForJob = (jobId: string | undefined) => {
         if(!userInfo.id || userInfo.role !== "freelancer") {

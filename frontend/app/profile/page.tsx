@@ -4,7 +4,7 @@ import Button from '@/components/button'
 import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDownIcon, ChevronUpIcon, XMarkIcon } from "@heroicons/react/20/solid";
-import { LoadingCtx } from '@/context/loadingContext';
+import { UserLoadingCtx } from '@/context/userLoadingContext';
 import { useContext } from 'react';
 import Loading from '@/components/loading';
 import { UserInfoCtx } from '@/context/userContext';
@@ -14,6 +14,8 @@ import { User } from '@/types/user';
 import { updateUser } from '@/utils/functions';
 import { EscrowBackendConfig } from '@/config/config';
 import { connectMetaMaskWallet } from '@/utils/walletConnnect';
+import { useWallet } from '@/context/walletContext';
+import { NotificationLoadingCtx } from '@/context/notificationLoadingContext';
 
 type FormState = {
     userName: string;
@@ -47,6 +49,8 @@ const ProfilePage = () => {
     const [uploadedFileName, setUploadedFileName] = useState("");
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const { connect, address, isConnected } = useWallet();
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
     const initialFormState = useRef<FormState>({
         userName: "",
@@ -56,7 +60,7 @@ const ProfilePage = () => {
         selectedLanguage: "",
     });  
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const router = useRouter();
 
@@ -222,11 +226,10 @@ const ProfilePage = () => {
     }
 
     const handleConnectWallet = async () => {
-        const connection = await connectMetaMaskWallet(userEmail);
-        if(!connection) {
-            return;
+        const result = await connect(userEmail);
+        if (result?.address) {
+            setUserWaletAddress(result.address);
         }
-        setUserWaletAddress(connection.address);
     }
 
     const resetForm = () => {
@@ -274,7 +277,7 @@ const ProfilePage = () => {
     }, [dropdownMenuOpen]);
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
                 router.push("/");
                 return;
@@ -288,24 +291,36 @@ const ProfilePage = () => {
                         userPhoto: userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "",
                         selectedLanguage,
                     };
-                    console.log("test-initialFormState", initialFormState.current);
-                    console.log("test-userInfo", userInfo);
                     setUserBio(userInfo.bio || "")
                     setSelectedLanguage("")
                     setUserName(userInfo.display_name || "")
                     setUserPhoto(userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "")
                     setUserRole(userInfo.role || "")
                     setUserEmail(userInfo.email || "")
-                    setUserWaletAddress(userInfo.address || "")
+                    setUserWaletAddress(isConnected ? userInfo.address || null : null)
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }
-                loadProfile();
+                if(notificationLoadingState === "success") {
+                    loadProfile();
+                }
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState, router])
+    }, [userInfo, userLoadingState, router, notificationLoadingState])
+
+    useEffect(() => {
+        if (address) {
+            setUserWaletAddress(address);
+        }
+    }, [address]);
+
+    useEffect(() => {
+        if (!isConnected) {
+            setUserWaletAddress(null);
+        }
+    }, [isConnected]);
 
     if (loading === "pending") {
         return <Loading />;

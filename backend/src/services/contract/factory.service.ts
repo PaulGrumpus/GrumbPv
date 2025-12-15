@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { CONTRACT_ABIS, CONTRACT_ADDRESSES, DEFAULT_CONFIG } from '../../config/contracts.js';
+import { CONTRACT_ABIS, CONTRACT_ADDRESSES, DEFAULT_CONFIG, MEDIATOR_ID } from '../../config/contracts.js';
 import { web3Provider } from '../../utils/web3Provider.js';
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
@@ -12,6 +12,7 @@ import {
 import { jobMilestoneService } from '../database/job.milestone.service.js';
 import { jobService } from '../database/job.service.js';
 import { userService } from '../database/user.service.js';
+import { chainTxsService } from '../database/chainTxs.service.js';
 
 export interface CreateEscrowParams {
   job_milestone_id: string;
@@ -199,6 +200,16 @@ export class FactoryService {
       await jobMilestoneService.updateJobMilestone(exsitingJobMilestone.id, {
         escrow: escrowAddress,
       });
+
+      await chainTxsService.createChainTx(
+        'create_escrow',
+        97,
+        wallet.address,
+        escrowAddress,
+        tx.hash,
+        'success',
+        MEDIATOR_ID
+      );
 
       return {
         escrowAddress,

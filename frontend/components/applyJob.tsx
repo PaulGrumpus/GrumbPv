@@ -355,6 +355,7 @@ const ApplyJob = ({ jobId, freelancerId, clickHandler }: ApplyJobProps) => {
                                 <p className='text-normal font-regular text-black text-left pb-2'>Budget</p>
                                 <input
                                     value={budget}
+                                    type="number"
                                     onChange={(e) => {
                                         setBudget(Number(e.target.value));
                                         setError("");

@@ -4,20 +4,25 @@ import BidPost from "../bidPost";
 import SectionPlaceholder from "./sectionPlaceholder";
 import { useRouter } from "next/navigation";
 import { UserInfoCtx } from "@/context/userContext";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { getBidsByFreelancerId, getJobById } from "@/utils/functions";
 import { toast } from "react-toastify";
 import { Bid, BidStatus } from "@/types/bid";
 import Loading from "../loading";
 import { Job } from "@/types/jobs";
 import { BidPostProps } from "@/types/bid";
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
+import { useProjectInfo } from "@/context/projectInfoContext";
+import { BidWithJob } from "@/types/projectInfo";
 
 const MyBidsSection = () => {
     const router = useRouter();
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [bids, setBids] = useState<BidPostProps[]>([]);
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+    const { bidsInfo } = useProjectInfo();
 
     const getJobByJobId = async (job_id: string) => {
         try {
@@ -47,79 +52,50 @@ const MyBidsSection = () => {
         }
     }
 
-    const getBidsPerFreelancerId = async (freelancer_id: string) => {
-        try {
-            const result = await getBidsByFreelancerId(freelancer_id);            
-            if (result.success) {
-                const bidsPostProps = await Promise.all(
-                    (result.data ?? []).map(async (bid: Bid) => {
-                        const job = await getJobByJobId(bid.job_id);
-                        if (!job) {
-                            return null;
-                        }
+    const parseBids = (bids: BidWithJob[]) => {
+        const bidsPostProps = bids.map((bid: BidWithJob) => ({
+            job_description: bid.job.description_md,
+            job_title: bid.job.title,
+            job_location: bid.job.location,
+            job_tags: bid.job.tags,
+            job_max_budget: bid.job.budget_max_usd ?? 0,
+            job_min_budget: bid.job.budget_min_usd ?? 0,
+            job_deadline: bid.job.deadline_at
+                ? new Date(bid.job.deadline_at).getTime() / 1000
+                : undefined,
+            bid_cover_letter: bid.cover_letter_md ?? "",
+            bid_amount: bid.bid_amount ?? 0,
+            currency: bid.token_symbol ?? "USD",
+            bid_status: bid.status,
+            created_at: bid.created_at ?? 0,
+        }));
 
-                        return {
-                            job_description: job.description_md,
-                            job_title: job.title,
-                            job_location: job.location,
-                            job_tags: job.tags,
-                            job_max_budget: job.budget_max_usd ?? 0,
-                            job_min_budget: job.budget_min_usd ?? 0,
-                            job_deadline: job.deadline_at ? new Date(job.deadline_at).getTime() / 1000 : undefined,
-                            bid_cover_letter: bid.cover_letter_md ?? "",
-                            bid_amount: bid.bid_amount ?? 0,
-                            currency: bid.token_symbol ?? "USD",
-                            bid_status: bid.status as BidStatus,
-                        } as BidPostProps;
-                    })
-                );
-
-                setBids(bidsPostProps.filter(Boolean) as BidPostProps[]);
-                await new Promise(resolve => setTimeout(resolve, 3000));
-                setLoading("success");           
-            } else {
-                toast.error(result.error as string, {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                });
-            }
-        } catch (error) {
-            toast.error(error as string, {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-            });
-        }
+        bidsPostProps.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        
+        setBids(bidsPostProps);
+        setLoading("success");           
+            
     }
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
-                setLoadingState("failure");
+                setuserLoadingState("failure");
                 return;
             }
             if (userInfo && userInfo.id) {
-                const loadBids = async () => {
-                    if (!userInfo?.id) {
-                        setLoadingState("failure");
-                        return;
-                    }
-                    await getBidsPerFreelancerId(userInfo.id);
+                const loadBids = () => {
+                    parseBids(bidsInfo);
                 };
         
-                loadBids();
+                if(notificationLoadingState === "success") {
+                    loadBids();
+                }
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState])
+    }, [userInfo, userLoadingState, notificationLoadingState])
 
     if (loading === "pending") {
         return <Loading />;

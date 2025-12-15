@@ -7,10 +7,11 @@ import Button from "../button";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import { UserInfoCtx } from "@/context/userContext";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { useRouter } from "next/navigation";
 import Loading from "../loading";
 import { createGig } from "@/utils/functions";
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const uploadImage = "/Grmps/upload.svg";
 
@@ -27,13 +28,14 @@ const CreateGigSection = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploadedFileName, setUploadedFileName] = useState<string>("");
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const [error, setError] = useState("");
     const [checkError, setCheckError] = useState(false);
     const router = useRouter();
-    
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+
     const handleUploadFile = () => {
         const fileInput = document.createElement("input");
         fileInput.type = "file";
@@ -145,9 +147,9 @@ const CreateGigSection = () => {
     }
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
-                setLoadingState("failure");
+                setuserLoadingState("failure");
                 return;
             }
             if (userInfo && userInfo.id) {
@@ -155,12 +157,14 @@ const CreateGigSection = () => {
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }
-                loadCreateGig();
+                if(notificationLoadingState === "success") {
+                    loadCreateGig();
+                }
             }
-        } else if (loadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState, router])
+    }, [userInfo, userLoadingState, router, notificationLoadingState])
 
     if (loading === "pending") {
         return <Loading />;

@@ -1,15 +1,14 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, PrismaClient, job_bids } from '@prisma/client';
+import { Prisma, bid_status, job_bids } from '@prisma/client';
 import { userService } from './user.service.js';
 import { jobService } from './job.service.js';
+import { prisma } from '../../prisma.js';
+import { notification_entity, notification_type } from "@prisma/client";
+import { notificationService } from './notification.service.js';
 
 export class JobBidService {
-  private prisma: PrismaClient;
-
-  public constructor() {
-    this.prisma = new PrismaClient();
-  }
+  private prisma = prisma;
 
   public async createJobBid(jobBid: Prisma.job_bidsUncheckedCreateInput): Promise<job_bids> {
     try {
@@ -40,6 +39,29 @@ export class JobBidService {
       const newJobBid = await this.prisma.job_bids.create({
         data: jobBid,
       });
+      await notificationService.createNotification({
+        user_id: existingJob.client_id,
+        actor_user_id: newJobBid.freelancer_id,
+        type: notification_type.BID_RECEIVED,
+        entity_type: notification_entity.bid,
+        entity_id: newJobBid.id,
+        title: 'New job bid received',
+        body: 'You have received a new job bid',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
+      });
+      await notificationService.createNotification({
+        user_id: newJobBid.freelancer_id,
+        type: notification_type.BID_SENT,
+        entity_type: notification_entity.bid,
+        entity_id: newJobBid.id,
+        title: 'Job bid sent',
+        body: 'You have sent a job bid',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
+      });
       return newJobBid;
     } catch (error) {
       if (error instanceof AppError) {
@@ -63,6 +85,12 @@ export class JobBidService {
       });
       if (!existingJobBid) {
         throw new AppError('Job bid not found', 404, 'JOB_BID_NOT_FOUND');
+      }
+      if(existingJobBid.status === bid_status.declined) {
+        throw new AppError('Job bid is already declined', 400, 'JOB_BID_IS_ALREADY_DECLINED');
+      }
+      if(existingJobBid.status === bid_status.withdrawn) {
+        throw new AppError('Job bid is already withdrawn', 400, 'JOB_BID_IS_ALREADY_WITHDRAWN');
       }
       if (!jobBid.job_id || !jobBid.freelancer_id) {
         throw new AppError(
@@ -88,6 +116,18 @@ export class JobBidService {
           ...jobBid,
           updated_at: new Date(),
         },
+      });
+      await notificationService.createNotification({
+        user_id: existingFreelancer.id,
+        actor_user_id: existingJob.client_id,
+        type: updatedJobBid.status === bid_status.accepted ? notification_type.BID_ACCEPTED : updatedJobBid.status === bid_status.declined ? notification_type.BID_DECLIEND : notification_type.BID_WITHDRAWN,
+        entity_type: notification_entity.bid,
+        entity_id: updatedJobBid.id,
+        title: updatedJobBid.status === bid_status.accepted ? 'Job bid accepted' : updatedJobBid.status === bid_status.declined ? 'Job bid declined' : 'Job bid withdrawn',
+        body: updatedJobBid.status === bid_status.accepted ? 'Your job bid has been accepted by the client.' : updatedJobBid.status === bid_status.declined ? 'Your job bid has been declined by the client.' : 'Your job bid has been withdrawn.',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
       });
       return updatedJobBid;
     } catch (error) {
@@ -155,6 +195,22 @@ export class JobBidService {
       }
       const existingJobBids = await this.prisma.job_bids.findMany({
         where: { job_id },
+        orderBy: { created_at: "desc" },
+        include: {
+          freelancer: {
+            select: {
+              id: true,
+              display_name: true,
+              email: true,
+              role: true,
+              bio: true,
+              address: true,
+              chain: true,
+              image_id: true,
+              country_code: true,
+            },
+          },
+        },
       });
       return existingJobBids;
     } catch (error) {
@@ -175,12 +231,27 @@ export class JobBidService {
       if (!freelancer_id) {
         throw new AppError('Freelancer ID is required', 400, 'FREELANCER_ID_REQUIRED');
       }
-      const existingFreelancer = await userService.getUserById(freelancer_id as string);
-      if (!existingFreelancer) {
-        throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
-      }
+      // const existingFreelancer = await userService.getUserById(freelancer_id as string);
+      // if (!existingFreelancer) {
+      //   throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
+      // }
       const existingJobBids = await this.prisma.job_bids.findMany({
         where: { freelancer_id },
+        orderBy: { created_at: "desc" },
+        include: {
+          job: {
+            select: {
+              id: true,
+              title: true,
+              description_md: true,
+              location: true,
+              tags: true,
+              budget_min_usd: true,
+              budget_max_usd: true,
+              deadline_at: true,
+            },
+          },
+        },
       });
       return existingJobBids;
     } catch (error) {

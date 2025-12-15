@@ -14,39 +14,41 @@ const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
-const ChatUserInfo = ({ user }: { user: User }) => {
+const ChatUserInfo = ({ user }: { user: User | null }) => {
     return (
-        <div className="bg-[#7E3FF2] rounded-xl py-3.75 px-3">
-            <div
-                className="flex items-center justify-center flex-col"
-            >
-                <div className="w-25 h-25 rounded-full overflow-hidden pb-2">
-                    <Image 
-                        src={EscrowBackendConfig.uploadedImagesURL + user.image_id} 
-                        alt="User Photo" 
-                        width={100} 
-                        height={100} 
-                        className="w-full h-full object-cover" 
-                    />
-                </div>
-                <h1 className="text-light-large font-bold text-[#DEE4F2] pb-3">{user.display_name}</h1>
-                <div className="flex items-center justify-center bg-[#FFFFFF33] rounded-sm py-1 px-2.5 mb-3">
-                    <p className="text-small font-regular text-[#DEE4F2]">{user.role}</p>
-                </div>
-                <div className="flex flex-col items-start gap-2">
-                    <div className="flex items-center justify-center py-2 px-2.5">
-                        <p className="text-normal font-medium text-[#DEE4F2]">Joined: {formatDate(user.created_at)}</p>
+        <div className="bg-[#7E3FF2] rounded-xl py-3 px-3.75">
+            <div className="w-full min-w-62.5">
+                <div
+                    className="flex items-center justify-center flex-col w-full"
+                >
+                    <div className="w-25 h-25 rounded-full overflow-hidden mb-2">
+                        <Image 
+                            src={user? EscrowBackendConfig.uploadedImagesURL + user.image_id : EscrowBackendConfig.uploadedImagesURL + "/default.jpg"} 
+                            alt="User Photo" 
+                            width={100} 
+                            height={100} 
+                            className="w-full h-full object-cover" 
+                        />
                     </div>
-                    {user.email && (
+                    <h1 className="text-light-large font-bold text-[#DEE4F2] pb-3">{user? user.display_name : "No user"}</h1>
+                    <div className="flex items-center justify-center bg-[#FFFFFF33] rounded-sm py-1 px-2.5 mb-3">
+                        <p className="text-small font-regular text-[#DEE4F2]">{user? user.role : "No role"}</p>
+                    </div>
+                    <div className="flex flex-col items-start gap-2">
                         <div className="flex items-center justify-center py-2 px-2.5">
-                            <p className="text-normal font-medium text-[#DEE4F2]">Email: {shortenEmail(user.email)}</p>
+                            <p className="text-normal font-medium text-[#DEE4F2]">Joined: {user? formatDate(user.created_at) : "No created at"}</p>
                         </div>
-                    )}
-                    {user.address && (
-                        <div className="flex items-center justify-center py-2 px-2.5">
-                            <p className="text-normal font-medium text-[#DEE4F2]">Address: {shortenAddress(user.address)}</p>
-                        </div>
-                    )}
+                        {user?.email && (
+                            <div className="flex items-center justify-center py-2 px-2.5">
+                                <p className="text-normal font-medium text-[#DEE4F2]">Email: {user? shortenEmail(user.email) : "No email"}</p>
+                            </div>
+                        )}
+                        {user?.address && (
+                            <div className="flex items-center justify-center py-2 px-2.5">
+                                <p className="text-normal font-medium text-[#DEE4F2]">Address: {user? shortenAddress(user.address) : "No address"}</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

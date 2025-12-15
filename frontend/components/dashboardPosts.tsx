@@ -5,7 +5,12 @@ import Image from "next/image";
 import { toast } from "react-toastify";
 import { CONFIG } from "@/config/config";
 import ModalTemplate from "./modalTemplate";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { JobMilestoneStatus } from "@/types/jobMilestone";
+import { approveWork, deliverWork, fundEscrow, updateJobMilestone, withdrawFunds } from "@/utils/functions";
+import { User } from "@/types/user";
+import { useWallet } from "@/context/walletContext";
+import { useProjectInfo } from "@/context/projectInfoContext";
 
 const STATUSES = [
     { key: "started", label: "Started the job" },
@@ -15,60 +20,172 @@ const STATUSES = [
 ];
 
 interface DashboardPostsProps {
-    jobId: string;
+    user: User;
+    jobMilestoneId: string;
     title: string;
     description: string;
-    status: number;
-    ipfsUrl?: string;
+    milestoneStatus: JobMilestoneStatus;
+    ipfs?: string;
     variant: "open" | "completed";
     clickHandler: () => void;
 }
 
-const userRole:string = CONFIG.userRole;
-
-const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, clickHandler }: DashboardPostsProps) => {
+const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneStatus, ipfs, variant, clickHandler }: DashboardPostsProps) => {
     const totalSteps = STATUSES.length;
     const [isOpen, setIsOpen] = useState(false);
-    
-    const handleFund = () => {
-        toast.success("Processing fund...", {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
+    const [status, setStatus] = useState(0);
+    const { sendTransaction } = useWallet();
+    const { setJobMilestonesInfo } = useProjectInfo();
+
+    useEffect(() => {
+        let nextStatus = 0;
+        if(milestoneStatus === JobMilestoneStatus.PENDING_FUND) {
+            nextStatus = 1;
+        } else if(milestoneStatus === JobMilestoneStatus.FUNDED) {
+            nextStatus = 2;
+        } else if(milestoneStatus === JobMilestoneStatus.DELIVERED) {
+            nextStatus = 3;
+        } else if(milestoneStatus === JobMilestoneStatus.APPROVED) {
+            nextStatus = 4;
+        } else if(milestoneStatus === JobMilestoneStatus.RELEASED) {
+            nextStatus = 5;
+        } else if(milestoneStatus === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE) {
+            nextStatus = 6;
+        } else if(milestoneStatus === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE) {
+            nextStatus = 7;
+        } else if(milestoneStatus === JobMilestoneStatus.RESOLVED_TO_BUYER) {
+            nextStatus = 8;
+        } else if(milestoneStatus === JobMilestoneStatus.RESOLVED_TO_VENDOR) {
+            nextStatus = 9;
+        } else if(milestoneStatus === JobMilestoneStatus.CANCELLED) {
+            nextStatus = 10;
+        }
+        setStatus(Number.isFinite(nextStatus) ? nextStatus : 0);
+    }, [milestoneStatus, setStatus]);
+
+    const handleFund = async () => {
+        const result = await fundEscrow(user.id, jobMilestoneId, Number(CONFIG.chainId));
+        const txHash = await sendTransaction({
+            to: result.data.to,
+            data: result.data.data,
+            value: result.data.value,
+            chainId: Number(result.data.chainId),
         });
-        clickHandler();
+        if (!txHash) {
+            toast.error("Failed to fund escrow", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.FUNDED });
+        if (updatedJobMilestone.success) {
+            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
+            toast.success("Escrow funded successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.error(updatedJobMilestone.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
     }
 
     const handleDeliver = () => {
         setIsOpen(true);
     }
 
-    const handleApprove = () => {
-        toast.success("Processing approve...", {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
+    const handleApprove = async () => {
+        const result = await approveWork(user.id, jobMilestoneId, Number(CONFIG.chainId), ipfs ?? "");
+        const txHash = await sendTransaction({
+            to: result.data.to,
+            data: result.data.data,
+            value: result.data.value,
+            chainId: Number(result.data.chainId),
         });
-        clickHandler();
+        if (!txHash) {
+            toast.error("Failed to approve work", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.APPROVED });
+        if (updatedJobMilestone.success) {
+            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
+            toast.success("Work approved successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.error(updatedJobMilestone.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
     }
 
-    const handleWithdraw = () => {
-        toast.success("Processing withdraw...", {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
+    const handleWithdraw = async () => {
+        const result = await withdrawFunds(user.id, jobMilestoneId, Number(CONFIG.chainId));
+        const txHash = await sendTransaction({
+            to: result.data.to,
+            data: result.data.data,
+            value: result.data.value,
+            chainId: Number(result.data.chainId),
         });
-        clickHandler();
+        if (!txHash) {
+            toast.error("Failed to withdraw funds", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.RELEASED });
+        if (updatedJobMilestone.success) {
+            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
+            toast.success("Funds withdrawn successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.error(updatedJobMilestone.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
     }
 
     const handleDispute = () => {
-        if ((status >= 2 && status < 4 && userRole === "client") || (status === 3 && userRole === "freelancer"))
+        if ((status >= 2 && status < 4 && user.role === "client") || (status === 3 && user.role === "freelancer"))
         {
             toast.success("Processing dispute...", {
                 position: "top-right",
@@ -138,6 +255,7 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
             );
         }
     }
+    
     const handleDownload = async (url: string) => {
         try {
             const response = await fetch(url);
@@ -177,15 +295,43 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [projectDescription, setProjectDescription] = useState<string>("");
 
-    const handleDeliverUploadedFile = () => {
-        toast.success("Processing deliver uploaded file...", {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
+    const handleDeliverUploadedFile = async () => {
+        const result = await deliverWork(user.id, jobMilestoneId, Number(CONFIG.chainId), selectedFile);
+        const txHash = await sendTransaction({
+            to: result.data.to,
+            data: result.data.data,
+            value: result.data.value,
+            chainId: Number(result.data.chainId),
         });
-        clickHandler();
+        if (!txHash) {
+            toast.error("Failed to deliver work", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.DELIVERED, ipfs: result.data.cid });
+        if (updatedJobMilestone.success) {
+            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
+            toast.success("Work delivered successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.error(updatedJobMilestone.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
     }
 
     const handleUploadFile = () => {
@@ -232,7 +378,7 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
                     {
                         variant === "open" && (
                             <div className="text-black flex flex-wrap justify-between gap-6">
-                                <div className="flex flex-col max-w-180 gap-6">
+                                <div className="flex flex-col max-w-180 w-full gap-6">
                                     <p className="text-subtitle font-bold text-black">{title}</p>
                                     <p className="text-normal font-regular text-black">
                                         {description}
@@ -287,17 +433,17 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
                                             );
                                         })}
                                     </div>
-                                    {ipfsUrl && status == 3 && userRole === "client" && (
+                                    {ipfs && status == 3 && user.role === "client" && (
                                         <div className='flex items-center border border-[#8F99AF] rounded-lg p-3 gap-3'>
                                             <p
                                                 className='flex-1 bg-transparent text-normal font-regular text-[#2F3DF6] text-left focus:outline-none max-w-153.5 truncate'
                                             >
-                                                {ipfsUrl}
+                                                {CONFIG.ipfsGateWay}/{ipfs}
                                             </p>
                                             <div className="flex items-center gap-2.5">
                                                 <div>
                                                     <Button
-                                                        onClick={() => handleCopy(ipfsUrl)}
+                                                        onClick={() => handleCopy(`${CONFIG.ipfsGateWay}/${ipfs}`)}
                                                         padding="p-3"
                                                         variant="secondary"
                                                     >
@@ -311,7 +457,7 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
                                                 </div>
                                                 <div>
                                                     <Button
-                                                        onClick={() => handleDownload(ipfsUrl)}
+                                                        onClick={() => handleDownload(`${CONFIG.ipfsGateWay}/${ipfs}`)}
                                                         padding="p-3"
                                                         variant="secondary"
                                                     >
@@ -328,7 +474,7 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
                                     )}
                                 </div>
                                 <div className="flex flex-col gap-2.5">
-                                    {status == 1 && userRole === "client" && (
+                                    {status == 1 && user.role === "client" && (
                                         <Button 
                                             padding="px-10.375 py-3"
                                             onClick={handleFund}
@@ -336,7 +482,7 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
                                             Fund
                                         </Button>
                                     )}
-                                    {status == 2 && userRole === "freelancer" && (
+                                    {status == 2 && user.role === "freelancer" && (
                                         <Button 
                                             padding="px-8.75 py-3"
                                             onClick={handleDeliver}
@@ -344,7 +490,7 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
                                             Deliver 
                                         </Button>
                                     )}
-                                    {status == 3 && userRole === "client" && (
+                                    {status == 3 && user.role === "client" && (
                                         <Button 
                                             padding="px-7.5 py-3"
                                             onClick={handleApprove}
@@ -352,7 +498,7 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
                                             Approve
                                         </Button>
                                     )}
-                                    {status == 4 && userRole === "freelancer" && (
+                                    {status == 4 && user.role === "freelancer" && (
                                         <Button 
                                             padding="px-6.375 py-3"
                                             onClick={handleWithdraw}
@@ -363,8 +509,8 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
                                     <Button 
                                         padding="px-8.5 py-3.25"
                                         variant={
-                                            (status >= 2 && status < 4 && userRole === "client") ||
-                                            (status === 3 && userRole === "freelancer")
+                                            (status >= 2 && status < 4 && user.role === "client") ||
+                                            (status === 3 && user.role === "freelancer")
                                                 ? "secondary"
                                                 : "disable"
                                         }
@@ -392,15 +538,15 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
                                         {description}
                                     </p>
                                 </div>
-                                {ipfsUrl && userRole === "client" && (
+                                {ipfs && user.role === "client" && (
                                     <div className='flex items-center border border-[#8F99AF] rounded-lg p-3 gap-3'>
                                         <p className='flex-1 bg-transparent text-normal font-regular text-[#2F3DF6] text-left focus:outline-none max-w-70 truncate'>
-                                            {ipfsUrl}
+                                            {CONFIG.ipfsGateWay}/{ipfs}
                                         </p>
                                         <div className="flex items-center gap-2.5">
                                             <div>
                                                 <Button
-                                                    onClick={() => handleCopy(ipfsUrl)}
+                                                    onClick={() => handleCopy(`${CONFIG.ipfsGateWay}/${ipfs}`)}
                                                     padding="p-3"
                                                     variant="secondary"
                                                 >
@@ -414,7 +560,7 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
                                             </div>
                                             <div>
                                                 <Button
-                                                    onClick={() => handleDownload(ipfsUrl)}
+                                                    onClick={() => handleDownload(`${CONFIG.ipfsGateWay}/${ipfs}`)}
                                                     padding="p-3"
                                                     variant="secondary"
                                                 >
@@ -442,8 +588,8 @@ const DashboardPosts = ({ variant, jobId, title, description, status, ipfsUrl, c
                 actionLabel="Confirm"
                 className="p-10.5"
                 onAction={() => {
-                    setIsOpen(false);
                     handleDeliverUploadedFile();
+                    setIsOpen(false);
                 }}
             >
                 <div className="mt-6">

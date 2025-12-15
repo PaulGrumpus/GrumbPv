@@ -10,12 +10,15 @@ import { CONFIG, EscrowBackendConfig } from "@/config/config";
 import LoginSignupModal from "./loginSignupModal";
 import { UserInfoCtx } from "@/context/userContext";
 import { toast } from "react-toastify";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
+import { NotificationCtx } from "@/context/notificationContext";
+import { Notification } from "@/types/notification";
+import { formatHourMinute, updateNotification } from "@/utils/functions";
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
-
-const userPhoto = "/Grmps/grmps.jpg";
 const chatIcon = "/Grmps/chat.svg";
 const bellIcon = "/Grmps/bell.svg";
+const logoImage = "/Grmps/grmps.jpg"; // Change this path to your custom logo
 
 const menuItems = [
     {
@@ -38,15 +41,23 @@ const menuItems = [
 const Navbar = () => {
     const router = useRouter();
     const { userInfo } = useContext(UserInfoCtx);
+    const { notifications } = useContext(NotificationCtx);
     const [userRole, setUserRole] = useState("client");
     const [loggedIn, setLoggedIn] = useState(false);
     const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
-    const [notifications] = useState(0);
+    const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
     const [messages] = useState(2);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const menuToggleRef = useRef<HTMLDivElement>(null);
+    const notificationDropdownRef = useRef<HTMLDivElement>(null);
+    const notificationToggleRef = useRef<HTMLDivElement>(null);
     const [loginSignupModalOpen, setLoginSignupModalOpen] = useState(false);
     const [username, setUsername] = useState("");
+
+    const [notificationCount, setNotificationCount] = useState(0);
+    const [messageCount, setMessageCount] = useState(0);
+
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
     useEffect(() => {
         if(userInfo.id) {
@@ -58,130 +69,206 @@ const Navbar = () => {
             } else if(userInfo.address) {
                 setUsername(userInfo.address.slice(0, 4) + "..." + userInfo.address.slice(-4));
             }
-            setLoggedIn(true);
+            setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
+            setLoggedIn(true);            
         } else {
             setUserRole('client');
             setLoggedIn(false);
         }
     }, [userInfo]);
 
+    useEffect(() => {
+        setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
+    }, [notifications]);
+
     const handleDropdownMenuOpen = () => {
-        setDropdownMenuOpen(!dropdownMenuOpen);
+        setDropdownMenuOpen((prev) => !prev);
+        setNotificationDropdownOpen(false);
     }
+
+    const handleNotificationClick = () => {
+        setNotificationDropdownOpen((prev) => !prev);
+        setDropdownMenuOpen(false);
+    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (!dropdownMenuOpen) return;
-
             const target = event.target as Node;
-            const clickedInsideMenu = dropdownRef.current?.contains(target);
-            const clickedToggle = menuToggleRef.current?.contains(target);
 
-            if (!clickedInsideMenu && !clickedToggle) {
-                setDropdownMenuOpen(false);
+            if (dropdownMenuOpen) {
+                const clickedInsideMenu = dropdownRef.current?.contains(target);
+                const clickedToggle = menuToggleRef.current?.contains(target);
+
+                if (!clickedInsideMenu && !clickedToggle) {
+                    setDropdownMenuOpen(false);
+                }
+            }
+
+            if (notificationDropdownOpen) {
+                const clickedInsideMenu = notificationDropdownRef.current?.contains(target);
+                const clickedToggle = notificationToggleRef.current?.contains(target);
+
+                if (!clickedInsideMenu && !clickedToggle) {
+                    setNotificationDropdownOpen(false);
+                }
             }
         };
 
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [dropdownMenuOpen]);
+    }, [dropdownMenuOpen, notificationDropdownOpen]);
+    
+    const placeholderLinks = userRole === "freelancer"
+        ? ["Jobs", "Gigs", "Post Gig"]
+        : ["Jobs", "Gigs", "Post Job"];
+
+    const showPlaceholder = loggedIn && notificationLoadingState !== "success";
+
     return (
         <div>
             <div className="fixed top-0 left-0 right-0 z-50 bg-white px-16 py-[15.5px] shadow-xl">
                 <div className="container mx-auto"> 
                     <div className="flex items-center justify-between">
-                        <div 
-                            className="flex gap-0.75 items-center cursor-pointer"
-                            onClick={() => router.push('/')}
-                        >
-                            <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
-                                <Image
-                                    src="/Grmps/grmps.jpg"
-                                    alt="Logo"
-                                    width={40}
-                                    height={40}
-                                    className="h-full w-full rounded-full object-cover"
-                                />
-                            </div>
-                            <p className="text-logo font-poppins font-bold text-black">Grumpus</p>
-                        </div>
-                        {userRole === "freelancer" ? (  
-                            <div className="flex gap-8 text-normal font-regular text-black">    
-                                <Link className="hover:text-purple" href="/jobs">Featured Jobs</Link>
-                                <Link className="hover:text-purple" href="/gigs">Gigs</Link>
-                                <Link className="hover:text-purple" href="/dashboard?view=create-gig">Post Gig</Link>
-                            </div>
-                        ) : (
-                            <div className="flex gap-8 text-normal font-regular text-black">    
-                                <Link className="hover:text-purple" href="/jobs">Featured Jobs</Link>
-                                <Link className="hover:text-purple" href="/gigs">Gigs</Link>
-                                <Link className="hover:text-purple" href="/dashboard?view=create-job">Post Job</Link>
-                            </div>
-                        )}
-                        {loggedIn ? ( 
-                            <div 
-                                className="relative flex items-center gap-4"
-                                ref={menuToggleRef}
-                            >
-                                <div className="relative w-6 h-6 cursor-pointer" onClick={() => router.push("/chat")}>
-                                    <Image 
-                                        src={chatIcon} 
-                                        alt="Chat Icon" 
-                                        width={24} 
-                                        height={24} 
-                                        className="h-full w-full object-cover"
-                                    />
-                                    {messages >= 1 && (
-                                        <span 
-                                            className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
-                                    )}
-                                </div>
-                                <div className="relative w-6 h-6">
-                                    <Image 
-                                        src={bellIcon} 
-                                        alt="Bell Icon" 
-                                        width={24} 
-                                        height={24} 
-                                        className="h-full w-full object-cover"
-                                    />
-                                    {notifications >= 1 && (
-                                        <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
-                                    )}
-                                </div>
+                        { !showPlaceholder && (
+                            <>
                                 <div 
-                                    className="flex items-center gap-2 cursor-pointer select-none"
-                                    onClick={handleDropdownMenuOpen}
+                                    className="flex gap-0.75 items-center cursor-pointer"
+                                    onClick={() => router.push('/')}
                                 >
-                                    {
-                                        userInfo.image_id && <div className="w-9 h-9 overflow-hidden rounded-full">
-                                            <Image 
-                                                src={EscrowBackendConfig.uploadedImagesURL + userInfo.image_id} 
-                                                alt="User Photo" 
-                                                width={36} 
-                                                height={36} 
-                                                className="h-full w-full rounded-full object-cover"
-                                            />
-                                        </div>
-                                    }
-                                    <p className="text-normal font-regular text-black">{username}</p>
-                                    {dropdownMenuOpen ? (
-                                        <ChevronUpIcon className="w-5 h-5 text-black" />
-                                    ) : (
-                                        <ChevronDownIcon className="w-5 h-5 text-black" />
-                                    )}
+                                    <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
+                                        <Image
+                                            src={logoImage}
+                                            alt="Logo"
+                                            width={40}
+                                            height={40}
+                                            className="h-full w-full rounded-full object-cover"
+                                        />
+                                    </div>
+                                    <p className="text-logo font-poppins font-bold text-black">Grumpus</p>
                                 </div>
-                                {dropdownMenuOpen && <DropdownMenu ref={dropdownRef} />}
-                            </div>
-                        ) : (
-                            <Button
-                                padding="px-6 py-2"
-                                onClick={() => {
-                                    router.push("/");
-                                    setLoginSignupModalOpen(true)
-                                }}
-                            >
-                                <p>Login</p>
-                            </Button>
+                                {userRole === "freelancer" ? (  
+                                    <div className="flex gap-8 text-normal font-regular text-black">    
+                                        <Link className="hover:text-purple uppercase" href="/jobs">Featured Jobs</Link>
+                                        <Link className="hover:text-purple uppercase" href="/gigs">Gigs</Link>
+                                        <Link className="hover:text-purple" href="/dashboard?view=create-gig">Post Gig</Link>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-8 text-normal font-regular text-black">    
+                                        <Link className="hover:text-purple uppercase" href="/jobs">Featured Jobs</Link>
+                                        <Link className="hover:text-purple uppercase" href="/gigs">Gigs</Link>
+                                        <Link className="hover:text-purple uppercase" href="/dashboard?view=create-job">Post Job</Link>
+                                    </div>
+                                )}
+                                {loggedIn ? ( 
+                                    <div 
+                                        className="relative flex items-center gap-4"
+                                        ref={menuToggleRef}
+                                    >
+                                        <div className="relative w-6 h-6 cursor-pointer hover:scale-110 transition-all duration-300" onClick={() => router.push("/chat")}>
+                                            <Image 
+                                                src={chatIcon} 
+                                                alt="Chat Icon" 
+                                                width={24} 
+                                                height={24} 
+                                                className="h-full w-full object-cover"
+                                            />
+                                            {messageCount >= 1 && (
+                                                <span 
+                                                    className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
+                                            )}
+                                        </div>
+                                        <div className="relative" ref={notificationToggleRef}>
+                                            <div
+                                                className="relative w-6 h-6 cursor-pointer hover:scale-110 transition-all duration-300"
+                                                onClick={handleNotificationClick}
+                                            >
+                                                <Image
+                                                    src={bellIcon}
+                                                    alt="Bell Icon"
+                                                    width={24}
+                                                    height={24}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                                {notificationCount >= 1 && (
+                                                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
+                                                )}
+                                            </div>
+                                            {notificationDropdownOpen && (
+                                                <NotificationDropdownMenu
+                                                    ref={notificationDropdownRef}
+                                                    notifications={notifications}
+                                                />
+                                            )}
+                                        </div>
+                                        <div 
+                                            className="flex items-center gap-2 cursor-pointer select-none"
+                                            onClick={handleDropdownMenuOpen}
+                                        >
+                                            {
+                                                userInfo.image_id && <div className="w-9 h-9 overflow-hidden rounded-full">
+                                                    <Image 
+                                                        src={EscrowBackendConfig.uploadedImagesURL + userInfo.image_id} 
+                                                        alt="User Photo" 
+                                                        width={36} 
+                                                        height={36} 
+                                                        className="h-full w-full rounded-full object-cover"
+                                                    />
+                                                </div>
+                                            }
+                                            <p className="text-normal font-regular text-black">{username}</p>
+                                            {dropdownMenuOpen ? (
+                                                <ChevronUpIcon className="w-5 h-5 text-black" />
+                                            ) : (
+                                                <ChevronDownIcon className="w-5 h-5 text-black" />
+                                            )}
+                                        </div>
+                                        {dropdownMenuOpen && <DropdownMenu ref={dropdownRef} />}
+                                    </div>
+                                ) : (
+                                    <Button
+                                        padding="px-6 py-2"
+                                        onClick={() => {
+                                            router.push("/");
+                                            setLoginSignupModalOpen(true)
+                                        }}
+                                    >
+                                        <p>Login</p>
+                                    </Button>
+                                )}
+                            </>
+                        )}
+                        { showPlaceholder && (
+                            <>
+                                <div className="flex items-center gap-0.75">
+                                    <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
+                                        <Image
+                                            src={logoImage}
+                                            alt="Logo"
+                                            width={40}
+                                            height={40}
+                                            className="h-full w-full rounded-full object-cover"
+                                        />
+                                    </div>
+                                    <div
+                                        className="h-11 w-28 animate-pulse flex items-center justify-left text-xl font-semibold uppercase tracking-wide text-gray-400"
+                                    >
+                                        Grumpus
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    {placeholderLinks.map((label) => (
+                                        <div
+                                            key={`placeholder-${label}`}
+                                            className="h-11 w-28 rounded-2xl border border-white/30 bg-linear-to-br from-white via-slate-100 to-slate-200 shadow-lg animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-gray-400"
+                                        >
+                                            {label}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="h-11 w-28 rounded-2xl bg-linear-to-br from-[#2F3DF6] via-[#7E3FF2] to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
+                                    Login
+                                </div>
+                            </>
                         )}
                     </div>
                 </div>
@@ -198,10 +285,10 @@ const Navbar = () => {
 const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
     const { setUserInfo } = useContext(UserInfoCtx);
     const router = useRouter();
-    const { setLoadingState } = useContext(LoadingCtx);
+    const { setuserLoadingState } = useContext(UserLoadingCtx);
     
     const handleLogOut = () => {
-        setLoadingState("pending");
+        setuserLoadingState("pending");
         window.localStorage.removeItem('token');
         toast.success("Logged out successfully", {
             position: "top-right",
@@ -224,7 +311,7 @@ const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
             created_at: '',
             updated_at: ''
         });
-        setLoadingState("pending");
+        setuserLoadingState("pending");        
         router.push('/');
     }
     return (
@@ -272,5 +359,85 @@ const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
 });
 
 DropdownMenu.displayName = "DropdownMenu";
+
+type NotificationDropdownMenuProps = {
+    notifications: Notification[];
+};
+
+const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdownMenuProps>(({ notifications }, ref) => {
+    const { setNotifications } = useContext(NotificationCtx);
+    const [unreadNotifications, setUnreadNotifications] = useState<Notification[]>([]);
+
+    const formatDate = (value?: Date | string) => {
+        if (!value) return null;
+        const parsedDate = typeof value === "string" ? new Date(value) : value;
+        if (!parsedDate || Number.isNaN(parsedDate.getTime())) return null;
+        return parsedDate.toLocaleString();
+    };
+
+    useEffect(() => {
+        setUnreadNotifications(notifications.filter((notification) => !notification.read_at).sort((a, b) => {
+            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return bTime - aTime;
+        }));
+    }, [notifications]);
+
+    const handleMarkAsRead = async (notificationId: string) => {
+        try {
+            await updateNotification(notificationId, new Date());
+        }
+        catch (error) {
+            console.error("Unable to mark notification as read", error);
+        }
+        finally {
+            const updatedNotifications = notifications.map((notification) =>
+                notification.id === notificationId ? { ...notification, read_at: new Date().toISOString() } : notification
+            );
+            setNotifications(updatedNotifications);
+        }
+    };
+
+    return (
+        <div
+            ref={ref}
+            className="absolute right-0 mt-2 w-72 rounded-lg border border-[#8F99AF66] bg-white shadow-md z-50 transition-all duration-200"
+        >
+            <div className="border-b px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-500">
+                Notifications
+            </div>
+            <ul className="max-h-72 overflow-y-auto decorate-scrollbar notification-scrollbar">
+                {unreadNotifications.length === 0 && (
+                    <li className="px-4 py-3 text-sm text-gray-500">You're all caught up!</li>
+                )}
+                {unreadNotifications.map((notification) => {
+                    const formattedDate = formatDate(notification.created_at);
+                    return (
+                        <li
+                            key={`${notification.id}-${notification.created_at ?? ""}-${notification.read_at ?? ""}`}
+                            onClick={() => handleMarkAsRead(notification.id)}
+                            className="cursor-pointer border-b last:border-b-0 px-4 py-3 hover:bg-[#2F3DF633]"
+                        >
+                            <div className="flex justify-between">
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-800">{notification.title}</p>
+                                    <p className="text-xs text-gray-600">{notification.body}</p>
+                                    {formattedDate && (
+                                        <p className="mt-1 text-[11px] text-gray-400">{formattedDate}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-600">{formatHourMinute(notification.created_at ?? "")}</p>
+                                </div>
+                            </div>
+                        </li>
+                    );
+                })}
+            </ul>
+        </div>
+    );
+});
+
+NotificationDropdownMenu.displayName = "NotificationDropdownMenu";
 
 export default Navbar;

@@ -11,7 +11,7 @@ import { Bid } from "@/types/bid";
 import { toast } from "react-toastify";
 import { User } from "@/types/user";
 import ApplicationPost from "./applicationPost";
-import Loading from "./loading";
+import SmallLoading from "./smallLoading";
 
 interface userJobOrGigPostProps {
     job_id?: string;
@@ -32,7 +32,7 @@ interface userJobOrGigPostProps {
 }
 
 interface ApplicationWithUser extends Bid {
-    user: User;
+    freelancer?: User;
 }
 
 const editIcon = "/Grmps/lucide_edit.svg";
@@ -61,23 +61,10 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
         const result = await getBidsByJobId(job_id ?? "");
         if (result.success) {
             if (result.data) {
-                const applicationsWithUser = await Promise.all(result.data.map(async (application: Bid) => {
-                    const user = await getUserById(application.freelancer_id);
-                    if (user.success) {
-                        return { ...application, user: user.data as User };
-                    }
-                    return application;
-                }));
-                setApplications(applicationsWithUser);
+                setApplications(result.data); // freelancer already included
             } else {
                 setApplications([]);
-                toast.error("No applications found", {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                });
+                toast.error(result.error || "No applications found");
             }
         } else {
             toast.error(result.error as string, {
@@ -97,7 +84,7 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
             <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
                 <div className="linear-border__inner rounded-[0.4375rem] p-6 bg-white">
                     {loading === "pending" ? (
-                        <Loading />
+                        <SmallLoading />
                     ) : (
                         <div className="text-black">
                             <div className="flex justify-between gap-6">

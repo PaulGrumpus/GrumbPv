@@ -5,7 +5,7 @@ import { checkUserByAddress } from "./functions";
 const isSameChain = (current?: string | null, target?: string | null) =>
     current?.toLowerCase() === target?.toLowerCase();
 
-type MetaMaskProvider = {
+export type MetaMaskProvider = {
     isMetaMask?: boolean;
     request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
     on?: (event: string, handler: (...args: unknown[]) => void) => void;
@@ -36,6 +36,26 @@ const normalizeChainId = (value?: string | null) => {
     return trimmed.toLowerCase();
 };
 
+const normalizeUrlList = (value?: string | string[]) => {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+        return value.map((v) => (v ?? "").toString().trim()).filter(Boolean);
+    }
+    try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+            return parsed.map((v) => (v ?? "").toString().trim()).filter(Boolean);
+        }
+    } catch (_err) {
+        // fall through to comma split
+    }
+    return value
+        .toString()
+        .split(",")
+        .map((v) => v.trim())
+        .filter(Boolean);
+};
+
 const nativeCurrencyDecimals = (() => {
     return Number(CONFIG.nativeCurrency?.decimals);
 })();
@@ -50,18 +70,14 @@ const NETWORK_PARAMS = {
         symbol: CONFIG.nativeCurrency?.symbol,
         decimals: nativeCurrencyDecimals,
     },
-    rpcUrls: CONFIG.rpcUrls,
-    blockExplorerUrls: CONFIG.blockExplorerUrls,
+    rpcUrls: normalizeUrlList(CONFIG.rpcUrls),
+    blockExplorerUrls: normalizeUrlList(CONFIG.blockExplorerUrls),
 } as const;
 
-const getEthereumProvider = () => (typeof window === "undefined" ? undefined : window.ethereum);
+export const getEthereumProvider = () => (typeof window === "undefined" ? undefined : window.ethereum);
 
 const switchOrAddTargetChain = async (provider: MetaMaskProvider) => {
     try {
-        console.log("provider.request", provider.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: NETWORK_PARAMS.chainId }],
-        }));
         await provider.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId: NETWORK_PARAMS.chainId }],
@@ -119,7 +135,7 @@ export const connectMetaMaskWallet = async (email?: string): Promise<{ address: 
         console.log("currentChainId", currentChainId);
         console.log("NETWORK_PARAMS.chainId", NETWORK_PARAMS.chainId);
         if (!isSameChain(currentChainId, NETWORK_PARAMS.chainId)) {
-            switchOrAddTargetChain(provider);
+            await switchOrAddTargetChain(provider);
             // throw new Error("Chain not supported. Please switch to the supported chain.");
         }
 

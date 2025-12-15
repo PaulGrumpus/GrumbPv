@@ -1,14 +1,10 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from "../../prisma.js";
 
 export class DatabaseService {
   private static instance: DatabaseService;
-  private prisma: PrismaClient;
-
-  private constructor() {
-    this.prisma = new PrismaClient();
-  }
+  private prisma = prisma;
 
   public static getInstance(): DatabaseService {
     if (!DatabaseService.instance) {
@@ -35,8 +31,8 @@ export class DatabaseService {
       logger.error('⚠️  Error during database disconnect', { error });
     }
   }
-
-  public client(): PrismaClient {
+  
+  public client(): typeof prisma {
     return this.prisma;
   }
 }

@@ -4,64 +4,52 @@ import UserJobOrGigPost from "../userJobOrGigPost";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import { UserInfoCtx } from "@/context/userContext";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { Gig } from "@/types/gigs";
 import { toast } from "react-toastify";
 import { getGigsByFreelancerId } from "@/utils/functions";
 import { EscrowBackendConfig } from "@/config/config";
 import Loading from "../loading";
 import { LocationType } from "@/types/jobs";
+import { ProjectInfoCtx, useProjectInfo } from "@/context/projectInfoContext";
+import { ProjectInfoLoadingCtx } from "@/context/projectInfoLoadingContext";
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const MyGigsSection = () => {
     const router = useRouter();
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { loadingState, setLoadingState } = useContext(LoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [gigs, setGigs] = useState<Gig[]>([]);
-
-    const getGigsPerFreelancerId = async (freelancer_id: string) => {
-        try {
-            const result = await getGigsByFreelancerId(freelancer_id);
-            if (result.success) {
-                setGigs(result.data ?? []);
-                await new Promise(resolve => setTimeout(resolve, 3000));
-                setLoading("success");
-            } else {
-                toast.error(result.error as string, {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                });
-            }
-        } catch (error) {
-            toast.error(error as string);
-        }
-    }
+    const { projectInfoLoadingState } = useContext(ProjectInfoLoadingCtx);
+    const { gigsInfo } = useProjectInfo();
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
     useEffect(() => {
-        if(loadingState === "success") {
+        if(projectInfoLoadingState === "success") {
             if(userInfo.id === "") {
-                setLoadingState("failure");
+                setuserLoadingState("failure");
                 return;
             }
             if (userInfo && userInfo.id) {
-                const loadGigs = async () => {
-                    if (!userInfo?.id) {
-                        setLoadingState("failure");
-                        return;
-                    }
-                    await getGigsPerFreelancerId(userInfo.id);
+                const loadGigs = () => {
+                    setGigs(gigsInfo.sort((a: Gig, b: Gig) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()));
+                    setLoading("success");
                 };
         
-                loadGigs();
+                if(notificationLoadingState === "success") {
+                    loadGigs();
+                }
             }
-        } else if (loadingState === "failure") {
+        } else if (projectInfoLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, loadingState])
+    }, [userInfo, projectInfoLoadingState, notificationLoadingState])
+
+    useEffect(() => {
+        console.log("test-gigsInfo", gigsInfo);
+        setGigs(gigsInfo);
+    }, [gigsInfo]);
 
         if (loading === "pending") {
         return <Loading />;

@@ -56,13 +56,13 @@ export class EscrowController {
   async fund(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
-      const { privateKey, value } = req.body;
+      const { userId, chainId } = req.body;
 
-      const txHash = await escrowService.fundEscrow(job_milestone_id, privateKey, value);
+      const txData = await escrowService.buildFundEscrowTx(job_milestone_id, userId, chainId);
 
       res.json({
         success: true,
-        data: { transactionHash: txHash },
+        data: txData,
         message: 'Escrow funded successfully',
       });
     } catch (error) {
@@ -76,7 +76,7 @@ export class EscrowController {
   async deliver(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
-      const { privateKey, cid, contentHash } = req.body;
+      const { userId, chainId, cid, contentHash } = req.body;
 
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
       if (!exsitingJobMilestone) {
@@ -110,6 +110,19 @@ export class EscrowController {
       let finalCid = cid;
       let finalContentHash = contentHash;
 
+      async function testPinata() {
+        try {
+          const res = await pinata.testAuthentication();
+          console.log("✅ Pinata connected successfully");
+          console.log(res);
+        } catch (err) {
+          console.error("❌ Pinata auth failed");
+          console.error(err);
+        }
+      }
+      
+      testPinata();
+
       if (file) {
         try {
           const fileObj = new File([file.buffer], file.originalname, {
@@ -127,12 +140,6 @@ export class EscrowController {
           // Use keccak256 to create a proper 32-byte hash from the multihash
           finalContentHash = ethers.keccak256(ethers.hexlify(multihashBytes));
 
-          const url = await pinata.gateways.public.convert(finalCid);
-
-          console.log('File uploaded to Pinata');
-          console.log('CID:', finalCid);
-          console.log('Content Hash:', finalContentHash);
-          console.log('Download URL:', url);
         } catch (pinataError) {
           throw new AppError(
             `Failed to upload file to Pinata: ${pinataError instanceof Error ? pinataError.message : 'Unknown error'}`,
@@ -146,16 +153,17 @@ export class EscrowController {
         throw new AppError('Either a file or CID must be provided', 400, 'MISSING_FILE_OR_CID');
       }
 
-      const txHash = await escrowService.deliverWork(
+      const txData = await escrowService.buildDeliverWorkTx(
         job_milestone_id,
-        privateKey,
+        userId,
+        chainId,
         finalCid,
         finalContentHash
       );
 
       res.json({
         success: true,
-        data: { transactionHash: txHash, cid: finalCid },
+        data: txData,
         message: 'Work delivered successfully',
       });
     } catch (error) {
@@ -169,13 +177,13 @@ export class EscrowController {
   async approve(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
-      const { privateKey, cid } = req.body;
+      const { userId, chainId, cid } = req.body;
 
-      const txHash = await escrowService.approveWork(job_milestone_id, privateKey, cid);
+      const txData = await escrowService.buildApproveWorkTx(job_milestone_id, userId, chainId, cid);
 
       res.json({
         success: true,
-        data: { transactionHash: txHash },
+        data: txData,
         message: 'Work approved successfully',
       });
     } catch (error) {
@@ -189,13 +197,13 @@ export class EscrowController {
   async withdraw(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
-      const { privateKey } = req.body;
+      const { userId, chainId } = req.body;
 
-      const txHash = await escrowService.withdrawFunds(job_milestone_id, privateKey);
+      const txData = await escrowService.buildWithdrawFundsTx(job_milestone_id, userId, chainId);
 
       res.json({
         success: true,
-        data: { transactionHash: txHash },
+        data: txData,
         message: 'Funds withdrawn successfully',
       });
     } catch (error) {

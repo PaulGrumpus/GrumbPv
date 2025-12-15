@@ -2,24 +2,34 @@
 
 import { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LoadingCtx } from "@/context/loadingContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
 import Loading from "@/components/loading";
 import { UserInfoCtx } from "@/context/userContext";
 import Image from "next/image";
 
+import { useWallet } from '@/context/walletContext';
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
+
 const Home = () => {
-  const { loadingState } = useContext(LoadingCtx);
+  const { userLoadingState } = useContext(UserLoadingCtx);
   const [loading, setLoading] = useState("pending");
+  const { address, chainId, provider, isConnecting, isConnected, connect, disconnect, sendTransaction } = useWallet();
+  const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
   useEffect(() => {
-    if(loadingState !== "pending") {
+    if(userLoadingState === "failure") {
         const load = async () => {
             await new Promise(resolve => setTimeout(resolve, 3000));
             setLoading("success");
         }
         load();
     }
-}, [loadingState])
+    if(userLoadingState === "success") {
+      if(notificationLoadingState === "success") {
+        setLoading("success");
+      }
+    }
+  }, [userLoadingState, notificationLoadingState])
 
   if (loading === "pending") {
     return <Loading />;

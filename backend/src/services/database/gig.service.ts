@@ -1,19 +1,17 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, PrismaClient, gigs } from '@prisma/client';
+import { Prisma, gigs, notification_entity, notification_type } from '@prisma/client';
 import { userService } from './user.service.js';
 import {
   persistUploadedImage,
   removeStoredImage,
   type UploadedImage,
 } from '../../utils/imageStorage.js';
+import { prisma } from '../../prisma.js';
+import { notificationService } from './notification.service.js';
 
 export class GigService {
-  private prisma: PrismaClient;
-
-  public constructor() {
-    this.prisma = new PrismaClient();
-  }
+  private prisma = prisma;
 
   private toNumber(value: any): number | null {
     if (value === null || value === undefined) return null;
@@ -83,10 +81,20 @@ export class GigService {
         tags: [gig.tags ?? ''],
       } as Prisma.gigsUncheckedCreateInput;
 
-      console.log('createData', createData);
-
       const newGig = await this.prisma.gigs.create({
         data: createData,
+      });
+      await notificationService.createNotification({
+        user_id: newGig.freelancer_id,
+        actor_user_id: newGig.freelancer_id,
+        type: notification_type.GIG_POSTED,
+        entity_type: notification_entity.gig,
+        entity_id: newGig.id,
+        title: 'Gig posted',
+        body: 'Your gig has been posted',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
       });
       return newGig;
     } catch (error) {

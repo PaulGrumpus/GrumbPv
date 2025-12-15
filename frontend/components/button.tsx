@@ -76,7 +76,7 @@ const Button = ({
         }`}
       >
         <button
-          onClick={onClick}
+          onClick={() => {}}
           {...pressHandlers}
           className={`rounded-lg font-regular text-normal items-center justify-center bg-white text-gray-500 border border-gray-500 cursor-not-allowed ${padding}`}
         >

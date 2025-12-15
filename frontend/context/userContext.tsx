@@ -9,7 +9,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { UserContextType, User } from "@/types/user";
-import { LoadingCtx } from "./loadingContext";
+import { UserLoadingCtx } from "./userLoadingContext";
 import { decodeToken } from "@/utils/jwt";
 
 const defaultProvider: UserContextType = {
@@ -41,19 +41,19 @@ type Props = {
 const UserInfoProvider = ({ children }: Props) => {
     const [userInfo, setUserInfo] = useState<User>(defaultProvider.userInfo);
     const [userInfoError, setUserInfoError] = useState<string>(defaultProvider.userInfoError);
-    const { setLoadingState } = useContext(LoadingCtx);
+    const { setuserLoadingState } = useContext(UserLoadingCtx);
     const pathname = usePathname();
 
     const init = async () => {
         if (typeof window === "undefined") return;
-        setLoadingState("pending");
+        setuserLoadingState("pending");
         const token = localStorage.getItem('token');
         if(token) {
             const decodedToken = decodeToken(token);
             setUserInfo(decodedToken as User);
-            setLoadingState("success");
+            setuserLoadingState("success");
         } else {
-            setLoadingState("failure");
+            setuserLoadingState("failure");
         }
     }
     const isInvitePage = typeof window !== 'undefined' && 
