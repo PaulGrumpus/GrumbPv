@@ -323,6 +323,10 @@ export class JobMilestoneService {
       }
       const existingJobMilestones = await this.prisma.job_milestones.findMany({
         where: { job_id },
+        include: {
+          job: true,
+          jobApplicationsDocs: true,
+        },
       });
       return existingJobMilestones;
     } catch (error) {
@@ -355,6 +359,10 @@ export class JobMilestoneService {
     try {
       const existingJobMilestones = await this.prisma.job_milestones.findMany({
         where: { freelancer_id: user_id },
+        include: {
+          job: true,
+          jobApplicationsDocs: true,
+        },
       });
       return existingJobMilestones;
     }

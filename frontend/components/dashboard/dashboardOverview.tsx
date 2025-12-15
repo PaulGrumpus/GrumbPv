@@ -8,69 +8,26 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
-
-const myJobs = [
-    {
-        id: 1,
-        title: "Escrow Smart Contract Deployment",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.",
-        status: 2,
-        ipfsUrl: "https://brown-decisive-tyrannosaurus-507.mypinata.cloud/ipfs/bafybeifjc4r5emdr7zrvdqpzzxxkikl3qxfhe4b3m34pyue4mamnff3xqa",
-    },
-    {
-        id: 2,
-        title: "Design a new logo for my company",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.",
-        status: 1,
-        ipfsUrl: "https://brown-decisive-tyrannosaurus-507.mypinata.cloud/ipfs/bafybeifjc4r5emdr7zrvdqpzzxxkikl3qxfhe4b3m34pyue4mamnff3xqa",
-    },
-    {
-        id: 3,
-        title: "Develop a new website for my company",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.",
-        status: 3,
-        ipfsUrl: "https://brown-decisive-tyrannosaurus-507.mypinata.cloud/ipfs/bafybeifjc4r5emdr7zrvdqpzzxxkikl3qxfhe4b3m34pyue4mamnff3xqa",
-    },
-];
-
-const myCompletedJobs = [
-    {
-        id: 1,
-        title: "Escrow Smart Contract Deployment",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.",
-        status: 4,
-        ipfsUrl: "https://brown-decisive-tyrannosaurus-507.mypinata.cloud/ipfs/bafybeifjc4r5emdr7zrvdqpzzxxkikl3qxfhe4b3m34pyue4mamnff3xqa",
-    },
-    {
-        id: 2,
-        title: "Design a new logo for my company",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.",
-        status: 4,
-        ipfsUrl: "https://brown-decisive-tyrannosaurus-507.mypinata.cloud/ipfs/bafybeifjc4r5emdr7zrvdqpzzxxkikl3qxfhe4b3m34pyue4mamnff3xqa",
-    },
-    {
-        id: 3,
-        title: "Develop a new website for my company",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.",
-        status: 4,
-        ipfsUrl: "https://brown-decisive-tyrannosaurus-507.mypinata.cloud/ipfs/bafybeifjc4r5emdr7zrvdqpzzxxkikl3qxfhe4b3m34pyue4mamnff3xqa",
-    },
-];
+import { useProjectInfo } from "@/context/projectInfoContext";
+import { JobMilestoneWithJobApplicationsDocs } from "@/types/projectInfo";
+import { JobMilestoneStatus } from "@/types/jobMilestone";
 
 const DashboardOverview = () => {
     const [openJobs, setOpenJobs] = useState(true);
     const [showAllOpenJobs, setShowAllOpenJobs] = useState(false);
     const [completedJobs, setCompletedJobs] = useState(true);
     const [showAllCompletedJobs, setShowAllCompletedJobs] = useState(false);
-    const openJobPosts = myJobs;
-    const visibleOpenJobPosts = showAllOpenJobs ? myJobs : myJobs.slice(0, 2);
-    const completedJobPosts = myCompletedJobs;
-    const visibleCompletedJobPosts = showAllCompletedJobs ? completedJobPosts : completedJobPosts.slice(0, 2);
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const router = useRouter();
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+
+    const { jobMilestonesInfo } = useProjectInfo();
+    const [ openedJobs, setOpenedJobs] = useState<JobMilestoneWithJobApplicationsDocs[]>([]);
+    const [ finishedJobs, setFinishedJobs] = useState<JobMilestoneWithJobApplicationsDocs[]>([]);
+    const [ visibleOpenedJobs, setVisibleOpenedJobs] = useState<JobMilestoneWithJobApplicationsDocs[]>([]);
+    const [ visibleFinishedJobs, setVisibleFinishedJobs] = useState<JobMilestoneWithJobApplicationsDocs[]>([]);
     
     useEffect(() => {
         if(userLoadingState === "success") {
@@ -80,10 +37,11 @@ const DashboardOverview = () => {
             }
             if (userInfo && userInfo.id) {
                 const loadDashboardPosts = async () => {
-                    if (!userInfo?.id) {
-                        setuserLoadingState("failure");
-                        return;
-                    }
+
+                    setOpenedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.status === JobMilestoneStatus.FUNDED || jobMilestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.status === JobMilestoneStatus.APPROVED || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE));
+
+                    setFinishedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.RELEASED || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.status === JobMilestoneStatus.CANCELLED));
+                    
                     // await getGigsPerFreelancerId(userInfo.id);
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
@@ -97,7 +55,18 @@ const DashboardOverview = () => {
         }
     }, [userInfo, userLoadingState, notificationLoadingState])
 
-        if (loading === "pending") {
+    useEffect(() => {
+        setVisibleOpenedJobs(showAllOpenJobs ? openedJobs : openedJobs.slice(0, 2));
+        setVisibleFinishedJobs(showAllCompletedJobs ? finishedJobs : finishedJobs.slice(0, 2));
+    }, [openedJobs, finishedJobs, showAllOpenJobs, showAllCompletedJobs]);
+
+    useEffect(() => {
+        setOpenedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.status === JobMilestoneStatus.FUNDED || jobMilestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.status === JobMilestoneStatus.APPROVED || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE));
+
+        setFinishedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.RELEASED || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.status === JobMilestoneStatus.CANCELLED));
+    }, [jobMilestonesInfo]);
+
+    if (loading === "pending") {
         return <Loading />;
     }
 
@@ -132,21 +101,22 @@ const DashboardOverview = () => {
                                 </div>
                                 {openJobs && (
                                     <div className="flex flex-col gap-8">
-                                        {visibleOpenJobPosts.map((job) => (
+                                        {visibleOpenedJobs.map((milestone) => (
                                             <DashboardPosts 
-                                                key={`open-job-${job.id}`} 
+                                                key={`open-milestone-${milestone.id}`} 
+                                                user={userInfo}
                                                 variant="open" 
-                                                jobId={job.id.toString()}
-                                                title={job.title}
-                                                description={job.description}
-                                                status={job.status}
-                                                ipfsUrl={job.ipfsUrl}
+                                                jobMilestoneId={milestone.id?.toString() ?? ""}
+                                                title={milestone?.title ?? ""}
+                                                description={milestone?.job?.description_md ?? ""}
+                                                milestoneStatus={milestone.status ?? JobMilestoneStatus.PENDING_FUND}
+                                                ipfs={milestone.ipfs}
                                                 clickHandler={() => {
-                                                    console.log("open job clicked");
+                                                    console.log("open milestone clicked");
                                                 }}
                                             />
                                         ))}
-                                        {openJobPosts.length > 2 && (
+                                        {openedJobs.length > 2 && (
                                             <p
                                                 className="text-center text-small font-semibold text-[#5a6bff] cursor-pointer"
                                                 onClick={() => setShowAllOpenJobs((prev) => !prev)}
@@ -182,20 +152,21 @@ const DashboardOverview = () => {
                                 {completedJobs && (
                                     <div>
                                         <div className="grid grid-cols-2 gap-8">
-                                            {visibleCompletedJobPosts.map((job) => (
+                                            {visibleFinishedJobs.map((milestone) => (
                                                 <DashboardPosts 
-                                                    key={`completed-job-${job.id}`} 
+                                                    key={`finished-milestone-${milestone.id}`} 
+                                                    user={userInfo}
                                                     variant="completed" 
-                                                    jobId={job.id.toString()}
-                                                    title={job.title}
-                                                    description={job.description}
-                                                    status={job.status}
-                                                    ipfsUrl={job.ipfsUrl}
+                                                    jobMilestoneId={milestone.id?.toString() ?? ""}
+                                                    title={milestone?.title ?? ""}
+                                                    description={milestone?.job?.description_md ?? ""}
+                                                    milestoneStatus={milestone.status ?? JobMilestoneStatus.PENDING_FUND}
+                                                    ipfs={milestone.ipfs}
                                                     clickHandler={() => {}}
                                                 />
                                             ))}
                                         </div>
-                                        {completedJobPosts.length > 2 && (
+                                        {finishedJobs.length > 2 && (
                                             <p
                                                 className="text-center text-small font-semibold text-[#5a6bff] cursor-pointer mt-8"
                                                 onClick={() => setShowAllCompletedJobs((prev) => !prev)}

@@ -55,21 +55,10 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
 
                 if(jobApplicationInfo.data.job_application_info.job_milestone_id){
                     setJobMilestoneId(jobApplicationInfo.data.job_application_info.job_milestone_id);
-                    // const jobMilestoneInfo = await getJobMilestoneById(jobApplicationInfo.data.job_application_info.job_milestone_id);
-                    // if(!jobMilestoneInfo.success) {
-                    //     toast.error(jobMilestoneInfo.error as string, {
-                    //         position: "top-right",
-                    //         autoClose: 5000,
-                    //         hideProgressBar: false,
-                    //     });
-                    //     return;
-                    // }
+                   
                     const jobMilestoneInfo = jobMilestonesInfo.find((jobMilestone) => jobMilestone.id === jobApplicationInfo.data.job_application_info.job_milestone_id);
                     if(!isMounted) return;
 
-                    // const nextStatus = Number(jobMilestoneInfo.data.status ?? 0);
-                    // setStatus(Number.isFinite(nextStatus) ? nextStatus : 0);
-                    // setIpfsUrl(jobMilestoneInfo.data.ipfs ?? null);
                     let nextStatus = 0;
                     if(jobMilestoneInfo?.status === JobMilestoneStatus.PENDING_FUND) {
                         nextStatus = 1;

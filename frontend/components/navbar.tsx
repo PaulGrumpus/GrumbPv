@@ -58,7 +58,6 @@ const Navbar = () => {
     const [messageCount, setMessageCount] = useState(0);
 
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
-    const [ placehoder, setPlacehoder] = useState(true);
 
     useEffect(() => {
         if(userInfo.id) {
@@ -75,17 +74,8 @@ const Navbar = () => {
         } else {
             setUserRole('client');
             setLoggedIn(false);
-            setPlacehoder(false);
         }
     }, [userInfo]);
-
-    useEffect(() => {
-        if(notificationLoadingState === "success") {
-            setPlacehoder(false);
-        } else {
-            setPlacehoder(true);
-        }
-    }, [notificationLoadingState]);
 
     useEffect(() => {
         setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
@@ -132,12 +122,14 @@ const Navbar = () => {
         ? ["Jobs", "Gigs", "Post Gig"]
         : ["Jobs", "Gigs", "Post Job"];
 
+    const showPlaceholder = loggedIn && notificationLoadingState !== "success";
+
     return (
         <div>
             <div className="fixed top-0 left-0 right-0 z-50 bg-white px-16 py-[15.5px] shadow-xl">
                 <div className="container mx-auto"> 
                     <div className="flex items-center justify-between">
-                        { !placehoder && (
+                        { !showPlaceholder && (
                             <>
                                 <div 
                                     className="flex gap-0.75 items-center cursor-pointer"
@@ -245,7 +237,7 @@ const Navbar = () => {
                                 )}
                             </>
                         )}
-                        { placehoder && (
+                        { showPlaceholder && (
                             <>
                                 <div className="flex items-center gap-0.75">
                                     <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
@@ -319,7 +311,7 @@ const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
             created_at: '',
             updated_at: ''
         });
-        setuserLoadingState("pending");
+        setuserLoadingState("pending");        
         router.push('/');
     }
     return (
