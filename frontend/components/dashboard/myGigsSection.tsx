@@ -11,6 +11,8 @@ import { getGigsByFreelancerId } from "@/utils/functions";
 import { EscrowBackendConfig } from "@/config/config";
 import Loading from "../loading";
 import { LocationType } from "@/types/jobs";
+import { ProjectInfoCtx, useProjectInfo } from "@/context/projectInfoContext";
+import { ProjectInfoLoadingCtx } from "@/context/projectInfoLoadingContext";
 
 const MyGigsSection = () => {
     const router = useRouter();
@@ -18,6 +20,8 @@ const MyGigsSection = () => {
     const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [gigs, setGigs] = useState<Gig[]>([]);
+    const { projectInfoLoadingState } = useContext(ProjectInfoLoadingCtx);
+    const { gigsInfo } = useProjectInfo();
 
     const getGigsPerFreelancerId = async (freelancer_id: string) => {
         try {
@@ -42,26 +46,31 @@ const MyGigsSection = () => {
     }
 
     useEffect(() => {
-        if(userLoadingState === "success") {
+        if(projectInfoLoadingState === "success") {
             if(userInfo.id === "") {
                 setuserLoadingState("failure");
                 return;
             }
             if (userInfo && userInfo.id) {
                 const loadGigs = async () => {
-                    if (!userInfo?.id) {
-                        setuserLoadingState("failure");
-                        return;
-                    }
-                    await getGigsPerFreelancerId(userInfo.id);
+                    console.log("test-loadGigs");
+                    console.log("test-gigsInfo", gigsInfo);
+                    setGigs(gigsInfo);
+                    setLoading("success");
+                    // await getGigsPerFreelancerId(userInfo.id);
                 };
         
                 loadGigs();
             }
-        } else if (userLoadingState === "failure") {
+        } else if (projectInfoLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState])
+    }, [userInfo, projectInfoLoadingState])
+
+    useEffect(() => {
+        console.log("test-gigsInfo", gigsInfo);
+        setGigs(gigsInfo);
+    }, [gigsInfo]);
 
         if (loading === "pending") {
         return <Loading />;

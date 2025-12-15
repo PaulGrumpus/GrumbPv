@@ -70,10 +70,9 @@ const MyJobsSection = () => {
     }, [userInfo, conversationLoadingState])
 
     useEffect(() => {
-        console.log("test-userl loading state", userLoadingState);
-        console.log("test-conversation loading state", conversationLoadingState);
-        console.log("test project info loading state", projectInfoLoadingState);
-    }, [userLoadingState, conversationLoadingState, projectInfoLoadingState]);
+        console.log("test-jobsInfo", jobsInfo);
+        setJobs(jobsInfo);
+    }, [jobsInfo]);
 
     if (loading === "pending") {
         return <Loading />;

@@ -108,7 +108,7 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
                 }]);
             }
 
-            router.push(`/reference?jobApplicationId=${job_application_id}&conversationId=${conversation.data}`);
+            router.push(`/chat/${conversation.data.id}`);
         } catch (error) {
             error instanceof Error ? toast.error(error.message, {
                 position: "top-right",

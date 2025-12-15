@@ -14,6 +14,7 @@ export interface Notification {
 
 export enum NotificationType {
     jobPosted = "JOB_POSTED",
+    gigPosted = "GIG_POSTED",
     bidReceived = "BID_RECEIVED",
     bidAccepted = "BID_ACCEPTED",
     jobStarted = "JOB_STARTED",
@@ -28,6 +29,7 @@ export enum NotificationType {
 
 export enum NotificationEntity {
     job = "job",
+    gig = "gig",
     bid = "bid",
     milestone = "milestone",
     escrow = "escrow",

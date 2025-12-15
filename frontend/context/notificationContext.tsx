@@ -1,9 +1,9 @@
 'use client';
 
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
-import { NotificationContextType, Notification, NotificationEntity } from "../types/notification";
+import { NotificationContextType, Notification, NotificationEntity, NotificationType } from "../types/notification";
 import useSocket from "@/service/socket";
-import { getJobMilestoneById, getNotificationsByUserIdWithFilters } from "@/utils/functions";
+import { getGigsByFreelancerId, getJobMilestoneById, getJobsByClientId, getNotificationsByUserIdWithFilters } from "@/utils/functions";
 import { UserInfoCtx } from "./userContext";
 import { NotificationLoadingCtx } from "./notificationLoadingContext";
 import { UserLoadingCtx } from "./userLoadingContext";
@@ -31,7 +31,7 @@ export const NotificationProvider = ({ children }: Props) => {
     const { userInfo } = useContext(UserInfoCtx);
     const { projectInfoLoadingState } = useContext(ProjectInfoLoadingCtx);
     const { setnotificationLoadingState } = useContext(NotificationLoadingCtx);
-    const { jobMilestonesInfo, setJobMilestonesInfo } = useProjectInfo();
+    const { jobMilestonesInfo, setJobMilestonesInfo, jobsInfo, setJobsInfo, gigsInfo, setGigsInfo } = useProjectInfo();
     
     const init = async () => {
         if(projectInfoLoadingState === "success") {
@@ -60,6 +60,7 @@ export const NotificationProvider = ({ children }: Props) => {
         if(notificationSocket.isConnected) {
             notificationSocket.socket?.emit("joinUserRoom", userInfo.id);
             notificationSocket.socket?.on(websocket.WEBSOCKET_NEW_NOTIFICATION, async (notification: Notification) => {
+                console.log("test-notification", notification);
                 setNotifications((prev) => [...prev, notification]);
                 if (notification.entity_type === NotificationEntity.milestone) {
                     const updatedMilestoneInfo = await getJobMilestoneById(notification.entity_id);
@@ -73,6 +74,24 @@ export const NotificationProvider = ({ children }: Props) => {
                     }
 
                     console.log("test-jobMilestonesInfo", jobMilestonesInfo);
+                }
+                if(notification.entity_type === NotificationEntity.job) {
+                    if(notification.type === NotificationType.jobPosted) {
+                        const userJobs = await getJobsByClientId(userInfo.id);
+                        if(userJobs.success) {
+                            setJobsInfo(userJobs.data ?? []);
+                        } else {
+                            setJobsInfo([]);
+                        }
+                    }
+                }
+                if(notification.entity_type === NotificationEntity.gig) {
+                    const userGigs = await getGigsByFreelancerId(userInfo.id);
+                    if(userGigs.success) {
+                        setGigsInfo(userGigs.data ?? []);
+                    } else {
+                        setGigsInfo([]);
+                    }
                 }
             });
         }

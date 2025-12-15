@@ -15,6 +15,7 @@ import { UserLoadingCtx } from "@/context/userLoadingContext";
 import Loading from "@/components/loading";
 import { getBidsByFreelancerId, getGigsByFreelancerId, getJobsByClientId } from "@/utils/functions";
 import { toast } from "react-toastify";
+import { useProjectInfo } from "@/context/projectInfoContext";
 
 type SectionSlug = "dashboard" | "my-gigs" | "create-gig" | "my-bids" | "my-jobs" | "create-job";
 
@@ -83,6 +84,14 @@ const DashboardPageContent = () => {
     const [myBidsCount, setMyBidsCount] = useState(0);
     const [myGigsCount, setMyGigsCount] = useState(0);
     const [myJobsCount, setMyJobsCount] = useState(0);
+
+    const { gigsInfo } = useProjectInfo();
+    const { jobsInfo } = useProjectInfo();
+
+    useEffect(() => {
+        setMyGigsCount(gigsInfo.length);
+        setMyJobsCount(jobsInfo.length);
+    }, [gigsInfo, jobsInfo]);
 
     const freelancerSidebarItems = useMemo(() => ([
         {
