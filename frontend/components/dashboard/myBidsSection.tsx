@@ -51,31 +51,23 @@ const MyBidsSection = () => {
         try {
             const result = await getBidsByFreelancerId(freelancer_id);            
             if (result.success) {
-                const bidsPostProps = await Promise.all(
-                    (result.data ?? []).map(async (bid: Bid) => {
-                        const job = await getJobByJobId(bid.job_id);
-                        if (!job) {
-                            return null;
-                        }
-
-                        return {
-                            job_description: job.description_md,
-                            job_title: job.title,
-                            job_location: job.location,
-                            job_tags: job.tags,
-                            job_max_budget: job.budget_max_usd ?? 0,
-                            job_min_budget: job.budget_min_usd ?? 0,
-                            job_deadline: job.deadline_at ? new Date(job.deadline_at).getTime() / 1000 : undefined,
-                            bid_cover_letter: bid.cover_letter_md ?? "",
-                            bid_amount: bid.bid_amount ?? 0,
-                            currency: bid.token_symbol ?? "USD",
-                            bid_status: bid.status as BidStatus,
-                        } as BidPostProps;
-                    })
-                );
-
-                setBids(bidsPostProps.filter(Boolean) as BidPostProps[]);
-                await new Promise(resolve => setTimeout(resolve, 3000));
+                const bidsPostProps = result.data.map((bid: any) => ({
+                    job_description: bid.job.description_md,
+                    job_title: bid.job.title,
+                    job_location: bid.job.location,
+                    job_tags: bid.job.tags,
+                    job_max_budget: bid.job.budget_max_usd ?? 0,
+                    job_min_budget: bid.job.budget_min_usd ?? 0,
+                    job_deadline: bid.job.deadline_at
+                      ? new Date(bid.job.deadline_at).getTime() / 1000
+                      : undefined,
+                    bid_cover_letter: bid.cover_letter_md ?? "",
+                    bid_amount: bid.bid_amount ?? 0,
+                    currency: bid.token_symbol ?? "USD",
+                    bid_status: bid.status,
+                }));
+                
+                setBids(bidsPostProps);
                 setLoading("success");           
             } else {
                 toast.error(result.error as string, {

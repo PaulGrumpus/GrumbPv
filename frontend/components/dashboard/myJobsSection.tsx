@@ -10,13 +10,19 @@ import { Job, LocationType } from "@/types/jobs";
 import { EscrowBackendConfig } from "@/config/config";
 import { getJobsByClientId } from "@/utils/functions";
 import { toast } from "react-toastify";
+import { ConversationLoadingCtx } from "@/context/conversationLoadingContext";
+import { ProjectInfoCtx } from "@/context/projectInfoContext";
+import { ProjectInfoLoadingCtx } from "@/context/projectInfoLoadingContext";
 
 const MyJobsSection = () => {
     const router = useRouter();
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
+    const { conversationLoadingState } = useContext(ConversationLoadingCtx);    
+    const { projectInfoLoadingState } = useContext(ProjectInfoLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [jobs, setJobs] = useState<Job[]>([]);
+    const { jobsInfo } = useContext(ProjectInfoCtx);
 
     const getJobsPerClientId = async (client_id: string) => {
         try {
@@ -41,26 +47,33 @@ const MyJobsSection = () => {
     }
 
     useEffect(() => {
-        if(userLoadingState === "success") {
+        if(conversationLoadingState === "success") {
             if(userInfo.id === "") {
                 setuserLoadingState("failure");
                 return;
             }
             if (userInfo && userInfo.id) {
                 const loadJobs = async () => {
-                    if (!userInfo?.id) {
-                        setuserLoadingState("failure");
-                        return;
-                    }
-                    await getJobsPerClientId(userInfo.id);
+                    console.log("test-loadJobs");
+                    
+                    console.log("test-jobsInfo", jobsInfo);
+                    setJobs(jobsInfo);
+                    setLoading("success");
+                    // await getJobsPerClientId(userInfo.id);
                 };
         
                 loadJobs();
             }
-        } else if (userLoadingState === "failure") {
+        } else if (conversationLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState])
+    }, [userInfo, conversationLoadingState])
+
+    useEffect(() => {
+        console.log("test-userl loading state", userLoadingState);
+        console.log("test-conversation loading state", conversationLoadingState);
+        console.log("test project info loading state", projectInfoLoadingState);
+    }, [userLoadingState, conversationLoadingState, projectInfoLoadingState]);
 
     if (loading === "pending") {
         return <Loading />;

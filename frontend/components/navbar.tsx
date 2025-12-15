@@ -319,6 +319,7 @@ type NotificationDropdownMenuProps = {
 
 const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdownMenuProps>(({ notifications }, ref) => {
     const { setNotifications } = useContext(NotificationCtx);
+    const [unreadNotifications, setUnreadNotifications] = useState<Notification[]>([]);
 
     const formatDate = (value?: Date | string) => {
         if (!value) return null;
@@ -327,13 +328,13 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
         return parsedDate.toLocaleString();
     };
 
-    const unreadNotifications = notifications
-        .filter((notification) => !notification.read_at)
-        .sort((a, b) => {
+    useEffect(() => {
+        setUnreadNotifications(notifications.filter((notification) => !notification.read_at).sort((a, b) => {
             const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
             const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
             return bTime - aTime;
-        });
+        }));
+    }, [notifications]);
 
     const handleMarkAsRead = async (notificationId: string) => {
         try {
@@ -344,7 +345,7 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
         }
         finally {
             const updatedNotifications = notifications.map((notification) =>
-                notification.id === notificationId ? { ...notification, readAt: new Date().toISOString() } : notification
+                notification.id === notificationId ? { ...notification, read_at: new Date().toISOString() } : notification
             );
             setNotifications(updatedNotifications);
         }

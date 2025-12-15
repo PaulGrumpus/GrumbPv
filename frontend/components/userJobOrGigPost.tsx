@@ -61,23 +61,10 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
         const result = await getBidsByJobId(job_id ?? "");
         if (result.success) {
             if (result.data) {
-                const applicationsWithUser = await Promise.all(result.data.map(async (application: Bid) => {
-                    const user = await getUserById(application.freelancer_id);
-                    if (user.success) {
-                        return { ...application, user: user.data as User };
-                    }
-                    return application;
-                }));
-                setApplications(applicationsWithUser);
+                setApplications(result.data); // freelancer already included
             } else {
                 setApplications([]);
-                toast.error("No applications found", {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                });
+                toast.error(result.error || "No applications found");
             }
         } else {
             toast.error(result.error as string, {

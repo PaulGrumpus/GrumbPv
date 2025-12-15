@@ -30,12 +30,12 @@ const MessagesInfoProvider = ({ children }: Props) => {
     const [messagesInfo, setMessagesInfo] = useState<MessageInfo[]>(defaultProvider.messagesInfo);
     const [messagesError, setMessagesError] = useState<string>(defaultProvider.messagesError);
     const { conversationsInfo } = useContext(ConversationsInfoCtx);
-    const { conversationLoadingState, setconversationLoadingState } = useContext(ConversationLoadingCtx);
+    const { conversationLoadingState } = useContext(ConversationLoadingCtx);
     const { setmessageLoadingState } = useContext(MessageLoadingCtx);
 
     const init = async () => {
         if(conversationLoadingState === "success") {
-            setconversationLoadingState("pending");
+            setmessageLoadingState("pending");
             const messages = await getAllMessagesByConversationIds(conversationsInfo.map(conversation => conversation.conversation.id));
             if(messages.success) {
                 setMessagesInfo(messages.data ?? []);

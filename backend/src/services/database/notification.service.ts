@@ -33,22 +33,50 @@ export class NotificationService {
         }
     }
 
-    public async getNotificationsByUserIdWithFilters(userId: string, read?: boolean | undefined): Promise<notifications[]> {
+    // public async getNotificationsByUserIdWithFilters(userId: string, read?: boolean): Promise<notifications[]> {
+    //     try {
+    //         if(read !== null) {
+    //             const notifications = await this.prisma.notifications.findMany({ where: { user_id: userId } });
+    //             return notifications;
+    //         } else if(read === true) {
+    //             const notifications = await this.prisma.notifications.findMany({ where: { user_id: userId, read_at: { not: null } } });
+    //             return notifications;
+    //         } else {
+    //             const notifications = await this.prisma.notifications.findMany({ where: { user_id: userId, read_at: null } });
+    //             return notifications;
+    //         }
+    //     }
+    //     catch (error) {
+    //         logger.error('Error getting notifications', { error });
+    //         throw new AppError('Error getting notifications', 500, 'NOTIFICATIONS_GET_FAILED');
+    //     }
+    // }
+
+    public async getNotificationsByUserIdWithFilters(
+        userId: string,
+        read?: boolean
+    ): Promise<notifications[]> {
         try {
-            if(read !== undefined) {
-                const notifications = await this.prisma.notifications.findMany({ where: { user_id: userId } });
-                return notifications;
-            } else if(read === true) {
-                const notifications = await this.prisma.notifications.findMany({ where: { user_id: userId, read_at: { not: null } } });
-                return notifications;
-            } else {
-                const notifications = await this.prisma.notifications.findMany({ where: { user_id: userId, read_at: null } });
-                return notifications;
+            const where: any = { user_id: userId };
+        
+            if (read === true) {
+                where.read_at = { not: null };
+            } else if (read === false) {
+                where.read_at = null;
             }
-        }
-        catch (error) {
-            logger.error('Error getting notifications', { error });
-            throw new AppError('Error getting notifications', 500, 'NOTIFICATIONS_GET_FAILED');
+            // if read === undefined → no filter (all)
+        
+            return await this.prisma.notifications.findMany({
+                where,
+                orderBy: { created_at: "desc" },
+            });
+        } catch (error) {
+            logger.error("Error getting notifications", { error });
+            throw new AppError(
+                "Error getting notifications",
+                500,
+                "NOTIFICATIONS_GET_FAILED"
+            );
         }
     }
 

@@ -6,7 +6,7 @@ import { JobApplication } from "@/types/jobApplication";
 import { JobMilestone } from "@/types/jobMilestone";
 import { Job } from "@/types/jobs";
 import { ProjectInfoContextType } from "@/types/projectInfo";
-import { getBidsByFreelancerId, getJobApplicationsByUserId, getJobMilestonesByUserId, getJobsByClientId, getGigsByFreelancerId } from "@/utils/functions";
+import { getBidsByFreelancerId, getJobApplicationsByUserId, getJobMilestonesByUserId, getJobsByClientId, getGigsByFreelancerId, getJobMilestonesByJobId } from "@/utils/functions";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { UserInfoCtx } from "./userContext";
 import { UserLoadingCtx } from "./userLoadingContext";
@@ -27,7 +27,7 @@ const defaultProvider: ProjectInfoContextType = {
     setProjectInfoError: () => {}
 }
 
-const ProjectInfoCtx = createContext<ProjectInfoContextType>(defaultProvider);
+export const ProjectInfoCtx = createContext<ProjectInfoContextType>(defaultProvider);
 
 type Props = {
     children: ReactNode;
@@ -77,22 +77,39 @@ export const ProjectInfoProvider = ({ children }: Props) => {
                 setJobApplicationsInfo([]);
             }
 
-            const userJobMilestones = await getJobMilestonesByUserId(userInfo.id);
-            if(userJobMilestones.success) {
-                setJobMilestonesInfo(userJobMilestones.data ?? []);
+            if(userInfo.role === "freelancer") {
+                const userJobMilestones = await getJobMilestonesByUserId(userInfo.id);
+                if(userJobMilestones.success) {
+                    setJobMilestonesInfo(userJobMilestones.data ?? []);
+                } else {
+                    setJobMilestonesInfo([]);
+                }
             } else {
-                setJobMilestonesInfo([]);
+                userJobs.data.forEach(async (job: Job) => {
+                    const jobMilestones = await getJobMilestonesByJobId(job.id ?? "");
+                    if(jobMilestones.success) {
+                        setJobMilestonesInfo((prev) => [...prev, ...jobMilestones.data ?? []]);
+                    }
+                });
             }
 
             setprojectInfoLoadingState("success");
         } else {
-            setprojectInfoLoadingState("pending");
+            setprojectInfoLoadingState("failure");
         }
     }
 
     useEffect(() => {
         init();
     }, [userLoadingState]);
+
+    useEffect(() => {
+        console.log("test-jobsInfo", jobsInfo);
+        console.log("test-gigsInfo", gigsInfo);
+        console.log("test-bidsInfo", bidsInfo);
+        console.log("test-jobApplicationsInfo", jobApplicationsInfo);
+        console.log("test-jobMilestonesInfo", jobMilestonesInfo);
+    }, [jobsInfo]);
 
     return (
         <ProjectInfoCtx.Provider value={{ jobsInfo, setJobsInfo, gigsInfo, setGigsInfo, bidsInfo, setBidsInfo, jobApplicationsInfo, setJobApplicationsInfo, jobMilestonesInfo, setJobMilestonesInfo, projectInfoError, setProjectInfoError }}>

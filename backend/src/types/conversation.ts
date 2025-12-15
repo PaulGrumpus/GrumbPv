@@ -5,6 +5,8 @@ export interface newConversationParam {
     escrow?: string;
     gig_id?: string;
     job_application_doc_id?: string;
+    client_id: string;
+    freelancer_id: string;
 }
 
 export enum convo_type {

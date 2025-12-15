@@ -12,6 +12,8 @@ import { toast } from "react-toastify";
 import ChatProjectStatus from "./chatProjectStatus";
 import { userLoadingState } from "@/types/loading";
 import SmallLoading from "../smallLoading";
+import { useProjectInfo } from "@/context/projectInfoContext";
+import { JobMilestoneStatus } from "@/types/jobMilestone";
 
 interface ChatCombProps {
     sender: User;
@@ -33,6 +35,7 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
     const [ status, setStatus] = useState<number>(0);
     const [loading, setLoading] = useState<userLoadingState>("pending");
     const [ipfsUrl, setIpfsUrl] = useState<string | null>(null);
+    const { jobMilestonesInfo } = useProjectInfo();
 
     useEffect(() => {
         let isMounted = true;
@@ -52,20 +55,47 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
 
                 if(jobApplicationInfo.data.job_application_info.job_milestone_id){
                     setJobMilestoneId(jobApplicationInfo.data.job_application_info.job_milestone_id);
-                    const jobMilestoneInfo = await getJobMilestoneById(jobApplicationInfo.data.job_application_info.job_milestone_id);
-                    if(!jobMilestoneInfo.success) {
-                        toast.error(jobMilestoneInfo.error as string, {
-                            position: "top-right",
-                            autoClose: 5000,
-                            hideProgressBar: false,
-                        });
-                        return;
-                    }
+                    // const jobMilestoneInfo = await getJobMilestoneById(jobApplicationInfo.data.job_application_info.job_milestone_id);
+                    // if(!jobMilestoneInfo.success) {
+                    //     toast.error(jobMilestoneInfo.error as string, {
+                    //         position: "top-right",
+                    //         autoClose: 5000,
+                    //         hideProgressBar: false,
+                    //     });
+                    //     return;
+                    // }
+                    const jobMilestoneInfo = jobMilestonesInfo.find((jobMilestone) => jobMilestone.id === jobApplicationInfo.data.job_application_info.job_milestone_id);
                     if(!isMounted) return;
 
-                    const nextStatus = Number(jobMilestoneInfo.data.status ?? 0);
+                    // const nextStatus = Number(jobMilestoneInfo.data.status ?? 0);
+                    // setStatus(Number.isFinite(nextStatus) ? nextStatus : 0);
+                    // setIpfsUrl(jobMilestoneInfo.data.ipfs ?? null);
+                    console.log("test-jobMilestoneInfo", jobMilestoneInfo);
+                    let nextStatus = 0;
+                    if(jobMilestoneInfo?.status === JobMilestoneStatus.PENDING_FUND) {
+                        nextStatus = 1;
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.FUNDED) {
+                        nextStatus = 2;
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.DELIVERED) {
+                        nextStatus = 3;
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.APPROVED) {
+                        nextStatus = 4;
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.RELEASED) {
+                        nextStatus = 5;
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE) {
+                        nextStatus = 6;
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE) {
+                        nextStatus = 7;
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.RESOLVED_TO_BUYER) {
+                        nextStatus = 8;
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.RESOLVED_TO_VENDOR) {
+                        nextStatus = 9;
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.CANCELLED) {
+                        nextStatus = 10;
+                    }
+                    console.log("test-nextStatus", nextStatus);
                     setStatus(Number.isFinite(nextStatus) ? nextStatus : 0);
-                    setIpfsUrl(jobMilestoneInfo.data.ipfs ?? null);
+                    setIpfsUrl(jobMilestoneInfo?.ipfs ?? null);
                 } else {
                     setJobMilestoneId(null);
                     setStatus(0);
@@ -77,7 +107,8 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
         };
         fetchJobMilestoneId();
         return () => { isMounted = false; };
-    }, [job_application_doc_id]);
+    }, [job_application_doc_id, jobMilestonesInfo]);
+    
     return (
         <div className="flex">
             <div className="flex-1 w-[70%]">
@@ -110,7 +141,7 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
                             />}
                             {jobMilestoneId && <ChatProjectStatus 
                                 user={sender}
-                                status={4}
+                                status={status}
                                 jobMilestoneId={jobMilestoneId} 
                                 conversationId={conversation_id} 
                                 jobApplicationDocId={job_application_doc_id} 

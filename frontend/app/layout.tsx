@@ -68,11 +68,11 @@ export default function RootLayout({
         <WalletProvider>
           <UserLoadingProvider>
             <UserInfoProvider>
-              <SocketContextProvider>
-                <NotificationLoadingProvider>
-                  <NotificationProvider>
-                    <ProjectInfoLoadingProvider>
-                      <ProjectInfoProvider>
+              <ProjectInfoLoadingProvider>
+                <ProjectInfoProvider>
+                  <SocketContextProvider>
+                    <NotificationLoadingProvider>
+                      <NotificationProvider>
                         <ConversationLoadingProvider>
                           <ConversationsInfoProvider>
                             <MessageLoadingProvider>
@@ -85,11 +85,11 @@ export default function RootLayout({
                             </MessageLoadingProvider>
                           </ConversationsInfoProvider>
                         </ConversationLoadingProvider>
-                      </ProjectInfoProvider>
-                    </ProjectInfoLoadingProvider>
-                  </NotificationProvider>
-                </NotificationLoadingProvider>
-              </SocketContextProvider>
+                      </NotificationProvider>
+                    </NotificationLoadingProvider>
+                  </SocketContextProvider>
+                </ProjectInfoProvider>
+              </ProjectInfoLoadingProvider>
             </UserInfoProvider>
           </UserLoadingProvider>
         </WalletProvider>

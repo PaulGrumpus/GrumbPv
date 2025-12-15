@@ -15,6 +15,14 @@ export class ConversationController {
             if(params.job_application_doc_id === "") {
                 params.job_application_doc_id = null;
             }
+
+            if(params.client_id === "") {
+                throw new AppError('Client ID is required', 400, 'CLIENT_ID_REQUIRED');
+            }
+            if(params.freelancer_id === "") {
+                throw new AppError('Freelancer ID is required', 400, 'FREELANCER_ID_REQUIRED');
+            }
+            
             const result = await conversationService.createConversation(params);
             if (!result) {
                 throw new AppError('Conversation not created', 400, 'CONVERSATION_NOT_CREATED');

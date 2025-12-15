@@ -12,6 +12,7 @@ import { UserLoadingCtx } from "./userLoadingContext";
 import { getConversationByParticipant } from "@/utils/functions";
 import { UserInfoCtx } from "./userContext";
 import { ConversationLoadingCtx } from "./conversationLoadingContext";
+import { ProjectInfoLoadingCtx } from "./projectInfoLoadingContext";
 
 const defaultProvider: ConversationInfoContextType = {
     conversationsInfo: [],
@@ -30,11 +31,11 @@ const ConversationsInfoProvider = ({ children }: Props) => {
     const [conversationsInfo, setConversationsInfo] = useState<ConversationInfo[]>(defaultProvider.conversationsInfo);
     const [conversationsError, setConversationsError] = useState<string>(defaultProvider.conversationsError);
     const { userInfo } = useContext(UserInfoCtx);
-    const { userLoadingState } = useContext(UserLoadingCtx);
+    const { projectInfoLoadingState } = useContext(ProjectInfoLoadingCtx);
     const { conversationLoadingState, setconversationLoadingState } = useContext(ConversationLoadingCtx);
 
     const init = async () => {
-        if(userLoadingState === "success") {
+        if(projectInfoLoadingState === "success") {
             setconversationLoadingState("pending");
             const conversations = await getConversationByParticipant(userInfo.id);
             if(conversations.success) {
@@ -51,7 +52,11 @@ const ConversationsInfoProvider = ({ children }: Props) => {
 
     useEffect(() => {
         init();
-    }, [userLoadingState]);
+    }, [projectInfoLoadingState]);
+
+    useEffect(() => {
+        console.log("test-conversationsInfo", conversationsInfo);
+    }, [conversationsInfo]);
 
     return (
         <ConversationsInfoCtx.Provider value={{ conversationsInfo, setConversationsInfo, conversationsError, setConversationsError }}>

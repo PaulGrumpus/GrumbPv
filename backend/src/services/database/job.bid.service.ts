@@ -184,6 +184,17 @@ export class JobBidService {
       }
       const existingJobBids = await this.prisma.job_bids.findMany({
         where: { job_id },
+        orderBy: { created_at: "desc" },
+        include: {
+          freelancer: {
+            select: {
+              id: true,
+              display_name: true,
+              image_id: true,
+              country_code: true,
+            },
+          },
+        },
       });
       return existingJobBids;
     } catch (error) {
@@ -204,12 +215,27 @@ export class JobBidService {
       if (!freelancer_id) {
         throw new AppError('Freelancer ID is required', 400, 'FREELANCER_ID_REQUIRED');
       }
-      const existingFreelancer = await userService.getUserById(freelancer_id as string);
-      if (!existingFreelancer) {
-        throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
-      }
+      // const existingFreelancer = await userService.getUserById(freelancer_id as string);
+      // if (!existingFreelancer) {
+      //   throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
+      // }
       const existingJobBids = await this.prisma.job_bids.findMany({
         where: { freelancer_id },
+        orderBy: { created_at: "desc" },
+        include: {
+          job: {
+            select: {
+              id: true,
+              title: true,
+              description_md: true,
+              location: true,
+              tags: true,
+              budget_min_usd: true,
+              budget_max_usd: true,
+              deadline_at: true,
+            },
+          },
+        },
       });
       return existingJobBids;
     } catch (error) {

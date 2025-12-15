@@ -357,6 +357,22 @@ export const getJobMilestoneById = async (job_milestone_id: string) => {
     }
 }
 
+export const getJobMilestonesByJobId = async (job_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/job-milestones/by-job-id/${job_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 export const updateJobMilestone = async (job_milestone_id: string, jobMilestone: JobMilestone) => {
     try {
         const response = await EscrowBackend.post(`/database/job-milestones/${job_milestone_id}`, jobMilestone);
@@ -644,6 +660,8 @@ export const createConversationAndParticipant = async (job_application_doc_id: s
             job_id: job_id === "" ? null : job_id,
             gig_id: gig_id === "" ? null : gig_id,
             job_application_doc_id: job_application_doc_id === "" ? null : job_application_doc_id,
+            client_id,
+            freelancer_id,
         });
 
         if (!response.data.success) {

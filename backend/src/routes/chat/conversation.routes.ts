@@ -9,10 +9,14 @@ router.post('/',
     [
         body('type').isString().notEmpty(),
         body('job_application_doc_id').isString().notEmpty(),
+        body('client_id').isString().notEmpty(),
+        body('freelancer_id').isString().notEmpty(),
     ], 
     validate([
         body('type'),
         body('job_application_doc_id'),
+        body('client_id'),
+        body('freelancer_id'),
     ]),
     conversationController.createConversation.bind(conversationController)
 );

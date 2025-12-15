@@ -274,7 +274,7 @@ export class JobService {
       if (!id) {
         throw new AppError('Job ID is required', 400, 'JOB_ID_REQUIRED');
       }
-      const job = await this.prisma.jobs.findUnique({
+      const job = await this.prisma.jobs.findFirst({
         where: { id },
       });
       if (!job) {

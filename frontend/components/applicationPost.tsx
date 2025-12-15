@@ -22,7 +22,7 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
     const [expanded, setExpanded] = useState(false);
     const [canToggle, setCanToggle] = useState(false);
     const coverLetterRef = useRef<HTMLParagraphElement>(null);
-    const { setConversationsInfo } = useContext(ConversationsInfoCtx);
+    const { conversationsInfo, setConversationsInfo } = useContext(ConversationsInfoCtx);
     const router = useRouter();
 
     useEffect(() => {
@@ -87,14 +87,26 @@ const ApplicationPost = ({ user, id, cover_letter_md, bid_amount, token_symbol, 
                 throw new Error(conversation.error as string);
             }
 
-            setConversationsInfo((prev) => [...prev, {
-                conversation: conversation.data,
-                participants: conversation.data.participants,
-                clientInfo: jobInfo.data.client_info,
-                freelancerInfo: jobInfo.data.freelancer_info,
-                jobInfo: jobInfo.data,
-                gigInfo: null,
-            }]);
+            const existingConversationInfo = conversationsInfo.find((conversationInfo) => conversationInfo.conversation.id === conversation.data.id);
+
+            if(existingConversationInfo) {
+                const newConversationsInfo = conversationsInfo.map((conversationInfo) => conversationInfo.conversation.id === conversation.data.id ? {
+                    ...conversationInfo,
+                    jobInfo: jobInfo.data,
+                    gigInfo: null,
+                } : conversationInfo);
+    
+                setConversationsInfo(newConversationsInfo);
+            } else{
+                setConversationsInfo((prev) => [...prev, {
+                    conversation: conversation.data,
+                    participants: conversation.data.participants,
+                    clientInfo: jobInfo.data.client_info,
+                    freelancerInfo: jobInfo.data.freelancer_info,
+                    jobInfo: jobInfo.data,
+                    gigInfo: null,
+                }]);
+            }
 
             router.push(`/reference?jobApplicationId=${job_application_id}&conversationId=${conversation.data}`);
         } catch (error) {

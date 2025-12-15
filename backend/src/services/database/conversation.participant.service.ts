@@ -9,6 +9,12 @@ export class ConversationParticipantService {
 
     public async createConversationParticipant(params: newConversationParticipantParam): Promise<conversation_participants> {
         try {
+            const existingConversationParticipant = await this.prisma.conversation_participants.findFirst({
+                where: { conversation_id: params.conversation_id, user_id: params.user_id },
+            });
+            if (existingConversationParticipant) {
+                return existingConversationParticipant;
+            }
             const newConversationParticipant = await this.prisma.conversation_participants.create({
                 data: {
                     conversation_id: params.conversation_id,
@@ -63,80 +69,149 @@ export class ConversationParticipantService {
         freelancerInfo: users | null,
         jobInfo: jobs | null,
         gigInfo: gigs | null
-    }[]> {
+    }[]>  {
         try {
             const conversationParticipants = await this.prisma.conversation_participants.findMany({
                 where: { user_id: userId },
+                include: {
+                    conversation: {
+                        include: {
+                            job: {
+                                include: {
+                                    client: true,
+                                },
+                            },
+                            gig: true,
+                            participants: {
+                                include: {
+                                    user: true,
+                                },
+                            },
+                        },
+                    },
+                },
             });
-            if (!conversationParticipants) {
-                throw new AppError('Conversation participants not found', 404, 'CONVERSATION_PARTICIPANTS_NOT_FOUND');
-            }
-            const conversationsData = await Promise.all(conversationParticipants.map(async (conversationParticipant) => {
-                const conversation = await this.prisma.conversations.findFirst({
-                    where: { id: conversationParticipant.conversation_id },
-                });
-                if (!conversation) {
-                    throw new AppError('Conversation not found', 404, 'CONVERSATION_NOT_FOUND');
-                }
-                let jobInfo: jobs | null = null;
-                let gigInfo: gigs | null = null;
-                let clientInfo: users | null = null;
-                let freelancerInfo: users | null = null;
-
-                if(conversation.job_id) {
-                    jobInfo = await this.prisma.jobs.findUnique({
-                        where: { id: conversation.job_id },
-                    });
-                    if (!jobInfo) {
-                        throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
-                    }
-                }
-                if(conversation.gig_id) {
-                    gigInfo = await this.prisma.gigs.findUnique({
-                        where: { id: conversation.gig_id },
-                    });
-                    if (!gigInfo) {
-                        throw new AppError('Gig not found', 404, 'GIG_NOT_FOUND');
-                    }
-                }
-                if(jobInfo) {
-                    clientInfo = await this.prisma.users.findUnique({
-                        where: { id: jobInfo.client_id },
-                    });
-                    if (!clientInfo) {
-                        throw new AppError('Client not found', 404, 'CLIENT_NOT_FOUND');
-                    }
-                }
-                const participants = await this.getConversationParticipantsByConversationId(conversation.id);
-                const freelancerId = participants.find((participant) => participant.user_id !== (jobInfo?.client_id ?? ""))?.user_id ?? "";
-                freelancerInfo = await this.prisma.users.findUnique({
-                    where: { id: freelancerId },
-                });
-                if (!freelancerInfo) {
-                    throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
-                }
-                return { conversation, clientInfo, freelancerInfo, jobInfo, gigInfo, participants };
-            }));
-            return conversationsData.map((conversationData) => {
-                if (!conversationData.clientInfo) {
-                    throw new AppError('Client info not found', 404, 'CLIENT_INFO_NOT_FOUND');
-                }
+      
+            const conversationsData = conversationParticipants.map((cp) => {
+                const conversation = cp.conversation;
+        
+                const jobInfo = conversation.job ?? null;
+                const gigInfo = conversation.gig ?? null;
+                const clientInfo = jobInfo?.client ?? null;
+        
+                const freelancerInfo = conversation.participants
+                    .map((p) => p.user)
+                    .find((u) => u.id !== clientInfo?.id) ?? null;
+        
                 return {
-                    conversation: conversationData.conversation,
-                    participants: conversationData.participants,
-                    clientInfo: conversationData.clientInfo,
-                    freelancerInfo: conversationData.freelancerInfo ?? null,
-                    jobInfo: conversationData.jobInfo ?? null,
-                    gigInfo: conversationData.gigInfo ?? null,
+                    conversation,
+                    participants: conversation.participants,
+                    clientInfo,
+                    freelancerInfo,
+                    jobInfo,
+                    gigInfo,
                 };
             });
-        }
-        catch (error) {
-            console.error("PRISMA ERROR:", error);
-            logger.error('Error getting conversation participants by user id', { error });
-            throw new AppError('Error getting conversation participants by user id', 500, 'CONVERSATION_PARTICIPANTS_GET_BY_USER_ID_FAILED');
+            return conversationsData as {
+                conversation: conversations,
+                participants: conversation_participants[],
+                clientInfo: users,
+                freelancerInfo: users | null,
+                jobInfo: jobs | null,
+                gigInfo: gigs | null
+            }[];
+        } catch (error) {
+            logger.error("Error getting conversation participants", { error });
+            throw new AppError(
+                "Error getting conversation participants by user id",
+                500,
+                "CONVERSATION_PARTICIPANTS_GET_BY_USER_ID_FAILED"
+            );
         }
     }
+
+    // public async getConversationParticipantsByUserId(userId: string): Promise<
+    // {
+    //     conversation: conversations, 
+    //     participants: conversation_participants[], 
+    //     clientInfo: users, 
+    //     freelancerInfo: users | null,
+    //     jobInfo: jobs | null,
+    //     gigInfo: gigs | null
+    // }[]> {
+    //     try {
+    //         const conversationParticipants = await this.prisma.conversation_participants.findMany({
+    //             where: { user_id: userId },
+    //         });
+    //         if (!conversationParticipants) {
+    //             throw new AppError('Conversation participants not found', 404, 'CONVERSATION_PARTICIPANTS_NOT_FOUND');
+    //         }
+    //         const conversationsData = await Promise.all(conversationParticipants.map(async (conversationParticipant) => {
+    //             const conversation = await this.prisma.conversations.findFirst({
+    //                 where: { id: conversationParticipant.conversation_id },
+    //             });
+    //             if (!conversation) {
+    //                 throw new AppError('Conversation not found', 404, 'CONVERSATION_NOT_FOUND');
+    //             }
+    //             let jobInfo: jobs | null = null;
+    //             let gigInfo: gigs | null = null;
+    //             let clientInfo: users | null = null;
+    //             let freelancerInfo: users | null = null;
+
+    //             if(conversation.job_id) {
+    //                 jobInfo = await this.prisma.jobs.findUnique({
+    //                     where: { id: conversation.job_id },
+    //                 });
+    //                 if (!jobInfo) {
+    //                     throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
+    //                 }
+    //             }
+    //             if(conversation.gig_id) {
+    //                 gigInfo = await this.prisma.gigs.findUnique({
+    //                     where: { id: conversation.gig_id },
+    //                 });
+    //                 if (!gigInfo) {
+    //                     throw new AppError('Gig not found', 404, 'GIG_NOT_FOUND');
+    //                 }
+    //             }
+    //             if(jobInfo) {
+    //                 clientInfo = await this.prisma.users.findUnique({
+    //                     where: { id: jobInfo.client_id },
+    //                 });
+    //                 if (!clientInfo) {
+    //                     throw new AppError('Client not found', 404, 'CLIENT_NOT_FOUND');
+    //                 }
+    //             }
+    //             const participants = await this.getConversationParticipantsByConversationId(conversation.id);
+    //             const freelancerId = participants.find((participant) => participant.user_id !== (jobInfo?.client_id ?? ""))?.user_id ?? "";
+    //             freelancerInfo = await this.prisma.users.findFirst({
+    //                 where: { id: freelancerId },
+    //             });
+    //             if (!freelancerInfo) {
+    //                 throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
+    //             }
+    //             return { conversation, clientInfo, freelancerInfo, jobInfo, gigInfo, participants };
+    //         }));
+    //         return conversationsData.map((conversationData) => {
+    //             if (!conversationData.clientInfo) {
+    //                 throw new AppError('Client info not found', 404, 'CLIENT_INFO_NOT_FOUND');
+    //             }
+    //             return {
+    //                 conversation: conversationData.conversation,
+    //                 participants: conversationData.participants,
+    //                 clientInfo: conversationData.clientInfo,
+    //                 freelancerInfo: conversationData.freelancerInfo ?? null,
+    //                 jobInfo: conversationData.jobInfo ?? null,
+    //                 gigInfo: conversationData.gigInfo ?? null,
+    //             };
+    //         });
+    //     }
+    //     catch (error) {
+    //         console.error("PRISMA ERROR:", error);
+    //         logger.error('Error getting conversation participants by user id', { error });
+    //         throw new AppError('Error getting conversation participants by user id', 500, 'CONVERSATION_PARTICIPANTS_GET_BY_USER_ID_FAILED');
+    //     }
+    // }
 
     public async getConversationParticipantsByConversationIdAndUserId(conversationId: string, userId: string): Promise<conversation_participants> {
         try {

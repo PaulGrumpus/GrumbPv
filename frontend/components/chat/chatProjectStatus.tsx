@@ -10,6 +10,7 @@ import { useWallet } from "@/context/walletContext";
 import { CONFIG } from "@/config/config";
 import ModalTemplate from "../modalTemplate";
 import { useState } from "react";
+import { JobMilestoneStatus } from "@/types/jobMilestone";
 
 interface ChatProjectStatusProps {
     status: number; // 1-4
@@ -93,7 +94,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
             });
             return;
         }
-        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: "funded" });
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.FUNDED });
         if (updatedJobMilestone.success) {
             toast.success("Escrow funded successfully", {
                 position: "top-right",
@@ -132,7 +133,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
             });
             return;
         }
-        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: "delivered", ipfs: result.data.cid });
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.DELIVERED, ipfs: result.data.cid });
         if (updatedJobMilestone.success) {
             toast.success("Work delivered successfully", {
                 position: "top-right",
@@ -207,7 +208,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
             });
             return;
         }
-        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: "approved" });
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.APPROVED });
         if (updatedJobMilestone.success) {
             toast.success("Work approved successfully", {
                 position: "top-right",
@@ -245,7 +246,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
             });
             return;
         }
-        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: "released" });
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.RELEASED });
         if (updatedJobMilestone.success) {
             toast.success("Funds withdrawn successfully", {
                 position: "top-right",
@@ -297,7 +298,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
                             return (
                                 <div key={idx} className="flex flex-col items-center">
                                     <div
-                                        className={`w-7 h-7 rounded-full flex items-center justify-center text-lg font-bold ${
+                                        className={`w-7 h-7 rounded-full flex items-center justify-center text-lg font-bold cursor-pointer ${
                                             isReached
                                                 ? `bg-[#2F3DF6] text-white ${isActive ? "shadow-[0_8px_24px_rgba(77,125,255,0.45)]" : ""}`
                                                 : "bg-[#A79FD9] text-[#0F1421]"
@@ -391,6 +392,11 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
                             )}
                         </div>
                     )}
+                    {status >= 5 && ( 
+                        <div className="pb-20.5">
+                            <div className="h-9"></div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center justify-center pb-6">
@@ -439,7 +445,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
                             </Link>
                         </div>
                     )}   
-                    {status === 4 && ( 
+                    {status >= 4 && ( 
                         <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
                             <Button padding="px-4 py-1.5" variant="secondary">
                                 <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>

@@ -9,6 +9,51 @@ export class ConversationService {
 
     public async createConversation(params: newConversationParam): Promise<conversations> {
         try {
+            const existingConversation = await this.prisma.conversations.findFirst({
+                where: {
+                    AND: [
+                        { participants: { some: { user_id: params.client_id } } },
+                        { participants: { some: { user_id: params.freelancer_id } } },
+                    ],
+                },
+            });
+
+            if (existingConversation) {
+                const updatePayload: {
+                    job_id?: string | null;
+                    gig_id?: string | null;
+                    job_application_doc_id?: string | null;
+                    escrow?: string | null;
+                } = {};
+
+                if (params.job_id !== undefined) {
+                    updatePayload.job_id = params.job_id;
+                }
+
+                if (params.gig_id !== undefined) {
+                    updatePayload.gig_id = params.gig_id;
+                }
+
+                if (params.job_application_doc_id !== undefined) {
+                    updatePayload.job_application_doc_id = params.job_application_doc_id;
+                }
+
+                if (params.escrow !== undefined) {
+                    updatePayload.escrow = params.escrow;
+                }
+
+                if (Object.keys(updatePayload).length === 0) {
+                    return existingConversation;
+                }
+
+                const updatedConversation = await this.prisma.conversations.update({
+                    where: { id: existingConversation.id },
+                    data: updatePayload,
+                });
+
+                return updatedConversation;
+            }
+
             const newConversation = await this.prisma.conversations.create({
                 data: {
                     type: params.type as convo_type,
@@ -19,9 +64,11 @@ export class ConversationService {
                     job_application_doc_id: params.job_application_doc_id ?? null,
                 },
             });
+
             if (!newConversation) {
                 throw new AppError('Conversation not created', 400, 'CONVERSATION_NOT_CREATED');
             }
+
             return newConversation;
         }
         catch (error) {
