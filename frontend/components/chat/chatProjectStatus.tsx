@@ -11,6 +11,7 @@ import { CONFIG } from "@/config/config";
 import ModalTemplate from "../modalTemplate";
 import { useState } from "react";
 import { JobMilestoneStatus } from "@/types/jobMilestone";
+import { useProjectInfo } from "@/context/projectInfoContext";
 
 interface ChatProjectStatusProps {
     status: number; // 1-4
@@ -39,7 +40,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const { sendTransaction } = useWallet();
-
+    const { jobMilestonesInfo, setJobMilestonesInfo } = useProjectInfo();
     const handleDownload = async (url: string) => {
         try {
             const response = await fetch(url);
@@ -96,6 +97,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
         }
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.FUNDED });
         if (updatedJobMilestone.success) {
+            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
             toast.success("Escrow funded successfully", {
                 position: "top-right",
                 autoClose: 5000,
@@ -135,6 +137,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
         }
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.DELIVERED, ipfs: result.data.cid });
         if (updatedJobMilestone.success) {
+            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
             toast.success("Work delivered successfully", {
                 position: "top-right",
                 autoClose: 5000,
@@ -210,6 +213,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
         }
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.APPROVED });
         if (updatedJobMilestone.success) {
+            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
             toast.success("Work approved successfully", {
                 position: "top-right",
                 autoClose: 5000,
@@ -248,6 +252,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
         }
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.RELEASED });
         if (updatedJobMilestone.success) {
+            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
             toast.success("Funds withdrawn successfully", {
                 position: "top-right",
                 autoClose: 5000,

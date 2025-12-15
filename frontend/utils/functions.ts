@@ -694,7 +694,7 @@ export const createConversationAndParticipant = async (job_application_doc_id: s
 
         return {
             success: true,
-            data: response.data.data.id,
+            data: response.data,
         };
     } catch (error: any) {
         return {

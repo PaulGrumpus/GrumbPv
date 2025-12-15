@@ -11,7 +11,6 @@ import { websocket } from "@/config/config";
 import { useProjectInfo } from "./projectInfoContext";
 import { ProjectInfoLoadingCtx } from "./projectInfoLoadingContext";
 import { ConversationsInfoCtx } from "./conversationsContext";
-import { JobMilestone } from "@/types/jobMilestone";
 import { MessageLoadingCtx } from "./messageLoadingContext";
 
 const defaultProvider: NotificationContextType = {
@@ -34,18 +33,15 @@ export const NotificationProvider = ({ children }: Props) => {
     const { userInfo } = useContext(UserInfoCtx);
     const { messageLoadingState } = useContext(MessageLoadingCtx);
     const { setnotificationLoadingState } = useContext(NotificationLoadingCtx);
-    const { jobMilestonesInfo, setJobMilestonesInfo, jobsInfo, setJobsInfo, gigsInfo, setGigsInfo } = useProjectInfo();
+    const { setJobMilestonesInfo, jobsInfo, setJobsInfo, gigsInfo, setGigsInfo } = useProjectInfo();
     const { conversationsInfo, setConversationsInfo } = useContext(ConversationsInfoCtx);
 
-    const [milestonesInfo, setMilestonesInfo] = useState<JobMilestone[]>([]);
-    
     const init = async () => {
         if(messageLoadingState === "success") {
             setnotificationLoadingState("pending");
             const notifications = await getNotificationsByUserIdWithFilters(userInfo.id, false);
             if(notifications.success) {
                 setNotifications(notifications.data ?? []);
-                setMilestonesInfo(jobMilestonesInfo ?? []);
             } else {
                 setNotificationsError(notifications.error ?? 'Failed to get notifications');
             }
@@ -71,19 +67,25 @@ export const NotificationProvider = ({ children }: Props) => {
                 setNotifications((prev) => [...prev, notification]);
                 if (notification.entity_type === NotificationEntity.milestone) {
                     const updatedMilestoneInfo = await getJobMilestoneById(notification.entity_id);                    
-                    if (updatedMilestoneInfo.success) {
-                        if(notification.type === NotificationType.milestoneStarted){
-                            console.log("test-before-update", milestonesInfo);
-                            setJobMilestonesInfo([...milestonesInfo, updatedMilestoneInfo.data ?? []]);
-                        } else {
-                            console.log("test-before-update", milestonesInfo);
-                            milestonesInfo.forEach((jobMilestone) => {
-                                if(jobMilestone.id === notification.entity_id) {
-                                    jobMilestone.status = updatedMilestoneInfo.data.status;
+                    if (updatedMilestoneInfo.success && updatedMilestoneInfo.data) {
+                        const updatedMilestone = updatedMilestoneInfo.data;
+                        setJobMilestonesInfo((prev) => {
+                            const milestoneExists = prev.some((jobMilestone) => jobMilestone.id === updatedMilestone.id);
+                            if (notification.type === NotificationType.milestoneStarted) {
+                                if (milestoneExists) {
+                                    return prev.map((jobMilestone) =>
+                                        jobMilestone.id === updatedMilestone.id ? updatedMilestone : jobMilestone
+                                    );
                                 }
-                            });
-                            setMilestonesInfo(milestonesInfo);
-                        }
+                                return [...prev, updatedMilestone];
+                            }
+                            if (!milestoneExists) {
+                                return prev;
+                            }
+                            return prev.map((jobMilestone) =>
+                                jobMilestone.id === updatedMilestone.id ? updatedMilestone : jobMilestone
+                            );
+                        });
                     }
 
                 }
