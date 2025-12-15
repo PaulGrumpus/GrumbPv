@@ -13,6 +13,7 @@ import Loading from "../loading";
 import { LocationType } from "@/types/jobs";
 import { ProjectInfoCtx, useProjectInfo } from "@/context/projectInfoContext";
 import { ProjectInfoLoadingCtx } from "@/context/projectInfoLoadingContext";
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const MyGigsSection = () => {
     const router = useRouter();
@@ -22,6 +23,7 @@ const MyGigsSection = () => {
     const [gigs, setGigs] = useState<Gig[]>([]);
     const { projectInfoLoadingState } = useContext(ProjectInfoLoadingCtx);
     const { gigsInfo } = useProjectInfo();
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
     const getGigsPerFreelancerId = async (freelancer_id: string) => {
         try {
@@ -60,12 +62,14 @@ const MyGigsSection = () => {
                     // await getGigsPerFreelancerId(userInfo.id);
                 };
         
-                loadGigs();
+                if(notificationLoadingState === "success") {
+                    loadGigs();
+                }
             }
         } else if (projectInfoLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, projectInfoLoadingState])
+    }, [userInfo, projectInfoLoadingState, notificationLoadingState])
 
     useEffect(() => {
         console.log("test-gigsInfo", gigsInfo);

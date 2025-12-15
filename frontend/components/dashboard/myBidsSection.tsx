@@ -11,6 +11,7 @@ import { Bid, BidStatus } from "@/types/bid";
 import Loading from "../loading";
 import { Job } from "@/types/jobs";
 import { BidPostProps } from "@/types/bid";
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const MyBidsSection = () => {
     const router = useRouter();
@@ -18,6 +19,7 @@ const MyBidsSection = () => {
     const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [bids, setBids] = useState<BidPostProps[]>([]);
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
     const getJobByJobId = async (job_id: string) => {
         try {
@@ -106,12 +108,14 @@ const MyBidsSection = () => {
                     await getBidsPerFreelancerId(userInfo.id);
                 };
         
-                loadBids();
+                if(notificationLoadingState === "success") {
+                    loadBids();
+                }
             }
         } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState])
+    }, [userInfo, userLoadingState, notificationLoadingState])
 
     if (loading === "pending") {
         return <Loading />;

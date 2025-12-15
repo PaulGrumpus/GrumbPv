@@ -16,6 +16,7 @@ import { MessageLoadingCtx } from "@/context/messageLoadingContext";
 import { Message } from "@/types/message";
 import useSocket from '@/service/socket';
 import { websocket } from "@/config/config";
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 interface ChatSidebarItem {
     conversation_id: string;
@@ -38,7 +39,7 @@ const ChatPageContent = () => {
     const { messagesInfo, setMessagesInfo } = useContext(MessagesInfoCtx);
     const { messageLoadingState, setmessageLoadingState } = useContext(MessageLoadingCtx);
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
     const searchParams = useSearchParams();
     const conversationId = searchParams.get("conversationId");
     const chatSocket = useSocket();   
@@ -170,12 +171,14 @@ const ChatPageContent = () => {
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }
-                loadConversations();
+                if(notificationLoadingState === "success") {
+                    loadConversations();
+                }
             }
         } else if (messageLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, messageLoadingState, router]);
+    }, [userInfo, messageLoadingState, router, notificationLoadingState]);
 
     if(loading === "pending") {
         return <Loading />;

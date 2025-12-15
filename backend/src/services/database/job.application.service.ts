@@ -112,19 +112,19 @@ export class JobApplicationService {
                 if(!escrow) {
                     throw new AppError('Failed to create escrow', 500, 'FAILED_TO_CREATE_ESCROW');
                 }   
-                await notificationService.createNotification({
-                    user_id: userId === updateResult.client_id ? updateResult.freelancer_id : updateResult.client_id,
-                    actor_user_id: userId,
-                    type: notification_type.REQUIREMENT_DOCS_CONFIRMED,
-                    entity_type: notification_entity.job_application_doc,
-                    entity_id: updateResult.id,
-                    title: 'Job Requirement Docs Confirmed',
-                    body: 'Your job requirement docs have been confirmed by the client',
-                    payload: Prisma.JsonNull,
-                    read_at: null,
-                    created_at: new Date(),
-                });
             }
+            await notificationService.createNotification({
+                user_id: userId === updateResult.client_id ? updateResult.freelancer_id : updateResult.client_id,
+                actor_user_id: userId,
+                type: notification_type.REQUIREMENT_DOCS_CONFIRMED,
+                entity_type: notification_entity.job_application_doc,
+                entity_id: updateResult.id,
+                title: 'Job Requirement Docs Confirmed',
+                body: 'Your job requirement docs have been confirmed by the client',
+                payload: Prisma.JsonNull,
+                read_at: null,
+                created_at: new Date(),
+            });
             return {
                 ...updateResult as job_applications_docs,
                 job_milestone_id: milestone?.id ?? null,

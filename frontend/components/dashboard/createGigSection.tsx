@@ -11,6 +11,7 @@ import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { useRouter } from "next/navigation";
 import Loading from "../loading";
 import { createGig } from "@/utils/functions";
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const uploadImage = "/Grmps/upload.svg";
 
@@ -33,7 +34,8 @@ const CreateGigSection = () => {
     const [error, setError] = useState("");
     const [checkError, setCheckError] = useState(false);
     const router = useRouter();
-    
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+
     const handleUploadFile = () => {
         const fileInput = document.createElement("input");
         fileInput.type = "file";
@@ -155,12 +157,14 @@ const CreateGigSection = () => {
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }
-                loadCreateGig();
+                if(notificationLoadingState === "success") {
+                    loadCreateGig();
+                }
             }
         } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState, router])
+    }, [userInfo, userLoadingState, router, notificationLoadingState])
 
     if (loading === "pending") {
         return <Loading />;

@@ -13,6 +13,7 @@ import Loading from "../loading";
 import { createJob } from "@/utils/functions";
 import { JobStatus, LocationType } from "@/types/jobs";
 import { formatISODate, parseISODate, formatDisplayDate, calendarIcon, CalendarDropdown } from "@/utils/calendar";
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const uploadImage = "/Grmps/upload.svg";
 
@@ -40,7 +41,8 @@ const CreateJobSection = () => {
     const [loading, setLoading] = useState("pending");
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const router = useRouter();
-
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+    
     useEffect(() => {
         if (!isDueDateCalendarOpen) {
             return;
@@ -195,12 +197,14 @@ const CreateJobSection = () => {
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }
-                loadCreateJob();
+                if(notificationLoadingState === "success") {
+                    loadCreateJob();
+                }
             }
         } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState, router])
+    }, [userInfo, userLoadingState, router, notificationLoadingState])
 
     if (loading === "pending") {
         return <Loading />;

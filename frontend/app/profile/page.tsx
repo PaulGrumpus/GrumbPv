@@ -15,6 +15,7 @@ import { updateUser } from '@/utils/functions';
 import { EscrowBackendConfig } from '@/config/config';
 import { connectMetaMaskWallet } from '@/utils/walletConnnect';
 import { useWallet } from '@/context/walletContext';
+import { NotificationLoadingCtx } from '@/context/notificationLoadingContext';
 
 type FormState = {
     userName: string;
@@ -49,6 +50,7 @@ const ProfilePage = () => {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const { connect, address, isConnected } = useWallet();
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
     const initialFormState = useRef<FormState>({
         userName: "",
@@ -299,12 +301,14 @@ const ProfilePage = () => {
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 }
-                loadProfile();
+                if(notificationLoadingState === "success") {
+                    loadProfile();
+                }
             }
         } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState, router])
+    }, [userInfo, userLoadingState, router, notificationLoadingState])
 
     useEffect(() => {
         if (address) {

@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { ConversationLoadingCtx } from "@/context/conversationLoadingContext";
 import { ProjectInfoCtx } from "@/context/projectInfoContext";
 import { ProjectInfoLoadingCtx } from "@/context/projectInfoLoadingContext";
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const MyJobsSection = () => {
     const router = useRouter();
@@ -23,6 +24,7 @@ const MyJobsSection = () => {
     const [loading, setLoading] = useState("pending");
     const [jobs, setJobs] = useState<Job[]>([]);
     const { jobsInfo } = useContext(ProjectInfoCtx);
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
     const getJobsPerClientId = async (client_id: string) => {
         try {
@@ -62,12 +64,14 @@ const MyJobsSection = () => {
                     // await getJobsPerClientId(userInfo.id);
                 };
         
-                loadJobs();
+                if(notificationLoadingState === "success") {
+                    loadJobs();
+                }
             }
         } else if (conversationLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, conversationLoadingState])
+    }, [userInfo, conversationLoadingState, notificationLoadingState])
 
     useEffect(() => {
         console.log("test-jobsInfo", jobsInfo);

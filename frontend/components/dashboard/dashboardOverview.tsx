@@ -7,6 +7,7 @@ import { UserInfoCtx } from "@/context/userContext";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const myJobs = [
     {
@@ -69,7 +70,8 @@ const DashboardOverview = () => {
     const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const router = useRouter();
-
+    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+    
     useEffect(() => {
         if(userLoadingState === "success") {
             if(userInfo.id === "") {
@@ -86,13 +88,14 @@ const DashboardOverview = () => {
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     setLoading("success");
                 };
-        
-                loadDashboardPosts();
+                if(notificationLoadingState === "success") {
+                    loadDashboardPosts();
+                }
             }
         } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState])
+    }, [userInfo, userLoadingState, notificationLoadingState])
 
         if (loading === "pending") {
         return <Loading />;

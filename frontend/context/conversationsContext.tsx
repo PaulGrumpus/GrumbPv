@@ -32,7 +32,7 @@ const ConversationsInfoProvider = ({ children }: Props) => {
     const [conversationsError, setConversationsError] = useState<string>(defaultProvider.conversationsError);
     const { userInfo } = useContext(UserInfoCtx);
     const { projectInfoLoadingState } = useContext(ProjectInfoLoadingCtx);
-    const { conversationLoadingState, setconversationLoadingState } = useContext(ConversationLoadingCtx);
+    const { setconversationLoadingState } = useContext(ConversationLoadingCtx);
 
     const init = async () => {
         if(projectInfoLoadingState === "success") {

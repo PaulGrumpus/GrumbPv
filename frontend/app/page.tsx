@@ -8,26 +8,28 @@ import { UserInfoCtx } from "@/context/userContext";
 import Image from "next/image";
 
 import { useWallet } from '@/context/walletContext';
+import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const Home = () => {
   const { userLoadingState } = useContext(UserLoadingCtx);
   const [loading, setLoading] = useState("pending");
   const { address, chainId, provider, isConnecting, isConnected, connect, disconnect, sendTransaction } = useWallet();
+  const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
   useEffect(() => {
-    if(userLoadingState !== "pending") {
+    if(userLoadingState === "failure") {
         const load = async () => {
-          console.log("test-address", address);
-          console.log("test-chainId", chainId);
-          console.log("test-provider", provider);
-          console.log("test-isConnecting", isConnecting);
-          console.log("test-isConnected", isConnected);
             await new Promise(resolve => setTimeout(resolve, 3000));
             setLoading("success");
         }
         load();
     }
-}, [userLoadingState])
+    if(userLoadingState === "success") {
+      if(notificationLoadingState === "success") {
+        setLoading("success");
+      }
+    }
+  }, [userLoadingState, notificationLoadingState])
 
   if (loading === "pending") {
     return <Loading />;

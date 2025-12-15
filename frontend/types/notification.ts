@@ -17,17 +17,21 @@ export enum NotificationType {
     gigPosted = "GIG_POSTED",
     bidReceived = "BID_RECEIVED",
     bidAccepted = "BID_ACCEPTED",
-    jobStarted = "JOB_STARTED",
+    bidDeclined = "BID_DECLIEND",
+    bidWithdrawn = "BID_WITHDRAWN",
+    milestoneStarted = "MILESTONE_STARTED",
     milestoneFunded = "MILESTONE_FUNDED",
     milestoneDelivered = "MILESTONE_DELIVERED",
     milestoneApproved = "MILESTONE_APPROVED",
-    fundsReleased = "FUNDS_RELEASED",
+    milestoneFundsReleased = "MILESTONE_FUNDS_RELEASED",
     disputeStarted = "DISPUTE_STARTED",
     disputeResolved = "DISPUTE_RESOLVED",
-    messageReceived = "MESSAGE_RECEIVED",
+    messageReceived = "MESSAGE_RECEIVED",    
+    requirementDocsCreated = "REQUIREMENT_DOCS_CREATED",
+    requirementDocsConfirmed = "REQUIREMENT_DOCS_CONFIRMED",
     chatCreated = "CHAT_CREATED",
     chatUpdated = "CHAT_UPDATED",
-  }
+  }   
 
 export enum NotificationEntity {
     job = "job",

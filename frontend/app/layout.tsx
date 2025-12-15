@@ -68,28 +68,28 @@ export default function RootLayout({
         <WalletProvider>
           <UserLoadingProvider>
             <UserInfoProvider>
-              <ProjectInfoLoadingProvider>
-                <ProjectInfoProvider>
-                  <SocketContextProvider>
+              <SocketContextProvider>
+                <ProjectInfoLoadingProvider>
+                  <ProjectInfoProvider>
                     <ConversationLoadingProvider>
                       <ConversationsInfoProvider>
-                        <NotificationLoadingProvider>
-                          <NotificationProvider>
-                            <MessageLoadingProvider>
-                              <MessagesInfoProvider>
+                        <MessageLoadingProvider>
+                          <MessagesInfoProvider>
+                            <NotificationLoadingProvider>
+                              <NotificationProvider>
                                 <Navbar />
                                 {children}
                                 <FooterToggle />
                                 <ToastContainer />
-                              </MessagesInfoProvider>
-                            </MessageLoadingProvider>
-                          </NotificationProvider>
-                        </NotificationLoadingProvider>
+                              </NotificationProvider>
+                            </NotificationLoadingProvider>
+                          </MessagesInfoProvider>
+                        </MessageLoadingProvider>
                       </ConversationsInfoProvider>
                     </ConversationLoadingProvider>
-                  </SocketContextProvider>
-                </ProjectInfoProvider>
-              </ProjectInfoLoadingProvider>
+                  </ProjectInfoProvider>
+                </ProjectInfoLoadingProvider>
+              </SocketContextProvider>
             </UserInfoProvider>
           </UserLoadingProvider>
         </WalletProvider>

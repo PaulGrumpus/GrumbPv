@@ -11,6 +11,8 @@ import { websocket } from "@/config/config";
 import { useProjectInfo } from "./projectInfoContext";
 import { ProjectInfoLoadingCtx } from "./projectInfoLoadingContext";
 import { ConversationsInfoCtx } from "./conversationsContext";
+import { JobMilestone } from "@/types/jobMilestone";
+import { MessageLoadingCtx } from "./messageLoadingContext";
 
 const defaultProvider: NotificationContextType = {
     notifications: [],
@@ -30,17 +32,20 @@ export const NotificationProvider = ({ children }: Props) => {
     const [notificationsError, setNotificationsError] = useState<string>(defaultProvider.notificationsError);
     const notificationSocket = useSocket();
     const { userInfo } = useContext(UserInfoCtx);
-    const { projectInfoLoadingState } = useContext(ProjectInfoLoadingCtx);
+    const { messageLoadingState } = useContext(MessageLoadingCtx);
     const { setnotificationLoadingState } = useContext(NotificationLoadingCtx);
     const { jobMilestonesInfo, setJobMilestonesInfo, jobsInfo, setJobsInfo, gigsInfo, setGigsInfo } = useProjectInfo();
     const { conversationsInfo, setConversationsInfo } = useContext(ConversationsInfoCtx);
+
+    const [milestonesInfo, setMilestonesInfo] = useState<JobMilestone[]>([]);
     
     const init = async () => {
-        if(projectInfoLoadingState === "success") {
+        if(messageLoadingState === "success") {
             setnotificationLoadingState("pending");
             const notifications = await getNotificationsByUserIdWithFilters(userInfo.id, false);
             if(notifications.success) {
                 setNotifications(notifications.data ?? []);
+                setMilestonesInfo(jobMilestonesInfo ?? []);
             } else {
                 setNotificationsError(notifications.error ?? 'Failed to get notifications');
             }
@@ -52,7 +57,7 @@ export const NotificationProvider = ({ children }: Props) => {
 
     useEffect(() => {
         init();
-    }, [projectInfoLoadingState]);
+    }, [messageLoadingState]);
 
     useEffect(() => {
         console.log("test-notifications", notifications);
@@ -65,17 +70,22 @@ export const NotificationProvider = ({ children }: Props) => {
                 console.log("test-notification", notification);
                 setNotifications((prev) => [...prev, notification]);
                 if (notification.entity_type === NotificationEntity.milestone) {
-                    const updatedMilestoneInfo = await getJobMilestoneById(notification.entity_id);
+                    const updatedMilestoneInfo = await getJobMilestoneById(notification.entity_id);                    
                     if (updatedMilestoneInfo.success) {
-                        jobMilestonesInfo.forEach((jobMilestone) => {
-                            if(jobMilestone.id === notification.entity_id) {
-                                jobMilestone.status = updatedMilestoneInfo.data.status;
-                            }
-                        });
-                        setJobMilestonesInfo(jobMilestonesInfo);
+                        if(notification.type === NotificationType.milestoneStarted){
+                            console.log("test-before-update", milestonesInfo);
+                            setJobMilestonesInfo([...milestonesInfo, updatedMilestoneInfo.data ?? []]);
+                        } else {
+                            console.log("test-before-update", milestonesInfo);
+                            milestonesInfo.forEach((jobMilestone) => {
+                                if(jobMilestone.id === notification.entity_id) {
+                                    jobMilestone.status = updatedMilestoneInfo.data.status;
+                                }
+                            });
+                            setMilestonesInfo(milestonesInfo);
+                        }
                     }
 
-                    console.log("test-jobMilestonesInfo", jobMilestonesInfo);
                 }
                 if(notification.entity_type === NotificationEntity.job) {
                     if(notification.type === NotificationType.jobPosted) {
@@ -122,7 +132,7 @@ export const NotificationProvider = ({ children }: Props) => {
                             setConversationsInfo([]);
                         }
                     }
-                }
+                }                
             });
         }
     }, [notificationSocket.isConnected]);

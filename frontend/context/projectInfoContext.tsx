@@ -104,12 +104,12 @@ export const ProjectInfoProvider = ({ children }: Props) => {
     }, [userLoadingState]);
 
     useEffect(() => {
-        console.log("test-jobsInfo", jobsInfo);
-        console.log("test-gigsInfo", gigsInfo);
-        console.log("test-bidsInfo", bidsInfo);
-        console.log("test-jobApplicationsInfo", jobApplicationsInfo);
+        // console.log("test-jobsInfo", jobsInfo);
+        // console.log("test-gigsInfo", gigsInfo);
+        // console.log("test-bidsInfo", bidsInfo);
+        // console.log("test-jobApplicationsInfo", jobApplicationsInfo);
         console.log("test-jobMilestonesInfo", jobMilestonesInfo);
-    }, [jobsInfo]);
+    }, [jobsInfo, gigsInfo, bidsInfo, jobApplicationsInfo, jobMilestonesInfo]);
 
     return (
         <ProjectInfoCtx.Provider value={{ jobsInfo, setJobsInfo, gigsInfo, setGigsInfo, bidsInfo, setBidsInfo, jobApplicationsInfo, setJobApplicationsInfo, jobMilestonesInfo, setJobMilestonesInfo, projectInfoError, setProjectInfoError }}>
