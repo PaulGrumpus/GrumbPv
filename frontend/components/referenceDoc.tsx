@@ -210,9 +210,9 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
 
     return (
         <div>
-            <h1 className="text-display font-bold text-black pb-10.25">Project Agreement Form</h1>
-            <div className="flex gap-8">
-                <div className="w-[53.87%] max-w-full flex flex-col gap-6">
+            <h1 className="lg:text-display text-title font-bold text-black lg:pb-10.25 pb-6">Project Agreement Form</h1>
+            <div className="flex lg:flex-row flex-col gap-8">
+                <div className="lg:w-[53.87%] w-full max-w-full flex flex-col gap-6">
                     <div className="flex flex-col gap-2">
                         <p className='text-normal font-medium text-[#8F99AF] text-left'>Project Title</p>
                         <input
@@ -328,7 +328,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                             )}
                         </div>
                     </div>
-                    <div className="flex gap-2.5">
+                    <div className="flex lg:flex-row flex-col gap-2.5">
                         <div className="flex-1" ref={startDatePickerRef}>
                             <p className='text-normal font-regular text-[#8F99AF] text-left pb-2'>Start Date</p>
                             <div className='relative'>
@@ -433,7 +433,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                     {error && (
                         <p className="text-normal font-regular text-red-500 text-left">{error}</p>
                     )}
-                    <div className="flex gap-2.5">
+                    <div className="flex lg:justify-start justify-center gap-2.5">
                         <Button
                             variant="secondary"
                             padding="px-10.5 py-3"
@@ -450,7 +450,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                         </Button>
                     </div>
                 </div>
-                <div className="max-w-[40.13%]">
+                <div className="lg:max-w-[40.13%] w-full max-w-full">
                     <p className="text-subtitle font-medium text-[#2F3DF6] text-left pb-2.5">Project Agreement Form  Preview</p>
                     <div className="border-l-3 border-[#7E3FF2] rounded-lg flex flex-col gap-6 p-6">
                         <div className="flex flex-col gap-2">

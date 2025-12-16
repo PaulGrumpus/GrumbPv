@@ -2,25 +2,21 @@ import SectionPlaceholder from "./sectionPlaceholder";
 import Button from "../button";
 import UserJobOrGigPost from "../userJobOrGigPost";
 import { useRouter } from "next/navigation";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { UserInfoCtx } from "@/context/userContext";
-import Loading from "../loading";
 import { Job, LocationType } from "@/types/jobs";
 import { EscrowBackendConfig } from "@/config/config";
-import { getJobsByClientId } from "@/utils/functions";
-import { toast } from "react-toastify";
 import { ConversationLoadingCtx } from "@/context/conversationLoadingContext";
 import { ProjectInfoCtx } from "@/context/projectInfoContext";
-import { ProjectInfoLoadingCtx } from "@/context/projectInfoLoadingContext";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
+import SmallLoading from "../smallLoading";
 
 const MyJobsSection = () => {
     const router = useRouter();
-    const { userInfo, setUserInfo } = useContext(UserInfoCtx);
+    const { userInfo } = useContext(UserInfoCtx);
     const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const { conversationLoadingState } = useContext(ConversationLoadingCtx);    
-    const { projectInfoLoadingState } = useContext(ProjectInfoLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [jobs, setJobs] = useState<Job[]>([]);
     const { jobsInfo } = useContext(ProjectInfoCtx);
@@ -33,7 +29,8 @@ const MyJobsSection = () => {
                 return;
             }
             if (userInfo && userInfo.id) {
-                const loadJobs = () => {
+                const loadJobs = async () => {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     setJobs(jobsInfo.sort((a: Job, b: Job) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
                     setLoading("success");
                 };
@@ -53,7 +50,7 @@ const MyJobsSection = () => {
     }, [jobsInfo]);
 
     if (loading === "pending") {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 
     if (loading === "success") {
@@ -109,7 +106,7 @@ const MyJobsSection = () => {
             </div>
         )
     } else {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 }
 

@@ -9,9 +9,9 @@ import { toast } from "react-toastify";
 import { UserInfoCtx } from "@/context/userContext";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { useRouter } from "next/navigation";
-import Loading from "../loading";
 import { createGig } from "@/utils/functions";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
+import SmallLoading from "../smallLoading";
 
 const uploadImage = "/Grmps/upload.svg";
 
@@ -30,7 +30,7 @@ const CreateGigSection = () => {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
-    const { userInfo, setUserInfo } = useContext(UserInfoCtx);
+    const { userInfo } = useContext(UserInfoCtx);
     const [error, setError] = useState("");
     const [checkError, setCheckError] = useState(false);
     const router = useRouter();
@@ -154,7 +154,7 @@ const CreateGigSection = () => {
             }
             if (userInfo && userInfo.id) {
                 const loadCreateGig = async () => {
-                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
                 if(notificationLoadingState === "success") {
@@ -167,7 +167,7 @@ const CreateGigSection = () => {
     }, [userInfo, userLoadingState, router, notificationLoadingState])
 
     if (loading === "pending") {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 
     if (loading === "success") {
@@ -319,7 +319,7 @@ const CreateGigSection = () => {
             </div>
         )
     } else {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 }
 export default CreateGigSection;

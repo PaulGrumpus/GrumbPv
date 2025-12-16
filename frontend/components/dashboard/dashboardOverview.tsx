@@ -1,7 +1,7 @@
 'use client'
 
 import DashboardPosts from "@/components/dashboardPosts";
-import Loading from "@/components/loading";
+import SmallLoading from "@/components/smallLoading";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { UserInfoCtx } from "@/context/userContext";
 import Image from "next/image";
@@ -38,12 +38,12 @@ const DashboardOverview = () => {
             if (userInfo && userInfo.id) {
                 const loadDashboardPosts = async () => {
 
-                    setOpenedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.status === JobMilestoneStatus.FUNDED || jobMilestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.status === JobMilestoneStatus.APPROVED || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE));
+                    setOpenedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.status === JobMilestoneStatus.FUNDED || jobMilestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.status === JobMilestoneStatus.APPROVED || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE).sort((a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
 
-                    setFinishedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.RELEASED || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.status === JobMilestoneStatus.CANCELLED));
+                    setFinishedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.RELEASED || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.status === JobMilestoneStatus.CANCELLED).sort((a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
                     
                     // await getGigsPerFreelancerId(userInfo.id);
-                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 };
                 if(notificationLoadingState === "success") {
@@ -61,19 +61,19 @@ const DashboardOverview = () => {
     }, [openedJobs, finishedJobs, showAllOpenJobs, showAllCompletedJobs]);
 
     useEffect(() => {
-        setOpenedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.status === JobMilestoneStatus.FUNDED || jobMilestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.status === JobMilestoneStatus.APPROVED || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE));
+        setOpenedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.status === JobMilestoneStatus.FUNDED || jobMilestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.status === JobMilestoneStatus.APPROVED || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE).sort((a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
 
-        setFinishedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.RELEASED || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.status === JobMilestoneStatus.CANCELLED));
+        setFinishedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.RELEASED || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.status === JobMilestoneStatus.CANCELLED).sort((a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
     }, [jobMilestonesInfo]);
 
     if (loading === "pending") {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 
     if (loading === "success") {
         return (
             <div>
-                <h1 className="text-display font-bold text-black pb-6">Dashboard</h1>
+                <h1 className="lg:text-display text-title lg:text-left text-center font-bold text-black pb-6">Dashboard</h1>
                 <p className="text-normal font-regular text-black pb-20">
                     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in
                     eros elementum tristique.
@@ -88,7 +88,7 @@ const DashboardOverview = () => {
                                         setOpenJobs(!openJobs);
                                     }}
                                 >
-                                    <h2 className="text-title font-bold text-black">Open Jobs</h2>
+                                    <h2 className="lg:text-title text-subtitle font-bold text-black">Open Jobs</h2>
                                     <div className="w-6 h-6">
                                         <Image
                                             src="/Grmps/chevronUp.svg"
@@ -138,7 +138,7 @@ const DashboardOverview = () => {
                                         setCompletedJobs(!completedJobs);
                                     }}
                                 >
-                                    <h2 className="text-title font-bold text-black">Completed Jobs</h2>
+                                    <h2 className="lg:text-title text-subtitle font-bold text-black">Completed Jobs</h2>
                                     <div className="w-6 h-6">
                                         <Image
                                             src="/Grmps/chevronUp.svg"
@@ -183,7 +183,7 @@ const DashboardOverview = () => {
             </div>
         );
     } else {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 };
 

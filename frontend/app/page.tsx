@@ -19,14 +19,18 @@ const Home = () => {
   useEffect(() => {
     if(userLoadingState === "failure") {
         const load = async () => {
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
             setLoading("success");
         }
         load();
     }
     if(userLoadingState === "success") {
       if(notificationLoadingState === "success") {
-        setLoading("success");
+        const load = async () => {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          setLoading("success");
+        }
+        load();
       }
     }
   }, [userLoadingState, notificationLoadingState])
@@ -40,7 +44,7 @@ const Home = () => {
       <div className="bg-white min-h-screen">
         <div className="container mx-auto">
           <div className="relative">
-            <div className="absolute top-60 left-0 w-full h-full">
+            <div className="absolute top-80 left-0 w-full h-full">
               <div className="flex flex-col items-center justify-center gap-6">
                 <div className="w-50 h-50 rounded-full overflow-hidden">
                   <Image src="/Grmps/grmps.jpg" alt="Grmps" width={100} height={100} className="w-full h-full object-cover" />

@@ -95,8 +95,6 @@ const ApplicationPost = ({ freelancer, id, cover_letter_md, bid_amount, token_sy
                 pauseOnHover: true,
             });
 
-            console.log("-------------------test-conversation", conversation);
-
             const existingConversationInfo = conversationsInfo.find((conversationInfo) => conversationInfo.conversation.id === conversation.data.id);
 
             if(existingConversationInfo) {
@@ -177,7 +175,7 @@ const ApplicationPost = ({ freelancer, id, cover_letter_md, bid_amount, token_sy
             <div className="linear-border__inner rounded-[0.4375rem] p-6 bg-white">
                 <div className="text-black">
                     <div className='flex items-center justify-center'>
-                        <div className="w-25 h-25 rounded-full overflow-hidden">
+                        <div className="w-25 h-25 rounded-full overflow-hidden mb-4">
                             <Image 
                                 src={freelancer?.image_id ? EscrowBackendConfig.uploadedImagesURL + freelancer.image_id : EscrowBackendConfig.uploadedImagesURL + "/default.jpg"}
                                 alt="job image"

@@ -161,8 +161,8 @@ const ModalTemplate = ({
                         {customButton ? (
                             null
                         ) : (
-                            <div className="flex items-center justify-end gap-3 px-6 pb-6">
-                                <Button onClick={onAction} padding="px-6 py-2">
+                            <div className="flex items-center lg:justify-end justify-center gap-3 px-6 pb-6">
+                                <Button onClick={onAction} padding="lg:px-6 px-20 py-2">
                                     {actionLabel}
                                 </Button>
                             </div>

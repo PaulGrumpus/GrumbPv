@@ -30,7 +30,7 @@ const JobsPage = () => {
                 if(result.success) {
                     setJobs(result.data.sort((a: Job, b: Job) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()) ?? []);
                 }
-                await new Promise(resolve => setTimeout(resolve, 3000));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 setLoading("success");
             }
             loadJobs();

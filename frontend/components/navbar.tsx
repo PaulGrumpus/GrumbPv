@@ -323,7 +323,7 @@ const Navbar = () => {
 
             {/* Mobile footer nav */}
             {isMobile && (
-                <div className="fixed top-0 left-0 right-0 z-50 border-t border-[#d6d6d6] bg-white px-4 py-3 lg:hidden">
+                <div className="fixed top-0 left-0 right-0 z-50 border-t border-[#d6d6d6] bg-white px-4 py-3 shadow-xl lg:hidden">
                     <div className="flex items-center justify-between">
                         <button
                             className="flex items-center gap-2 cursor-pointer" 
@@ -395,7 +395,7 @@ const Navbar = () => {
                     />
 
                     {/* Drawer */}
-                    <div className="relative h-full w-full max-w-sm bg-black/40 backdrop-blur-xl shadow-2xl transform transition-transform duration-300 translate-x-0">
+                    <div className="relative h-full w-full max-w-[90%] bg-black/40 backdrop-blur-xl shadow-2xl transform transition-transform duration-300 translate-x-0">
                     
                     {/* Header */}
                     <div className="flex items-center justify-between bg-white py-3 px-5">

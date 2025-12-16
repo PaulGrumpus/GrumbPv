@@ -24,7 +24,7 @@ const GigsPage = () => {
                 if(result.success) {
                     setGigs(result.data.sort((a: Gig, b: Gig) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()) ?? []);
                 }
-                await new Promise(resolve => setTimeout(resolve, 3000));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 setLoading("success");
             }
             loadGigs();

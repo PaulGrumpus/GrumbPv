@@ -172,10 +172,7 @@ const ChatPageContent = () => {
                         handleChatClick(targetConversationId);
                     }
 
-                    console.log("test-conversationsInfo", conversationsInfo);
-                    console.log("test-messagesInfo", messagesInfo);
-
-                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
                 if(notificationLoadingState === "success") {

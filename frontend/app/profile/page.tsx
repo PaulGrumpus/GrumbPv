@@ -298,7 +298,7 @@ const ProfilePage = () => {
                     setUserRole(userInfo.role || "")
                     setUserEmail(userInfo.email || "")
                     setUserWaletAddress(isConnected ? userInfo.address || null : null)
-                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
                 if(notificationLoadingState === "success") {
