@@ -23,4 +23,12 @@ router.post('/:id',
     notificationController.updateNotification.bind(notificationController)
 );
 
+router.post('/mark-all-as-read/:user_id', 
+    [
+        param('user_id').isString().notEmpty(),
+    ],
+    validate([param('user_id')]),
+    notificationController.markAllNotificationsAsRead.bind(notificationController)
+);
+
 export default router;

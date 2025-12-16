@@ -13,7 +13,7 @@ import { toast } from "react-toastify";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { NotificationCtx } from "@/context/notificationContext";
 import { Notification } from "@/types/notification";
-import { formatHourMinute, updateNotification } from "@/utils/functions";
+import { formatHourMinute, markAllNotificationsAsRead, updateNotification } from "@/utils/functions";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const chatIcon = "/Grmps/chat.svg";
@@ -556,6 +556,7 @@ type NotificationDropdownMenuProps = {
 const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdownMenuProps>(({ notifications }, ref) => {
     const { setNotifications } = useContext(NotificationCtx);
     const [unreadNotifications, setUnreadNotifications] = useState<Notification[]>([]);
+    const { userInfo } = useContext(UserInfoCtx);
 
     const formatDate = (value?: Date | string) => {
         if (!value) return null;
@@ -574,6 +575,10 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
 
     const handleMarkAsRead = async (notificationId: string) => {
         try {
+            const updatedNotifications = notifications.map((notification) =>
+                notification.id === notificationId ? { ...notification, read_at: new Date().toISOString() } : notification
+            );
+            setNotifications(updatedNotifications);
             await updateNotification(notificationId, new Date());
         }
         catch (error) {
@@ -587,13 +592,30 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
         }
     };
 
+    const handleMarkAllAsRead = async () => {
+        setNotifications(notifications.map((notification) => ({ ...notification, read_at: new Date().toISOString() })));
+        await markAllNotificationsAsRead(userInfo.id);
+    }
+
     return (
         <div
             ref={ref}
             className="absolute right-0 mt-2 w-72 rounded-lg border border-[#8F99AF66] bg-white shadow-md z-50 transition-all duration-200"
         >
-            <div className="border-b px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-500 text-left">
-                Notifications
+            <div className="border-b px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-500 text-left flex justify-between">
+                <p className="text-left">Notifications</p>
+                {unreadNotifications.length > 0 && (
+                    <div>
+                        <Image 
+                            src="/Grmps/received.svg" 
+                            alt="Mark all as read" 
+                            width={24} 
+                            height={24} 
+                            className="h-full w-full object-cover"
+                            onClick={handleMarkAllAsRead}
+                        />
+                    </div>
+                )}
             </div>
             <ul className="max-h-72 overflow-y-auto decorate-scrollbar notification-scrollbar">
                 {unreadNotifications.length === 0 && (

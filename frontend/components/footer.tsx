@@ -177,20 +177,20 @@ const Footer = () => {
                 </div>
                 <div className="border-t border-t-black pt-4 pb-4"></div>
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
-                        <p className="text-small font-roboto font-regular">© 2025 Grumpus. All rights reserved.</p>
-                        <div className="flex flex-col flex-wrap gap-4 lg:gap-6 lg:flex-row">
-                            {footerUnderlinedLinks.map((link) => (
-                                <a href={link.href} className="text-small font-roboto font-regular underline" key={link.title}>{link.title}</a>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 order-1 lg:order-3 justify-start lg:justify-end">
                         {footerSocialIcons.map((icon) => (
                             <a href={icon.href} className="text-small font-roboto font-regular" key={icon.alt}>
                                 <Image src={icon.src} alt={icon.alt} width={24} height={24} />
                             </a>
                         ))}
+                    </div>
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6 order-2 lg:order-1">
+                        <p className="text-small font-roboto font-regular order-2 lg:order-1 text-left">© 2025 Grumpus. All rights reserved.</p>
+                        <div className="flex flex-col flex-wrap gap-4 lg:gap-6 lg:flex-row order-1 lg:order-2 text-left">
+                            {footerUnderlinedLinks.map((link) => (
+                                <a href={link.href} className="text-small font-roboto font-regular underline self-start" key={link.title}>{link.title}</a>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

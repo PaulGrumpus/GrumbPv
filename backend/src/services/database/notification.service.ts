@@ -95,6 +95,36 @@ export class NotificationService {
             throw new AppError('Error updating notification', 500, 'NOTIFICATION_UPDATE_FAILED');
         }
     }
+
+
+    public async markAllNotificationsAsRead(userId: string): Promise<number> {
+        try {
+            const result = await this.prisma.notifications.updateMany({
+                where: {
+                    user_id: userId,
+                    read_at: null,
+                },
+                data: {
+                    read_at: new Date(),
+                },
+            });
+        
+            return result.count;
+      
+        } catch (error) {
+            logger.error('Error marking all notifications as read', { error });
+        
+            if (error instanceof AppError) {
+                throw error;
+            }
+        
+            throw new AppError(
+                'Error marking all notifications as read',
+                500,
+                'NOTIFICATIONS_MARK_ALL_AS_READ_FAILED'
+            );
+        }
+    }
 }
 
 export const notificationService = new NotificationService();

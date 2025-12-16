@@ -112,7 +112,7 @@ const ModalTemplate = ({
                         aria-modal="true"
                         aria-labelledby={dialogTitleId}
                         aria-describedby={subtitle ? subtitleId : undefined}
-                        className={`${linearBorder ? 'linear-border__inner rounded-[0.4375rem]' : ''} rounded-3xl bg-white text-black shadow-[0_30px_80px_rgba(0,0,0,0.15)] ${className} min-h-full lg:min-h-auto`}
+                        className={`${linearBorder ? 'linear-border__inner rounded-[0.4375rem]' : ''} ${loginModal ? 'rounded-none' : 'rounded-3xl'} bg-white text-black shadow-[0_30px_80px_rgba(0,0,0,0.15)] ${className} min-h-full lg:min-h-auto`}
                     >
                         {title ? (
                             <div className="flex flex-col gap-6">
