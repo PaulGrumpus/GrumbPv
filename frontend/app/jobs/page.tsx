@@ -88,15 +88,17 @@ const JobsPage = () => {
                 <ModalTemplate
                     isOpen={isOpen}
                     onClose={() => setIsOpen(false)}
-                    title={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.title ?? "" : ""}
-                    subtitle={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.description_md ?? "" : ""}
+                    // title={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.title ?? "" : ""}
+                    // subtitle={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.description_md ?? "" : ""}
                     actionLabel=""
                     onAction={() => {}}
-                    className="p-10.5"
-                    customButton={true}                
+                    className="px-4 py-3 lg:p-10.5"
+                    customButton={true}         
                 >
                     <div className="mt-6">
                         <ApplyJob
+                            jobTitle={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.title ?? "" : ""}
+                            jobDescription={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.description_md ?? "" : ""}
                             jobId={selectedJobId.toString()}
                             freelancerId={userInfo.id}
                             clickHandler={() => {

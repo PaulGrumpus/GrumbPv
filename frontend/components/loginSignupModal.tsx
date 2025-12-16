@@ -610,6 +610,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
             dismissible={!registerProcessing}
             linearBorder={false}
             closeXIcon={false}
+            loginModal={true}
             children={
                 <div>
                     {registerProcessing ? (
@@ -709,7 +710,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                         </div>
                     ) : 
                     <div className="lg:block relative min-h-screen lg:min-h-auto">
-                        <div className="pt-16 flex flex-col gap-4 lg:mt-12">
+                        <div className="pt-16 lg:pt-0 flex flex-col gap-4 lg:mt-12">
                             <h1 className="text-center text-[1.5625rem] leading-7.5 font-medium">{isRegistered ? "Login" : "Register"}</h1>
                             <div className="flex gap-3.5 justify-center">
                                 <p className="text-normal font-regular">{isRegistered ? "Don't have an account yet?" : "Have an account?"}</p>

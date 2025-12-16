@@ -45,8 +45,8 @@ const Home = () => {
                 <div className="w-50 h-50 rounded-full overflow-hidden">
                   <Image src="/Grmps/grmps.jpg" alt="Grmps" width={100} height={100} className="w-full h-full object-cover" />
                 </div>
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <h1 className="text-center lg:text-left text-display font-bold text-[#7E3FF2]">Welcome to Grumpus</h1>
+                <div className="flex flex-col items-center justify-center gap-2 lg:p-0 px-2">
+                  <h1 className="text-center lg:text-left lg:text-display text-title font-bold text-[#7E3FF2]">Welcome to Grumpus</h1>
                   <p className="text-center lg:text-left text-normal font-regular text-[#7E3FF2]">The platform for freelancers and clients (Beta Version)</p>
                 </div>
               </div>

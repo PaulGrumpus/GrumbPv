@@ -65,17 +65,17 @@ const MyJobsSection = () => {
                 />
                 {jobs.length > 0 ? (
                     <div>
-                        <div className="flex justify-end">
-                            <div className="w-45 mb-8 flex justify-end">
+                        <div className="flex lg:justify-end justify-center">
+                            <div className="w-50 mb-8 flex lg:justify-end justify-center">
                                 <Button
                                     padding='px-7 py-3'
                                     onClick={() => router.push("/dashboard?view=create-job")}
                                 >
-                                    <p className='text-normal font-regular'>+ Create Job</p>
+                                    <p className='text-normal font-regular'>+ Create New Job</p>
                                 </Button>
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-8">
+                        <div className="grid lg:grid-cols-2 grid-cols-1 gap-8">
                             {jobs.map((job) => (
                                 <UserJobOrGigPost
                                     key={job.id}
@@ -102,7 +102,7 @@ const MyJobsSection = () => {
                         >
                             <p className='text-normal font-regular'
                                 onClick={() => router.push("/dashboard?view=create-job")}
-                            >+ Create Job</p>
+                            >+ Create New Job</p>
                         </Button>
                     </div>
                 ))}

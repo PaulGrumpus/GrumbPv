@@ -39,15 +39,9 @@ const menuItems = [
     },
 ]
 
-const mobileMenuItems = [
-    { label: "Freelance Jobs", href: "/jobs" },
-    { label: "Post Job", href: "/dashboard?view=create-job" },
-    { label: "Gigs", href: "/gigs" },
-];
-
 const Navbar = () => {
     const router = useRouter();
-    const { userInfo } = useContext(UserInfoCtx);
+    const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const { notifications } = useContext(NotificationCtx);
     const [userRole, setUserRole] = useState("client");
     const [loggedIn, setLoggedIn] = useState(false);
@@ -67,6 +61,18 @@ const Navbar = () => {
 
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
     const [ isMobile, setIsMobile ] = useState(true);
+    const { setuserLoadingState } = useContext(UserLoadingCtx);
+
+    const mobileMenuItems = 
+    userRole === "freelancer" ? [
+        { label: "Featured Jobs", href: "/jobs" },
+        { label: "Gigs", href: "/gigs" },
+        { label: "Post Gig", href: "/dashboard?view=create-gig" },
+    ] : [
+        { label: "Featured Gigs", href: "/gigs" },
+        { label: "Jobs", href: "/jobs" },
+        { label: "Post Job", href: "/dashboard?view=create-job" },
+    ];
 
     useEffect(() => {
         setIsMobile(window.innerWidth < 768);
@@ -135,6 +141,34 @@ const Navbar = () => {
 
     const showPlaceholder = loggedIn && notificationLoadingState !== "success";
 
+    const handleLogOut = () => {
+        setuserLoadingState("pending");
+        window.localStorage.removeItem('token');
+        toast.success("Logged out successfully", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        });
+        setUserInfo({
+            id: '',
+            address: '',
+            chain: '',
+            email: '',
+            role: '',
+            display_name: '',
+            bio: '',
+            country_code: '',
+            is_verified: false,
+            image_id: '',
+            created_at: '',
+            updated_at: ''
+        });
+        setuserLoadingState("pending");        
+        router.push('/');
+    }
+
     return (
         <div>
             {!isMobile && (
@@ -162,7 +196,7 @@ const Navbar = () => {
                                         <div className="flex gap-8 text-normal font-regular text-black">    
                                             <Link className="hover:text-purple uppercase" href="/jobs">Featured Jobs</Link>
                                             <Link className="hover:text-purple uppercase" href="/gigs">Gigs</Link>
-                                            <Link className="hover:text-purple" href="/dashboard?view=create-gig">Post Gig</Link>
+                                            <Link className="hover:text-purple uppercase" href="/dashboard?view=create-gig">Post Gig</Link>
                                         </div>
                                     ) : (
                                         <div className="flex gap-8 text-normal font-regular text-black">    
@@ -291,8 +325,9 @@ const Navbar = () => {
             {isMobile && (
                 <div className="fixed top-0 left-0 right-0 z-50 border-t border-[#d6d6d6] bg-white px-4 py-3 lg:hidden">
                     <div className="flex items-center justify-between">
-                        <div
-                            className="flex items-center gap-2 cursor-pointer"                            
+                        <button
+                            className="flex items-center gap-2 cursor-pointer" 
+                            onClick={() => router.push("/profile")}
                         >
                             <div className="w-8 h-8 overflow-hidden rounded-full">
                                 <Image
@@ -308,7 +343,7 @@ const Navbar = () => {
                             ) : (
                                 <p className="text-normal font-regular text-black"></p>
                             )}
-                        </div>
+                        </button>
                         <div className="flex items-center">
                             <button
                                 type="button"
@@ -404,16 +439,25 @@ const Navbar = () => {
                         ))}
 
                         {/* Login Button */}
-                        <button
-                            onClick={() => {
-                                router.push("/");
-                                setLoginSignupModalOpen(true);
-                                setMobileMenuOpen(false);
-                            }}
-                            className="mt-4 w-full rounded-xl bg-linear-to-r from-[#5B5BFF] to-[#7E3FF2] py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:opacity-90"
-                        >
-                            Login
-                        </button>
+                        {!loggedIn ? (
+                            <button
+                                onClick={() => {
+                                    router.push("/");
+                                    setLoginSignupModalOpen(true);
+                                    setMobileMenuOpen(false);
+                                }}
+                                className="mt-4 w-full rounded-xl bg-linear-to-r from-[#5B5BFF] to-[#7E3FF2] py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:opacity-90"
+                            >
+                                Login
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleLogOut}
+                                className="mt-4 w-full rounded-xl bg-linear-to-r from-[#5B5BFF] to-[#7E3FF2] py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:opacity-90"
+                            >
+                                Logout
+                            </button>
+                        )}
                     </div>
                     </div>
                 </div>

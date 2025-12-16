@@ -228,7 +228,7 @@ const DashboardPageContent = () => {
 
     if (loading === "success") {
         return (
-            <div className="flex gap-20">
+            <div className="flex lg:flex-row flex-col lg:gap-20 gap-6">
                 <Sidebar
                     sidebarItems={userRole === "freelancer" ? freelancerSidebarItems : clientSidebarItems}
                     selectedLabel={selectedSidebarLabel}

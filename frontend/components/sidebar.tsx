@@ -54,6 +54,21 @@ const Sidebar = ({ sidebarItems, selectedLabel, onSelect }: SidebarProps) => {
         }));
     };
 
+    const flattenSidebarItems = (items: SidebarItem[]): SidebarItem[] => {
+        const result: SidebarItem[] = [];
+      
+        for (const item of items) {
+            if (!item.subItems) {
+                result.push(item);
+            } else {
+                // Parent label is NOT clickable in mobile
+                result.push(...item.subItems);
+            }
+        }
+      
+        return result;
+    };
+
     const renderItems = (items: SidebarItem[], level = 0) =>
         items.map((item) => {
             const hasChildren = Boolean(item.subItems && item.subItems.length);
@@ -123,8 +138,53 @@ const Sidebar = ({ sidebarItems, selectedLabel, onSelect }: SidebarProps) => {
         });
 
     return (
-        <div className="px-4 py-6 min-w-58.5">
-            <ul>{renderItems(sidebarItems)}</ul>
+        <div className="lg:px-4 lg:py-6 p-0 min-w-58.5">
+            <ul
+                className="hidden lg:block"
+            >
+                {renderItems(sidebarItems)}
+            </ul>
+            <div className="block lg:hidden px-2 py-3">
+                <div className="flex flex-wrap gap-3">
+                    {flattenSidebarItems(sidebarItems).map((item) => {
+                        const isActive = activeLabel === item.label;
+
+                        return (
+                            <button
+                            key={item.label}
+                            onClick={() => handleClick(item)}
+                            className={`
+                                    flex items-center gap-2
+                                    rounded-full px-2.5 py-1
+                                    text-normal font-regular text-black
+                                    border transition
+                                ${
+                                isActive
+                                    ? "bg-[#2F3DF611] border-[#2F3DF6]"
+                                    : "bg-white border-[#2F3DF6] hover:bg-[#2F3DF611]"
+                                }
+                            `}
+                                >
+                                {item.icon && (
+                                    <Image
+                                        src={item.icon}
+                                        alt={item.label}
+                                        width={24}
+                                        height={24}
+                                    />
+                                )}
+                                    {item.label}
+
+                                {typeof item.count === "number" && item.count > 0 && (
+                                    <span className="ml-1 rounded-full border border-black px-2 text-xs">
+                                        {item.count}
+                                    </span>
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
         </div>
     )
 }

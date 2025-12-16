@@ -64,17 +64,17 @@ const MyGigsSection = () => {
                 />
                 {gigs.length > 0 ? (
                     <div>
-                        <div className="flex justify-end">
-                            <div className="w-45 mb-8 flex justify-end">
+                        <div className="flex lg:justify-end justify-center">
+                            <div className="w-45 mb-8 flex lg:justify-end justify-center">
                                 <Button
                                     padding='px-7 py-3'
                                     onClick={() => router.push("/dashboard?view=create-gig")}
                                 >
-                                    <p className='text-normal font-regular'>+ Create Gig</p>
+                                    <p className='text-normal font-regular'>+ Create New Gig</p>
                                 </Button>
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-8">
+                        <div className="grid lg:grid-cols-2 grid-cols-1 gap-8">
                             {gigs.map((gig) => (
                                 <UserJobOrGigPost
                                     key={gig.id}
@@ -99,7 +99,7 @@ const MyGigsSection = () => {
                         >
                             <p className='text-normal font-regular'
                                 onClick={() => router.push("/dashboard?view=create-gig")}
-                            >+ Create Gig</p>
+                            >+ Create New Gig</p>
                         </Button>
                     </div>
                 )}

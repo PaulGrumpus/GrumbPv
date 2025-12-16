@@ -25,6 +25,7 @@ interface ModalTemplateProps {
     customButton?: boolean;
     linearBorder?: boolean;
     closeXIcon?: boolean;
+    loginModal?: boolean;
 }
 
 const ModalTemplate = ({
@@ -37,10 +38,11 @@ const ModalTemplate = ({
     onClose,
     dismissible = true,
     className = '',
-    widthClassName = 'w-300',
+    widthClassName = 'lg:w-300 w-full',
     customButton = false,
     linearBorder = true,
     closeXIcon = true,
+    loginModal = false
 }: ModalTemplateProps) => {
     const dialogTitleId = useId();
     const subtitleId = `${dialogTitleId}-subtitle`;
@@ -100,10 +102,10 @@ const ModalTemplate = ({
 
     return (
         <div
-            className="fixed inset-0 z-50 overflow-y-auto bg-white/40 backdrop-blur-sm"
+            className="fixed inset-0 z-50 overflow-y-auto bg-black/20 lg:bg-white/40 backdrop-blur-sm"
             onClick={handleOverlayClick}
         >
-            <div className="flex min-h-full lg:items-center lg:justify-center p-0 md:px-8 md:py-16">
+            <div className={`flex min-h-full lg:items-center lg:justify-center ${loginModal ? `p-0` : `px-4 py-6`} md:px-8 md:py-16`}>
                 <div className={`${linearBorder ? 'linear-border rounded-lg p-0.25' : ''} ${widthClassName}`}>
                     <section
                         role="dialog"
@@ -115,19 +117,19 @@ const ModalTemplate = ({
                         {title ? (
                             <div className="flex flex-col gap-6">
                                 <div className="flex items-start justify-between gap-6">
-                                    <h2 id={dialogTitleId} className="text-display font-bold max-w-[90%]">
+                                    <h2 id={dialogTitleId} className="lg:text-display text-title lg:text-left text-center font-bold max-w-[90%]">
                                         {title}
                                     </h2>
                                     {canDismiss ? (
-                                    <button
-                                        type="button"
-                                        aria-label="Close modal"
-                                        onClick={onClose}
-                                        className="text-gray-500 transition-colors hover:text-gray-700 cursor-pointer p-2"
-                                    >
-                                        <XMarkIcon className="w-10 h-10" />
-                                    </button>
-                                ) : null}
+                                        <button
+                                            type="button"
+                                            aria-label="Close modal"
+                                            onClick={onClose}
+                                            className="text-gray-500 transition-colors hover:text-gray-700 cursor-pointer p-0 lg:p-2"
+                                        >
+                                            <XMarkIcon className="w-10 h-10" />
+                                        </button>
+                                    ) : null}
                                 </div>
                                 {subtitle ? (
                                     <p
