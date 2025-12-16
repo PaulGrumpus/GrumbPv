@@ -270,7 +270,7 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
     }
 
     return (
-        <div className="py-3 px-3.75 bg-linear-to-b from-[#7E3FF2] to-[#6A32E8] rounded-xl shadow-[0_10px_35px_rgba(55,0,132,0.35)]">
+        <div className="py-3 px-3.75 bg-linear-to-b from-[#7E3FF2] to-[#6A32E8] rounded-xl shadow-[0_10px_35px_rgba(55,0,132,0.35)] flex justify-center lg:block ">
             <div className="max-w-62.5 w-full">
                 <div className="flex items-center justify-center mb-6 w-full mt-6">
                     <p className="text-light-large font-bold text-[#DEE4F2]">Project Status</p>

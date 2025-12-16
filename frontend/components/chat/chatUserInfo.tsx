@@ -21,7 +21,7 @@ const ChatUserInfo = ({ user }: { user: User | null }) => {
                 <div
                     className="flex items-center justify-center flex-col w-full"
                 >
-                    <div className="w-25 h-25 rounded-full overflow-hidden mb-2">
+                    <div className="w-25 h-25 rounded-full overflow-hidden mb-2 mt-8">
                         <Image 
                             src={user? EscrowBackendConfig.uploadedImagesURL + user.image_id : EscrowBackendConfig.uploadedImagesURL + "/default.jpg"} 
                             alt="User Photo" 
@@ -34,7 +34,7 @@ const ChatUserInfo = ({ user }: { user: User | null }) => {
                     <div className="flex items-center justify-center bg-[#FFFFFF33] rounded-sm py-1 px-2.5 mb-3">
                         <p className="text-small font-regular text-[#DEE4F2]">{user? user.role : "No role"}</p>
                     </div>
-                    <div className="flex flex-col items-start gap-2">
+                    <div className="flex flex-col items-start gap-2 mb-8">
                         <div className="flex items-center justify-center py-2 px-2.5">
                             <p className="text-normal font-medium text-[#DEE4F2]">Joined: {user? formatDate(user.created_at) : "No created at"}</p>
                         </div>

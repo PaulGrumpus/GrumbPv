@@ -14,6 +14,7 @@ import { userLoadingState } from "@/types/loading";
 import SmallLoading from "../smallLoading";
 import { useProjectInfo } from "@/context/projectInfoContext";
 import { JobMilestoneStatus } from "@/types/jobMilestone";
+import MobileDrawer from "./mobileDrawer";
 
 interface ChatCombProps {
     sender: User;
@@ -28,14 +29,17 @@ interface ChatCombProps {
     onSendMessage: (message: Message) => void;
     onWritingMessage: (conversation_id: string) => void;
     onStopWritingMessage: (conversation_id: string) => void;
+    isMobile: boolean;
 }
 
-const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_id, clientName, acceptHandler, messages, isWriting, onSendMessage, onWritingMessage, onStopWritingMessage }: ChatCombProps) => {
+const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_id, clientName, acceptHandler, messages, isWriting, onSendMessage, onWritingMessage, onStopWritingMessage, isMobile }: ChatCombProps) => {
     const [jobMilestoneId, setJobMilestoneId] = useState<string | null>(null);
     const [ status, setStatus] = useState<number>(0);
     const [loading, setLoading] = useState<userLoadingState>("pending");
     const [ipfsUrl, setIpfsUrl] = useState<string | null>(null);
     const { jobMilestonesInfo } = useProjectInfo();
+    const [isProfileOpen, setProfileOpen] = useState(false);
+    const [isProjectInfoOpen, setProjectInfoOpen] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
@@ -97,8 +101,8 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
     }, [job_application_doc_id, jobMilestonesInfo]);
     
     return (
-        <div className="flex">
-            <div className="flex-1 w-[70%]">
+        <div className="lg:flex block w-full lg:w-auto">
+            <div className="flex-1 lg:w-[70%] w-full">
                 <ChatMain 
                     conversation_id={conversation_id}
                     sender={sender} 
@@ -108,9 +112,15 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
                     onSendMessage={onSendMessage}
                     onWritingMessage={onWritingMessage}
                     onStopWritingMessage={onStopWritingMessage}
+                    isMobile={isMobile}
+                    onMobileProfileClick={() => setProfileOpen(true)}
+                    onMobileProjectInfoClick={() => setProjectInfoOpen(true)}
                 />
             </div>
-            <div className="flex-end max-w-[30%]">
+            {/* <button onClick={() => setProfileOpen(true)}>
+                Open Profile
+            </button> */}
+            <div className="hidden lg:block flex-end max-w-[30%]">
                 <div className="flex flex-col gap-4.25 px-3.5 max-h-[calc(100vh-9rem)] overflow-y-auto hide-scrollbar">
                     <ChatUserInfo 
                         user={receiver} 
@@ -138,6 +148,46 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
                     )}
                 </div>
             </div>
+            <MobileDrawer
+                open={isProfileOpen}
+                onClose={() => setProfileOpen(false)}
+                slideDirection="down"
+            >
+                <div className="flex flex-col gap-4.25 max-h-[calc(100vh-9rem)] overflow-y-auto hide-scrollbar">
+                    <ChatUserInfo 
+                        user={receiver} 
+                    />
+                </div>
+            </MobileDrawer>
+            <MobileDrawer
+                open={isProjectInfoOpen}
+                onClose={() => setProjectInfoOpen(false)}
+                slideDirection="up"
+            >
+                <div className="flex flex-col gap-4.25 max-h-[calc(100vh-9rem)] overflow-y-auto hide-scrollbar">
+                    {loading === "pending" ? 
+                        <div className="flex items-center justify-center bg-[#7E3FF2] h-[60vh]">
+                            <SmallLoading />
+                        </div>
+                    : (
+                        <div>
+                            {!jobMilestoneId && <ChatProjectInfo 
+                                job={job} 
+                                clientName={job? clientName : "No client name"} 
+                                acceptHandler={() => acceptHandler(conversation_id)} 
+                            />}
+                            {jobMilestoneId && <ChatProjectStatus 
+                                user={sender}
+                                status={status}
+                                jobMilestoneId={jobMilestoneId} 
+                                conversationId={conversation_id} 
+                                jobApplicationDocId={job_application_doc_id} 
+                                ipfs={ipfsUrl}
+                            />}
+                        </div>
+                    )}
+                </div>
+            </MobileDrawer>
         </div>
     )
 }
