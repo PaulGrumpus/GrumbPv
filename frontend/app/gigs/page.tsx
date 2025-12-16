@@ -24,7 +24,7 @@ const GigsPage = () => {
                 if(result.success) {
                     setGigs(result.data.sort((a: Gig, b: Gig) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()) ?? []);
                 }
-                await new Promise(resolve => setTimeout(resolve, 3000));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 setLoading("success");
             }
             loadGigs();
@@ -37,11 +37,11 @@ const GigsPage = () => {
 
     return (
         <div>
-            <div className="px-16 bg-white pt-46">
+            <div className="lg:px-16 px-4 bg-white lg:pt-46 pt-22">
                 <div className="container mx-auto">
-                    <p className="text-display font-bold text-black pb-6">Gigs</p>
+                    <p className="lg:text-display text-title lg:text-left text-center font-bold text-black pb-6">Gigs</p>
                     <p className="text-normal font-regular text-black pb-20">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.</p>
-                    <div className="grid grid-cols-2 gap-8 pb-28">  
+                    <div className="grid lg:grid-cols-2 grid-cols-1 gap-8 pb-28">  
                         {gigs.map((gig) => (
                             <PubJobOrGigPost 
                                 key={gig.id} 

@@ -374,12 +374,12 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
     return (
         <div>
             <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
-                <div className="linear-border__inner rounded-[0.4375rem] p-8 bg-white">
+                <div className="linear-border__inner rounded-[0.4375rem] lg:p-8 p-4 bg-white">
                     {
                         variant === "open" && (
                             <div className="text-black flex flex-wrap justify-between gap-6">
                                 <div className="flex flex-col max-w-180 w-full gap-6">
-                                    <p className="text-subtitle font-bold text-black">{title}</p>
+                                    <p className="lg:text-subtitle text-large font-bold text-black">{title}</p>
                                     <p className="text-normal font-regular text-black">
                                         {description}
                                     </p>
@@ -473,74 +473,79 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex flex-col gap-2.5">
-                                    {status == 1 && user.role === "client" && (
+                                <div className="lg:w-auto w-full">
+                                    <div className="flex flex-col gap-2.5 lg:justify-end justify-center lg:px-0 px-12">
+                                        {status == 1 && user.role === "client" && (
+                                            <Button 
+                                                padding="px-10.375 py-3"
+                                                onClick={handleFund}
+                                            >
+                                                Fund
+                                            </Button>
+                                        )}
+                                        {status == 2 && user.role === "freelancer" && (
+                                            <Button 
+                                                padding="px-8.75 py-3"
+                                                onClick={handleDeliver}
+                                            >
+                                                Deliver 
+                                            </Button>
+                                        )}
+                                        {status == 3 && user.role === "client" && (
+                                            <Button 
+                                                padding="px-7.5 py-3"
+                                                onClick={handleApprove}
+                                            >
+                                                Approve
+                                            </Button>
+                                        )}
+                                        {status == 4 && user.role === "freelancer" && (
+                                            <Button 
+                                                padding="px-6.375 py-3"
+                                                onClick={handleWithdraw}
+                                            >
+                                                Withdraw 
+                                            </Button>
+                                        )}
+                                        <div className="lg:w-auto w-full">
+                                            <Button 
+                                                padding="px-8.5 py-3.25"
+                                                className="w-full"
+                                                variant={
+                                                    (status >= 2 && status < 4 && user.role === "client") ||
+                                                    (status === 3 && user.role === "freelancer")
+                                                        ? "secondary"
+                                                        : "disable"
+                                                }
+                                                onClick={handleDispute}
+                                            >
+                                                Dispute
+                                            </Button>
+                                        </div>
                                         <Button 
-                                            padding="px-10.375 py-3"
-                                            onClick={handleFund}
+                                            padding="px-6.25 py-3"
+                                            variant="secondary"
+                                            onClick={handleGoToDoc}
                                         >
-                                            Fund
+                                            Go to Doc
                                         </Button>
-                                    )}
-                                    {status == 2 && user.role === "freelancer" && (
-                                        <Button 
-                                            padding="px-8.75 py-3"
-                                            onClick={handleDeliver}
-                                        >
-                                            Deliver 
-                                        </Button>
-                                    )}
-                                    {status == 3 && user.role === "client" && (
-                                        <Button 
-                                            padding="px-7.5 py-3"
-                                            onClick={handleApprove}
-                                        >
-                                            Approve
-                                        </Button>
-                                    )}
-                                    {status == 4 && user.role === "freelancer" && (
-                                        <Button 
-                                            padding="px-6.375 py-3"
-                                            onClick={handleWithdraw}
-                                        >
-                                            Withdraw 
-                                        </Button>
-                                    )}
-                                    <Button 
-                                        padding="px-8.5 py-3.25"
-                                        variant={
-                                            (status >= 2 && status < 4 && user.role === "client") ||
-                                            (status === 3 && user.role === "freelancer")
-                                                ? "secondary"
-                                                : "disable"
-                                        }
-                                        onClick={handleDispute}
-                                    >
-                                        Dispute
-                                    </Button>
-                                    <Button 
-                                        padding="px-6.25 py-3"
-                                        variant="secondary"
-                                        onClick={handleGoToDoc}
-                                    >
-                                        Go to Doc
-                                    </Button>
+                                    </div>
                                 </div>
                             </div>
                         )
                     }
                     {
                         variant === "completed" && (
-                            <div className="text-black flex flex-wrap justify-between gap-6">
+                            <div className="text-black flex flex-col justify-between gap-6">
                                 <div className="flex flex-col gap-6">
-                                    <p className="text-subtitle font-bold text-black">{title}</p>
+                                    <p className="lg:text-subtitle text-large font-bold text-black">{title}</p>
                                     <p className="text-normal font-regular text-black">
                                         {description}
                                     </p>
                                 </div>
                                 {ipfs && user.role === "client" && (
-                                    <div className='flex items-center border border-[#8F99AF] rounded-lg p-3 gap-3'>
-                                        <p className='flex-1 bg-transparent text-normal font-regular text-[#2F3DF6] text-left focus:outline-none max-w-70 truncate'>
+                                    <div className='flex items-center border justify-between border-[#8F99AF] rounded-lg p-3 gap-3'>
+                                        <p className='flex-1 bg-transparent text-normal font-regular text-[#2F3DF6] text-left focus:outline-none max-w-[80%] truncate'>
                                             {CONFIG.ipfsGateWay}/{ipfs}
                                         </p>
                                         <div className="flex items-center gap-2.5">
@@ -583,17 +588,21 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
             <ModalTemplate
                 isOpen={isOpen}
                 onClose={() => setIsOpen(false)}
-                title={"Deliver Product"}
-                subtitle={description}
+                // title={"Deliver Product"}
+                // subtitle={description}
                 actionLabel="Confirm"
-                className="p-10.5"
+                className="lg:p-10.5 p-3"
                 onAction={() => {
                     handleDeliverUploadedFile();
                     setIsOpen(false);
                 }}
             >
                 <div className="mt-6">
-                    <div className="flex justify-end">
+                    <div className="lg:text-title text-subtitle lg:text-left text-center font-bold text-[#2F3DF6] py-6">Deliver Product</div>
+                    <div className="lg:text-normal text-light-large text-gray-500 lg:text-left text-center">
+                        {description}
+                    </div>
+                    <div className="flex lg:justify-end justify-center">
                         <div className="flex items-center gap-2.5">
                             { uploadedFileName 
                             ? 

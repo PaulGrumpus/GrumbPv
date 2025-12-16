@@ -30,7 +30,7 @@ const JobsPage = () => {
                 if(result.success) {
                     setJobs(result.data.sort((a: Job, b: Job) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()) ?? []);
                 }
-                await new Promise(resolve => setTimeout(resolve, 3000));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 setLoading("success");
             }
             loadJobs();
@@ -57,11 +57,11 @@ const JobsPage = () => {
     
     return (
         <div>
-            <div className="px-16 bg-white pt-46">
+            <div className="lg:px-16 px-4 bg-white lg:pt-46 pt-22">
                 <div className="container mx-auto">
-                    <p className="text-display font-bold text-black pb-6">Jobs</p>
+                    <p className="lg:text-display text-title lg:text-left text-center font-bold text-black pb-6">Jobs</p>
                     <p className="text-normal font-regular text-black pb-20">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.</p>
-                    <div className="grid grid-cols-2 gap-8 pb-28">  
+                    <div className="grid lg:grid-cols-2 grid-cols-1 gap-8 pb-28">  
                         {jobs.map((job) => (
                             <PubJobOrGigPost 
                                 key={job.id} 
@@ -88,15 +88,17 @@ const JobsPage = () => {
                 <ModalTemplate
                     isOpen={isOpen}
                     onClose={() => setIsOpen(false)}
-                    title={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.title ?? "" : ""}
-                    subtitle={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.description_md ?? "" : ""}
+                    // title={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.title ?? "" : ""}
+                    // subtitle={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.description_md ?? "" : ""}
                     actionLabel=""
                     onAction={() => {}}
-                    className="p-10.5"
-                    customButton={true}                
+                    className="px-4 py-3 lg:p-10.5"
+                    customButton={true}         
                 >
                     <div className="mt-6">
                         <ApplyJob
+                            jobTitle={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.title ?? "" : ""}
+                            jobDescription={selectedJobId ? jobs.find((job) => job.id === selectedJobId)?.description_md ?? "" : ""}
                             jobId={selectedJobId.toString()}
                             freelancerId={userInfo.id}
                             clickHandler={() => {

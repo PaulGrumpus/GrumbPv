@@ -19,14 +19,18 @@ const Home = () => {
   useEffect(() => {
     if(userLoadingState === "failure") {
         const load = async () => {
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
             setLoading("success");
         }
         load();
     }
     if(userLoadingState === "success") {
       if(notificationLoadingState === "success") {
-        setLoading("success");
+        const load = async () => {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          setLoading("success");
+        }
+        load();
       }
     }
   }, [userLoadingState, notificationLoadingState])
@@ -40,14 +44,14 @@ const Home = () => {
       <div className="bg-white min-h-screen">
         <div className="container mx-auto">
           <div className="relative">
-            <div className="absolute top-60 left-0 w-full h-full">
+            <div className="absolute top-80 left-0 w-full h-full">
               <div className="flex flex-col items-center justify-center gap-6">
                 <div className="w-50 h-50 rounded-full overflow-hidden">
                   <Image src="/Grmps/grmps.jpg" alt="Grmps" width={100} height={100} className="w-full h-full object-cover" />
                 </div>
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <h1 className="text-display font-bold text-[#7E3FF2]">Welcome to Grumpus</h1>
-                  <p className="text-normal font-regular text-[#7E3FF2]">The platform for freelancers and clients (Beta Version)</p>
+                <div className="flex flex-col items-center justify-center gap-2 lg:p-0 px-2">
+                  <h1 className="text-center lg:text-left lg:text-display text-title font-bold text-[#7E3FF2]">Welcome to Grumpus</h1>
+                  <p className="text-center lg:text-left text-normal font-regular text-[#7E3FF2]">The platform for freelancers and clients (Beta Version)</p>
                 </div>
               </div>
             </div>

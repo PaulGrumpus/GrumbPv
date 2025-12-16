@@ -43,7 +43,7 @@ const PubJobOrGigPost = ({ description, title, location, tags, minBudget, maxBud
             <div className="linear-border__inner rounded-[0.4375rem] p-6 bg-white">
                 <div className="text-black">
                     <div className="flex justify-between pb-6">
-                        <div className="flex flex-col max-w-[75%]">
+                        <div className="flex flex-col lg:max-w-[75%] max-w-[60%]">
                             <h1 className="text-subtitle font-bold text-black">{title}</h1>
                             <div className="flex flex-col">
                                 <p className="text-light-large font-regular text-black">Location: {location === LocationType.REMOTE ? "Remote" : location === LocationType.ON_SITE ? "On Site" : "Hybrid"}</p>

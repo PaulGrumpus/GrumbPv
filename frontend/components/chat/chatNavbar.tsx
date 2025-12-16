@@ -1,12 +1,20 @@
 import Button from "../button";
 import Image from "next/image";
 
-const ChatNavbar = () => {
+interface ChatNavbarProps {
+    onBack: () => void;
+}
+
+const ChatNavbar = ({ onBack }: ChatNavbarProps) => {
     return (
-        <div className="py-4 px-16 mt-16">
+        <div className="py-4 px-4 lg:px-16 mt-16">
             <div className="container mx-auto">
                 <div className="flex justify-between items-center">
-                    <h1 className="text-title font-bold text-black">Chat</h1>
+                    <h1 
+                    onClick={onBack}
+                    className="text-title font-bold text-black">
+                        Chats
+                    </h1>
                     <div className="flex items-center gap-2">
                         <Button padding="p-2">
                             <Image 

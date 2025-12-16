@@ -284,3 +284,29 @@ body {
   left: -3px;
   transform: rotate(41deg);
 }
+
+@keyframes slide-from-bottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-from-bottom {
+  animation: slide-from-bottom 0.25s ease-out;
+}
+
+@keyframes slide-from-top {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-from-top {
+  animation: slide-from-top 0.25s ease-out;
+}

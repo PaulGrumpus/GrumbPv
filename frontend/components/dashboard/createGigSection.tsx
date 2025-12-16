@@ -9,9 +9,9 @@ import { toast } from "react-toastify";
 import { UserInfoCtx } from "@/context/userContext";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { useRouter } from "next/navigation";
-import Loading from "../loading";
 import { createGig } from "@/utils/functions";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
+import SmallLoading from "../smallLoading";
 
 const uploadImage = "/Grmps/upload.svg";
 
@@ -30,7 +30,7 @@ const CreateGigSection = () => {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
-    const { userInfo, setUserInfo } = useContext(UserInfoCtx);
+    const { userInfo } = useContext(UserInfoCtx);
     const [error, setError] = useState("");
     const [checkError, setCheckError] = useState(false);
     const router = useRouter();
@@ -154,7 +154,7 @@ const CreateGigSection = () => {
             }
             if (userInfo && userInfo.id) {
                 const loadCreateGig = async () => {
-                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
                 if(notificationLoadingState === "success") {
@@ -167,7 +167,7 @@ const CreateGigSection = () => {
     }, [userInfo, userLoadingState, router, notificationLoadingState])
 
     if (loading === "pending") {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 
     if (loading === "success") {
@@ -178,7 +178,7 @@ const CreateGigSection = () => {
                     description="Set up a new gig to showcase your services to clients."
                 /> 
                 <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
-                    <div className="linear-border__inner rounded-[0.4375rem] bg-white p-8">
+                    <div className="linear-border__inner rounded-[0.4375rem] bg-white py-8 px-3 lg:p-8">
                         <div className='flex flex-col gap-6'>
                             <div>
                                 <p className='text-normal font-regular text-black text-left pb-2'>Title</p>
@@ -226,7 +226,7 @@ const CreateGigSection = () => {
                                     <textarea className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-33.5 resize-none' value={description} onChange={(e) => setDescription(e.target.value)} />
                                 </div>
                             </div>
-                            <div className="flex gap-6">
+                            <div className="flex lg:flex-row flex-col gap-6">
                                 <div>
                                     <p className='text-normal font-regular text-black text-left pb-2'>Max Budget (USD)</p>
                                     <input
@@ -279,35 +279,39 @@ const CreateGigSection = () => {
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className='w-40'>
-                                        <Button
-                                            variant="secondary"
-                                            padding="p-3"
-                                            onClick={() => handleUploadFile()}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <div>
-                                                    <Image
-                                                        src={uploadImage}
-                                                        alt="upload"
-                                                        width={24}
-                                                        height={24}
-                                                    />
+                                    <div className="flex justify-center lg:block">
+                                        <div className='w-40'>
+                                            <Button
+                                                variant="secondary"
+                                                padding="p-3"
+                                                onClick={() => handleUploadFile()}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <div>
+                                                        <Image
+                                                            src={uploadImage}
+                                                            alt="upload"
+                                                            width={24}
+                                                            height={24}
+                                                        />
+                                                    </div>
+                                                    <p className="text-normal font-regular">Upload Image</p>
                                                 </div>
-                                                <p className="text-normal font-regular">Upload Image</p>
-                                            </div>
-                                        </Button>
+                                            </Button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
                             {error && checkError && <p className='text-normal font-regular text-red-500 text-left'>{error}</p>}
-                            <div className='w-30'>
-                                <Button
-                                    padding='px-10.75 py-3'
-                                    onClick={handlePostGig}
-                                >
-                                    <p className='text-normal font-regular'>Post</p>
-                                </Button>
+                            <div className="flex justify-center lg:block">
+                                <div className='w-30'>
+                                    <Button
+                                        padding='px-10.75 py-3'
+                                        onClick={handlePostGig}
+                                    >
+                                        <p className='text-normal font-regular'>Post</p>
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -315,7 +319,7 @@ const CreateGigSection = () => {
             </div>
         )
     } else {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 }
 export default CreateGigSection;

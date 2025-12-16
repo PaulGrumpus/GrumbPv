@@ -10,6 +10,7 @@ interface ButtonProps {
   padding?: string;
   borderRadius?: string;
   borderInnerRadius?: string;
+  className?: string;
 }
 
 const Button = ({ 
@@ -19,6 +20,7 @@ const Button = ({
   padding = 'px-4 py-2',
   borderRadius = 'rounded-lg',
   borderInnerRadius = 'rounded-[0.4375rem]',
+  className = '',
 }: ButtonProps) => {
   const [isPressed, setIsPressed] = useState(false);
 
@@ -60,6 +62,7 @@ const Button = ({
             linear-border__inner font-regular cursor-pointer transition-colors text-normal items-center justify-center bg-white text-[#7E3FF2] hover:text-white hover:bg-linear-to-r hover:from-(--color-light-blue) hover:to-(--color-purple) 
             ${padding}
             ${borderInnerRadius}
+            ${className}
           `}
         >
           {children}
@@ -78,7 +81,7 @@ const Button = ({
         <button
           onClick={() => {}}
           {...pressHandlers}
-          className={`rounded-lg font-regular text-normal items-center justify-center bg-white text-gray-500 border border-gray-500 cursor-not-allowed ${padding}`}
+          className={`rounded-lg font-regular text-normal items-center justify-center bg-white text-gray-500 border border-gray-500 cursor-not-allowed ${padding} ${className}`}
         >
           {children}
         </button>
@@ -92,7 +95,7 @@ const Button = ({
       {...pressHandlers}
       className={`
         rounded-lg font-regular text-normal items-center justify-center transition-transform duration-150 cursor-pointer
-        button-primary text-white ${padding} ${isPressed ? 'button-primary--pressed scale-95' : ''}
+        button-primary text-white ${padding} ${isPressed ? 'button-primary--pressed scale-95' : ''} ${className}
       `}
     >
       {children}

@@ -84,7 +84,7 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
             <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
                 <div className="linear-border__inner rounded-[0.4375rem] p-6 bg-white">
                     {loading === "pending" ? (
-                        <SmallLoading />
+                        <SmallLoading size="md" />
                     ) : (
                         <div className="text-black">
                             <div className="flex justify-between gap-6">
@@ -203,17 +203,17 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
             <ModalTemplate
                 isOpen={isOpen}
                 onClose={() => setIsOpen(false)}
-                title={title}
+                // title={title}
                 actionLabel="Close"
                 onAction={() => {}}
-                className="p-10.5"
+                className="px-4 py-3 lg:p-10.5"
                 customButton={true}                
             >
-                <div className="mt-6">
-                    <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
-                        <div className="linear-border__inner rounded-[0.4375rem] p-6 bg-white">
-                            <p className="text-large font-bold text-[#2F3DF6] py-6">See Applicants:</p>
-                            <div className="grid grid-cols-3 gap-6">
+                <div>
+                    {/* <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
+                        <div className="linear-border__inner rounded-[0.4375rem] p-6 bg-white"> */}
+                            <p className="lg:text-title text-subtitle lg:text-left text-center font-bold text-[#2F3DF6] py-6">Applicants</p>
+                            <div className="grid lg:grid-cols-3 grid-cols-1 gap-6">
                                 {applications.length > 0 ? (
                                     applications.map((application) => (
                                         <ApplicationPost key={application.id} {...application} />
@@ -222,8 +222,8 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
                                     <p className="text-normal font-regular text-black">No applications found</p>
                                 )}
                             </div>
-                        </div>
-                    </div>
+                        {/* </div>
+                    </div> */}
                 </div>
             </ModalTemplate>
         </div>

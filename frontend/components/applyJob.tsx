@@ -9,6 +9,8 @@ import { BidStatus } from "@/types/bid";
 import { toast } from "react-toastify";
 
 interface ApplyJobProps {
+    jobTitle: string;
+    jobDescription: string;
     jobId: string;
     freelancerId: string;
     clickHandler: () => void;
@@ -193,7 +195,7 @@ const CalendarDropdown = ({ id, selectedDate, monthDate, onSelectDate, onMonthCh
     );
 };
 
-const ApplyJob = ({ jobId, freelancerId, clickHandler }: ApplyJobProps) => {
+const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler }: ApplyJobProps) => {
     const [title, setTitle] = useState("");
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
@@ -329,8 +331,10 @@ const ApplyJob = ({ jobId, freelancerId, clickHandler }: ApplyJobProps) => {
 
     return (
         <div>
+            <p className='lg:text-display text-title lg:text-left text-center font-bold text-black pb-6'>{jobTitle}</p>
+            <p className='text-light-large font-regular text-black lg:text-left text-center pb-6'>{jobDescription}</p>
             <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
-                <div className="linear-border__inner rounded-[0.4375rem] bg-white p-8">
+                <div className="linear-border__inner rounded-[0.4375rem] bg-white py-8 px-3 lg:p-8">
                     <div className='flex flex-col gap-6'>
                         {/* <div>
                             <p className='text-normal font-regular text-black text-left pb-2'>Title</p>
@@ -350,8 +354,8 @@ const ApplyJob = ({ jobId, freelancerId, clickHandler }: ApplyJobProps) => {
                                 <textarea className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-33.5 resize-none' value={coverLetter} onChange={(e) => setCoverLetter(e.target.value)} />
                             </div>
                         </div>
-                        <div className="flex gap-6 w-full">
-                            <div className="w-full">
+                        <div className="flex flex-col lg:flex-row gap-6 w-full">
+                            <div className="lg:w-full w-auto">
                                 <p className='text-normal font-regular text-black text-left pb-2'>Budget</p>
                                 <input
                                     value={budget}
@@ -364,9 +368,9 @@ const ApplyJob = ({ jobId, freelancerId, clickHandler }: ApplyJobProps) => {
                                     placeholder='Budget'
                                 />
                             </div>
-                            <div className='flex flex-col gap-2 w-full'>
+                            <div className='flex flex-col gap-2 lg:w-full w-auto'>
                                 <p className='text-normal font-regular text-black text-left'>Category</p>
-                                <div ref={dropdownRef} className={`relative w-full ${dropdownMenuOpen ? 'border-blue-500' : ''}`}>
+                                <div ref={dropdownRef} className={`relative lg:w-full w-auto ${dropdownMenuOpen ? 'border-blue-500' : ''}`}>
                                     <select
                                         value={selectedCategory}
                                         onChange={(e) => {

@@ -71,7 +71,7 @@ const ReferencePageContent = () => {
                     setStartDate(jobApplicationInfo.data.job_application_info.start_date ?? "");
                     setEndDate(jobApplicationInfo.data.job_application_info.end_date ?? "");
 
-                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
                 getJob();
@@ -87,7 +87,7 @@ const ReferencePageContent = () => {
 
     if (loading === "success") {
         return (
-            <div className="bg-white pt-34 px-16 pb-21.25">
+            <div className="bg-white lg:pt-34 pt-22 lg:px-16 px-4 lg:pb-21.25 pb-8.75">
                 <div className="container mx-auto">
                     <ReferenceDoc 
                         jobId={jobId} 

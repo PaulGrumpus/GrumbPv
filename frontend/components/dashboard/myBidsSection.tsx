@@ -5,15 +5,14 @@ import SectionPlaceholder from "./sectionPlaceholder";
 import { useRouter } from "next/navigation";
 import { UserInfoCtx } from "@/context/userContext";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
-import { getBidsByFreelancerId, getJobById } from "@/utils/functions";
+import { getJobById } from "@/utils/functions";
 import { toast } from "react-toastify";
-import { Bid, BidStatus } from "@/types/bid";
-import Loading from "../loading";
 import { Job } from "@/types/jobs";
 import { BidPostProps } from "@/types/bid";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 import { useProjectInfo } from "@/context/projectInfoContext";
 import { BidWithJob } from "@/types/projectInfo";
+import SmallLoading from "../smallLoading";
 
 const MyBidsSection = () => {
     const router = useRouter();
@@ -84,7 +83,8 @@ const MyBidsSection = () => {
                 return;
             }
             if (userInfo && userInfo.id) {
-                const loadBids = () => {
+                const loadBids = async () => {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     parseBids(bidsInfo);
                 };
         
@@ -98,7 +98,7 @@ const MyBidsSection = () => {
     }, [userInfo, userLoadingState, notificationLoadingState])
 
     if (loading === "pending") {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 
     if (loading === "success") {
@@ -110,7 +110,7 @@ const MyBidsSection = () => {
                 />
 
                 {bids.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-8">
+                    <div className="grid lg:grid-cols-2 grid-cols-1 gap-8">
                         {bids.map((bid: BidPostProps) => (
                             <BidPost 
                                 key={bid.bid_id}
@@ -137,7 +137,7 @@ const MyBidsSection = () => {
             </div>
         );
     } else {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 };
 

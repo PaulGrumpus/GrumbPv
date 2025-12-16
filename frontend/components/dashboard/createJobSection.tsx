@@ -194,7 +194,7 @@ const CreateJobSection = () => {
             }
             if (userInfo && userInfo.id) {
                 const loadCreateJob = async () => {
-                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    // await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
                 if(notificationLoadingState === "success") {
@@ -218,7 +218,7 @@ const CreateJobSection = () => {
                     description="Set up a new job to showcase your services to clients."
                 /> 
                 <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
-                    <div className="linear-border__inner rounded-[0.4375rem] bg-white p-8">
+                    <div className="linear-border__inner rounded-[0.4375rem] bg-white py-8 px-3 lg:p-8">
                         <div className='flex flex-col gap-6'>
                             <div>
                                 <p className='text-normal font-regular text-black text-left pb-2'>Title</p>
@@ -266,7 +266,7 @@ const CreateJobSection = () => {
                                     <textarea className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-33.5 resize-none' value={description} onChange={(e) => setDescription(e.target.value)} />
                                 </div>
                             </div>
-                            <div className="flex gap-6">
+                            <div className="flex lg:flex-row flex-col gap-6">
                                 <div>
                                     <p className='text-normal font-regular text-black text-left pb-2'>Max Budget (USD)</p>
                                     <input
@@ -334,7 +334,7 @@ const CreateJobSection = () => {
                                 </div>
                             </div>
                             
-                            <div >
+                            <div className="flex justify-center lg:block">
                                 {uploadedFileName ? (
                                     <div className="">
                                         <div className="w-full h-100">
@@ -356,35 +356,39 @@ const CreateJobSection = () => {
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className='w-40'>
-                                        <Button
-                                            variant="secondary"
-                                            padding="p-3"
-                                            onClick={() => handleUploadFile()}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <div>
-                                                    <Image
-                                                        src={uploadImage}
-                                                        alt="upload"
-                                                        width={24}
-                                                        height={24}
-                                                    />
+                                    <div className="flex justify-center lg:block">
+                                        <div className='w-40'>
+                                            <Button
+                                                variant="secondary"
+                                                padding="p-3"
+                                                onClick={() => handleUploadFile()}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <div>
+                                                        <Image
+                                                            src={uploadImage}
+                                                            alt="upload"
+                                                            width={24}
+                                                            height={24}
+                                                        />
+                                                    </div>
+                                                    <p className="text-normal font-regular">Upload Image</p>
                                                 </div>
-                                                <p className="text-normal font-regular">Upload Image</p>
-                                            </div>
-                                        </Button>
+                                            </Button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
                             {error && checkError && <p className='text-normal font-regular text-red-500 text-left'>{error}</p>}
-                            <div className='w-30'>
-                                <Button
-                                    padding='px-10.75 py-3'
-                                    onClick={handlePostJob}
-                                >
-                                    <p className='text-normal font-regular'>Post</p>
-                                </Button>
+                            <div className="flex justify-center lg:block">
+                                <div className='w-30'>
+                                    <Button
+                                        padding='px-10.75 py-3'
+                                        onClick={handlePostJob}
+                                    >
+                                        <p className='text-normal font-regular'>Post</p>
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>

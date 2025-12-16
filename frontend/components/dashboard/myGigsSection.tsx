@@ -6,19 +6,16 @@ import { useContext, useEffect, useState } from "react";
 import { UserInfoCtx } from "@/context/userContext";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { Gig } from "@/types/gigs";
-import { toast } from "react-toastify";
-import { getGigsByFreelancerId } from "@/utils/functions";
 import { EscrowBackendConfig } from "@/config/config";
-import Loading from "../loading";
-import { LocationType } from "@/types/jobs";
-import { ProjectInfoCtx, useProjectInfo } from "@/context/projectInfoContext";
+import { useProjectInfo } from "@/context/projectInfoContext";
 import { ProjectInfoLoadingCtx } from "@/context/projectInfoLoadingContext";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
+import SmallLoading from "../smallLoading";
 
 const MyGigsSection = () => {
     const router = useRouter();
-    const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
+    const { userInfo } = useContext(UserInfoCtx);
+    const { setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [gigs, setGigs] = useState<Gig[]>([]);
     const { projectInfoLoadingState } = useContext(ProjectInfoLoadingCtx);
@@ -32,7 +29,8 @@ const MyGigsSection = () => {
                 return;
             }
             if (userInfo && userInfo.id) {
-                const loadGigs = () => {
+                const loadGigs = async () => {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     setGigs(gigsInfo.sort((a: Gig, b: Gig) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()));
                     setLoading("success");
                 };
@@ -52,7 +50,7 @@ const MyGigsSection = () => {
     }, [gigsInfo]);
 
         if (loading === "pending") {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 
     if (loading === "success") {
@@ -64,17 +62,17 @@ const MyGigsSection = () => {
                 />
                 {gigs.length > 0 ? (
                     <div>
-                        <div className="flex justify-end">
-                            <div className="w-45 mb-8 flex justify-end">
+                        <div className="flex lg:justify-end justify-center">
+                            <div className="w-45 mb-8 flex lg:justify-end justify-center">
                                 <Button
                                     padding='px-7 py-3'
                                     onClick={() => router.push("/dashboard?view=create-gig")}
                                 >
-                                    <p className='text-normal font-regular'>+ Create Gig</p>
+                                    <p className='text-normal font-regular'>+ Create New Gig</p>
                                 </Button>
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-8">
+                        <div className="grid lg:grid-cols-2 grid-cols-1 gap-8">
                             {gigs.map((gig) => (
                                 <UserJobOrGigPost
                                     key={gig.id}
@@ -99,14 +97,14 @@ const MyGigsSection = () => {
                         >
                             <p className='text-normal font-regular'
                                 onClick={() => router.push("/dashboard?view=create-gig")}
-                            >+ Create Gig</p>
+                            >+ Create New Gig</p>
                         </Button>
                     </div>
                 )}
             </div>
         )
     } else {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 }
 

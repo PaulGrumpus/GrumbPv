@@ -4,8 +4,10 @@ import Image from "next/image";
 import { User } from "@/types/user";
 import { Message } from "@/types/message";
 import { EscrowBackendConfig } from "@/config/config";
+import { ChevronRightIcon } from "@heroicons/react/20/solid";
 
 interface ChatMainProps {
+    isMobile: boolean;  
     sender: User;
     receiver: User | null;
     messages: Message[];
@@ -25,9 +27,11 @@ interface ChatMainProps {
     onVideoCall?: () => void;
     onWritingMessage: (conversation_id: string) => void;
     onStopWritingMessage: (conversation_id: string) => void;
+    onMobileProfileClick: () => void;
+    onMobileProjectInfoClick: () => void;
 }
 
-const ChatMain = ({sender, receiver, messages, conversation_id, isWriting, onSendMessage, onEditMessage, onDeleteMessage, onReadMessage, onUnreadMessage, onPinMessage, onUnpinMessage, onReplyToMessage, onForwardMessage, onSaveMessage, onPhoneCall, onVideoCall, onWritingMessage, onStopWritingMessage }: ChatMainProps) => {
+const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWriting, onSendMessage, onEditMessage, onDeleteMessage, onReadMessage, onUnreadMessage, onPinMessage, onUnpinMessage, onReplyToMessage, onForwardMessage, onSaveMessage, onPhoneCall, onVideoCall, onWritingMessage, onStopWritingMessage, onMobileProfileClick, onMobileProjectInfoClick }: ChatMainProps) => {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -251,8 +255,24 @@ const ChatMain = ({sender, receiver, messages, conversation_id, isWriting, onSen
                             />
                         </div>
                         <p className="text-small font-regular text-[#DEE4F2]">{receiver? receiver.display_name : "No receiver"}</p>
+                        {isMobile && (
+                            <ChevronRightIcon onClick={onMobileProfileClick} className="w-6 h-6 text-white cursor-pointer" />
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
+                        {isMobile && (
+                            <div 
+                                onClick={onMobileProjectInfoClick}
+                                className="w-10 h-10 p-2 bg-[#7E3FF2] rounded-lg hover:bg-[#6E35E0] transition-colors duration-150 hover:scale-90"
+                            >
+                                <Image 
+                                    src="/Grmps/docs.svg"
+                                    alt="Call"
+                                    width={24}
+                                    height={24}
+                                />
+                            </div>
+                        )}
                         <div className="w-10 h-10 p-2 bg-[#7E3FF2] rounded-lg hover:bg-[#6E35E0] transition-colors duration-150 hover:scale-90">
                             <Image 
                                 src="/Grmps/video.svg"

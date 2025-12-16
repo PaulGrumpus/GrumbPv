@@ -298,7 +298,7 @@ const ProfilePage = () => {
                     setUserRole(userInfo.role || "")
                     setUserEmail(userInfo.email || "")
                     setUserWaletAddress(isConnected ? userInfo.address || null : null)
-                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
                 if(notificationLoadingState === "success") {
@@ -328,53 +328,55 @@ const ProfilePage = () => {
 
     if (loading === "success") {
         return (
-            <div className='pt-34 pb-8.75 px-16 bg-white'>
+            <div className='lg:pt-34 pt-22 pb-8.75 lg:px-16 px-4 bg-white'>
                 <div className='container mx-auto'>
-                    <h1 className='text-display font-bold text-black'>Profile</h1>
+                    <h1 className='text-display font-bold text-black lg:w-auto w-full text-center lg:text-left'>Profile</h1>
                     <div className='flex flex-col items-center'>
-                        <div className='min-w-140 pt-10.25 gap-6 flex flex-col pb-10.25'>
-                            <p className='text-normal font-regular text-black text-left pb-2'>Photo</p>
-                            {!uploadedFileName && userPhoto && (
-                                <div className='flex items-center gap-6 flex-col justify-center'>
-                                    <div
-                                        className='w-25 h-25 rounded-full overflow-hidden'
-                                    >
-                                        <Image 
-                                            src={userPhoto} 
-                                            alt='User Photo' 
-                                            width={100} 
-                                            height={100} 
-                                            className='h-full w-full rounded-full object-cover'
-                                        />
+                        <div className='lg:min-w-140 min-w-auto lg:w-auto w-full pt-10.25 gap-6 flex flex-col pb-10.25'>
+                            <div className='flex flex-col'>
+                                <p className='text-normal font-regular text-black text-left pb-2'>Photo</p>
+                                {!uploadedFileName && userPhoto && (
+                                    <div className='flex items-center gap-6 flex-col justify-center'>
+                                        <div
+                                            className='w-25 h-25 rounded-full overflow-hidden'
+                                        >
+                                            <Image 
+                                                src={userPhoto} 
+                                                alt='User Photo' 
+                                                width={100} 
+                                                height={100} 
+                                                className='h-full w-full rounded-full object-cover'
+                                            />
+                                        </div>
+                                        <Button variant='secondary' padding='px-5 py-2' onClick={handleUploadFile}
+                                        >Change Photo</Button>
                                     </div>
-                                    <Button variant='secondary' padding='px-5 py-2' onClick={handleUploadFile}
-                                    >Change Photo</Button>
-                                </div>
-                            )}
-                            {uploadedFileName ? (
-                                <div className='flex items-center gap-6 flex-col justify-center'>
-                                    <div className="w-25 h-25 relative">
-                                        {previewUrl ? (
-                                            <img
-                                                src={previewUrl}
-                                                alt="uploaded preview"
-                                                className="w-full h-full rounded-full object-cover"
-                                            />                                            
-                                        ) : (
-                                            <p className="text-normal font-regular text-black text-left">No image uploaded</p>
-                                        )}
-                                        <XMarkIcon className="w-6 h-6 absolute text-black cursor-pointer top-[-10px] right-[-15px]" onClick={removeUploadedFile}/>
+                                )}
+                                {uploadedFileName ? (
+                                    <div className='flex items-center gap-6 flex-col justify-center'>
+                                        <div className="w-25 h-25 relative">
+                                            {previewUrl ? (
+                                                <img
+                                                    src={previewUrl}
+                                                    alt="uploaded preview"
+                                                    className="w-full h-full rounded-full object-cover"
+                                                />                                            
+                                            ) : (
+                                                <p className="text-normal font-regular text-black text-left">No image uploaded</p>
+                                            )}
+                                            <XMarkIcon className="w-6 h-6 absolute text-black cursor-pointer top-[-10px] right-[-15px]" onClick={removeUploadedFile}/>
+                                        </div>
+                                        <p className="text-tiny font-regular text-[#7E3FF2] text-left">The uploaded image should be less than 20MB</p>
+                                        <Button variant='secondary' padding='px-5 py-2' onClick={handleUploadFile}>Change Photo</Button>
                                     </div>
-                                    <p className="text-tiny font-regular text-[#7E3FF2] text-left">The uploaded image should be less than 20MB</p>
-                                    <Button variant='secondary' padding='px-5 py-2' onClick={handleUploadFile}>Change Photo</Button>
-                                </div>
-                            ) : (
-                                !userPhoto && (
-                                    <div className='flex items-center justify-center'>
-                                        <Button variant='secondary' padding='px-5 py-2' onClick={handleUploadFile}>Upload Photo</Button>
-                                    </div>
-                                )
-                            )}
+                                ) : (
+                                    !userPhoto && (
+                                        <div className='flex items-center justify-center'>
+                                            <Button variant='secondary' padding='px-5 py-2' onClick={handleUploadFile}>Upload Photo</Button>
+                                        </div>
+                                    )
+                                )}
+                            </div>
                             <div>
                                 <p className='text-normal font-regular text-black text-left pb-2'>Username</p>
                                 <input
@@ -388,7 +390,7 @@ const ProfilePage = () => {
                                 <p className='text-normal font-regular text-black text-left pb-2'>Wallet Address</p>
                                 {userWaletAddress ? (
                                     <div className='flex justify-between items-center border p-3 border-[#8F99AF] rounded-lg'>
-                                        <p className='text-normal font-regular text-black text-left'>{userWaletAddress}</p>
+                                        <p className='lg:max-w-auto max-w-[75%] lg:w-auto w-full truncate text-normal font-regular text-black text-left'>{userWaletAddress}</p>
                                         <Button variant='secondary' padding='p-2' onClick={() => handleCopy(userWaletAddress)}>Copy</Button>
                                     </div>
                                 ) : (
@@ -431,7 +433,7 @@ const ProfilePage = () => {
                                 <p className='text-normal font-regular text-black text-left pb-2'>Role</p>
                                 <p className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg'>{userRole}</p>
                             </div>
-                            <div className='w-140'>
+                            <div className='lg:w-140 w-full'>
                                 <p className='text-normal font-regular text-black text-left pb-2'>About</p>
                                 <div className='flex flex-col'>
                                     <textarea

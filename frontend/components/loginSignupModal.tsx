@@ -604,12 +604,13 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
             isOpen={isOpen}
             onClose={handleClose}
             onAction={() => {}}
-            className={`${!registerProcessing ? "pt-8 pb-25 px-16" : "px-9 py-12"}`}
+            className={`${!registerProcessing ? "p-0 lg:pt-8 lg:pb-25 lg:px-16" : "p-0 lg:px-9 lg:py-12"}`}
             customButton={true}
-            widthClassName={`${!registerProcessing ? "w-150" : "w-210.75"}`}
+            widthClassName={`${!registerProcessing ? "w-full lg:w-150" : "w-full lg:w-210.75"}`}
             dismissible={!registerProcessing}
             linearBorder={false}
             closeXIcon={false}
+            loginModal={true}
             children={
                 <div>
                     {registerProcessing ? (
@@ -708,7 +709,8 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                             </div>
                         </div>
                     ) : 
-                        <div className="mt-12 flex flex-col gap-4">
+                    <div className="lg:block relative min-h-screen lg:min-h-auto">
+                        <div className="pt-16 lg:pt-0 flex flex-col gap-4 lg:mt-12">
                             <h1 className="text-center text-[1.5625rem] leading-7.5 font-medium">{isRegistered ? "Login" : "Register"}</h1>
                             <div className="flex gap-3.5 justify-center">
                                 <p className="text-normal font-regular">{isRegistered ? "Don't have an account yet?" : "Have an account?"}</p>
@@ -721,33 +723,35 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                                     {isRegistered ? "Register an account in" : "Sign in"} 
                                 </p>
                             </div>
-                            <Button
-                                padding="px-4 py-2"
-                                variant="secondary"
-                                borderRadius="rounded-3xl"
-                                borderInnerRadius="rounded-[1.4375rem]"
-                                onClick={handleMetaMaskAuthClick}
-                            >
-                                <div className="flex items-center justify-center gap-2.5">
-                                    <div className="w-8 h-8 flex items-center justify-center">
-                                        <Image
-                                            src="/Grmps/metamask.png"
-                                            alt="metamask"
-                                            width={24}
-                                            height={24}
-                                        />
+                            <div className="px-4 lg:px-0">
+                                <Button
+                                    padding="px-4 py-2"
+                                    variant="secondary"
+                                    borderRadius="rounded-3xl"
+                                    borderInnerRadius="rounded-[1.4375rem]"
+                                    onClick={handleMetaMaskAuthClick}
+                                >
+                                    <div className="flex items-center justify-center gap-2.5">
+                                        <div className="w-8 h-8 flex items-center justify-center">
+                                            <Image
+                                                src="/Grmps/metamask.png"
+                                                alt="metamask"
+                                                width={24}
+                                                height={24}
+                                            />
+                                        </div>
+                                        <p className="text-normal font-bold text-black font-inter">
+                                            {metaMaskButtonLabel}
+                                        </p>
                                     </div>
-                                    <p className="text-normal font-bold text-black font-inter">
-                                        {metaMaskButtonLabel}
-                                    </p>
-                                </div>
-                            </Button>
+                                </Button>
+                            </div>
                             <div className="flex items-center justify-center gap-2.5">
                                 <div className="w-32.5 border border-[#DDD6FE]"></div>
                                 <p className="text-[0.8125rem] font-regular leading-[0.975rem] text-[#7E3FF2]">OR</p>
                                 <div className="w-32.5 border border-[#DDD6FE]"></div>
                             </div>
-                            <div>
+                            <div className="px-4 lg:px-0">
                                 <p className='text-normal font-bold font-inter text-black text-left pb-2'>Email</p>
                                 <div className='flex items-center border border-[#8F99AF] rounded-[2.375rem] p-3 gap-3'>
                                     <input
@@ -759,7 +763,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                                     />
                                 </div>
                             </div>
-                            <div>
+                            <div className="px-4 lg:px-0">
                                 <p className='text-normal font-bold font-inter text-black text-left pb-2'>Password</p>
                                 <div className='flex items-center border border-[#8F99AF] rounded-[2.375rem] p-3 gap-3'>
                                     <input
@@ -815,7 +819,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                                 </div>
                             </div>
                             {isRegistered ? 
-                                <div className="flex items-center justify-start gap-2.5 p-2.5">
+                                <div className="flex items-center justify-start gap-2.5 p-2.5 px-4 lg:px-0">
                                     <input type="checkbox" id="remember" name="remember" className="w-4 h-4 text-gray-300"
                                         checked={rememberMe}
                                         onChange={(e) => setRememberMe(e.target.checked)}
@@ -823,7 +827,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                                     <label htmlFor="remember" className="text-normal font-regular font-inter text-black">Remember me</label>
                                 </div>
                             :
-                                <div className="flex items-center justify-start gap-2.5 p-2.5">
+                                <div className="flex items-center justify-start gap-2.5 p-2.5 px-4 lg:px-0">
                                     <input type="checkbox" id="termsAndPolicy" name="termsAndPolicy" className="w-4 h-4 text-gray-300"
                                         checked={termsAndPolicy}
                                         onChange={(e) => setTermsAndPolicy(e.target.checked)}
@@ -850,6 +854,22 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                                     {error}
                                 </div>
                             )}
+                            <div className="lg:block hidden">
+                                <Button
+                                    onClick={() => {
+                                        if (isRegistered) {
+                                            handleLogin();
+                                        } else {
+                                            handleRegister();
+                                        }
+                                    }}
+                                    padding="px-4 py-2 w-full"
+                                >
+                                    <p className="text-normal font-bold font-inter text-white text-center">{isRegistered ? "Login" : "Register"}</p>
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="lg:hidden absolute bottom-16 px-4 w-full lg:px-0 lg:w-auto">
                             <Button
                                 onClick={() => {
                                     if (isRegistered) {
@@ -858,10 +878,12 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                                         handleRegister();
                                     }
                                 }}
+                                padding="px-4 py-2 w-full"
                             >
                                 <p className="text-normal font-bold font-inter text-white text-center">{isRegistered ? "Login" : "Register"}</p>
                             </Button>
                         </div>
+                    </div>
                     }
                 </div>
             }

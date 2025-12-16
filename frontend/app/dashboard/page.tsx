@@ -212,7 +212,7 @@ const DashboardPageContent = () => {
                     } else {
                         await getMyJobsCount();
                     }
-                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
                 loadCounts();
@@ -228,14 +228,18 @@ const DashboardPageContent = () => {
 
     if (loading === "success") {
         return (
-            <div className="flex gap-20">
-                <Sidebar
-                    sidebarItems={userRole === "freelancer" ? freelancerSidebarItems : clientSidebarItems}
-                    selectedLabel={selectedSidebarLabel}
-                    onSelect={(item) => handleSectionChange(item.label)}
-                />
-                <div className="flex-1">
-                    {activeSection.render()}
+            <div className="lg:pt-34 pt-22 pb-8.75 lg:px-16 px-4 bg-white">
+                <div className="container mx-auto">
+                    <div className="flex lg:flex-row flex-col lg:gap-20 gap-6">
+                        <Sidebar
+                            sidebarItems={userRole === "freelancer" ? freelancerSidebarItems : clientSidebarItems}
+                            selectedLabel={selectedSidebarLabel}
+                            onSelect={(item) => handleSectionChange(item.label)}
+                        />
+                        <div className="flex-1">
+                            {activeSection.render()}
+                        </div>
+                    </div>
                 </div>
             </div>
         );

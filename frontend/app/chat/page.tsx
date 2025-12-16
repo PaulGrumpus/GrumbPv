@@ -45,6 +45,8 @@ const ChatPageContent = () => {
     const chatSocket = useSocket();   
     const router = useRouter();
 
+    const [mobileView, setMobileView] = useState<"list" | "chat">("list");
+
     const handleChatClick = (conversation_id: string) => {
         setSelectedConversationId(conversation_id);
         setChatSidebarItems((prev) =>
@@ -53,6 +55,8 @@ const ChatPageContent = () => {
                 selected: chat.conversation_id === conversation_id,
             }))
         );
+
+        setMobileView("chat");
     };
 
     const handleSendMessage = (message: Message) => {
@@ -168,10 +172,7 @@ const ChatPageContent = () => {
                         handleChatClick(targetConversationId);
                     }
 
-                    console.log("test-conversationsInfo", conversationsInfo);
-                    console.log("test-messagesInfo", messagesInfo);
-
-                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
                 if(notificationLoadingState === "success") {
@@ -190,8 +191,8 @@ const ChatPageContent = () => {
     if(loading === "success") {
         return (
             <div className="max-h-screen overflow-hidden">
-                <ChatNavbar />
-                <div className="flex">
+                <ChatNavbar onBack={() => setMobileView("list")} />
+                <div className="hidden lg:flex">
                     <div className="w-[25%]">
                         <ChatSidebar
                             chats={chatSidebarItems}
@@ -211,8 +212,35 @@ const ChatPageContent = () => {
                             onWritingMessage={handleWritingMessage}
                             onStopWritingMessage={handleStopWritingMessage}
                             acceptHandler={handleAcceptHandler}
+                            isMobile={false}
                         />
                     </div>
+                </div>
+
+                <div className="flex lg:hidden h-[calc(100vh-4rem)] w-full lg:w-auto">
+                    {mobileView === "list" && (
+                        <ChatSidebar
+                        chats={chatSidebarItems}
+                        />
+                    )}
+
+                    {mobileView === "chat" && selectedConversationId && (
+                        <ChatComb
+                            sender={userInfo}
+                            conversation_id={selectedConversationId as string}
+                            job_application_doc_id={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.conversation.id === selectedConversationId)?.conversation.job_application_doc_id as string ?? "" : ""}
+                            receiver={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.receiver as User ?? null : null} 
+                            job={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.conversation.id === selectedConversationId)?.jobInfo as Job ?? null : null} 
+                            clientName={``} 
+                            messages={messagesInfo.filter((message) => message.conversation_id === selectedConversationId) as Message[] ?? []} 
+                            isWriting={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.status === "typing" ? true : false : false}
+                            onSendMessage={handleSendMessage} 
+                            onWritingMessage={handleWritingMessage}
+                            onStopWritingMessage={handleStopWritingMessage}
+                            acceptHandler={handleAcceptHandler}
+                            isMobile={true}
+                        />
+                    )}
                 </div>
             </div>
         )

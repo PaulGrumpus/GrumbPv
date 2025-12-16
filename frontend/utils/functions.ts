@@ -918,6 +918,21 @@ export const updateNotification = async (notification_id: string, read_at: Date)
     }
 }
 
+export const markAllNotificationsAsRead = async (user_id: string) => {
+    try {
+        const response = await EscrowBackend.post(`/database/notifications/mark-all-as-read/${user_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
 // Utils
 export const formatDueDate = (deadline: number | string | undefined) => {
     if (deadline === null || deadline === undefined) {

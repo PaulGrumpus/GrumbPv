@@ -16,7 +16,7 @@ const ChatProjectInfo = ({ job, clientName, acceptHandler }: ChatProjectInfoProp
 
     return (
         <div className="bg-[#7E3FF2] rounded-xl py-3 px-3.75">
-            <div className="max-w-62.5 w-full">
+            <div className="lg:max-w-62.5 w-full">
                 <div className="flex items-center justify-center pt-6 pb-2.5">
                     <h1 className="text-light-large font-bold text-[#DEE4F2]">Project Overview</h1>
                 </div>
