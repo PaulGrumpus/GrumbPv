@@ -103,14 +103,14 @@ const ModalTemplate = ({
             className="fixed inset-0 z-50 overflow-y-auto bg-white/40 backdrop-blur-sm"
             onClick={handleOverlayClick}
         >
-            <div className="flex min-h-full items-center justify-center px-4 py-8 md:px-8 md:py-16">
+            <div className="flex min-h-full lg:items-center lg:justify-center p-0 md:px-8 md:py-16">
                 <div className={`${linearBorder ? 'linear-border rounded-lg p-0.25' : ''} ${widthClassName}`}>
                     <section
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby={dialogTitleId}
                         aria-describedby={subtitle ? subtitleId : undefined}
-                        className={`${linearBorder ? 'linear-border__inner rounded-[0.4375rem]' : ''} rounded-3xl bg-white text-black shadow-[0_30px_80px_rgba(0,0,0,0.15)] ${className}`}
+                        className={`${linearBorder ? 'linear-border__inner rounded-[0.4375rem]' : ''} rounded-3xl bg-white text-black shadow-[0_30px_80px_rgba(0,0,0,0.15)] ${className} min-h-full lg:min-h-auto`}
                     >
                         {title ? (
                             <div className="flex flex-col gap-6">

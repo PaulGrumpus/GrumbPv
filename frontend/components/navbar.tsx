@@ -18,7 +18,7 @@ import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 
 const chatIcon = "/Grmps/chat.svg";
 const bellIcon = "/Grmps/bell.svg";
-const defaultProfileImage = "/Grmps/default.jpg";
+const defaultProfileImage ="default.jpg";
 const logoImage = "/Grmps/grmps.jpg"; // Change this path to your custom logo
 
 const menuItems = [
@@ -66,8 +66,11 @@ const Navbar = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+    const [ isMobile, setIsMobile ] = useState(true);
 
     useEffect(() => {
+        setIsMobile(window.innerWidth < 768);
+
         if(userInfo.id) {
             setUserRole(userInfo.role);
             if(userInfo.display_name) {
@@ -98,12 +101,6 @@ const Navbar = () => {
         setNotificationDropdownOpen((prev) => !prev);
         setDropdownMenuOpen(false);
     };
-
-    const [ isMobile, setIsMobile ] = useState(false);
-
-    useEffect(() => {
-        setIsMobile(window.innerWidth < 768);
-    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -408,14 +405,14 @@ const Navbar = () => {
 
                         {/* Login Button */}
                         <button
-                        onClick={() => {
-                            router.push("/");
-                            setLoginSignupModalOpen(true);
-                            setMobileMenuOpen(false);
-                        }}
-                        className="mt-4 w-full rounded-xl bg-linear-to-r from-[#5B5BFF] to-[#7E3FF2] py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:opacity-90"
+                            onClick={() => {
+                                router.push("/");
+                                setLoginSignupModalOpen(true);
+                                setMobileMenuOpen(false);
+                            }}
+                            className="mt-4 w-full rounded-xl bg-linear-to-r from-[#5B5BFF] to-[#7E3FF2] py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:opacity-90"
                         >
-                        Login
+                            Login
                         </button>
                     </div>
                     </div>
