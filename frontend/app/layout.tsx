@@ -66,9 +66,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${roboto.variable} ${poppins.variable} ${inter.variable} antialiased bg-white`}
       >
         <WalletProvider>
-          <UserLoadingProvider>
-            <UserInfoProvider>
-              <SocketContextProvider>
+          <SocketContextProvider>
+            <UserLoadingProvider>
+              <UserInfoProvider>
                 <ProjectInfoLoadingProvider>
                   <ProjectInfoProvider>
                     <ConversationLoadingProvider>
@@ -89,9 +89,9 @@ export default function RootLayout({
                     </ConversationLoadingProvider>
                   </ProjectInfoProvider>
                 </ProjectInfoLoadingProvider>
-              </SocketContextProvider>
-            </UserInfoProvider>
-          </UserLoadingProvider>
+              </UserInfoProvider>
+            </UserLoadingProvider>
+          </SocketContextProvider>
         </WalletProvider>
       </body>
     </html>

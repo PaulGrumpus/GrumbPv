@@ -74,81 +74,89 @@ export const NotificationProvider = ({ children }: Props) => {
     }, [notifications]);
 
     useEffect(() => {
-        if(notificationSocket.isConnected) {
-            notificationSocket.socket?.emit("joinUserRoom", userInfo.id);
-            notificationSocket.socket?.on(websocket.WEBSOCKET_NEW_NOTIFICATION, async (notification: Notification) => {
-
-                setNotifications((prev) => [...prev, notification]);
-
-                if (notification.entity_type === NotificationEntity.milestone) {
-                    const updatedMilestoneInfo = await getJobMilestoneById(notification.entity_id);                    
-                    if (updatedMilestoneInfo.success && updatedMilestoneInfo.data) {
-                        const updatedMilestone = updatedMilestoneInfo.data;
-                        setJobMilestonesInfo((prev) => {
-                            const milestoneExists = prev.some((jobMilestone) => jobMilestone.id === updatedMilestone.id);
-                            if (notification.type === NotificationType.milestoneStarted) {
-                                if (milestoneExists) {
-                                    return prev.map((jobMilestone) =>
-                                        jobMilestone.id === updatedMilestone.id ? updatedMilestone : jobMilestone
-                                    );
-                                }
-                                return [...prev, updatedMilestone];
-                            }
-                            if (!milestoneExists) {
-                                return prev;
-                            }
-                            return prev.map((jobMilestone) =>
-                                jobMilestone.id === updatedMilestone.id ? updatedMilestone : jobMilestone
-                            );
-                        });
-                    }
-
-                }
-
-                if(notification.entity_type === NotificationEntity.job) {
-                    if(notification.type === NotificationType.jobPosted) {
-                        const userJobs = await getJobsByClientId(userInfo.id);
-                        if(userJobs.success) {
-                            setJobsInfo(userJobs.data ?? []);
-                        } else {
-                            setJobsInfo([]);
-                        }
-                    }
-                }
-                if(notification.entity_type === NotificationEntity.gig) {
-                    const userGigs = await getGigsByFreelancerId(userInfo.id);
-                    if(userGigs.success) {
-                        setGigsInfo(userGigs.data ?? []);
-                    } else {
-                        setGigsInfo([]);
-                    }
-                }
-                
-                if(notification.entity_type === NotificationEntity.conversation) {
-                    if (
-                        notification.type === NotificationType.chatCreated ||
-                        notification.type === NotificationType.chatUpdated
-                    ) {
-                        const conversationInfo = await getConversationById(notification.entity_id);
-                        if (conversationInfo.success && conversationInfo.data) {
-                            upsertConversationInfo(conversationInfo.data);
-                        }
-                    }
-                }   
-                
-                if(notification.entity_type === NotificationEntity.bid) {
-                    if(notification.type === NotificationType.bidSent) {
-                        const userBids = await getBidsByFreelancerId(userInfo.id);
-                        if(userBids.success) {
-                            setBidsInfo(userBids.data ?? []);
-                        } else {
-                            setBidsInfo([]);
-                        }
-                    }
-                }
-            });
+        if (!userInfo.id || !notificationSocket.socket || !notificationSocket.isConnected) {
+            return;
         }
-    }, [notificationSocket.isConnected]);
+
+        const socket = notificationSocket.socket;
+        const handleNotification = async (notification: Notification) => {
+            setNotifications((prev) => [...prev, notification]);
+
+            if (notification.entity_type === NotificationEntity.milestone) {
+                const updatedMilestoneInfo = await getJobMilestoneById(notification.entity_id);                    
+                if (updatedMilestoneInfo.success && updatedMilestoneInfo.data) {
+                    const updatedMilestone = updatedMilestoneInfo.data;
+                    setJobMilestonesInfo((prev) => {
+                        const milestoneExists = prev.some((jobMilestone) => jobMilestone.id === updatedMilestone.id);
+                        if (notification.type === NotificationType.milestoneStarted) {
+                            if (milestoneExists) {
+                                return prev.map((jobMilestone) =>
+                                    jobMilestone.id === updatedMilestone.id ? updatedMilestone : jobMilestone
+                                );
+                            }
+                            return [...prev, updatedMilestone];
+                        }
+                        if (!milestoneExists) {
+                            return prev;
+                        }
+                        return prev.map((jobMilestone) =>
+                            jobMilestone.id === updatedMilestone.id ? updatedMilestone : jobMilestone
+                        );
+                    });
+                }
+            }
+
+            if (notification.entity_type === NotificationEntity.job) {
+                if (notification.type === NotificationType.jobPosted) {
+                    const userJobs = await getJobsByClientId(userInfo.id);
+                    if (userJobs.success) {
+                        setJobsInfo(userJobs.data ?? []);
+                    } else {
+                        setJobsInfo([]);
+                    }
+                }
+            }
+
+            if (notification.entity_type === NotificationEntity.gig) {
+                const userGigs = await getGigsByFreelancerId(userInfo.id);
+                if (userGigs.success) {
+                    setGigsInfo(userGigs.data ?? []);
+                } else {
+                    setGigsInfo([]);
+                }
+            }
+
+            if (notification.entity_type === NotificationEntity.conversation) {
+                if (
+                    notification.type === NotificationType.chatCreated ||
+                    notification.type === NotificationType.chatUpdated
+                ) {
+                    const conversationInfo = await getConversationById(notification.entity_id);
+                    if (conversationInfo.success && conversationInfo.data) {
+                        upsertConversationInfo(conversationInfo.data);
+                    }
+                }
+            }
+
+            if (notification.entity_type === NotificationEntity.bid) {
+                if (notification.type === NotificationType.bidSent) {
+                    const userBids = await getBidsByFreelancerId(userInfo.id);
+                    if (userBids.success) {
+                        setBidsInfo(userBids.data ?? []);
+                    } else {
+                        setBidsInfo([]);
+                    }
+                }
+            }
+        };
+
+        socket.emit("joinUserRoom", userInfo.id);
+        socket.on(websocket.WEBSOCKET_NEW_NOTIFICATION, handleNotification);
+
+        return () => {
+            socket.off(websocket.WEBSOCKET_NEW_NOTIFICATION, handleNotification);
+        };
+    }, [notificationSocket.isConnected, notificationSocket.socket, userInfo.id]);
 
     return (
         <NotificationCtx.Provider value={{ notifications, setNotifications, notificationsError, setNotificationsError }}>

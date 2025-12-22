@@ -14,6 +14,7 @@ import { createJob } from "@/utils/functions";
 import { JobStatus, LocationType } from "@/types/jobs";
 import { formatISODate, parseISODate, formatDisplayDate, calendarIcon, CalendarDropdown } from "@/utils/calendar";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
+import SmallLoading from "../smallLoading";
 
 const uploadImage = "/Grmps/upload.svg";
 
@@ -153,6 +154,8 @@ const CreateJobSection = () => {
         setError("");
         setCheckError(false);
 
+        setLoading("pending");
+
         const response = await createJob(
             { 
                 title, 
@@ -175,6 +178,17 @@ const CreateJobSection = () => {
                 closeOnClick: true,
                 pauseOnHover: true,
             });
+
+            setTitle("");
+            setSelectedLocation("");
+            setDescription("");
+            setMaxBudget(0);
+            setMinBudget(0);
+            setDueDate(initialDate);
+            setSelectedFile(null);
+            setUploadedFileName("");
+            setPreviewUrl(null);
+
         } else {
             toast.error(response.error, {
                 position: "top-right",
@@ -184,6 +198,8 @@ const CreateJobSection = () => {
                 pauseOnHover: true,
             });
         }
+
+        setLoading("success");
     }
 
     useEffect(() => {
@@ -207,7 +223,7 @@ const CreateJobSection = () => {
     }, [userInfo, userLoadingState, router, notificationLoadingState])
 
     if (loading === "pending") {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 
     if (loading === "success") {
@@ -396,7 +412,7 @@ const CreateJobSection = () => {
             </div>
         )
     } else {
-        return <Loading />;
+        return <SmallLoading size="lg" />;
     }
 }
 export default CreateJobSection;

@@ -87,6 +87,8 @@ const CreateGigSection = () => {
         setError("");
         setCheckError(false);
 
+        setLoading("pending");        
+
         const response = await createGig(
             {
                 title,
@@ -108,6 +110,17 @@ const CreateGigSection = () => {
                 closeOnClick: true,
                 pauseOnHover: true,
             });
+
+            setTitle("");
+            setSelectedCategory("");
+            setDescription("");
+            setBudgetMaxUsd(0);
+            setBudgetMinUsd(0);
+            setLink("");
+            setSelectedFile(null);
+            setUploadedFileName("");
+            setPreviewUrl(null);
+
         } else {
             toast.error(response.error, {
                 position: "top-right",
@@ -116,7 +129,9 @@ const CreateGigSection = () => {
                 closeOnClick: true,
                 pauseOnHover: true,
             });
-        }        
+        }   
+        
+        setLoading("success");
     }
 
     useEffect(() => {
