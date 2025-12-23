@@ -203,7 +203,7 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
     const [selectedCategory, setSelectedCategory] = useState(""); 
     const categories = ["BNB", "USDC", "USDT", "USD"];
     const [coverLetter, setCoverLetter] = useState("");
-    const [budget, setBudget] = useState(0);
+    const [budget, setBudget] = useState("");
     const initialDate = formatISODate(new Date());
     const [startDate, setStartDate] = useState(initialDate);
     const [endDate, setEndDate] = useState(initialDate);
@@ -211,7 +211,7 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
     const [isEndCalendarOpen, setIsEndCalendarOpen] = useState(false);
     const [startCalendarMonth, setStartCalendarMonth] = useState(parseISODate(initialDate) ?? new Date());
     const [endCalendarMonth, setEndCalendarMonth] = useState(parseISODate(initialDate) ?? new Date());
-    const [period, setPeriod] = useState(0);
+    const [period, setPeriod] = useState("");
     const startPickerRef = useRef<HTMLDivElement | null>(null);
     const endPickerRef = useRef<HTMLDivElement | null>(null);
 
@@ -280,15 +280,15 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
         //     return;
         // }        
 
-        if (budget <= 0) {
+        if (Number(budget) <= 0) {
             setError("Budget must be greater than 0");
-            setBudget(0);
+            setBudget("");
             return;
         }
 
-        if (budget > 1000000) {
+        if (Number(budget) > 1000000) {
             setError("Budget must be less than 1000000");
-            setBudget(0);
+            setBudget("");
             return;
         }
 
@@ -308,9 +308,9 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
             job_id: jobId,
             freelancer_id: freelancerId,
             cover_letter_md: coverLetter,
-            bid_amount: budget,
+            bid_amount: Number(budget),
             token_symbol: selectedCategory ?? "USD",
-            period: period,
+            period: Number(period),
             status: BidStatus.PENDING,
         });
         if (result.success) {
@@ -372,13 +372,19 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
                                                 <p className='text-normal font-regular text-black text-left pb-2'>Budget</p>
                                                 <input
                                                     value={budget}
-                                                    type="number"
+                                                    type="text"
+                                                    inputMode="decimal"
                                                     onChange={(e) => {
-                                                        setBudget(Number(e.target.value));
+                                                        const value = e.target.value;
+
+                                                        // allow: "", "1", "1.", "1.2", "0.25"
+                                                        if (!/^\d*\.?\d*$/.test(value)) return;
+
+                                                        setBudget(value);
                                                         setError("");
                                                     }}
-                                                    className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
-                                                    placeholder='Budget'
+                                                    className="w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3"
+                                                    placeholder="Budget"
                                                 />
                                             </div>
                                             <div className='flex flex-col gap-2 lg:w-full w-auto'>
@@ -416,7 +422,7 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
                                             <div className="w-full">
                                                 <p className='text-normal font-regular text-black text-left pb-2'>Period</p>
                                                 <div className="flex gap-2 items-center">
-                                                    <input
+                                                    {/* <input
                                                         value={period}
                                                         onChange={(e) => {
                                                             setPeriod(Number(e.target.value));
@@ -424,6 +430,21 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
                                                         }}
                                                         className=' bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
                                                         placeholder='Period'
+                                                    /> */}
+                                                    <input
+                                                        value={period}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+
+                                                            // allow only digits
+                                                            if (!/^\d*$/.test(value)) return;
+
+                                                            setPeriod(value);
+                                                            setError("");
+                                                        }}
+                                                        inputMode="numeric"
+                                                        className="bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3"
+                                                        placeholder="Period"
                                                     />
                                                     <p className='text-normal font-regular text-black'>Days</p>
                                                 </div>

@@ -42,7 +42,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
     const [deliverables, setDeliverables] = useState(initialDeliverables);
     const [deliverablesList, setDeliverablesList] = useState<string[]>([]);
     const [outOfScope, setOutOfScope] = useState(initialOutOfScope);
-    const [budget, setBudget] = useState<number>(initialBudget);
+    const [budget, setBudget] = useState<string>(initialBudget.toString());
     const [currency, setCurrency] = useState(initialCurrency);
     const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -128,12 +128,12 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
             return;
         }
 
-        if (budget <= 0) {
+        if (Number(budget) <= 0) {
             setError("Budget must be greater than 0");
             return;
         }
 
-        if (budget > 1000000) {
+        if (Number(budget) > 1000000) {
             setError("Budget must be less than 1000000");
             return;
         }
@@ -149,7 +149,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                 freelancer_confirm: userInfo.id === freelancerId ? true : freelancerConfirmed,
                 deliverables: deliverables,
                 out_of_scope: outOfScope,
-                budget: budget,
+                budget: Number(budget),
                 token_symbol: currency,
                 start_date: new Date(startDate).toISOString(),
                 end_date: new Date(endDate).toISOString(),
@@ -291,8 +291,17 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                         <p className='text-normal font-medium text-[#8F99AF] text-left'>Budget</p>
                         <input
                             value={budget}
-                            type="number"
-                            onChange={(e) => setBudget(Number(e.target.value))}
+                            type="text"
+                            inputMode="decimal"
+                            onChange={(e) => {
+                                const value = e.target.value;
+
+                                // allow: "", "1", "1.", "1.2", "0.25"
+                                if (!/^\d*\.?\d*$/.test(value)) return;
+
+                                setBudget(value);
+                                setError("");
+                            }}
                             className='w-full border border-[#8F99AF] rounded-lg p-3 flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none'
                             placeholder='Budget'
                         />

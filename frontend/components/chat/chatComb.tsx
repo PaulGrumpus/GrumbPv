@@ -104,7 +104,7 @@ const ChatComb = ({ sender, receiver, job_id, job_token_symbol, job_title, job_d
         };
         fetchJobMilestoneId();
         return () => { isMounted = false; };
-    }, [job_application_doc_id, jobMilestonesInfo]);
+    }, [job_application_doc_id, jobsInfo]);
     
     return (
         <div className="lg:flex block w-full lg:w-auto">
@@ -155,6 +155,7 @@ const ChatComb = ({ sender, receiver, job_id, job_token_symbol, job_title, job_d
                                 conversationId={conversation_id} 
                                 jobApplicationDocId={job_application_doc_id} 
                                 ipfs={ipfsUrl}
+                                job_id={job_id}
                             />}
                         </div>
                     )}
@@ -201,6 +202,7 @@ const ChatComb = ({ sender, receiver, job_id, job_token_symbol, job_title, job_d
                                 conversationId={conversation_id} 
                                 jobApplicationDocId={job_application_doc_id} 
                                 ipfs={ipfsUrl}
+                                job_id={job_id}
                             />}
                         </div>
                     )}

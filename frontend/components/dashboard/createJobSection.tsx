@@ -26,8 +26,8 @@ const CreateJobSection = () => {
     const [selectedLocation, setSelectedLocation] = useState("");
     const categories = ["remote", "onsite", "hybrid"];
     const [description, setDescription] = useState("");
-    const [maxBudget, setMaxBudget] = useState<number>(0);
-    const [minBudget, setMinBudget] = useState<number>(0);
+    const [maxBudget, setMaxBudget] = useState<string>("");
+    const [minBudget, setMinBudget] = useState<string>("");
     const dueDatePickerRef = useRef<HTMLDivElement | null>(null);
     const initialDate = formatISODate(new Date());
     const [dueDate, setDueDate] = useState(initialDate);
@@ -123,7 +123,7 @@ const CreateJobSection = () => {
     }
     
     const handlePostJob = async () => {
-        if (title === "" || selectedLocation === "" || description === "" || maxBudget === 0 || minBudget === 0 || dueDate === "") {
+        if (title === "" || selectedLocation === "" || description === "" || Number(maxBudget) === 0 || Number(minBudget) === 0 || dueDate === "") {
             setError("Please fill in all fields");
             setCheckError(true);
             return;
@@ -163,8 +163,8 @@ const CreateJobSection = () => {
                 title, 
                 location: selectedLocation as LocationType, 
                 description_md: description, 
-                budget_max_usd:maxBudget, 
-                budget_min_usd: minBudget, 
+                budget_max_usd: Number(maxBudget), 
+                budget_min_usd: Number(minBudget), 
                 deadline_at: new Date(dueDate).toISOString() ?? "",
                 client_id: userInfo.id,
                 status: JobStatus.OPEN,
@@ -184,8 +184,8 @@ const CreateJobSection = () => {
             setTitle("");
             setSelectedLocation("");
             setDescription("");
-            setMaxBudget(0);
-            setMinBudget(0);
+            setMaxBudget("");
+            setMinBudget("");
             setDueDate(initialDate);
             setSelectedFile(null);
             setUploadedFileName("");
@@ -288,9 +288,18 @@ const CreateJobSection = () => {
                                 <div>
                                     <p className='text-normal font-regular text-black text-left pb-2'>Max Budget (USD)</p>
                                     <input
-                                        type="number"
                                         value={maxBudget}
-                                        onChange={(e) => setMaxBudget(Number(e.target.value))}
+                                        type="text"
+                                        inputMode="decimal"
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+
+                                            // allow: "", "1", "1.", "1.2", "0.25"
+                                            if (!/^\d*\.?\d*$/.test(value)) return;
+
+                                            setMaxBudget(value);
+                                            setError("");
+                                        }}
                                         className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
                                         placeholder='Max Budget'
                                     />
@@ -298,9 +307,18 @@ const CreateJobSection = () => {
                                 <div>
                                     <p className='text-normal font-regular text-black text-left pb-2'>Min Budget (USD)</p>
                                     <input
-                                        type="number"
                                         value={minBudget}
-                                        onChange={(e) => setMinBudget(Number(e.target.value))}
+                                        type="text"
+                                        inputMode="decimal"
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+
+                                            // allow: "", "1", "1.", "1.2", "0.25"
+                                            if (!/^\d*\.?\d*$/.test(value)) return;
+
+                                            setMinBudget(value);
+                                            setError("");
+                                        }}
                                         className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
                                         placeholder='Min Budget'
                                     />

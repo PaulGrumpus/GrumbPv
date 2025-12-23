@@ -24,8 +24,8 @@ const CreateGigSection = () => {
     const categories = ["Software Development", "Design", "Marketing", "Writing", "Translation", "Video Editing", "Audio Editing", "Data Entry", "Customer Support", "Other"];
     const [description, setDescription] = useState("");
     const [link, setLink] = useState("");
-    const [budgetMaxUsd, setBudgetMaxUsd] = useState<number>(0);
-    const [budgetMinUsd, setBudgetMinUsd] = useState<number>(0);
+    const [budgetMaxUsd, setBudgetMaxUsd] = useState<string>("");
+    const [budgetMinUsd, setBudgetMinUsd] = useState<string>("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploadedFileName, setUploadedFileName] = useState<string>("");
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -62,7 +62,7 @@ const CreateGigSection = () => {
     }
 
     const handlePostGig = async () => {
-        if (title === "" || selectedCategory === "" || description === "" || budgetMaxUsd === 0 || budgetMinUsd === 0) {
+        if (title === "" || selectedCategory === "" || description === "" || Number(budgetMaxUsd) === 0 || Number(budgetMinUsd) === 0) {
             setError("Please fill in all fields");
             setCheckError(true);
             return;
@@ -95,8 +95,8 @@ const CreateGigSection = () => {
             {
                 title,
                 description_md: description,
-                budget_max_usd: budgetMaxUsd,
-                budget_min_usd: budgetMinUsd,
+                budget_max_usd: Number(budgetMaxUsd),
+                budget_min_usd: Number(budgetMinUsd),
                 tags: [selectedCategory ?? ""],
                 freelancer_id: userInfo.id,
                 link,
@@ -116,8 +116,8 @@ const CreateGigSection = () => {
             setTitle("");
             setSelectedCategory("");
             setDescription("");
-            setBudgetMaxUsd(0);
-            setBudgetMinUsd(0);
+            setBudgetMaxUsd("");
+            setBudgetMinUsd("");
             setLink("");
             setSelectedFile(null);
             setUploadedFileName("");
@@ -247,9 +247,18 @@ const CreateGigSection = () => {
                                 <div>
                                     <p className='text-normal font-regular text-black text-left pb-2'>Max Budget (USD)</p>
                                     <input
-                                        type="number"
                                         value={budgetMaxUsd}
-                                        onChange={(e) => setBudgetMaxUsd(Number(e.target.value))}
+                                        type="text"
+                                        inputMode="decimal"
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+
+                                            // allow: "", "1", "1.", "1.2", "0.25"
+                                            if (!/^\d*\.?\d*$/.test(value)) return;
+
+                                            setBudgetMaxUsd(value);
+                                            setError("");
+                                        }}
                                         className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
                                         placeholder='Max Budget'
                                     />
@@ -257,9 +266,18 @@ const CreateGigSection = () => {
                                 <div>
                                     <p className='text-normal font-regular text-black text-left pb-2'>Min Budget (USD)</p>
                                     <input
-                                        type="number"
                                         value={budgetMinUsd}
-                                        onChange={(e) => setBudgetMinUsd(Number(e.target.value))}
+                                        type="text"
+                                        inputMode="decimal"
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+
+                                            // allow: "", "1", "1.", "1.2", "0.25"
+                                            if (!/^\d*\.?\d*$/.test(value)) return;
+
+                                            setBudgetMinUsd(value);
+                                            setError("");
+                                        }}
                                         className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
                                         placeholder='Min Budget'
                                     />

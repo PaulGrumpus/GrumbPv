@@ -107,28 +107,36 @@ export const DashboardProvider = ({ children }: Props) => {
 
         const socket = notificationSocket.socket;
         const handleNotification = async (notification: DashboardNotification) => {
+            console.log("TEST-NEW-NOTIFICATION:", notification);
             setNotificationsInfo((prev) => [...prev, notification]);
 
             if (notification.entity_type === NotificationEntity.milestone) {
                 const updatedMilestoneInfo = await getJobMilestoneById(notification.entity_id);                                    
                 if (updatedMilestoneInfo.success && updatedMilestoneInfo.data) {
                     const updatedMilestone = updatedMilestoneInfo.data;
-                    setJobsInfo(prevJobs =>
-                        prevJobs.map(job => {
+                    setJobsInfo(prevJobs => {
+                        let didUpdate = false;
+                    
+                        const nextJobs = prevJobs.map(job => {
                             if (job.id !== updatedMilestone.job_id) return job;
-                        
-                            const filtered = job.milestones.filter(
-                                m => m.id !== updatedMilestone.id
-                            );
-                        
+                    
+                            didUpdate = true;
+                    
+                            const milestones = job.milestones ?? [];
+                    
+                            const nextMilestones = [
+                                ...milestones.filter(m => m.id !== updatedMilestone.id),
+                                { ...updatedMilestone }, // force new ref
+                            ].sort((a, b) => a.order_index - b.order_index);
+                    
                             return {
                                 ...job,
-                                milestones: [...filtered, updatedMilestone].sort(
-                                    (a, b) => a.order_index - b.order_index
-                                ),
+                                milestones: nextMilestones,
                             };
-                        })
-                    );
+                        });
+                    
+                        return didUpdate ? nextJobs : prevJobs;
+                    });
                 }
             }
 
@@ -148,15 +156,17 @@ export const DashboardProvider = ({ children }: Props) => {
             }
 
             if (notification.entity_type === NotificationEntity.gig) {
-                const gigRes = await getGigById(notification.entity_id);
-                if (!gigRes.success || !gigRes.data) return;
-              
-                setGigsInfo(prev => {
-                    const exists = prev.some(gig => gig.id === gigRes.data.id);
-                    if (exists) return prev;
+                if(userInfo.role === "freelancer"){
+                    const gigRes = await getGigById(notification.entity_id);
+                    if (!gigRes.success || !gigRes.data) return;
                 
-                    return [gigRes.data, ...prev];
-                });
+                    setGigsInfo(prev => {
+                        const exists = prev.some(gig => gig.id === gigRes.data.id);
+                        if (exists) return prev;
+                    
+                        return [gigRes.data, ...prev];
+                    });
+                }
             }
 
             if (notification.entity_type === NotificationEntity.bid) {

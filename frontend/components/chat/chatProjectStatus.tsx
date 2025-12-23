@@ -12,6 +12,7 @@ import ModalTemplate from "../modalTemplate";
 import { useState } from "react";
 import { JobMilestoneStatus } from "@/types/jobMilestone";
 import { useProjectInfo } from "@/context/projectInfoContext";
+import { useDashboard } from "@/context/dashboardContext";
 
 interface ChatProjectStatusProps {
     status: number; // 1-4
@@ -22,6 +23,7 @@ interface ChatProjectStatusProps {
     jobApplicationDocId: string;
     user: User;
     ipfs: string | null;
+    job_id: string
 }
 
 const steps = [
@@ -31,7 +33,7 @@ const steps = [
     "Approved payment",
 ];
 
-const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId, conversationId, jobApplicationDocId, user, ipfs }: ChatProjectStatusProps) => {
+const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMilestoneId, conversationId, jobApplicationDocId, user, ipfs }: ChatProjectStatusProps) => {
     const safeStatus = Math.min(Math.max(status, 1), steps.length);
     const activeIndex = safeStatus - 1;
     const [isOpen, setIsOpen] = useState(false);
@@ -40,7 +42,8 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const { sendTransaction } = useWallet();
-    const { jobMilestonesInfo, setJobMilestonesInfo } = useProjectInfo();
+    // const { jobMilestonesInfo, setJobMilestonesInfo } = useProjectInfo();
+    const { setJobsInfo } = useDashboard();
     const handleDownload = async (url: string) => {
         try {
             const response = await fetch(url);
@@ -96,7 +99,32 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
         }
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.FUNDED });
         if (updatedJobMilestone.success) {
-            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
             toast.success("Escrow funded successfully", {
                 position: "top-right",
                 autoClose: 5000,
@@ -135,7 +163,32 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
         }
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.DELIVERED, ipfs: result.data.cid });
         if (updatedJobMilestone.success) {
-            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
             toast.success("Work delivered successfully", {
                 position: "top-right",
                 autoClose: 5000,
@@ -211,7 +264,32 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
         }
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.APPROVED });
         if (updatedJobMilestone.success) {
-            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
             toast.success("Work approved successfully", {
                 position: "top-right",
                 autoClose: 5000,
@@ -250,7 +328,32 @@ const ChatProjectStatus = ({ status, actionHandler, actionLabel, jobMilestoneId,
         }
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.RELEASED });
         if (updatedJobMilestone.success) {
-            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
             toast.success("Funds withdrawn successfully", {
                 position: "top-right",
                 autoClose: 5000,

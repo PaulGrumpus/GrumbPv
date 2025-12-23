@@ -59,6 +59,17 @@ export class ConversationService {
         const updatedConversation = await this.prisma.conversations.update({
           where: { id: existingConversation.id },
           data: updatePayload,
+          include: {
+            participants: {
+              include: {
+                user: true,
+              },
+            },
+            messages: {
+              orderBy: { created_at: 'asc' },
+              take: 100,
+            },
+          },
         });
 
         await notificationService.createNotification({
@@ -82,6 +93,17 @@ export class ConversationService {
           escrow: params.escrow,
           gig_id: params.gig_id ?? null,
           job_application_doc_id: params.job_application_doc_id ?? null,
+        },
+        include: {
+          participants: {
+            include: {
+              user: true,
+            },
+          },
+          messages: {
+            orderBy: { created_at: 'asc' },
+            take: 0,
+          },
         },
       });
 
