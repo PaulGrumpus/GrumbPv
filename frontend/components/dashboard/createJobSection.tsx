@@ -15,6 +15,7 @@ import { JobStatus, LocationType } from "@/types/jobs";
 import { formatISODate, parseISODate, formatDisplayDate, calendarIcon, CalendarDropdown } from "@/utils/calendar";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 import SmallLoading from "../smallLoading";
+import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
 
 const uploadImage = "/Grmps/upload.svg";
 
@@ -43,6 +44,7 @@ const CreateJobSection = () => {
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const router = useRouter();
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+    const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
     
     useEffect(() => {
         if (!isDueDateCalendarOpen) {
@@ -213,14 +215,14 @@ const CreateJobSection = () => {
                     // await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
-                if(notificationLoadingState === "success") {
+                if(dashboardLoadingState === "success") {
                     loadCreateJob();
                 }
             }
         } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState, router, notificationLoadingState])
+    }, [userInfo, userLoadingState, router, dashboardLoadingState])
 
     if (loading === "pending") {
         return <SmallLoading size="lg" />;

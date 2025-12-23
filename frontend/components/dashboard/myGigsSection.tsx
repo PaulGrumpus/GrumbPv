@@ -11,19 +11,26 @@ import { useProjectInfo } from "@/context/projectInfoContext";
 import { ProjectInfoLoadingCtx } from "@/context/projectInfoLoadingContext";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 import SmallLoading from "../smallLoading";
+import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
+import { useDashboard } from "@/context/dashboardContext";
+import { DashboardGig } from "@/types/dashboard";
 
 const MyGigsSection = () => {
     const router = useRouter();
     const { userInfo } = useContext(UserInfoCtx);
-    const { setuserLoadingState } = useContext(UserLoadingCtx);
+    const {userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
-    const [gigs, setGigs] = useState<Gig[]>([]);
+    // const [gigs, setGigs] = useState<Gig[]>([]);
+    const [gigs, setGigs] = useState<DashboardGig[]>([]);
     const { projectInfoLoadingState } = useContext(ProjectInfoLoadingCtx);
-    const { gigsInfo } = useProjectInfo();
+    // const { gigsInfo } = useProjectInfo();
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
 
+    const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
+    const { gigsInfo } = useDashboard()
+
     useEffect(() => {
-        if(projectInfoLoadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
                 setuserLoadingState("failure");
                 return;
@@ -31,18 +38,18 @@ const MyGigsSection = () => {
             if (userInfo && userInfo.id) {
                 const loadGigs = async () => {
                     await new Promise(resolve => setTimeout(resolve, 1000));
-                    setGigs(gigsInfo.sort((a: Gig, b: Gig) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()));
+                    setGigs(gigsInfo.sort((a: DashboardGig, b: DashboardGig) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()));
                     setLoading("success");
                 };
         
-                if(notificationLoadingState === "success") {
+                if(dashboardLoadingState === "success") {
                     loadGigs();
                 }
             }
-        } else if (projectInfoLoadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, projectInfoLoadingState, notificationLoadingState])
+    }, [userInfo, userLoadingState, dashboardLoadingState])
 
     useEffect(() => {
         console.log("test-gigsInfo", gigsInfo);
@@ -78,8 +85,8 @@ const MyGigsSection = () => {
                                     key={gig.id}
                                     title={gig.title}
                                     description={gig.description_md}
-                                    minBudget={gig.budget_min_usd}
-                                    maxBudget={gig.budget_max_usd}
+                                    minBudget={Number(gig.budget_min_usd)}
+                                    maxBudget={Number(gig.budget_max_usd)}
                                     currency={gig.token_symbol ?? "USD"}
                                     link={gig.link}
                                     tags={gig.tags ?? []}

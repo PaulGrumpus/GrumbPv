@@ -57,13 +57,11 @@ export const DashboardProvider = ({ children }: Props) => {
     const [notificationsInfo, setNotificationsInfo] = useState<DashboardNotification[]>([]);
     const [dashboardError, setDashboardError] = useState<string>("");
     const { userInfo } = useContext(UserInfoCtx);
-    const { userLoadingState } = useContext(UserLoadingCtx);
-    const { setdashboardLoadingState } = useContext(DashboardLoadingCtx);
+    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
+    const { dashboardLoadingState, setdashboardLoadingState } = useContext(DashboardLoadingCtx);
   
     const init = async () => {
-        if (userLoadingState !== "success") return;
-    
-        try {
+        if (userLoadingState === "success") {
             setdashboardLoadingState("pending");
 
             const userDahboard = await getDashboardDataByUserId(userInfo.id, userInfo.role);
@@ -83,11 +81,15 @@ export const DashboardProvider = ({ children }: Props) => {
             }
             
             setdashboardLoadingState("success");
-        } catch (err: any) {
-            setDashboardError(err.message);
+            
+        } else {
             setdashboardLoadingState("failure");
         }
     };
+
+    useEffect(() => {
+        console.log("test-dashboardLoadingState", dashboardLoadingState);
+    }, [dashboardLoadingState])
   
     useEffect(() => {
         init();

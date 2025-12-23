@@ -116,6 +116,7 @@ export type DashboardGig = {
     tags: string[];
     image_id: string | null;
     created_at: string;
+    link: string;
 };
 
 export type DashboardConversation = {

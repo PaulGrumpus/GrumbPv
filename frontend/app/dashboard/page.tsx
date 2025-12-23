@@ -16,6 +16,7 @@ import Loading from "@/components/loading";
 import { getBidsByFreelancerId, getGigsByFreelancerId, getJobsByClientId } from "@/utils/functions";
 import { toast } from "react-toastify";
 import { useProjectInfo } from "@/context/projectInfoContext";
+import { useDashboard } from "@/context/dashboardContext";
 
 type SectionSlug = "dashboard" | "my-gigs" | "create-gig" | "my-bids" | "my-jobs" | "create-job";
 
@@ -85,9 +86,11 @@ const DashboardPageContent = () => {
     const [myGigsCount, setMyGigsCount] = useState(0);
     const [myJobsCount, setMyJobsCount] = useState(0);
 
-    const { gigsInfo } = useProjectInfo();
-    const { jobsInfo } = useProjectInfo();
-    const { bidsInfo } = useProjectInfo();
+    // const { gigsInfo } = useProjectInfo();
+    // const { jobsInfo } = useProjectInfo();
+    // const { bidsInfo } = useProjectInfo();
+
+    const { jobsInfo, gigsInfo, bidsInfo } = useDashboard();
 
     useEffect(() => {
         setMyGigsCount(gigsInfo.length);
@@ -207,10 +210,10 @@ const DashboardPageContent = () => {
                 setUserRole(userInfo.role || "client");
                 const loadCounts = async () => {
                     if(userInfo.role === "freelancer") {
-                        await getMyGigsCount();
-                        await getMyBidsCount();
+                        setMyGigsCount(gigsInfo.length);
+                        setMyBidsCount(bidsInfo.length);
                     } else {
-                        await getMyJobsCount();
+                        setMyJobsCount(jobsInfo.length);
                     }
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
@@ -221,6 +224,12 @@ const DashboardPageContent = () => {
             router.push("/");
         }
     }, [userInfo, userLoadingState, router])
+
+    useEffect(() => {
+        setMyJobsCount(jobsInfo.length);
+        setMyGigsCount(gigsInfo.length);
+        setMyBidsCount(bidsInfo.length);
+    }, [jobsInfo, gigsInfo, bidsInfo])
 
     if (loading === "pending") {
         return <Loading />;

@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { createGig } from "@/utils/functions";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 import SmallLoading from "../smallLoading";
+import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
 
 const uploadImage = "/Grmps/upload.svg";
 
@@ -35,6 +36,7 @@ const CreateGigSection = () => {
     const [checkError, setCheckError] = useState(false);
     const router = useRouter();
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+    const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
 
     const handleUploadFile = () => {
         const fileInput = document.createElement("input");
@@ -172,14 +174,14 @@ const CreateGigSection = () => {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
-                if(notificationLoadingState === "success") {
+                if(dashboardLoadingState === "success") {
                     loadCreateGig();
                 }
             }
         } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState, router, notificationLoadingState])
+    }, [userInfo, userLoadingState, router, dashboardLoadingState])
 
     if (loading === "pending") {
         return <SmallLoading size="lg" />;

@@ -12,24 +12,35 @@ import { EscrowBackendConfig } from "@/config/config";
 
 const GigsPage = () => {
 
-    const { userInfo, setUserInfo } = useContext(UserInfoCtx);
-    const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [gigs, setGigs] = useState<Gig[]>([]);
     
     useEffect(() => {
-        if(userLoadingState !== "pending") {
-            const loadGigs = async () => {
-                const result = await getGigs();
-                if(result.success) {
-                    setGigs(result.data.sort((a: Gig, b: Gig) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()) ?? []);
+        let mounted = true;
+      
+        const loadJobs = async () => {
+            const result = await getGigs();
+            if (!mounted) return;
+        
+                if (result.success) {
+                    setGigs(
+                        (result.data ?? []).sort(
+                            (a: Gig, b: Gig) =>
+                            new Date(b.created_at ?? "").getTime() -
+                            new Date(a.created_at ?? "").getTime()
+                        )
+                    );
                 }
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                setLoading("success");
-            }
-            loadGigs();
-        }
-    }, [userInfo, userLoadingState])
+        
+            setLoading("success");
+        };
+      
+        loadJobs();
+      
+        return () => {
+            mounted = false;
+        };
+    }, []);
 
     if (loading === "pending") {
         return <Loading />;
