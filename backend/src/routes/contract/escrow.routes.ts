@@ -338,7 +338,11 @@ router.post(
  */
 router.post(
   '/:job_milestone_id/withdraw',
-  [param('job_milestone_id').isString().notEmpty(), body('userId').isString().notEmpty(), body('chainId').isInt().notEmpty()],
+  [
+    param('job_milestone_id').isString().notEmpty(),
+    body('userId').isString().notEmpty(),
+    body('chainId').isInt().notEmpty(),
+  ],
   validate([param('job_milestone_id'), body('userId'), body('chainId')]),
   escrowController.withdraw.bind(escrowController)
 );

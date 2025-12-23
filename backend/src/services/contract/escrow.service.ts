@@ -160,39 +160,37 @@ export class EscrowService {
     userId: string,
     chainId: number
   ): Promise<EscrowTxData> {
-    const exsitingJobMilestone =
-      await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
     if (!exsitingJobMilestone) {
       throw new AppError('Job milestone not found', 404);
     }
 
     const amount = exsitingJobMilestone.amount.toString();
-  
+
     const escrowAddress = exsitingJobMilestone.escrow;
     if (!escrowAddress) {
       throw new AppError('Escrow not found', 404);
     }
-  
-    const existingJob =
-      await jobService.getJobById(exsitingJobMilestone.job_id);
+
+    const existingJob = await jobService.getJobById(exsitingJobMilestone.job_id);
     if (!existingJob) {
       throw new AppError('Job not found', 404);
     }
-  
+
     // OPTIONAL: enforce who can fund
     if (existingJob.client_id !== userId) {
       throw new AppError('Unauthorized', 403);
     }
-  
+
     const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
-  
+
     const data = iface.encodeFunctionData('fund', []);
-  
+
     return {
       to: escrowAddress,
       data,
       value: ethers.parseEther(amount).toString(),
-      chainId: chainId
+      chainId: chainId,
     };
   }
 
@@ -285,8 +283,7 @@ export class EscrowService {
     cid: string,
     contentHash?: string
   ): Promise<EscrowTxData> {
-    const exsitingJobMilestone =
-      await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
     if (!exsitingJobMilestone) {
       throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
     }
@@ -340,7 +337,7 @@ export class EscrowService {
       data,
       value: '0',
       chainId,
-      cid
+      cid,
     };
   }
 
@@ -404,7 +401,7 @@ export class EscrowService {
     const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
     if (!exsitingJobMilestone) {
       throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
-  }
+    }
     const escrowAddress = exsitingJobMilestone.escrow;
     if (!escrowAddress) {
       throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
@@ -427,7 +424,7 @@ export class EscrowService {
       to: escrowAddress,
       data,
       value: '0',
-      chainId
+      chainId,
     };
   }
   /**
@@ -484,7 +481,7 @@ export class EscrowService {
     const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
     if (!exsitingJobMilestone) {
       throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
-  }
+    }
     const escrowAddress = exsitingJobMilestone.escrow;
     if (!escrowAddress) {
       throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
@@ -500,7 +497,7 @@ export class EscrowService {
       to: escrowAddress,
       data,
       value: '0',
-      chainId
+      chainId,
     };
   }
 

@@ -1,5 +1,10 @@
 import { ethers } from 'ethers';
-import { CONTRACT_ABIS, CONTRACT_ADDRESSES, DEFAULT_CONFIG, MEDIATOR_ID } from '../../config/contracts.js';
+import {
+  CONTRACT_ABIS,
+  CONTRACT_ADDRESSES,
+  DEFAULT_CONFIG,
+  MEDIATOR_ID,
+} from '../../config/contracts.js';
 import { web3Provider } from '../../utils/web3Provider.js';
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';

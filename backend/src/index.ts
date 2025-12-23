@@ -27,10 +27,11 @@ import conversationParticipantRoutes from './routes/chat/conversation.participan
 import messageRoutes from './routes/chat/message.routes.js';
 import messageReceiptRoutes from './routes/chat/message.receipt.routes.js';
 import notificationRoutes from './routes/database/notification.routes.js';
-import http from 'http'; 
+import dashboardRoutes from './routes/database/dashboard.routes.js';
+import http from 'http';
 import { Server } from 'socket.io';
 import { socket_router } from './routes/socket.routes.js';
-import { notification_socket_route } from './routes/notification.socket.route.js';  
+import { notification_socket_route } from './routes/notification.socket.route.js';
 
 // Load environment variables
 config();
@@ -88,6 +89,7 @@ app.use(`${API_PREFIX}/database/conversation-participants`, conversationParticip
 app.use(`${API_PREFIX}/database/messages`, messageRoutes);
 app.use(`${API_PREFIX}/database/message-receipts`, messageReceiptRoutes);
 app.use(`${API_PREFIX}/database/notifications`, notificationRoutes);
+app.use(`${API_PREFIX}/database/dashboard`, dashboardRoutes);
 
 // Error handlers (must be last)
 app.use(notFoundHandler);
@@ -108,7 +110,7 @@ async function bootstrap() {
   });
 
   io.on('connection', (socket) => {
-    console.log("test-socket-connected", socket.id);
+    console.log('test-socket-connected', socket.id);
     socket_router(socket, io);
     notification_socket_route(socket, io);
   });

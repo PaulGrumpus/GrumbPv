@@ -71,7 +71,7 @@ export class UserService {
         throw new AppError('User already exists', 400, 'USER_ALREADY_EXISTS');
       }
       const hashedPassword = await this.hashPasswordIfPresent(user.password);
-      const imageId = user.image_id ? user.image_id : "default.jpg";
+      const imageId = user.image_id ? user.image_id : 'default.jpg';
 
       console.log('Before create user');
       const newUser = await this.prisma.users.create({
@@ -108,9 +108,9 @@ export class UserService {
         throw new AppError('User not found', 404, 'USER_NOT_FOUND');
       }
       const { image_id: rawImageInput, ...userData } = user;
-      
+
       let removeExistingImage = true;
-      if (existingUser.image_id === "default.jpg") {
+      if (existingUser.image_id === 'default.jpg') {
         removeExistingImage = false;
       }
 
@@ -146,7 +146,7 @@ export class UserService {
       if (normalizedImageId !== undefined) {
         updateData.image_id = normalizedImageId as string;
       }
-      
+
       if (updateData.address) {
         const exsitingWalletAddress = await this.prisma.users.findUnique({
           where: { address: updateData.address as string },
