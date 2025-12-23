@@ -206,6 +206,8 @@ const ChatPageContent = () => {
                         return;
                     }
 
+                    console.log("TEST_CONVERSATIONSINFO:", conversationsInfo);
+
                     const now = new Date();
                     const builtChats: ChatSidebarItem[] = conversationsInfo.map((conversation) => ({
                         conversation_id: conversation.id,
@@ -222,12 +224,15 @@ const ChatPageContent = () => {
                         onUnpinChat: () => {},
                     }));
 
+                    console.log("TEST_builtChats:", builtChats);
+
                     setChatSidebarItems(builtChats);
 
                     const targetConversationId = conversationId ?? conversationsInfo[0]?.id;
                     if (targetConversationId) {
                         handleChatClick(targetConversationId);
                     }                    
+                    console.log("TEST_AFTER")
 
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");

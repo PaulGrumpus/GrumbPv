@@ -92,7 +92,7 @@ const Navbar = () => {
                 setUsername(userInfo.address.slice(0, 4) + "..." + userInfo.address.slice(-4));
             }
             // setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
-            setNotificationCount(notificationsInfo.length);
+            setNotificationCount(notificationsInfo.filter(n => !n.read_at).length);
             setLoggedIn(true);            
         } else {
             setUserRole('client');

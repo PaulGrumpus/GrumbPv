@@ -77,6 +77,10 @@ const MyBidsSection = () => {
         }
     }, [userInfo, userLoadingState, dashboardLoadingState])
 
+    useEffect(() => {
+        setBids(bidsInfo.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    }, [bidsInfo])
+
     if (loading === "pending") {
         return <SmallLoading size="lg" />;
     }

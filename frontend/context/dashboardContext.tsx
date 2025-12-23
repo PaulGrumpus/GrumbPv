@@ -175,10 +175,19 @@ export const DashboardProvider = ({ children }: Props) => {
                     if (!bidRes.success || !bidRes.data) return;
                 
                     setBidsInfo(prev => {
-                        const exists = prev.some(bid => bid.id === bidRes.data.id);
-                        if (exists) return prev;
+                        const exists = prev.some(b => b.id === bidRes.data.id);
                     
-                        return [bidRes.data, ...prev];
+                        if (!exists) {
+                            // INSERT
+                            return [bidRes.data, ...prev];
+                        }
+                    
+                        // UPDATE
+                        return prev.map(b =>
+                            b.id === bidRes.data.id
+                                ? { ...b, ...bidRes.data }
+                                : b
+                        );
                     });
                 } else {
                     const bidRes = await getJobBidForClientById(notification.entity_id);
@@ -204,25 +213,36 @@ export const DashboardProvider = ({ children }: Props) => {
             }
 
             const upsertConversationInfo = (conversation: DashboardConversation) => {
-                setConversationsInfo(prev => {
-                    const index = prev.findIndex(c => c.id === conversation.id);
+                const normalizeConversations = (
+                    list: DashboardConversation[]
+                ): DashboardConversation[] => {
+                    const map = new Map<string, DashboardConversation>();
                 
-                    if (index === -1) {
-                        return [conversation, ...prev];
+                    for (const c of list) {
+                        const existing = map.get(c.id);
+                
+                        if (!existing) {
+                            map.set(c.id, {
+                                ...c,
+                                messages: c.messages ?? [],
+                                participants: c.participants ?? [],
+                            });
+                        } else {
+                            // merge, keeping richer data
+                            map.set(c.id, {
+                                ...existing,
+                                ...c,
+                                messages:
+                                    c.messages?.length ? c.messages : existing.messages,
+                                participants:
+                                    c.participants?.length ? c.participants : existing.participants,
+                            });
+                        }
                     }
                 
-                    return prev.map(c =>
-                        c.id === conversation.id
-                        ? {
-                            ...c,
-                            ...conversation,
-                            // ensure messages are not lost accidentally
-                            messages: conversation.messages ?? c.messages,
-                            participants: conversation.participants ?? c.participants,
-                            }
-                        : c
-                    );
-                });
+                    return Array.from(map.values());
+                };
+                
             };
 
             if (notification.entity_type === NotificationEntity.conversation) {

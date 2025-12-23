@@ -97,20 +97,29 @@ const ApplicationPost = ({ item, job_id }: ApplicationPostProps) => {
             });
             if (jobApplication.success) {
                 job_application_id = jobApplication.data.id;
-                setJobsInfo(prevJobs =>
-                    prevJobs.map(job => {
-                        if (job.id !== job_id) return job;
-                    
-                        const filtered = job.jobApplicationsDocs.filter(
-                            app => app.id !== jobApplication.data.id
-                        );
-                    
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== jobApplication.data.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const applicationDocs = job.jobApplicationsDocs ?? [];
+                
+                        const nextApplicationDocs = [
+                            ...applicationDocs.filter(a => a.id !== jobApplication.data.id),
+                            { ...jobApplication.data }, // force new ref
+                        ];
+                
                         return {
                             ...job,
-                            jobApplicationsDocs: [...filtered, jobApplication.data]
+                            jobApplicationsDocs: nextApplicationDocs,
                         };
-                    })
-                );
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
             } else {
                 throw new Error(jobApplication.error as string);
             }
