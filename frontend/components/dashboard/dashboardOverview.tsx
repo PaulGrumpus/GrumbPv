@@ -11,6 +11,15 @@ import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 import { useProjectInfo } from "@/context/projectInfoContext";
 import { JobMilestoneWithJobApplicationsDocs } from "@/types/projectInfo";
 import { JobMilestoneStatus } from "@/types/jobMilestone";
+import { useDashboard } from "@/context/dashboardContext";
+import { DashboardJob, DashboardJobApplicationDoc, DashboardMilestone } from "@/types/dashboard";
+import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
+
+type MilestoneItem = {
+    job: DashboardJob;
+    milestone: DashboardMilestone;
+    applicationDoc: DashboardJobApplicationDoc | null;
+};
 
 const DashboardOverview = () => {
     const [openJobs, setOpenJobs] = useState(true);
@@ -22,12 +31,19 @@ const DashboardOverview = () => {
     const [loading, setLoading] = useState("pending");
     const router = useRouter();
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+    const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
 
     const { jobMilestonesInfo } = useProjectInfo();
-    const [ openedJobs, setOpenedJobs] = useState<JobMilestoneWithJobApplicationsDocs[]>([]);
-    const [ finishedJobs, setFinishedJobs] = useState<JobMilestoneWithJobApplicationsDocs[]>([]);
-    const [ visibleOpenedJobs, setVisibleOpenedJobs] = useState<JobMilestoneWithJobApplicationsDocs[]>([]);
-    const [ visibleFinishedJobs, setVisibleFinishedJobs] = useState<JobMilestoneWithJobApplicationsDocs[]>([]);
+    // const [ openedJobs, setOpenedJobs] = useState<JobMilestoneWithJobApplicationsDocs[]>([]);
+    // const [ finishedJobs, setFinishedJobs] = useState<JobMilestoneWithJobApplicationsDocs[]>([]);
+    const [ openedJobs, setOpenedJobs] = useState<MilestoneItem[]>([]);
+    const [ finishedJobs, setFinishedJobs] = useState<MilestoneItem[]>([]);
+    const [ visibleOpenedJobs, setVisibleOpenedJobs] = useState<MilestoneItem[]>([]);
+    const [ visibleFinishedJobs, setVisibleFinishedJobs] = useState<MilestoneItem[]>([]);
+    // const [ visibleOpenedJobs, setVisibleOpenedJobs] = useState<JobMilestoneWithJobApplicationsDocs[]>([]);
+    // const [ visibleFinishedJobs, setVisibleFinishedJobs] = useState<JobMilestoneWithJobApplicationsDocs[]>([]);
+    const { jobsInfo } = useDashboard()
+    let jobMilestones: MilestoneItem[] = [];
     
     useEffect(() => {
         if(userLoadingState === "success") {
@@ -37,34 +53,94 @@ const DashboardOverview = () => {
             }
             if (userInfo && userInfo.id) {
                 const loadDashboardPosts = async () => {
+                    
+                    // type FreelancerMilestoneItem = {
+                    //     job: typeof jobsInfo[number];
+                    //     milestone: typeof jobsInfo[number]["milestones"][number];
+                    //     applicationDoc: typeof jobsInfo[number]["jobApplicationsDocs"][number] | null;
+                    // };
 
-                    setOpenedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.status === JobMilestoneStatus.FUNDED || jobMilestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.status === JobMilestoneStatus.APPROVED || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE).sort((a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
+                    // let freelancerMilestones: FreelancerMilestoneItem[] = [];
+                    
 
-                    setFinishedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.RELEASED || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.status === JobMilestoneStatus.CANCELLED).sort((a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
+                    jobMilestones = jobsInfo
+                        // only jobs that actually have milestones
+                        .filter(job => job.milestones && job.milestones.length > 0)
+                        .flatMap(job =>
+                            job.milestones.map(milestone => {
+                                const applicationDoc =
+                                job.jobApplicationsDocs.find(
+                                    doc => doc.job_milestone_id === milestone.id
+                                ) ?? null;
+
+                                return {
+                                    job,
+                                    milestone,
+                                    applicationDoc
+                                };
+                            })
+                        );
+
+                    setOpenedJobs(jobMilestones.filter((jobMilestone) => jobMilestone.milestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.milestone.status === JobMilestoneStatus.FUNDED || jobMilestone.milestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.milestone.status === JobMilestoneStatus.APPROVED || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE).sort((a, b) => new Date(b.milestone.created_at ?? "").getTime() - new Date(a.milestone.created_at ?? "").getTime()));
+
+                    setFinishedJobs(jobMilestones.filter((jobMilestone) => jobMilestone.milestone.status === JobMilestoneStatus.RELEASED || jobMilestone.milestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.milestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.milestone.status === JobMilestoneStatus.CANCELLED).sort((a, b) => new Date(b.milestone.created_at ?? "").getTime() - new Date(a.milestone.created_at ?? "").getTime()));
+
+                    // setOpenedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.status === JobMilestoneStatus.FUNDED || jobMilestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.status === JobMilestoneStatus.APPROVED || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE).sort((a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
+
+                    // setFinishedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.RELEASED || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.status === JobMilestoneStatus.CANCELLED).sort((a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
                     
                     // await getGigsPerFreelancerId(userInfo.id);
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 };
-                if(notificationLoadingState === "success") {
+                // if(notificationLoadingState === "success") {
+                //     loadDashboardPosts();
+                // }
+
+                if(dashboardLoadingState === "success") {
                     loadDashboardPosts();
                 }
             }
         } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState, notificationLoadingState])
+    }, [userInfo, userLoadingState, dashboardLoadingState])
+    // }, [userInfo, userLoadingState, notificationLoadingState])
 
     useEffect(() => {
         setVisibleOpenedJobs(showAllOpenJobs ? openedJobs : openedJobs.slice(0, 2));
         setVisibleFinishedJobs(showAllCompletedJobs ? finishedJobs : finishedJobs.slice(0, 2));
     }, [openedJobs, finishedJobs, showAllOpenJobs, showAllCompletedJobs]);
 
-    useEffect(() => {
-        setOpenedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.status === JobMilestoneStatus.FUNDED || jobMilestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.status === JobMilestoneStatus.APPROVED || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE).sort((a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
+    // useEffect(() => {
+    //     setOpenedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.status === JobMilestoneStatus.FUNDED || jobMilestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.status === JobMilestoneStatus.APPROVED || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE).sort((a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
 
-        setFinishedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.RELEASED || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.status === JobMilestoneStatus.CANCELLED).sort((a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
-    }, [jobMilestonesInfo]);
+    //     setFinishedJobs(jobMilestonesInfo.filter((jobMilestone) => jobMilestone.status === JobMilestoneStatus.RELEASED || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.status === JobMilestoneStatus.CANCELLED).sort((a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
+    // }, [jobMilestonesInfo]);
+
+    useEffect(() => {
+        jobMilestones = jobsInfo
+        // only jobs that actually have milestones
+        .filter(job => job.milestones && job.milestones.length > 0)
+        .flatMap(job =>
+            job.milestones.map(milestone => {
+                const applicationDoc =
+                job.jobApplicationsDocs.find(
+                    doc => doc.job_milestone_id === milestone.id
+                ) ?? null;
+
+                return {
+                    job,
+                    milestone,
+                    applicationDoc
+                };
+            })
+        );
+
+        setOpenedJobs(jobMilestones.filter((jobMilestone) => jobMilestone.milestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.milestone.status === JobMilestoneStatus.FUNDED || jobMilestone.milestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.milestone.status === JobMilestoneStatus.APPROVED || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE).sort((a, b) => new Date(b.milestone.created_at ?? "").getTime() - new Date(a.milestone.created_at ?? "").getTime()));
+
+        setFinishedJobs(jobMilestones.filter((jobMilestone) => jobMilestone.milestone.status === JobMilestoneStatus.RELEASED || jobMilestone.milestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.milestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.milestone.status === JobMilestoneStatus.CANCELLED).sort((a, b) => new Date(b.milestone.created_at ?? "").getTime() - new Date(a.milestone.created_at ?? "").getTime()));
+    }, [jobsInfo])
 
     if (loading === "pending") {
         return <SmallLoading size="lg" />;
@@ -101,16 +177,16 @@ const DashboardOverview = () => {
                                 </div>
                                 {openJobs && (
                                     <div className="flex flex-col gap-8">
-                                        {visibleOpenedJobs.map((milestone) => (
+                                        {visibleOpenedJobs.map((openjob) => (
                                             <DashboardPosts 
-                                                key={`open-milestone-${milestone.id}`} 
+                                                key={`open-milestone-${openjob.milestone.id}`} 
                                                 user={userInfo}
                                                 variant="open" 
-                                                jobMilestoneId={milestone.id?.toString() ?? ""}
-                                                title={milestone?.title ?? ""}
-                                                description={milestone?.job?.description_md ?? ""}
-                                                milestoneStatus={milestone.status ?? JobMilestoneStatus.PENDING_FUND}
-                                                ipfs={milestone.ipfs}
+                                                jobMilestoneId={openjob.milestone.id?.toString() ?? ""}
+                                                title={openjob.job.title ?? ""}
+                                                description={openjob?.job?.description_md ?? ""}
+                                                milestoneStatus={openjob.milestone.status as JobMilestoneStatus ?? JobMilestoneStatus.PENDING_FUND}
+                                                ipfs={openjob.milestone.ipfs}
                                                 clickHandler={() => {
                                                     console.log("open milestone clicked");
                                                 }}
@@ -152,16 +228,16 @@ const DashboardOverview = () => {
                                 {completedJobs && (
                                     <div>
                                         <div className="grid lg:grid-cols-2 grid-cols-1 gap-8">
-                                            {visibleFinishedJobs.map((milestone) => (
+                                            {visibleFinishedJobs.map((finishedJob) => (
                                                 <DashboardPosts 
-                                                    key={`finished-milestone-${milestone.id}`} 
+                                                    key={`finished-milestone-${finishedJob.milestone.id}`} 
                                                     user={userInfo}
                                                     variant="completed" 
-                                                    jobMilestoneId={milestone.id?.toString() ?? ""}
-                                                    title={milestone?.title ?? ""}
-                                                    description={milestone?.job?.description_md ?? ""}
-                                                    milestoneStatus={milestone.status ?? JobMilestoneStatus.PENDING_FUND}
-                                                    ipfs={milestone.ipfs}
+                                                    jobMilestoneId={finishedJob.job.id?.toString() ?? ""}
+                                                    title={finishedJob?.milestone.title ?? ""}
+                                                    description={finishedJob?.job?.description_md ?? ""}
+                                                    milestoneStatus={finishedJob.milestone.status as JobMilestoneStatus ?? JobMilestoneStatus.PENDING_FUND}
+                                                    ipfs={finishedJob.milestone.ipfs}
                                                     clickHandler={() => {}}
                                                 />
                                             ))}

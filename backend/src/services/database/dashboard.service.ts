@@ -5,6 +5,7 @@ import { AppError } from '../../middlewares/errorHandler.js';
 class DashboardService {
   public async getDashboardData(userId: string, role: 'client' | 'freelancer') {
     try {
+      console.log("UserID is ", userId);
       const jobsPromise =
         role === 'client'
           ? prisma.jobs.findMany({
@@ -70,79 +71,84 @@ class DashboardService {
                     escrow: true,
                     due_at: true,
                     freelancer_id: true,
+                    created_at: true,
+                    ipfs: true,
                   },
                 },
               },
             })
           : prisma.jobs.findMany({
-              where: {
-                OR: [
-                  { bids: { some: { freelancer_id: userId } } },
-                  { jobApplicationsDocs: { some: { freelancer_id: userId } } },
-                  { milestones: { some: { freelancer_id: userId } } },
-                  {
-                    conversations: {
-                      some: {
-                        participants: { some: { user_id: userId } },
-                      },
-                    },
-                  },
-                ],
+            where: {
+              milestones: {
+                some: {
+                  freelancer_id: userId
+                }
+              }
+            },
+            select: {
+              id: true,
+              title: true,
+              description_md: true,
+              status: true,
+              created_at: true,
+              location: true,
+              tags: true,
+              image_id: true,
+              deadline_at: true,
+              budget_min_usd: true,
+              budget_max_usd: true,
+              token_symbol: true,
+              is_remote: true,
+          
+              client: {
+                select: {
+                  id: true,
+                  display_name: true,
+                  image_id: true,
+                  email: true
+                }
               },
-              select: {
-                id: true,
-                title: true,
-                description_md: true,
-                status: true,
-                created_at: true,
-                location: true,
-                tags: true,
-                image_id: true,
-                deadline_at: true,
-                budget_min_usd: true,
-                budget_max_usd: true,
-                token_symbol: true,
-                is_remote: true,
-
-                client: {
-                  select: {
-                    id: true,
-                    display_name: true,
-                    image_id: true,
-                    email: true,
-                  },
+          
+              milestones: {
+                where: {
+                  freelancer_id: userId
                 },
-
-                milestones: {
-                  select: {
-                    id: true,
-                    title: true,
-                    status: true,
-                    amount: true,
-                    escrow: true,
-                    due_at: true,
-                    order_index: true,
-                  },
-                },
-
-                jobApplicationsDocs: {
-                  where: { freelancer_id: userId },
-                  select: {
-                    id: true,
-                    budget: true,
-                    start_date: true,
-                    end_date: true,
-                    deliverables: true,
-                    out_of_scope: true,
-                    token_symbol: true,
-                    client_confirm: true,
-                    freelancer_confirm: true,
-                    job_milestone_id: true,
-                    client_id: true,
-                  },
-                },
+                select: {
+                  id: true,
+                  title: true,
+                  status: true,
+                  amount: true,
+                  escrow: true,
+                  due_at: true,
+                  order_index: true,
+                  created_at:true,
+                  ipfs: true,
+                }
               },
-            });
+          
+              jobApplicationsDocs: {
+                where: {
+                  freelancer_id: userId,
+                  job_milestone_id: {
+                    not: null
+                  }
+                },
+                select: {
+                  id: true,
+                  budget: true,
+                  start_date: true,
+                  end_date: true,
+                  deliverables: true,
+                  out_of_scope: true,
+                  token_symbol: true,
+                  client_confirm: true,
+                  freelancer_confirm: true,
+                  job_milestone_id: true,
+                  client_id: true
+                }
+              }
+            }
+          });
 
       const bidsPromise =
         role === 'freelancer'
@@ -198,10 +204,16 @@ class DashboardService {
         },
       });
 
+      
       const notificationsPromise = prisma.notifications.findMany({
-        where: { user_id: userId, read_at: null },
-        orderBy: { created_at: 'desc' },
-        take: 50,
+        where: {
+          AND: [
+            { user_id: userId },
+            { read_at: null }
+          ]
+        },
+        orderBy: { created_at: "desc" },
+        take: 50
       });
 
       const [jobs, bids, gigs, conversations, notifications] = await Promise.all([

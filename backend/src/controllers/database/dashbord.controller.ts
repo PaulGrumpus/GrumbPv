@@ -4,8 +4,9 @@ import { dashboardService } from '../../services/database/dashboard.service';
 class DashboardController {
   async getDashboardInfoByUserId(req: Request, res: Response, next: NextFunction) {
     try {
-      const { userId, role } = req.body;
-      const result = await dashboardService.getDashboardData(userId, role);
+      const { user_id } = req.params
+      const { role } = req.body;
+      const result = await dashboardService.getDashboardData(user_id, role);
       res.json({
         success: true,
         data: result,

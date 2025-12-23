@@ -9,12 +9,13 @@ import Image from "next/image";
 
 import { useWallet } from '@/context/walletContext';
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
+import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
 
 const Home = () => {
   const { userLoadingState } = useContext(UserLoadingCtx);
   const [loading, setLoading] = useState("pending");
   const { address, chainId, provider, isConnecting, isConnected, connect, disconnect, sendTransaction } = useWallet();
-  const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+  const { dashboardLoadingState } = useContext(DashboardLoadingCtx)
 
   useEffect(() => {
     if(userLoadingState === "failure") {
@@ -25,7 +26,7 @@ const Home = () => {
         load();
     }
     if(userLoadingState === "success") {
-      if(notificationLoadingState === "success") {
+      if(dashboardLoadingState === "success") {
         const load = async () => {
           await new Promise(resolve => setTimeout(resolve, 1000));
           setLoading("success");
@@ -33,7 +34,29 @@ const Home = () => {
         load();
       }
     }
-  }, [userLoadingState, notificationLoadingState])
+  }, [userLoadingState, dashboardLoadingState])
+
+  // const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+
+
+  // useEffect(() => {
+  //   if(userLoadingState === "failure") {
+  //       const load = async () => {
+  //           await new Promise(resolve => setTimeout(resolve, 1000));
+  //           setLoading("success");
+  //       }
+  //       load();
+  //   }
+  //   if(userLoadingState === "success") {
+  //     if(notificationLoadingState === "success") {
+  //       const load = async () => {
+  //         await new Promise(resolve => setTimeout(resolve, 1000));
+  //         setLoading("success");
+  //       }
+  //       load();
+  //     }
+  //   }
+  // }, [userLoadingState, notificationLoadingState])
 
   if (loading === "pending") {
     return <Loading />;

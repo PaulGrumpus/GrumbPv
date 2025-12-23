@@ -933,6 +933,7 @@ export const markAllNotificationsAsRead = async (user_id: string) => {
     }
 }
 
+// Dashboard
 export const getDashboardDataByUserId = async (user_id: string, role: string) => {
     try {
         const response = await EscrowBackend.post(`/database/dashboard/by-user-id/${user_id}`, {

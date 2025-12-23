@@ -87,6 +87,8 @@ export type DashboardMilestone = {
     escrow: string | null;
     due_at: string | null;
     freelancer_id?: string;
+    created_at?: string;
+    ipfs: string;
 };
 
 export type DashboardFreelancer = {
@@ -147,6 +149,7 @@ export type DashboardNotification = {
     body: string;
     payload: any;
     created_at: string;
+    read_at: string;
 };
     
 

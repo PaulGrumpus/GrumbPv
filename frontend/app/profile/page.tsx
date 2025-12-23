@@ -16,6 +16,8 @@ import { EscrowBackendConfig } from '@/config/config';
 import { connectMetaMaskWallet } from '@/utils/walletConnnect';
 import { useWallet } from '@/context/walletContext';
 import { NotificationLoadingCtx } from '@/context/notificationLoadingContext';
+import { DashboardCtx } from '@/context/dashboardContext';
+import { DashboardLoadingCtx } from '@/context/dashboardLoadingContext';
 
 type FormState = {
     userName: string;
@@ -50,7 +52,8 @@ const ProfilePage = () => {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const { connect, address, isConnected } = useWallet();
-    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+    // const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+    const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
 
     const initialFormState = useRef<FormState>({
         userName: "",
@@ -301,14 +304,18 @@ const ProfilePage = () => {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
-                if(notificationLoadingState === "success") {
+                // if(notificationLoadingState === "success") {
+                //     loadProfile();
+                // }
+                if(dashboardLoadingState === "success") {
                     loadProfile();
                 }
             }
         } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState, router, notificationLoadingState])
+    // }, [userInfo, userLoadingState, router, notificationLoadingState])
+    }, [userInfo, userLoadingState, router, dashboardLoadingState])
 
     useEffect(() => {
         if (address) {
