@@ -32,3 +32,10 @@ export type NotificationLoadingContextType = {
   notificationLoadingState: notificationLoadingState;
   setnotificationLoadingState: React.Dispatch<React.SetStateAction<notificationLoadingState>>;
 };
+
+export type dashboardLoadingState = "pending" | "failure" | "success";
+
+export type DashboardLoadingContextType = {
+  dashboardLoadingState: dashboardLoadingState;
+  setdashboardLoadingState: React.Dispatch<React.SetStateAction<dashboardLoadingState>>;
+};
