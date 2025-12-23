@@ -7,6 +7,7 @@ import Image from "next/image";
 import { createBid } from "@/utils/functions";
 import { BidStatus } from "@/types/bid";
 import { toast } from "react-toastify";
+import SmallLoading from "./smallLoading";
 
 interface ApplyJobProps {
     jobTitle: string;
@@ -214,6 +215,8 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
     const startPickerRef = useRef<HTMLDivElement | null>(null);
     const endPickerRef = useRef<HTMLDivElement | null>(null);
 
+    const [loading, setLoading] = useState("success");
+
     useEffect(() => {
         if (!isStartCalendarOpen && !isEndCalendarOpen) {
             return;
@@ -275,7 +278,7 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
         // if (title === "") {
         //     setError("Please enter a title");
         //     return;
-        // }
+        // }        
 
         if (budget <= 0) {
             setError("Budget must be greater than 0");
@@ -300,6 +303,7 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
         // }
 
         setError("");
+        setLoading("pending");
         const result = await createBid({
             job_id: jobId,
             freelancer_id: freelancerId,
@@ -317,6 +321,8 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
                 closeOnClick: true,
                 pauseOnHover: true,
             });
+            setLoading("success");
+            clickHandler();
         } else {
             toast.error(result.error, {
                 position: "top-right",
@@ -326,208 +332,219 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
                 pauseOnHover: true,
             });
         }
-        clickHandler();
+        setLoading("success");
     };
 
-    return (
-        <div>
-            <p className='lg:text-display text-title lg:text-left text-center font-bold text-black pb-6'>{jobTitle}</p>
-            <p className='text-light-large font-regular text-black lg:text-left text-center pb-6'>{jobDescription}</p>
-            <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
-                <div className="linear-border__inner rounded-[0.4375rem] bg-white py-8 px-3 lg:p-8">
-                    <div className='flex flex-col gap-6'>
-                        {/* <div>
-                            <p className='text-normal font-regular text-black text-left pb-2'>Title</p>
-                            <input
-                                value={title}
-                                onChange={(e) => {
-                                    setTitle(e.target.value);
-                                    setError("");
-                                }}
-                                className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
-                                placeholder='Title'
-                            />
-                        </div> */}
-                        <div className='w-full'>
-                            <p className='text-normal font-regular text-black text-left pb-2'>Cover Letter</p>
-                            <div className='flex flex-col'>
-                                <textarea className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-33.5 resize-none' value={coverLetter} onChange={(e) => setCoverLetter(e.target.value)} />
-                            </div>
-                        </div>
-                        <div className="flex flex-col lg:flex-row gap-6 w-full">
-                            <div className="lg:w-full w-auto">
-                                <p className='text-normal font-regular text-black text-left pb-2'>Budget</p>
-                                <input
-                                    value={budget}
-                                    type="number"
-                                    onChange={(e) => {
-                                        setBudget(Number(e.target.value));
-                                        setError("");
-                                    }}
-                                    className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
-                                    placeholder='Budget'
-                                />
-                            </div>
-                            <div className='flex flex-col gap-2 lg:w-full w-auto'>
-                                <p className='text-normal font-regular text-black text-left'>Category</p>
-                                <div ref={dropdownRef} className={`relative lg:w-full w-auto ${dropdownMenuOpen ? 'border-blue-500' : ''}`}>
-                                    <select
-                                        value={selectedCategory}
-                                        onChange={(e) => {
-                                            setSelectedCategory(e.target.value);
-                                            setError("");
-                                            setDropdownMenuOpen(false);
-                                        }}
-                                        className='w-full appearance-none rounded-lg border border-[#8F99AF] bg-white p-3 text-normal font-regular text-black focus:outline-none focus:border-blue-500'
-                                        onClick={(event) => {
-                                            event.stopPropagation();
-                                            setDropdownMenuOpen((prev: boolean) => !prev);
-                                        }}
-                                    >
-                                        <option value='' disabled>
-                                            Select one ...
-                                        </option>
-                                        {categories.map((category) => (
-                                            <option key={category} value={category} className='text-normal font-regular text-black bg-white py-2 px-3'>
-                                                {category}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {dropdownMenuOpen ? (
-                                        <ChevronUpIcon className="w-5 h-5 text-black absolute right-3 top-1/2 -translate-y-1/2" />
-                                    ) : (
-                                        <ChevronDownIcon className="w-5 h-5 text-black absolute right-3 top-1/2 -translate-y-1/2" />
-                                    )}
-                                </div>
-                            </div>
-                            <div className="w-full">
-                                <p className='text-normal font-regular text-black text-left pb-2'>Period</p>
-                                <div className="flex gap-2 items-center">
-                                    <input
-                                        value={period}
-                                        onChange={(e) => {
-                                            setPeriod(Number(e.target.value));
-                                            setError("");
-                                        }}
-                                        className=' bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
-                                        placeholder='Period'
-                                    />
-                                    <p className='text-normal font-regular text-black'>Days</p>
-                                </div>
-                            </div>
-                        </div>
-                        {/* <div className='flex flex-col gap-4 md:flex-row md:gap-2.5'>
-                            <div className="flex-1" ref={startPickerRef}>
-                                <p className='text-normal font-regular text-black text-left pb-2'>Start Date</p>
-                                <div className='relative'>
-                                    <div className='flex items-center border border-[#8F99AF] rounded-lg p-3 gap-3'>
-                                        <input
-                                            id="start-date-input"
-                                            type='text'
-                                            readOnly
-                                            value={formatDisplayDate(startDate)}
-                                            onClick={() => setIsStartCalendarOpen(true)}
-                                            className='flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none cursor-pointer'
-                                            placeholder='Select start date'
-                                            aria-haspopup="dialog"
-                                            aria-expanded={isStartCalendarOpen}
-                                            aria-controls="start-date-calendar"
-                                        />
-                                        <button
-                                            type='button'
-                                            onClick={() => setIsStartCalendarOpen((prev) => !prev)}
-                                            className='text-black'
-                                            aria-label='Open start date calendar'
-                                            aria-controls="start-date-calendar"
-                                            aria-expanded={isStartCalendarOpen}
-                                        >
-                                            <div>
-                                                <Image 
-                                                    src={calendarIcon} 
-                                                    alt='calendar icon' 
-                                                    width={24} 
-                                                    height={24} 
+    
+        return (
+            <div>
+                {
+                    loading === "pending" && <SmallLoading />
+                }
+                {
+                    loading === "success" &&
+                        <div>
+                            <p className='lg:text-display text-title lg:text-left text-center font-bold text-black pb-6'>{jobTitle}</p>
+                            <p className='text-light-large font-regular text-black lg:text-left text-center pb-6'>{jobDescription}</p>
+                            <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
+                                <div className="linear-border__inner rounded-[0.4375rem] bg-white py-8 px-3 lg:p-8">
+                                    <div className='flex flex-col gap-6'>
+                                        {/* <div>
+                                            <p className='text-normal font-regular text-black text-left pb-2'>Title</p>
+                                            <input
+                                                value={title}
+                                                onChange={(e) => {
+                                                    setTitle(e.target.value);
+                                                    setError("");
+                                                }}
+                                                className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
+                                                placeholder='Title'
+                                            />
+                                        </div> */}
+                                        <div className='w-full'>
+                                            <p className='text-normal font-regular text-black text-left pb-2'>Cover Letter</p>
+                                            <div className='flex flex-col'>
+                                                <textarea className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-33.5 resize-none' value={coverLetter} onChange={(e) => setCoverLetter(e.target.value)} />
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col lg:flex-row gap-6 w-full">
+                                            <div className="lg:w-full w-auto">
+                                                <p className='text-normal font-regular text-black text-left pb-2'>Budget</p>
+                                                <input
+                                                    value={budget}
+                                                    type="number"
+                                                    onChange={(e) => {
+                                                        setBudget(Number(e.target.value));
+                                                        setError("");
+                                                    }}
+                                                    className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
+                                                    placeholder='Budget'
                                                 />
                                             </div>
-                                        </button>
-                                    </div>
-                                    {isStartCalendarOpen && (
-                                        <CalendarDropdown
-                                            id="start-date-calendar"
-                                            selectedDate={startDate}
-                                            monthDate={startCalendarMonth}
-                                            onSelectDate={handleStartSelect}
-                                            onMonthChange={(date) => setStartCalendarMonth(new Date(date.getFullYear(), date.getMonth(), 1))}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-                            <div className="flex-1" ref={endPickerRef}>
-                                <p className='text-normal font-regular text-black text-left pb-2'>End Date</p>
-                                <div className='relative'>
-                                    <div className='flex items-center border border-[#8F99AF] rounded-lg p-3 gap-3'>
-                                        <input
-                                            id="end-date-input"
-                                            type='text'
-                                            readOnly
-                                            value={formatDisplayDate(endDate)}
-                                            onClick={() => setIsEndCalendarOpen(true)}
-                                            className='flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none cursor-pointer'
-                                            placeholder='Select end date'
-                                            aria-haspopup="dialog"
-                                            aria-expanded={isEndCalendarOpen}
-                                            aria-controls="end-date-calendar"
-                                        />
-                                        <button
-                                            type='button'
-                                            onClick={() => setIsEndCalendarOpen((prev) => !prev)}
-                                            className='text-black'
-                                            aria-label='Open end date calendar'
-                                            aria-controls="end-date-calendar"
-                                            aria-expanded={isEndCalendarOpen}
-                                        >
-                                            <div>
-                                                <Image 
-                                                    src={calendarIcon} 
-                                                    alt='calendar icon' 
-                                                    width={24} 
-                                                    height={24} 
-                                                />
+                                            <div className='flex flex-col gap-2 lg:w-full w-auto'>
+                                                <p className='text-normal font-regular text-black text-left'>Category</p>
+                                                <div ref={dropdownRef} className={`relative lg:w-full w-auto ${dropdownMenuOpen ? 'border-blue-500' : ''}`}>
+                                                    <select
+                                                        value={selectedCategory}
+                                                        onChange={(e) => {
+                                                            setSelectedCategory(e.target.value);
+                                                            setError("");
+                                                            setDropdownMenuOpen(false);
+                                                        }}
+                                                        className='w-full appearance-none rounded-lg border border-[#8F99AF] bg-white p-3 text-normal font-regular text-black focus:outline-none focus:border-blue-500'
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            setDropdownMenuOpen((prev: boolean) => !prev);
+                                                        }}
+                                                    >
+                                                        <option value='' disabled>
+                                                            Select one ...
+                                                        </option>
+                                                        {categories.map((category) => (
+                                                            <option key={category} value={category} className='text-normal font-regular text-black bg-white py-2 px-3'>
+                                                                {category}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {dropdownMenuOpen ? (
+                                                        <ChevronUpIcon className="w-5 h-5 text-black absolute right-3 top-1/2 -translate-y-1/2" />
+                                                    ) : (
+                                                        <ChevronDownIcon className="w-5 h-5 text-black absolute right-3 top-1/2 -translate-y-1/2" />
+                                                    )}
+                                                </div>
                                             </div>
-                                        </button>
+                                            <div className="w-full">
+                                                <p className='text-normal font-regular text-black text-left pb-2'>Period</p>
+                                                <div className="flex gap-2 items-center">
+                                                    <input
+                                                        value={period}
+                                                        onChange={(e) => {
+                                                            setPeriod(Number(e.target.value));
+                                                            setError("");
+                                                        }}
+                                                        className=' bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
+                                                        placeholder='Period'
+                                                    />
+                                                    <p className='text-normal font-regular text-black'>Days</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {/* <div className='flex flex-col gap-4 md:flex-row md:gap-2.5'>
+                                            <div className="flex-1" ref={startPickerRef}>
+                                                <p className='text-normal font-regular text-black text-left pb-2'>Start Date</p>
+                                                <div className='relative'>
+                                                    <div className='flex items-center border border-[#8F99AF] rounded-lg p-3 gap-3'>
+                                                        <input
+                                                            id="start-date-input"
+                                                            type='text'
+                                                            readOnly
+                                                            value={formatDisplayDate(startDate)}
+                                                            onClick={() => setIsStartCalendarOpen(true)}
+                                                            className='flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none cursor-pointer'
+                                                            placeholder='Select start date'
+                                                            aria-haspopup="dialog"
+                                                            aria-expanded={isStartCalendarOpen}
+                                                            aria-controls="start-date-calendar"
+                                                        />
+                                                        <button
+                                                            type='button'
+                                                            onClick={() => setIsStartCalendarOpen((prev) => !prev)}
+                                                            className='text-black'
+                                                            aria-label='Open start date calendar'
+                                                            aria-controls="start-date-calendar"
+                                                            aria-expanded={isStartCalendarOpen}
+                                                        >
+                                                            <div>
+                                                                <Image 
+                                                                    src={calendarIcon} 
+                                                                    alt='calendar icon' 
+                                                                    width={24} 
+                                                                    height={24} 
+                                                                />
+                                                            </div>
+                                                        </button>
+                                                    </div>
+                                                    {isStartCalendarOpen && (
+                                                        <CalendarDropdown
+                                                            id="start-date-calendar"
+                                                            selectedDate={startDate}
+                                                            monthDate={startCalendarMonth}
+                                                            onSelectDate={handleStartSelect}
+                                                            onMonthChange={(date) => setStartCalendarMonth(new Date(date.getFullYear(), date.getMonth(), 1))}
+                                                        />
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex-1" ref={endPickerRef}>
+                                                <p className='text-normal font-regular text-black text-left pb-2'>End Date</p>
+                                                <div className='relative'>
+                                                    <div className='flex items-center border border-[#8F99AF] rounded-lg p-3 gap-3'>
+                                                        <input
+                                                            id="end-date-input"
+                                                            type='text'
+                                                            readOnly
+                                                            value={formatDisplayDate(endDate)}
+                                                            onClick={() => setIsEndCalendarOpen(true)}
+                                                            className='flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none cursor-pointer'
+                                                            placeholder='Select end date'
+                                                            aria-haspopup="dialog"
+                                                            aria-expanded={isEndCalendarOpen}
+                                                            aria-controls="end-date-calendar"
+                                                        />
+                                                        <button
+                                                            type='button'
+                                                            onClick={() => setIsEndCalendarOpen((prev) => !prev)}
+                                                            className='text-black'
+                                                            aria-label='Open end date calendar'
+                                                            aria-controls="end-date-calendar"
+                                                            aria-expanded={isEndCalendarOpen}
+                                                        >
+                                                            <div>
+                                                                <Image 
+                                                                    src={calendarIcon} 
+                                                                    alt='calendar icon' 
+                                                                    width={24} 
+                                                                    height={24} 
+                                                                />
+                                                            </div>
+                                                        </button>
+                                                    </div>
+                                                    {isEndCalendarOpen && (
+                                                        <CalendarDropdown
+                                                            id="end-date-calendar"
+                                                            selectedDate={endDate}
+                                                            monthDate={endCalendarMonth}
+                                                            onSelectDate={handleEndSelect}
+                                                            onMonthChange={(date) => setEndCalendarMonth(new Date(date.getFullYear(), date.getMonth(), 1))}
+                                                        />
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div> */}
+                                        {error && (
+                                            <div className="text-small font-regular text-red-500 text-left">
+                                                {error}
+                                            </div>
+                                        )}
+                                        <div className='flex justify-end'>
+                                            <div className='w-30'>
+                                                <Button
+                                                    padding='px-10.75 py-3'
+                                                    onClick={handleApply}
+                                                >
+                                                    <p className='text-normal font-regular'>Apply</p>
+                                                </Button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    {isEndCalendarOpen && (
-                                        <CalendarDropdown
-                                            id="end-date-calendar"
-                                            selectedDate={endDate}
-                                            monthDate={endCalendarMonth}
-                                            onSelectDate={handleEndSelect}
-                                            onMonthChange={(date) => setEndCalendarMonth(new Date(date.getFullYear(), date.getMonth(), 1))}
-                                        />
-                                    )}
                                 </div>
                             </div>
-                        </div> */}
-                        {error && (
-                            <div className="text-small font-regular text-red-500 text-left">
-                                {error}
-                            </div>
-                        )}
-                        <div className='flex justify-end'>
-                            <div className='w-30'>
-                                <Button
-                                    padding='px-10.75 py-3'
-                                    onClick={handleApply}
-                                >
-                                    <p className='text-normal font-regular'>Apply</p>
-                                </Button>
-                            </div>
+                            
                         </div>
-                    </div>
-                </div>
-            </div>
+                }
             
-        </div>
-    )
+            </div>
+        )
+
 }
 export default ApplyJob;
