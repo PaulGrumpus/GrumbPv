@@ -59,6 +59,20 @@ export class JobBidController {
     }
   }
 
+  async getJobBidForClientById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const result = await jobBidService.getJobBidForClientById(id);
+      res.json({
+        success: true,
+        data: result,
+        message: 'Job bid retrieved successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getJobBidsByJobId(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_id } = req.params;

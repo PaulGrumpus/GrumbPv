@@ -101,9 +101,10 @@ const Navbar = () => {
     }, [userInfo]);
 
     useEffect(() => {
-        // setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
-        setNotificationCount(notificationsInfo.length);
-    }, [notificationsInfo]); // notifications
+        setNotificationCount(
+            notificationsInfo.filter(n => !n.read_at).length
+        );
+    }, [notificationsInfo]);
 
     const handleDropdownMenuOpen = () => {
         setDropdownMenuOpen((prev) => !prev);
@@ -251,7 +252,7 @@ const Navbar = () => {
                                                 {notificationDropdownOpen && (
                                                     <NotificationDropdownMenu
                                                         ref={notificationDropdownRef}
-                                                        notifications={notifications}
+                                                        notifications={notificationsInfo}
                                                     />
                                                 )}
                                             </div>
@@ -377,7 +378,7 @@ const Navbar = () => {
                                 {notificationDropdownOpen && (
                                     <NotificationDropdownMenu
                                         ref={notificationDropdownRef}
-                                        notifications={notifications}
+                                        notifications={notificationsInfo}
                                     />
                                 )}
                             </button>
@@ -559,12 +560,12 @@ const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
 DropdownMenu.displayName = "DropdownMenu";
 
 type NotificationDropdownMenuProps = {
-    notifications: Notification[];
+    notifications: DashboardNotification[];
 };
 
 const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdownMenuProps>(({ notifications }, ref) => {
     // const { setNotifications } = useContext(NotificationCtx);
-    const { notificationsInfo, setNotificationsInfo } = useDashboard();
+    const { setNotificationsInfo } = useDashboard();
     // const [unreadNotifications, setUnreadNotifications] = useState<Notification[]>([]);
     const [unreadNotifications, setUnreadNotifications] = useState<DashboardNotification[]>([]);
     const { userInfo } = useContext(UserInfoCtx);
@@ -577,48 +578,37 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
     };
 
     useEffect(() => {
-        setUnreadNotifications(notificationsInfo.sort((a, b) => {
-            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
-            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-            return bTime - aTime;
-        }));
-        // setUnreadNotifications(notifications.filter((notification) => !notification.read_at).sort((a, b) => {
-        //     const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
-        //     const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-        //     return bTime - aTime;
-        // }));
+        const unread = notifications
+            .filter(n => !n.read_at)
+            .slice() // clone BEFORE sort
+            .sort((a, b) => {
+                const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+                const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+                return bTime - aTime;
+            });
+    
+        setUnreadNotifications(unread);
     }, [notifications]);
 
     const handleMarkAsRead = async (notificationId: string) => {
+        setNotificationsInfo(prev =>
+            prev.map(n =>
+                n.id === notificationId
+                    ? { ...n, read_at: new Date().toISOString() }
+                    : n
+            )
+        );
+    
         try {
-            const updatedNotifications = notificationsInfo.map((notification) =>
-                notification.id === notificationId ? { ...notification, read_at: new Date().toISOString() } : notification
-            );
-            // const updatedNotifications = notifications.map((notification) =>
-            //     notification.id === notificationId ? { ...notification, read_at: new Date().toISOString() } : notification
-            // );
-            setNotificationsInfo(updatedNotifications)
-            // setNotifications(updatedNotifications);
             await updateNotification(notificationId, new Date());
-        }
-        catch (error) {
-            console.error("Unable to mark notification as read", error);
-        }
-        finally {
-            const updatedNotifications = notificationsInfo.map((notification) =>
-                notification.id === notificationId ? { ...notification, read_at: new Date().toISOString() } : notification
-            );
-            // const updatedNotifications = notifications.map((notification) =>
-            //     notification.id === notificationId ? { ...notification, read_at: new Date().toISOString() } : notification
-            // );
-            setNotificationsInfo(updatedNotifications);
-            // setNotifications(updatedNotifications);
+        } catch (err) {
+            console.error("Unable to mark notification as read", err);
         }
     };
 
     const handleMarkAllAsRead = async () => {
         // setNotifications(notifications.map((notification) => ({ ...notification, read_at: new Date().toISOString() })));
-        setNotificationsInfo(notificationsInfo.map((notification) => ({ ...notification, read_at: new Date().toISOString() })))
+        setNotificationsInfo(notifications.map((notification) => ({ ...notification, read_at: new Date().toISOString() })))
         await markAllNotificationsAsRead(userInfo.id);
     }
 

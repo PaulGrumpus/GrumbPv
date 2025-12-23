@@ -10,6 +10,7 @@ class DashboardService {
         role === 'client'
           ? prisma.jobs.findMany({
               where: { client_id: userId },
+              orderBy: {created_at: 'desc'},
               select: {
                 id: true,
                 title: true,
@@ -154,6 +155,7 @@ class DashboardService {
         role === 'freelancer'
           ? prisma.job_bids.findMany({
               where: { freelancer_id: userId },
+              orderBy: {created_at: 'desc'},
               select: {
                 id: true,
                 bid_amount: true,
@@ -186,6 +188,7 @@ class DashboardService {
         role === 'freelancer'
           ? prisma.gigs.findMany({
               where: { freelancer_id: userId },
+              orderBy: {created_at: 'desc'}
             })
           : Promise.resolve([]);
 

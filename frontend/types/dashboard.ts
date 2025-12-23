@@ -38,6 +38,7 @@ export type DashboardJobBid = {
     cover_letter_md: string | null;
     period: number | null;
     status: string;
+    job_id: string,
     freelancer: DashboardFreelancer;
 };
 
@@ -143,14 +144,16 @@ export type DashboardConversation = {
 
 export type DashboardNotification = {
     id: string;
+    user_id: string;
     type: string;
     entity_type: string;
     entity_id: string;
+    actor_user_id: string
     title: string;
     body: string;
-    payload: any;
+    payload: any | null;
     created_at: string;
-    read_at: string;
+    read_at: string | null;
 };
     
 

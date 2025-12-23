@@ -38,7 +38,7 @@ const MyGigsSection = () => {
             if (userInfo && userInfo.id) {
                 const loadGigs = async () => {
                     await new Promise(resolve => setTimeout(resolve, 1000));
-                    setGigs(gigsInfo.sort((a: DashboardGig, b: DashboardGig) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()));
+                    setGigs(gigsInfo.sort((a: DashboardGig, b: DashboardGig) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
                     setLoading("success");
                 };
         

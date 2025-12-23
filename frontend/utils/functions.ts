@@ -486,6 +486,21 @@ export const getGigs = async () => {
     }
 }
 
+export const getGigById = async (id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/gigs/by-id/${id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 // Bids
 export const createBid = async (bid: Bid) => {
     try {
@@ -507,6 +522,23 @@ export const createBid = async (bid: Bid) => {
 export const getBidById = async (bid_id: string) => {
     try {
         const response = await EscrowBackend.get(`/database/job-bids/by-id/${bid_id}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+
+export const getJobBidForClientById = async (bid_id: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/job-bids/by-id-client/${bid_id}`);
         return {
             success: true,
             data: response.data.data,

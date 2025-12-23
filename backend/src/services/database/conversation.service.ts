@@ -109,59 +109,26 @@ export class ConversationService {
     }
   }
 
-  public async getConversationById(id: string): Promise<{
-    conversation: conversations;
-    participants: conversation_participants[];
-    clientInfo: users;
-    freelancerInfo: users | null;
-    jobInfo: jobs | null;
-    gigInfo: gigs | null;
-  }> {
+  public async getConversationById(id: string){
     try {
-      const conversation = await this.prisma.conversations.findUnique({
-        where: { id },
+      const existingConversation = await prisma.conversations.findMany({
+        where: {
+          id
+        },
         include: {
-          job: {
-            include: {
-              client: true, // users table
-            },
-          },
-          gig: true,
           participants: {
             include: {
               user: true,
             },
           },
+          messages: {
+            orderBy: { created_at: 'asc' },
+            take: 100,
+          },
         },
       });
 
-      if (!conversation) {
-        throw new AppError('Conversation not found', 404, 'CONVERSATION_NOT_FOUND');
-      }
-
-      const jobInfo = conversation.job ?? null;
-      const gigInfo = conversation.gig ?? null;
-
-      const clientInfo = jobInfo?.client;
-      if (!clientInfo) {
-        throw new AppError('Client not found', 404, 'CLIENT_NOT_FOUND');
-      }
-
-      const freelancerInfo =
-        conversation.participants.map((p) => p.user).find((u) => u.id !== clientInfo.id) ?? null;
-
-      if (!freelancerInfo) {
-        throw new AppError('Freelancer not found', 404, 'FREELANCER_NOT_FOUND');
-      }
-
-      return {
-        conversation,
-        participants: conversation.participants,
-        clientInfo,
-        freelancerInfo,
-        jobInfo,
-        gigInfo,
-      };
+      return existingConversation;
     } catch (error) {
       logger.error('Error getting conversation by id', { error });
       throw new AppError('Error getting conversation by id', 500, 'CONVERSATION_GET_BY_ID_FAILED');
