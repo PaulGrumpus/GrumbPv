@@ -196,7 +196,11 @@ class DashboardService {
           },
         },
         include: {
-          participants: true,
+          participants: {
+            include: {
+              user: true,
+            },
+          },
           messages: {
             orderBy: { created_at: 'asc' },
             take: 100,

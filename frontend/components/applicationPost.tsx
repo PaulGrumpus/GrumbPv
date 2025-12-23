@@ -12,13 +12,37 @@ import { createConversationAndParticipant, createJobApplication, deleteJobApplic
 import { useRouter } from "next/navigation";
 import { ConversationsInfoCtx } from "@/context/conversationsContext";
 
+
+type freelancer = {
+    id: string;
+    display_name: string;
+    email: string;
+    address: string;
+    image_id: string;
+}
+
+interface ApplicationItem {
+    id: string;
+    bid_amount: string;
+    token_symbol: string;
+    cover_letter_md: string;
+    period: number;
+    status: string;
+    freelancer: freelancer;
+}
+
+export interface ApplicationPostProps {
+    item: ApplicationItem;
+    job_id?: string;
+}
 interface ApplicationWithUser extends Bid {
     freelancer?: User;
 }
 
 const COLLAPSED_MAX_HEIGHT = 120;
 
-const ApplicationPost = ({ freelancer, id, cover_letter_md, bid_amount, token_symbol, status, period, job_id, freelancer_id }: ApplicationWithUser) => {
+const ApplicationPost = ({ item, job_id }: ApplicationPostProps) => {
+    const { id, freelancer, bid_amount, token_symbol, cover_letter_md, period, status } = item;
     const [expanded, setExpanded] = useState(false);
     const [canToggle, setCanToggle] = useState(false);
     const coverLetterRef = useRef<HTMLParagraphElement>(null);
@@ -60,7 +84,7 @@ const ApplicationPost = ({ freelancer, id, cover_letter_md, bid_amount, token_sy
             const jobApplication = await createJobApplication({
                 job_id: job_id ?? "",
                 client_id: client_id,
-                freelancer_id: freelancer_id ?? "",
+                freelancer_id: freelancer.id ?? "",
                 client_confirm: false,
                 freelancer_confirm: false,
             });
@@ -69,7 +93,7 @@ const ApplicationPost = ({ freelancer, id, cover_letter_md, bid_amount, token_sy
             } else {
                 throw new Error(jobApplication.error as string);
             }
-            const result = await updateBidStatus(id ?? "", BidStatus.ACCEPTED, job_id ?? "", freelancer_id ?? "");
+            const result = await updateBidStatus(id ?? "", BidStatus.ACCEPTED, job_id ?? "", freelancer.id ?? "");
             if (result.success) {
                 toast.success("Bid accepted successfully", {
                     position: "top-right",
@@ -82,7 +106,7 @@ const ApplicationPost = ({ freelancer, id, cover_letter_md, bid_amount, token_sy
                 throw new Error(result.error as string);
             }
 
-            const conversation = await createConversationAndParticipant(job_application_id, job_id ?? "", "", client_id, freelancer_id ?? "");
+            const conversation = await createConversationAndParticipant(job_application_id, job_id ?? "", "", client_id, freelancer.id ?? "");
             if (!conversation.success) {
                 throw new Error(conversation.error as string);
             }
@@ -141,7 +165,7 @@ const ApplicationPost = ({ freelancer, id, cover_letter_md, bid_amount, token_sy
             // if (!jobApplication.success) {
             //     throw new Error(jobApplication.error as string);
             // }
-            const result = await updateBidStatus(id ?? "", BidStatus.DECLINED, job_id ?? "", freelancer_id ?? "");
+            const result = await updateBidStatus(id ?? "", BidStatus.DECLINED, job_id ?? "", freelancer.id ?? "");
             if (result.success) {
                 toast.success("Bid declined successfully", {
                     position: "top-right",

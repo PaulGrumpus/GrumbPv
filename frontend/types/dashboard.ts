@@ -1,3 +1,6 @@
+import { Message, MessageKind } from "./message";
+import { User } from "./user";
+
 export type DashboardResponse = {
     jobs: DashboardJob[];
     bids: DashboardBid[];          // freelancer only, empty for client
@@ -124,21 +127,18 @@ export type DashboardConversation = {
     job_id: string | null;
     gig_id: string | null;
     created_at: string;
+    type: string;
+    escrow: string | null;
+    job_application_doc_id: string;
     participants: {
-        user_id: string;
+        id: string;
         is_pinned: boolean;
         is_muted: boolean;
+        user: User;
+        blocked_until: string | null;
+        last_read_msg_id: string | null;
     }[];
-    messages: DashboardMessage[];
-};
-  
-export type DashboardMessage = {
-    id: string;
-    sender_id: string;
-    kind: string;
-    body_text: string | null;
-    created_at: string;
-    edited_at: string | null;
+    messages: Message[];
 };
 
 export type DashboardNotification = {

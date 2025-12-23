@@ -15,11 +15,18 @@ import SmallLoading from "../smallLoading";
 import { useProjectInfo } from "@/context/projectInfoContext";
 import { JobMilestoneStatus } from "@/types/jobMilestone";
 import MobileDrawer from "./mobileDrawer";
+import { useDashboard } from "@/context/dashboardContext";
 
 interface ChatCombProps {
     sender: User;
     receiver: User | null;
-    job: Job | null;
+    job_id: string;
+    job_title: string;
+    job_description: string
+    job_min_budget: string
+    job_max_budget: string
+    job_deadline_at: string
+    job_token_symbol: string;
     conversation_id: string;
     job_application_doc_id: string;
     clientName: string;
@@ -32,7 +39,7 @@ interface ChatCombProps {
     isMobile: boolean;
 }
 
-const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_id, clientName, acceptHandler, messages, isWriting, onSendMessage, onWritingMessage, onStopWritingMessage, isMobile }: ChatCombProps) => {
+const ChatComb = ({ sender, receiver, job_id, job_token_symbol, job_title, job_description, job_max_budget, job_deadline_at, job_min_budget, conversation_id, job_application_doc_id, clientName, acceptHandler, messages, isWriting, onSendMessage, onWritingMessage, onStopWritingMessage, isMobile }: ChatCombProps) => {
     const [jobMilestoneId, setJobMilestoneId] = useState<string | null>(null);
     const [ status, setStatus] = useState<number>(0);
     const [loading, setLoading] = useState<userLoadingState>("pending");
@@ -40,27 +47,26 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
     const { jobMilestonesInfo } = useProjectInfo();
     const [isProfileOpen, setProfileOpen] = useState(false);
     const [isProjectInfoOpen, setProjectInfoOpen] = useState(false);
+    const { jobsInfo } = useDashboard();
 
     useEffect(() => {
         let isMounted = true;
         const fetchJobMilestoneId = async () => {
             setLoading("pending");
             try {
-                const jobApplicationInfo = await getJobApplicationById(job_application_doc_id);
-                if(!jobApplicationInfo.success) {
-                    toast.error(jobApplicationInfo.error as string, {
-                        position: "top-right",
-                        autoClose: 5000,
-                        hideProgressBar: false,
-                    });
-                    return;
-                }
+                const jobApplicationDoc =
+                jobsInfo
+                    .flatMap(job => job.jobApplicationsDocs)
+                    .find(doc => doc.id === job_application_doc_id) ?? null;
+
                 if(!isMounted) return;
 
-                if(jobApplicationInfo.data.job_application_info.job_milestone_id){
-                    setJobMilestoneId(jobApplicationInfo.data.job_application_info.job_milestone_id);
+                if(jobApplicationDoc?.id){
+                    setJobMilestoneId(jobApplicationDoc.job_milestone_id);
                    
-                    const jobMilestoneInfo = jobMilestonesInfo.find((jobMilestone) => jobMilestone.id === jobApplicationInfo.data.job_application_info.job_milestone_id);
+                    const jobMilestoneInfo = jobsInfo
+                    .flatMap(job => job.milestones)
+                    .find(milestone => milestone.id === jobApplicationDoc.job_milestone_id) ?? null;
                     if(!isMounted) return;
 
                     let nextStatus = 0;
@@ -132,8 +138,14 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
                     : (
                         <div className="mb-10">
                             {!jobMilestoneId && <ChatProjectInfo 
-                                job={job} 
-                                clientName={job? clientName : "No client name"} 
+                                job_id={job_id}
+                                job_token_symbol={job_token_symbol}
+                                job_title={job_title}
+                                job_description={job_description}
+                                job_max_budget={job_max_budget}
+                                job_min_budget={job_min_budget}
+                                job_deadline_at={job_deadline_at}
+                                clientName={job_id? clientName : "No client name"} 
                                 acceptHandler={() => acceptHandler(conversation_id)} 
                             />}
                             {jobMilestoneId && <ChatProjectStatus 
@@ -172,8 +184,14 @@ const ChatComb = ({ sender, receiver, job, conversation_id, job_application_doc_
                     : (
                         <div>
                             {!jobMilestoneId && <ChatProjectInfo 
-                                job={job} 
-                                clientName={job? clientName : "No client name"} 
+                                job_id={job_id}
+                                job_token_symbol={job_token_symbol}
+                                job_title={job_title}
+                                job_description={job_description}
+                                job_max_budget={job_max_budget}
+                                job_min_budget={job_min_budget}
+                                job_deadline_at={job_deadline_at}
+                                clientName={job_id? clientName : "No client name"} 
                                 acceptHandler={() => acceptHandler(conversation_id)} 
                             />}
                             {jobMilestoneId && <ChatProjectStatus 
