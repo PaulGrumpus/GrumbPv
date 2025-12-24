@@ -11,6 +11,9 @@ import { ConversationLoadingCtx } from "@/context/conversationLoadingContext";
 import { ProjectInfoCtx } from "@/context/projectInfoContext";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 import SmallLoading from "../smallLoading";
+import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
+import { useDashboard } from "@/context/dashboardContext";
+import { DashboardJob } from "@/types/dashboard";
 
 const MyJobsSection = () => {
     const router = useRouter();
@@ -18,12 +21,15 @@ const MyJobsSection = () => {
     const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const { conversationLoadingState } = useContext(ConversationLoadingCtx);    
     const [loading, setLoading] = useState("pending");
-    const [jobs, setJobs] = useState<Job[]>([]);
-    const { jobsInfo } = useContext(ProjectInfoCtx);
+    const [jobs, setJobs] = useState<DashboardJob[]>([]);
+    // const [jobs, setJobs] = useState<Job[]>([]);
+    // const { jobsInfo } = useContext(ProjectInfoCtx);
+    const { jobsInfo } = useDashboard();
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+    const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
 
     useEffect(() => {
-        if(conversationLoadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
                 setuserLoadingState("failure");
                 return;
@@ -31,18 +37,18 @@ const MyJobsSection = () => {
             if (userInfo && userInfo.id) {
                 const loadJobs = async () => {
                     await new Promise(resolve => setTimeout(resolve, 1000));
-                    setJobs(jobsInfo.sort((a: Job, b: Job) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
+                    setJobs(jobsInfo.sort((a: DashboardJob, b: DashboardJob) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()));
                     setLoading("success");
                 };
         
-                if(notificationLoadingState === "success") {
+                if(dashboardLoadingState === "success") {
                     loadJobs();
                 }
             }
-        } else if (conversationLoadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, conversationLoadingState, notificationLoadingState])
+    }, [userInfo, userLoadingState, dashboardLoadingState])
 
     useEffect(() => {
         console.log("test-jobsInfo", jobsInfo);
@@ -79,11 +85,11 @@ const MyJobsSection = () => {
                                     job_id={job.id}
                                     title={job.title}
                                     description={job.description_md}
-                                    location={job.location ?? LocationType.REMOTE}
+                                    location={job.location as LocationType ?? LocationType.REMOTE}
                                     tags={job.tags ?? []}
                                     image={job.image_id?EscrowBackendConfig.uploadedImagesURL + job.image_id: ""}
-                                    minBudget={job.budget_min_usd}
-                                    maxBudget={job.budget_max_usd}
+                                    minBudget={Number(job.budget_min_usd)}
+                                    maxBudget={Number(job.budget_max_usd)}
                                     currency={job.token_symbol ?? "USD"}
                                     deadline={job.deadline_at ? new Date(job.deadline_at).getTime() / 1000 : undefined}
                                     status={job.status}

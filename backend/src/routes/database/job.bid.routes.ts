@@ -167,6 +167,13 @@ router.get(
   validate([param('id')]),
   jobBidController.getJobBidById.bind(jobBidController)
 );
+
+router.get(
+  '/by-id-client/:id',
+  [param('id').isString().notEmpty()],
+  validate([param('id')]),
+  jobBidController.getJobBidForClientById.bind(jobBidController)
+);
 /**
  * @openapi
  * /api/v1/database/job-bids/by-job-id/{job_id}:

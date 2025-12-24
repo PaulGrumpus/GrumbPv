@@ -18,6 +18,8 @@ import { ProjectInfoLoadingProvider } from "@/context/projectInfoLoadingContext"
 import { ProjectInfoProvider } from "@/context/projectInfoContext";
 import { NotificationProvider } from "@/context/notificationContext";
 import { NotificationLoadingProvider } from "@/context/notificationLoadingContext";
+import { DashboardLoadingProvider } from "@/context/dashboardLoadingContext";
+import { DashboardProvider } from "@/context/dashboardContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -66,32 +68,36 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${roboto.variable} ${poppins.variable} ${inter.variable} antialiased bg-white`}
       >
         <WalletProvider>
-          <UserLoadingProvider>
-            <UserInfoProvider>
-              <SocketContextProvider>
-                <ProjectInfoLoadingProvider>
-                  <ProjectInfoProvider>
-                    <ConversationLoadingProvider>
-                      <ConversationsInfoProvider>
-                        <MessageLoadingProvider>
-                          <MessagesInfoProvider>
-                            <NotificationLoadingProvider>
-                              <NotificationProvider>
-                                <Navbar />
-                                {children}
-                                <FooterToggle />
-                                <ToastContainer />
-                              </NotificationProvider>
-                            </NotificationLoadingProvider>
-                          </MessagesInfoProvider>
-                        </MessageLoadingProvider>
-                      </ConversationsInfoProvider>
-                    </ConversationLoadingProvider>
-                  </ProjectInfoProvider>
-                </ProjectInfoLoadingProvider>
-              </SocketContextProvider>
-            </UserInfoProvider>
-          </UserLoadingProvider>
+          <SocketContextProvider>
+            <UserLoadingProvider>
+              <UserInfoProvider>
+                <DashboardLoadingProvider>
+                  <DashboardProvider>
+                    {/* <ProjectInfoLoadingProvider>
+                      <ProjectInfoProvider>
+                        <ConversationLoadingProvider>
+                          <ConversationsInfoProvider>
+                            <MessageLoadingProvider>
+                              <MessagesInfoProvider>
+                                <NotificationLoadingProvider>
+                                  <NotificationProvider> */}
+                                    <Navbar />
+                                    {children}
+                                    <FooterToggle />
+                                    <ToastContainer />
+                                  {/* </NotificationProvider>
+                                </NotificationLoadingProvider>
+                              </MessagesInfoProvider>
+                            </MessageLoadingProvider>
+                          </ConversationsInfoProvider>
+                        </ConversationLoadingProvider>                    
+                      </ProjectInfoProvider>
+                    </ProjectInfoLoadingProvider> */}
+                  </DashboardProvider>
+                </DashboardLoadingProvider>
+              </UserInfoProvider>
+            </UserLoadingProvider>
+          </SocketContextProvider>
         </WalletProvider>
       </body>
     </html>

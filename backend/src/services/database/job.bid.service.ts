@@ -4,7 +4,7 @@ import { Prisma, bid_status, job_bids } from '@prisma/client';
 import { userService } from './user.service.js';
 import { jobService } from './job.service.js';
 import { prisma } from '../../prisma.js';
-import { notification_entity, notification_type } from "@prisma/client";
+import { notification_entity, notification_type } from '@prisma/client';
 import { notificationService } from './notification.service.js';
 
 export class JobBidService {
@@ -86,10 +86,10 @@ export class JobBidService {
       if (!existingJobBid) {
         throw new AppError('Job bid not found', 404, 'JOB_BID_NOT_FOUND');
       }
-      if(existingJobBid.status === bid_status.declined) {
+      if (existingJobBid.status === bid_status.declined) {
         throw new AppError('Job bid is already declined', 400, 'JOB_BID_IS_ALREADY_DECLINED');
       }
-      if(existingJobBid.status === bid_status.withdrawn) {
+      if (existingJobBid.status === bid_status.withdrawn) {
         throw new AppError('Job bid is already withdrawn', 400, 'JOB_BID_IS_ALREADY_WITHDRAWN');
       }
       if (!jobBid.job_id || !jobBid.freelancer_id) {
@@ -120,11 +120,26 @@ export class JobBidService {
       await notificationService.createNotification({
         user_id: existingFreelancer.id,
         actor_user_id: existingJob.client_id,
-        type: updatedJobBid.status === bid_status.accepted ? notification_type.BID_ACCEPTED : updatedJobBid.status === bid_status.declined ? notification_type.BID_DECLIEND : notification_type.BID_WITHDRAWN,
+        type:
+          updatedJobBid.status === bid_status.accepted
+            ? notification_type.BID_ACCEPTED
+            : updatedJobBid.status === bid_status.declined
+              ? notification_type.BID_DECLIEND
+              : notification_type.BID_WITHDRAWN,
         entity_type: notification_entity.bid,
         entity_id: updatedJobBid.id,
-        title: updatedJobBid.status === bid_status.accepted ? 'Job bid accepted' : updatedJobBid.status === bid_status.declined ? 'Job bid declined' : 'Job bid withdrawn',
-        body: updatedJobBid.status === bid_status.accepted ? 'Your job bid has been accepted by the client.' : updatedJobBid.status === bid_status.declined ? 'Your job bid has been declined by the client.' : 'Your job bid has been withdrawn.',
+        title:
+          updatedJobBid.status === bid_status.accepted
+            ? 'Job bid accepted'
+            : updatedJobBid.status === bid_status.declined
+              ? 'Job bid declined'
+              : 'Job bid withdrawn',
+        body:
+          updatedJobBid.status === bid_status.accepted
+            ? 'Your job bid has been accepted by the client.'
+            : updatedJobBid.status === bid_status.declined
+              ? 'Your job bid has been declined by the client.'
+              : 'Your job bid has been withdrawn.',
         payload: Prisma.JsonNull,
         read_at: null,
         created_at: new Date(),
@@ -163,17 +178,71 @@ export class JobBidService {
     }
   }
 
-  public async getJobBidById(id: string): Promise<job_bids> {
+  public async getJobBidById(id: string) {
     try {
-      if (!id) {
-        throw new AppError('Job bid ID is required', 400, 'JOB_BID_ID_REQUIRED');
+      const existingJobBid =
+          prisma.job_bids.findFirst({
+            where: { id },
+            select: {
+              id: true,
+              bid_amount: true,
+              cover_letter_md: true,
+              period: true,
+              status: true,
+              created_at: true,
+              token_symbol: true,
+
+              job: {
+                select: {
+                  id: true,
+                  title: true,
+                  location: true,
+                  budget_max_usd: true,
+                  budget_min_usd: true,
+                  deadline_at: true,
+                  description_md: true,
+                  tags: true,
+                  status: true,
+                  token_symbol: true,
+                  client_id: true,
+                },
+              },
+            },
+          })
+      return existingJobBid;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
       }
-      const existingJobBid = await this.prisma.job_bids.findUnique({
-        where: { id },
-      });
-      if (!existingJobBid) {
-        throw new AppError('Job bid not found', 404, 'JOB_BID_NOT_FOUND');
-      }
+      logger.error('Error getting job bid by id', { error });
+      throw new AppError('Error getting job bid by id', 500, 'DB_JOB_BID_GET_BY_ID_FAILED');
+    }
+  }
+
+  public async getJobBidForClientById(id: string) {
+    try {
+      const existingJobBid =
+          prisma.job_bids.findFirst({
+            where: { id },
+            select: {
+              id: true,
+              job_id:true,
+              bid_amount: true,
+              token_symbol: true,
+              cover_letter_md: true,
+              period: true,
+              status: true,
+              freelancer: {
+                select: {
+                  id: true,
+                  display_name: true,
+                  email: true,
+                  address: true,
+                  image_id: true,
+                },
+              },
+            }
+          })
       return existingJobBid;
     } catch (error) {
       if (error instanceof AppError) {
@@ -195,7 +264,7 @@ export class JobBidService {
       }
       const existingJobBids = await this.prisma.job_bids.findMany({
         where: { job_id },
-        orderBy: { created_at: "desc" },
+        orderBy: { created_at: 'desc' },
         include: {
           freelancer: {
             select: {
@@ -237,7 +306,7 @@ export class JobBidService {
       // }
       const existingJobBids = await this.prisma.job_bids.findMany({
         where: { freelancer_id },
-        orderBy: { created_at: "desc" },
+        orderBy: { created_at: 'desc' },
         include: {
           job: {
             select: {

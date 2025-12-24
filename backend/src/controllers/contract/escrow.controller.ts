@@ -113,14 +113,14 @@ export class EscrowController {
       async function testPinata() {
         try {
           const res = await pinata.testAuthentication();
-          console.log("✅ Pinata connected successfully");
+          console.log('✅ Pinata connected successfully');
           console.log(res);
         } catch (err) {
-          console.error("❌ Pinata auth failed");
+          console.error('❌ Pinata auth failed');
           console.error(err);
         }
       }
-      
+
       testPinata();
 
       if (file) {
@@ -139,7 +139,6 @@ export class EscrowController {
 
           // Use keccak256 to create a proper 32-byte hash from the multihash
           finalContentHash = ethers.keccak256(ethers.hexlify(multihashBytes));
-
         } catch (pinataError) {
           throw new AppError(
             `Failed to upload file to Pinata: ${pinataError instanceof Error ? pinataError.message : 'Unknown error'}`,

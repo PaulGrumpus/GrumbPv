@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import { User } from "@/types/user";
 import ApplicationPost from "./applicationPost";
 import SmallLoading from "./smallLoading";
+import { useDashboard } from "@/context/dashboardContext";
 
 interface userJobOrGigPostProps {
     job_id?: string;
@@ -35,6 +36,24 @@ interface ApplicationWithUser extends Bid {
     freelancer?: User;
 }
 
+type freelancer = {
+    id: string;
+    display_name: string;
+    email: string;
+    address: string;
+    image_id: string;
+}
+
+interface ApplicationItem {
+    id: string;
+    bid_amount: string;
+    token_symbol: string;
+    cover_letter_md: string;
+    period: number;
+    status: string;
+    freelancer: freelancer;
+}
+
 const editIcon = "/Grmps/lucide_edit.svg";
 
 const COLLAPSED_MAX_HEIGHT = 120;
@@ -44,8 +63,11 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
     const [canToggle, setCanToggle] = useState(false);
     const descriptionRef = useRef<HTMLParagraphElement>(null);
     const [isOpen, setIsOpen] = useState(false);
-    const [applications, setApplications] = useState<ApplicationWithUser[]>([]);
+    // const [applications, setApplications] = useState<ApplicationWithUser[]>([]);
+    const [applications, setApplications] = useState<ApplicationItem[]>([]);
     const [loading, setLoading] = useState("success");
+
+    const { jobsInfo } = useDashboard();
 
     useEffect(() => {
         const el = descriptionRef.current;
@@ -58,23 +80,24 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
 
     const handleApplications = async () => {
         setLoading("pending");
-        const result = await getBidsByJobId(job_id ?? "");
-        if (result.success) {
-            if (result.data) {
-                setApplications(result.data); // freelancer already included
-            } else {
-                setApplications([]);
-                toast.error(result.error || "No applications found");
-            }
-        } else {
-            toast.error(result.error as string, {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-            });
-        }
+        // const result = await getBidsByJobId(job_id ?? "");
+        // if (result.success) {
+        //     if (result.data) {
+        //         setApplications(result.data); // freelancer already included
+        //     } else {
+        //         setApplications([]);
+        //         toast.error(result.error || "No applications found");
+        //     }
+        // } else {
+        //     toast.error(result.error as string, {
+        //         position: "top-right",
+        //         autoClose: 5000,
+        //         hideProgressBar: false,
+        //         closeOnClick: true,
+        //         pauseOnHover: true,
+        //     });
+        // }
+        setApplications(jobsInfo.find(job => job.id === job_id)?.bids as ApplicationItem[] ?? [])
         setLoading("success");
         setIsOpen(true);
     }
@@ -216,7 +239,11 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
                             <div className="grid lg:grid-cols-3 grid-cols-1 gap-6">
                                 {applications.length > 0 ? (
                                     applications.map((application) => (
-                                        <ApplicationPost key={application.id} {...application} />
+                                        <ApplicationPost
+                                            key={application.id}
+                                            item={application}
+                                            job_id={job_id}
+                                        />
                                     ))
                                 ) : (
                                     <p className="text-normal font-regular text-black">No applications found</p>

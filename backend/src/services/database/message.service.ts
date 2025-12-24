@@ -1,123 +1,131 @@
-import { logger } from "../../utils/logger.js";
-import { AppError } from "../../middlewares/errorHandler.js";
-import { messages, msg_type } from "@prisma/client";
-import { newMessageParam } from "../../types/message.js";
-import { prisma } from "../../prisma.js";
+import { logger } from '../../utils/logger.js';
+import { AppError } from '../../middlewares/errorHandler.js';
+import { messages, msg_type } from '@prisma/client';
+import { newMessageParam } from '../../types/message.js';
+import { prisma } from '../../prisma.js';
 
 export class MessageService {
-    private prisma = prisma;
+  private prisma = prisma;
 
-    public async createMessage(message: newMessageParam): Promise<messages> {
-        try {
-            const newMessage = await this.prisma.messages.create({
-                data: {
-                    sender_id: message.user_id,
-                    conversation_id: message.conversation_id,
-                    body_text: message.body_text as string,
-                    kind: message.kind as msg_type,
-                    attachment_id: message.attachment_id,
-                    reply_to_msg_id: message.reply_to_msg_id,
-                    created_at: message.created_at as Date,
-                },
-            });
-            return newMessage;
-        }
-        catch (error) {
-            logger.error('Error creating message', { error });
-            throw new AppError('Error creating message', 500, 'MESSAGE_CREATE_FAILED');
-        }
+  public async createMessage(message: newMessageParam): Promise<messages> {
+    try {
+      const newMessage = await this.prisma.messages.create({
+        data: {
+          sender_id: message.user_id,
+          conversation_id: message.conversation_id,
+          body_text: message.body_text as string,
+          kind: message.kind as msg_type,
+          attachment_id: message.attachment_id,
+          reply_to_msg_id: message.reply_to_msg_id,
+          created_at: message.created_at as Date,
+        },
+      });
+      return newMessage;
+    } catch (error) {
+      logger.error('Error creating message', { error });
+      throw new AppError('Error creating message', 500, 'MESSAGE_CREATE_FAILED');
     }
+  }
 
-    public async getMessageById(id: string): Promise<messages> {
-        try {
-            const message = await this.prisma.messages.findUnique({
-                where: { id },
-            });
-            if (!message) {
-                throw new AppError('Message not found', 404, 'MESSAGE_NOT_FOUND');
-            }
-            return message;
-        }
-        catch (error) {
-            logger.error('Error getting message by id', { error });
-            throw new AppError('Error getting message by id', 500, 'MESSAGE_GET_BY_ID_FAILED');
-        }
+  public async getMessageById(id: string): Promise<messages> {
+    try {
+      const message = await this.prisma.messages.findUnique({
+        where: { id },
+      });
+      if (!message) {
+        throw new AppError('Message not found', 404, 'MESSAGE_NOT_FOUND');
+      }
+      return message;
+    } catch (error) {
+      logger.error('Error getting message by id', { error });
+      throw new AppError('Error getting message by id', 500, 'MESSAGE_GET_BY_ID_FAILED');
     }
+  }
 
-    public async getMessagesByConversationId(conversationId: string): Promise<messages[]> {
-        try {
-            const messages = await this.prisma.messages.findMany({
-                where: { conversation_id: conversationId },
-            });
-            return messages;
-        }
-        catch (error) {
-            logger.error('Error getting messages by conversation id', { error });
-            throw new AppError('Error getting messages by conversation id', 500, 'MESSAGES_GET_BY_CONVERSATION_ID_FAILED');
-        }
+  public async getMessagesByConversationId(conversationId: string): Promise<messages[]> {
+    try {
+      const messages = await this.prisma.messages.findMany({
+        where: { conversation_id: conversationId },
+      });
+      return messages;
+    } catch (error) {
+      logger.error('Error getting messages by conversation id', { error });
+      throw new AppError(
+        'Error getting messages by conversation id',
+        500,
+        'MESSAGES_GET_BY_CONVERSATION_ID_FAILED'
+      );
     }
+  }
 
-    public async getMessagesByDateRangeAndConversationId(startDate: Date, endDate: Date, conversationIds: string[]): Promise<messages[]> {
-        try {
-            const messages = await this.prisma.messages.findMany({
-                where: { created_at: { gte: startDate, lte: endDate }, conversation_id: { in: conversationIds },},
-                orderBy: { created_at: 'asc' },
-                include: {
-                    receipts: true,
-                },
-            });
-            return messages;
-        }
-        catch (error) {
-            logger.error('Error getting messages by latest period', { error });
-            throw new AppError('Error getting messages by latest period', 500, 'MESSAGES_GET_BY_LATEST_PERIOD_FAILED');
-        }
+  public async getMessagesByDateRangeAndConversationId(
+    startDate: Date,
+    endDate: Date,
+    conversationIds: string[]
+  ): Promise<messages[]> {
+    try {
+      const messages = await this.prisma.messages.findMany({
+        where: {
+          created_at: { gte: startDate, lte: endDate },
+          conversation_id: { in: conversationIds },
+        },
+        orderBy: { created_at: 'asc' },
+        include: {
+          receipts: true,
+        },
+      });
+      return messages;
+    } catch (error) {
+      logger.error('Error getting messages by latest period', { error });
+      throw new AppError(
+        'Error getting messages by latest period',
+        500,
+        'MESSAGES_GET_BY_LATEST_PERIOD_FAILED'
+      );
     }
+  }
 
-    public async getAllMessagesByConversationIds(conversationIds: string[]): Promise<messages[]> {
-        try {
-            const messages = await this.prisma.messages.findMany({
-                where: { 
-                    conversation_id: { in: conversationIds },
-                },
-                include: {
-                    receipts: true,
-                },
-                orderBy: { created_at: 'asc' },
-            });
-            return messages;
-        }
-        catch (error) {
-            logger.error('Error getting all messages', { error });
-            throw new AppError('Error getting all messages', 500, 'MESSAGES_GET_ALL_FAILED');
-        }
+  public async getAllMessagesByConversationIds(conversationIds: string[]): Promise<messages[]> {
+    try {
+      const messages = await this.prisma.messages.findMany({
+        where: {
+          conversation_id: { in: conversationIds },
+        },
+        include: {
+          receipts: true,
+        },
+        orderBy: { created_at: 'asc' },
+      });
+      return messages;
+    } catch (error) {
+      logger.error('Error getting all messages', { error });
+      throw new AppError('Error getting all messages', 500, 'MESSAGES_GET_ALL_FAILED');
     }
+  }
 
-    public async updateMessage(id: string, message: messages): Promise<messages> {
-        try {
-            const updatedMessage = await this.prisma.messages.update({
-                where: { id },
-                data: message,
-            });
-            return updatedMessage;
-        }
-        catch (error) {
-            logger.error('Error updating message', { error });
-            throw new AppError('Error updating message', 500, 'MESSAGE_UPDATE_FAILED');
-        }
+  public async updateMessage(id: string, message: messages): Promise<messages> {
+    try {
+      const updatedMessage = await this.prisma.messages.update({
+        where: { id },
+        data: message,
+      });
+      return updatedMessage;
+    } catch (error) {
+      logger.error('Error updating message', { error });
+      throw new AppError('Error updating message', 500, 'MESSAGE_UPDATE_FAILED');
     }
+  }
 
-    public async deleteMessage(id: string): Promise<void> {
-        try {
-            await this.prisma.messages.delete({
-                where: { id },
-            });
-        }
-        catch (error) {
-            logger.error('Error deleting message', { error });
-            throw new AppError('Error deleting message', 500, 'MESSAGE_DELETE_FAILED');
-        }
+  public async deleteMessage(id: string): Promise<void> {
+    try {
+      await this.prisma.messages.delete({
+        where: { id },
+      });
+    } catch (error) {
+      logger.error('Error deleting message', { error });
+      throw new AppError('Error deleting message', 500, 'MESSAGE_DELETE_FAILED');
     }
+  }
 }
 
 export const messageService = new MessageService();

@@ -17,6 +17,9 @@ import { Message } from "@/types/message";
 import useSocket from '@/service/socket';
 import { websocket } from "@/config/config";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
+import { useDashboard } from "@/context/dashboardContext";
+import { UserLoadingCtx } from "@/context/userLoadingContext";
+import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
 
 interface ChatSidebarItem {
     conversation_id: string;
@@ -35,15 +38,52 @@ const ChatPageContent = () => {
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const [loading, setLoading] = useState("pending");
     const [chatSidebarItems, setChatSidebarItems] = useState<ChatSidebarItem[]>([]);
-    const { conversationsInfo, setConversationsInfo } = useContext(ConversationsInfoCtx);
-    const { messagesInfo, setMessagesInfo } = useContext(MessagesInfoCtx);
-    const { messageLoadingState, setmessageLoadingState } = useContext(MessageLoadingCtx);
+    // const { conversationsInfo, setConversationsInfo } = useContext(ConversationsInfoCtx);
+    // const { messagesInfo, setMessagesInfo } = useContext(MessagesInfoCtx);
+    const { userLoadingState } = useContext(UserLoadingCtx);
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-    const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+    const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
     const searchParams = useSearchParams();
     const conversationId = searchParams.get("conversation_id");
     const chatSocket = useSocket();   
     const router = useRouter();
+    const { conversationsInfo, setConversationsInfo, jobsInfo, bidsInfo } = useDashboard();    
+
+    const [jobId, setJobId] = useState("");
+    const [jobTitle, setJobTitle] = useState("");
+    const [jobTokenSymbol, setJobTokenSymbol] = useState("");
+    const [jobDescription, setJobDescription] = useState("");
+    const [jobMaxBudget, setJobMaxBudget] = useState("");
+    const [jobMinBudget, setJobMinBudget] = useState("");
+    const [jobDeadlineAt, setJobDeadlineAt] = useState("");   
+    const [clientName, setClientName]  = useState("");
+
+    useEffect(() => {
+        if(userInfo.role === "client") {
+            setJobId(conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id ?? "" : "");
+            setJobTitle(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.title ?? "");
+            setJobTokenSymbol(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.token_symbol ?? "");
+            setJobDescription(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.description_md ?? "");
+            setJobMaxBudget(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.budget_max_usd ?? "");
+            setJobMinBudget(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.budget_min_usd ?? "");
+            setJobDeadlineAt(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.deadline_at ?? "");        
+        } else {
+            const Id = conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id ?? "": "";
+            setJobId(Id);
+            setJobTitle(bidsInfo.find(bid => bid.job.id === Id)?.job.title ?? "");
+            setJobTokenSymbol(bidsInfo.find(bid => bid.job.id === Id)?.job.token_symbol ?? "");
+            setJobDescription(bidsInfo.find(bid => bid.job.id === Id)?.job.description_md ?? "");
+            setJobMaxBudget(bidsInfo.find(bid => bid.job.id === Id)?.job.budget_max_usd ?? "");
+            setJobMinBudget(bidsInfo.find(bid => bid.job.id === Id)?.job.budget_min_usd ?? "");
+            setJobDeadlineAt(bidsInfo.find(bid => bid.job.id === Id)?.job.deadline_at ?? "");
+        }
+
+        const userName = conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.participants[0].user.role === "client" ? conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.participants[0].user.display_name ?? "" : conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.participants[1].user.display_name ?? "";
+
+        console.log("test-clientName", userName);
+        setClientName(userName);
+    }, [selectedConversationId])
+
 
     const [mobileView, setMobileView] = useState<"list" | "chat">("list");
 
@@ -59,6 +99,7 @@ const ChatPageContent = () => {
         setMobileView("chat");
     };
 
+    
     const handleSendMessage = (message: Message) => {
         if(chatSocket.isConnected) {
             chatSocket.socket?.emit(websocket.WEBSOCKET_SEND_NEW_MESSAGE, {
@@ -91,7 +132,7 @@ const ChatPageContent = () => {
 
     const handleAcceptHandler = (conversation_id: string) => {
         console.log("handleAcceptHandler");
-        const job_application_doc_id = conversationsInfo.find((conversation) => conversation.conversation.id === conversation_id)?.conversation.job_application_doc_id;
+        const job_application_doc_id = conversationsInfo.find((conversation) => conversation.id === conversation_id)?.job_application_doc_id;
         router.push(`/reference?jobApplicationId=${job_application_doc_id}&conversationId=${conversation_id}`);
     };
 
@@ -110,10 +151,26 @@ const ChatPageContent = () => {
         const handler = (message: Message) => {
             setChatSidebarItems((prev) => prev.map((chat) => chat.conversation_id === message.conversation_id && message.sender_id !== userInfo.id ? { ...chat, lastMessage: message.body_text ?? "" } : chat));
             setChatSidebarItems((prev) => prev.map((chat) => chat.conversation_id === message.conversation_id && message.sender_id !== userInfo.id ? { ...chat, lastMessageTime: message.created_at as Date } : chat));
-            setMessagesInfo((prev) => [...prev, {
-                ...message,
-                messageReceipt: [],
-            }]);
+            // setMessageInfo((prev) => [...prev, {
+            //     ...message,
+            //     messageReceipt: [],
+            // }]);
+            setConversationsInfo(prev =>
+                prev.map(conversation =>
+                    conversation.id === message.conversation_id
+                    ? {
+                        ...conversation,
+                        messages: [
+                            ...conversation.messages,
+                            {
+                                ...message,
+                                messageReceipt: [],
+                            }
+                        ],
+                    }
+                    : conversation
+                )
+            );
         };
     
         chatSocket.socket.on(websocket.WEBSOCKET_NEW_MESSAGE, handler);
@@ -136,7 +193,7 @@ const ChatPageContent = () => {
     }, [chatSocket.socket, userInfo.id]);
 
     useEffect(() => {
-        if(messageLoadingState === "success") {
+        if(userLoadingState === "success") {
             if(userInfo.id === "") {
                 router.push("/");
                 return;
@@ -149,40 +206,45 @@ const ChatPageContent = () => {
                         return;
                     }
 
+                    console.log("TEST_CONVERSATIONSINFO:", conversationsInfo);
+
                     const now = new Date();
                     const builtChats: ChatSidebarItem[] = conversationsInfo.map((conversation) => ({
-                        conversation_id: conversation.conversation.id,
-                        receiver: conversation.clientInfo.id === userInfo.id ? conversation.freelancerInfo as User : conversation.clientInfo as User,
+                        conversation_id: conversation.id,
+                        receiver: conversation.participants[0].user.id === userInfo.id ? conversation.participants[1].user as User : conversation.participants[0].user as User,
                         status: "idle",
                         lastMessage: "",
                         lastMessageTime: now,
                         pinned: false,
                         selected: false,
                         onChatClick: () => {
-                            handleChatClick(conversation.conversation.id);
+                            handleChatClick(conversation.id);
                         },
                         onPinChat: () => {},
                         onUnpinChat: () => {},
                     }));
 
+                    console.log("TEST_builtChats:", builtChats);
+
                     setChatSidebarItems(builtChats);
 
-                    const targetConversationId = conversationId ?? conversationsInfo[0]?.conversation.id;
+                    const targetConversationId = conversationId ?? conversationsInfo[0]?.id;
                     if (targetConversationId) {
                         handleChatClick(targetConversationId);
-                    }
+                    }                    
+                    console.log("TEST_AFTER")
 
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
-                if(notificationLoadingState === "success") {
+                if(dashboardLoadingState === "success") {
                     loadConversations();
                 }
             }
-        } else if (messageLoadingState === "failure") {
+        } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, messageLoadingState, router, notificationLoadingState, conversationsInfo]);
+    }, [userInfo, userLoadingState, router, dashboardLoadingState, conversationsInfo]);
 
     if(loading === "pending") {
         return <Loading />;
@@ -202,11 +264,17 @@ const ChatPageContent = () => {
                         <ChatComb
                             sender={userInfo} 
                             conversation_id={selectedConversationId as string}
-                            job_application_doc_id={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.conversation.id === selectedConversationId)?.conversation.job_application_doc_id as string ?? "" : ""}
+                            job_application_doc_id={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_application_doc_id as string ?? "" : ""}
                             receiver={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.receiver as User ?? null : null} 
-                            job={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.conversation.id === selectedConversationId)?.jobInfo as Job ?? null : null} 
-                            clientName={``} 
-                            messages={messagesInfo.filter((message) => message.conversation_id === selectedConversationId) as Message[] ?? []} 
+                            job_id={jobId}
+                            job_title={jobTitle}
+                            job_token_symbol={jobTokenSymbol}
+                            job_description={jobDescription}
+                            job_max_budget={jobMaxBudget}
+                            job_min_budget={jobMinBudget}
+                            job_deadline_at={jobDeadlineAt}
+                            clientName={clientName}
+                            messages={conversationsInfo.find(conversation => conversation.id === selectedConversationId)?.messages || []} 
                             isWriting={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.status === "typing" ? true : false : false}
                             onSendMessage={handleSendMessage} 
                             onWritingMessage={handleWritingMessage}
@@ -228,11 +296,17 @@ const ChatPageContent = () => {
                         <ChatComb
                             sender={userInfo}
                             conversation_id={selectedConversationId as string}
-                            job_application_doc_id={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.conversation.id === selectedConversationId)?.conversation.job_application_doc_id as string ?? "" : ""}
+                            job_application_doc_id={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_application_doc_id as string ?? "" : ""}
                             receiver={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.receiver as User ?? null : null} 
-                            job={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.conversation.id === selectedConversationId)?.jobInfo as Job ?? null : null} 
-                            clientName={``} 
-                            messages={messagesInfo.filter((message) => message.conversation_id === selectedConversationId) as Message[] ?? []} 
+                            job_id={jobId}
+                            job_title={jobTitle}
+                            job_token_symbol={jobTokenSymbol}
+                            job_description={jobDescription}
+                            job_max_budget={jobMaxBudget}
+                            job_min_budget={jobMinBudget}
+                            job_deadline_at={jobDeadlineAt}
+                            clientName={clientName}
+                            messages={conversationsInfo.find(conversation => conversation.id === selectedConversationId)?.messages || []} 
                             isWriting={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.status === "typing" ? true : false : false}
                             onSendMessage={handleSendMessage} 
                             onWritingMessage={handleWritingMessage}

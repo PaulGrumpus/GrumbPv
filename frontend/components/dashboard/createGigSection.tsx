@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { createGig } from "@/utils/functions";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 import SmallLoading from "../smallLoading";
+import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
 
 const uploadImage = "/Grmps/upload.svg";
 
@@ -23,8 +24,8 @@ const CreateGigSection = () => {
     const categories = ["Software Development", "Design", "Marketing", "Writing", "Translation", "Video Editing", "Audio Editing", "Data Entry", "Customer Support", "Other"];
     const [description, setDescription] = useState("");
     const [link, setLink] = useState("");
-    const [budgetMaxUsd, setBudgetMaxUsd] = useState<number>(0);
-    const [budgetMinUsd, setBudgetMinUsd] = useState<number>(0);
+    const [budgetMaxUsd, setBudgetMaxUsd] = useState<string>("");
+    const [budgetMinUsd, setBudgetMinUsd] = useState<string>("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploadedFileName, setUploadedFileName] = useState<string>("");
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -35,6 +36,7 @@ const CreateGigSection = () => {
     const [checkError, setCheckError] = useState(false);
     const router = useRouter();
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
+    const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
 
     const handleUploadFile = () => {
         const fileInput = document.createElement("input");
@@ -60,7 +62,7 @@ const CreateGigSection = () => {
     }
 
     const handlePostGig = async () => {
-        if (title === "" || selectedCategory === "" || description === "" || budgetMaxUsd === 0 || budgetMinUsd === 0) {
+        if (title === "" || selectedCategory === "" || description === "" || Number(budgetMaxUsd) === 0 || Number(budgetMinUsd) === 0) {
             setError("Please fill in all fields");
             setCheckError(true);
             return;
@@ -87,12 +89,14 @@ const CreateGigSection = () => {
         setError("");
         setCheckError(false);
 
+        setLoading("pending");        
+
         const response = await createGig(
             {
                 title,
                 description_md: description,
-                budget_max_usd: budgetMaxUsd,
-                budget_min_usd: budgetMinUsd,
+                budget_max_usd: Number(budgetMaxUsd),
+                budget_min_usd: Number(budgetMinUsd),
                 tags: [selectedCategory ?? ""],
                 freelancer_id: userInfo.id,
                 link,
@@ -108,6 +112,17 @@ const CreateGigSection = () => {
                 closeOnClick: true,
                 pauseOnHover: true,
             });
+
+            setTitle("");
+            setSelectedCategory("");
+            setDescription("");
+            setBudgetMaxUsd("");
+            setBudgetMinUsd("");
+            setLink("");
+            setSelectedFile(null);
+            setUploadedFileName("");
+            setPreviewUrl(null);
+
         } else {
             toast.error(response.error, {
                 position: "top-right",
@@ -116,7 +131,9 @@ const CreateGigSection = () => {
                 closeOnClick: true,
                 pauseOnHover: true,
             });
-        }        
+        }   
+        
+        setLoading("success");
     }
 
     useEffect(() => {
@@ -157,14 +174,14 @@ const CreateGigSection = () => {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }
-                if(notificationLoadingState === "success") {
+                if(dashboardLoadingState === "success") {
                     loadCreateGig();
                 }
             }
         } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState, router, notificationLoadingState])
+    }, [userInfo, userLoadingState, router, dashboardLoadingState])
 
     if (loading === "pending") {
         return <SmallLoading size="lg" />;
@@ -230,9 +247,18 @@ const CreateGigSection = () => {
                                 <div>
                                     <p className='text-normal font-regular text-black text-left pb-2'>Max Budget (USD)</p>
                                     <input
-                                        type="number"
                                         value={budgetMaxUsd}
-                                        onChange={(e) => setBudgetMaxUsd(Number(e.target.value))}
+                                        type="text"
+                                        inputMode="decimal"
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+
+                                            // allow: "", "1", "1.", "1.2", "0.25"
+                                            if (!/^\d*\.?\d*$/.test(value)) return;
+
+                                            setBudgetMaxUsd(value);
+                                            setError("");
+                                        }}
                                         className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
                                         placeholder='Max Budget'
                                     />
@@ -240,9 +266,18 @@ const CreateGigSection = () => {
                                 <div>
                                     <p className='text-normal font-regular text-black text-left pb-2'>Min Budget (USD)</p>
                                     <input
-                                        type="number"
                                         value={budgetMinUsd}
-                                        onChange={(e) => setBudgetMinUsd(Number(e.target.value))}
+                                        type="text"
+                                        inputMode="decimal"
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+
+                                            // allow: "", "1", "1.", "1.2", "0.25"
+                                            if (!/^\d*\.?\d*$/.test(value)) return;
+
+                                            setBudgetMinUsd(value);
+                                            setError("");
+                                        }}
                                         className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
                                         placeholder='Min Budget'
                                     />
