@@ -6,14 +6,24 @@ import { LocationType } from "@/types/jobs";
 import { useContext, useEffect, useState } from "react";
 import { UserInfoCtx } from "@/context/userContext";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
-import { getGigs } from "@/utils/functions";
+import { createConversationAndParticipant, getGigs } from "@/utils/functions";
 import Loading from "@/components/loading";
 import { EscrowBackendConfig } from "@/config/config";
+import { toast } from "react-toastify";
+import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
+import { useDashboard } from "@/context/dashboardContext";
+import { useRouter } from "next/navigation";
 
 const GigsPage = () => {
 
     const [loading, setLoading] = useState("pending");
     const [gigs, setGigs] = useState<Gig[]>([]);
+
+    const { userInfo } = useContext(UserInfoCtx);
+    const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
+    const { setConversationsInfo } = useDashboard();
+
+    const router = useRouter();
     
     useEffect(() => {
         let mounted = true;
@@ -46,6 +56,57 @@ const GigsPage = () => {
         return <Loading />;
     }
 
+    const contactHandler = async (gig_id: string, freelancer_id: string) => {
+        if(!userInfo.id){
+            toast.warn("Plz login first to contact",{
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            })
+            return;
+        }
+        if(userInfo.role === "freelancer") {
+            toast.warn("Plz login first as client account",{
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            })
+            return;
+        }
+        if(dashboardLoadingState == "success"){
+            const conversation = await createConversationAndParticipant("", "", gig_id, userInfo.id, freelancer_id ?? "");
+            if (!conversation.success) {
+                throw new Error(conversation.error as string);
+            }
+
+            setConversationsInfo(prev => {
+                const exists = prev.some(c => c.id === conversation.data.id);
+            
+                if (!exists) {
+                    return [conversation.data, ...prev];
+                }
+            
+                return prev.map(conv =>
+                    conv.id === conversation.data.id
+                        ? {
+                            ...conv,
+                            ...conversation.data,
+                            participants:
+                                conversation.data.participants ?? conv.participants,
+                            messages:
+                                conversation.data.messages ?? conv.messages,
+                        }
+                        : conv
+                );
+            });
+            router.push(`/chat?conversation_id=${conversation.data.id}`);
+        }
+    }
+
     return (
         <div>
             <div className="lg:px-16 px-4 bg-white lg:pt-46 pt-22">
@@ -65,8 +126,7 @@ const GigsPage = () => {
                                 currency={gig.token_symbol ?? "USD"} 
                                 createdAt={gig.created_at ? new Date(gig.created_at).getTime() / 1000 : 0}
                                 label="Contact"
-                                clickHandler={() => {
-                                }}
+                                clickHandler={() => {contactHandler(gig.id ?? "", gig.freelancer_id)}}
                             />
                         ))}
                     </div>

@@ -1,14 +1,10 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
 import {
-  conversation_participants,
   conversations,
-  gigs,
-  jobs,
   notification_entity,
   notification_type,
   Prisma,
-  users,
 } from '@prisma/client';
 import { newConversationParam, convo_type } from '../../types/conversation.js';
 import { prisma } from '../../prisma.js';

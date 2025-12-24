@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { dashboardService } from '../../services/database/dashboard.service';
+import { dashboardService } from '../../services/database/dashboard.service.js';
 
 class DashboardController {
   async getDashboardInfoByUserId(req: Request, res: Response, next: NextFunction) {
