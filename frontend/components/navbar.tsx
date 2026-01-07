@@ -12,7 +12,7 @@ import { UserInfoCtx } from "@/context/userContext";
 import { toast } from "react-toastify";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { NotificationCtx } from "@/context/notificationContext";
-import { Notification } from "@/types/notification";
+import { Notification, NotificationEntity } from "@/types/notification";
 import { formatHourMinute, markAllNotificationsAsRead, updateNotification } from "@/utils/functions";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
@@ -569,7 +569,7 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
     // const [unreadNotifications, setUnreadNotifications] = useState<Notification[]>([]);
     const [unreadNotifications, setUnreadNotifications] = useState<DashboardNotification[]>([]);
     const { userInfo } = useContext(UserInfoCtx);
-
+    const router = useRouter();
     const formatDate = (value?: Date | string) => {
         if (!value) return null;
         const parsedDate = typeof value === "string" ? new Date(value) : value;
@@ -591,6 +591,29 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
     }, [notifications]);
 
     const handleMarkAsRead = async (notificationId: string) => {
+        const notification = notifications.find(n => n.id === notificationId);
+        if (notification && notification.entity_type === NotificationEntity.milestone) {
+            router.push(`/dashboard?view=dashboard`);
+        }   
+        if (notification && notification.entity_type === NotificationEntity.job) {
+            router.push(`/dashboard?view=my-jobs`);
+        }   
+        if (notification && notification.entity_type === NotificationEntity.gig) {
+            router.push(`/dashboard?view=my-gigs`);
+        }   
+        if (notification && notification.entity_type === NotificationEntity.bid) {
+            if(userInfo.role === "freelancer") {
+                router.push(`/dashboard?view=my-bids`);
+            } else {
+                router.push(`/dashboard?view=my-jobs`);
+            }
+        }  
+        if (notification && notification.entity_type === NotificationEntity.conversation) {
+            router.push(`/chat?conversation_id=${notification.entity_id}`);
+        } 
+        if (notification && notification.entity_type === NotificationEntity.jobApplicationDoc) {
+            router.push(`/reference?jobApplicationId=${notification.entity_id}`);
+        }   
         setNotificationsInfo(prev =>
             prev.map(n =>
                 n.id === notificationId

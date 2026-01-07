@@ -700,29 +700,29 @@ export const createConversationAndParticipant = async (job_application_doc_id: s
             throw new Error(response.data.error);
         }
 
-        const clientParticipant = await EscrowBackend.post('/database/conversation-participants', {
-            conversation_id: response.data.data.id,
-            user_id: client_id,
-            is_muted: false,
-            is_pinned: false,
-            last_read_msg_id: null,
-        });
+        // const clientParticipant = await EscrowBackend.post('/database/conversation-participants', {
+        //     conversation_id: response.data.data.id,
+        //     user_id: client_id,
+        //     is_muted: false,
+        //     is_pinned: false,
+        //     last_read_msg_id: null,
+        // });
 
-        if (!clientParticipant.data.success) {
-            throw new Error(clientParticipant.data.error);
-        }
+        // if (!clientParticipant.data.success) {
+        //     throw new Error(clientParticipant.data.error);
+        // }
 
-        const freelancerParticipant = await EscrowBackend.post('/database/conversation-participants', {
-            conversation_id: response.data.data.id,
-            user_id: freelancer_id,
-            is_muted: false,
-            is_pinned: false,
-            last_read_msg_id: null,
-        });
+        // const freelancerParticipant = await EscrowBackend.post('/database/conversation-participants', {
+        //     conversation_id: response.data.data.id,
+        //     user_id: freelancer_id,
+        //     is_muted: false,
+        //     is_pinned: false,
+        //     last_read_msg_id: null,
+        // });
 
-        if (!freelancerParticipant.data.success) {
-            throw new Error(freelancerParticipant.data.error);
-        }
+        // if (!freelancerParticipant.data.success) {
+        //     throw new Error(freelancerParticipant.data.error);
+        // }
 
         const conversationData = response.data.data;
 

@@ -42,6 +42,7 @@ export enum NotificationEntity {
     escrow = "escrow",
     dispute = "dispute",
     conversation = "conversation",
+    jobApplicationDoc = "job_application_doc",
 }
 
 

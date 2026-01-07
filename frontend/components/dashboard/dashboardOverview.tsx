@@ -187,6 +187,7 @@ const DashboardOverview = () => {
                                                 description={openjob?.job?.description_md ?? ""}
                                                 milestoneStatus={openjob.milestone.status as JobMilestoneStatus ?? JobMilestoneStatus.PENDING_FUND}
                                                 ipfs={openjob.milestone.ipfs}
+                                                applicationDocId={openjob.applicationDoc?.id?.toString() ?? ""}
                                                 clickHandler={() => {
                                                     console.log("open milestone clicked");
                                                 }}
@@ -238,6 +239,7 @@ const DashboardOverview = () => {
                                                     description={finishedJob?.job?.description_md ?? ""}
                                                     milestoneStatus={finishedJob.milestone.status as JobMilestoneStatus ?? JobMilestoneStatus.PENDING_FUND}
                                                     ipfs={finishedJob.milestone.ipfs}
+                                                    applicationDocId={finishedJob.applicationDoc?.id?.toString() ?? ""}
                                                     clickHandler={() => {}}
                                                 />
                                             ))}
