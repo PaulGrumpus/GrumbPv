@@ -44,7 +44,13 @@ const ChatPageContent = () => {
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
     const searchParams = useSearchParams();
-    const conversationId = searchParams.get("conversation_id");
+    const [conversationId, setConversationId] = useState<string | null>(null);
+    useEffect(() => {
+        const id = searchParams.get("conversation_id");
+        if(id) {
+            setConversationId(id);
+        }
+    }, [searchParams]);
     const chatSocket = useSocket();   
     const router = useRouter();
     const { conversationsInfo, setConversationsInfo, jobsInfo, bidsInfo } = useDashboard();    
@@ -171,6 +177,7 @@ const ChatPageContent = () => {
                     : conversation
                 )
             );
+            setConversationId(message.conversation_id); 
         };
     
         chatSocket.socket.on(websocket.WEBSOCKET_NEW_MESSAGE, handler);

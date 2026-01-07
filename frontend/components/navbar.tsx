@@ -296,7 +296,7 @@ const Navbar = () => {
                             { showPlaceholder && (
                                 <>
                                     <div className="flex items-center gap-0.75">
-                                        <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
+                                        <div className="w-8.75 h-8.75 overflow-hidden rounded-full to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
                                             <Image
                                                 src={logoImage}
                                                 alt="Logo"
@@ -321,9 +321,26 @@ const Navbar = () => {
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="h-11 w-28 rounded-2xl bg-linear-to-br from-[#2F3DF6] via-[#7E3FF2] to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
-                                        Login
-                                    </div>
+                                    {loggedIn ? (
+                                        <div className="flex items-center gap-2">
+                                            {
+                                                userInfo.image_id && <div className="w-9 h-9 overflow-hidden rounded-full to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
+                                                    <Image 
+                                                        src={EscrowBackendConfig.uploadedImagesURL + userInfo.image_id} 
+                                                        alt="User Photo" 
+                                                        width={36} 
+                                                        height={36} 
+                                                        className="h-full w-full rounded-full object-cover"
+                                                    />
+                                                </div>
+                                            }
+                                            <p className="h-11 rounded-2xl from-white via-slate-100 to-slate-200 animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-gray-400">{username}</p>
+                                        </div>
+                                    ) : (
+                                        <div className="h-11 w-28 rounded-2xl bg-linear-to-br from-[#2F3DF6] via-[#7E3FF2] to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
+                                            Login
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </div>
