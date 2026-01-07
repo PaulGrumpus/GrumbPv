@@ -11,6 +11,7 @@ import { approveWork, deliverWork, fundEscrow, updateJobMilestone, withdrawFunds
 import { User } from "@/types/user";
 import { useWallet } from "@/context/walletContext";
 import { useProjectInfo } from "@/context/projectInfoContext";
+import { useRouter } from "next/navigation";
 
 const STATUSES = [
     { key: "started", label: "Started the job" },
@@ -27,16 +28,18 @@ interface DashboardPostsProps {
     milestoneStatus: JobMilestoneStatus;
     ipfs?: string;
     variant: "open" | "completed";
+    applicationDocId: string;
     clickHandler: () => void;
 }
 
-const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneStatus, ipfs, variant, clickHandler }: DashboardPostsProps) => {
+const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneStatus, ipfs, variant, applicationDocId, clickHandler }: DashboardPostsProps) => {
     const totalSteps = STATUSES.length;
     const [isOpen, setIsOpen] = useState(false);
     const [status, setStatus] = useState(0);
     const { sendTransaction } = useWallet();
     const { setJobMilestonesInfo } = useProjectInfo();
-
+    const router = useRouter();
+    
     useEffect(() => {
         let nextStatus = 0;
         if(milestoneStatus === JobMilestoneStatus.PENDING_FUND) {
@@ -207,14 +210,15 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
     }
     
     const handleGoToDoc = () => {
-        toast.success("Processing go to doc...", {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-        });
-        clickHandler();
+        // toast.success("Processing go to doc...", {
+        //     position: "top-right",
+        //     autoClose: 5000,
+        //     hideProgressBar: false,
+        //     closeOnClick: true,
+        //     pauseOnHover: true,
+        // });
+        // clickHandler();
+        router.push(`/reference?jobApplicationId=${applicationDocId}`);
     }
 
     const handleCopy = async (url: string) => {

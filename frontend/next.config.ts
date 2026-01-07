@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'knownothing0.xyz',
-        pathname: '/backend/uploads/images/**', // or '/uploads/images/**' depending on your proxy
+        hostname: 'grumbuild.com',
+        pathname: '/backend/uploads/images/**',
       },
     ],
     // or simpler for a single host:

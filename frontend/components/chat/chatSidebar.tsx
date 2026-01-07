@@ -38,17 +38,17 @@ const ChatSidebar = ({ chats }: { chats: ChatSidebarItemType[] }) => {
         );
     }, [chats]);
 
-    useEffect(() => {
-        if (chats.length === 0) {
-            setSelectedConversationId(null);
-            return;
-        }
+    // useEffect(() => {
+    //     if (chats.length === 0) {
+    //         setSelectedConversationId(null);
+    //         return;
+    //     }
 
-        const hasSelection = chats.some((chat) => chat.conversation_id === selectedConversationId);
-        if (!hasSelection) {
-            setSelectedConversationId(chats[0].conversation_id);
-        }
-    }, [chats, selectedConversationId]);
+    //     const hasSelection = chats.some((chat) => chat.conversation_id === selectedConversationId);
+    //     if (!hasSelection) {
+    //         setSelectedConversationId(chats[0].conversation_id);
+    //     }
+    // }, [chats, selectedConversationId]);
 
 
     const handleChatClick = (conversation_id: string) => {
@@ -73,7 +73,7 @@ const ChatSidebar = ({ chats }: { chats: ChatSidebarItemType[] }) => {
                             status={chat.status} 
                             lastMessage={chat.lastMessage} 
                             lastMessageTime={formatHourMinute(chat.lastMessageTime.toString())} 
-                            selected={chat.conversation_id === selectedConversationId}
+                            selected={chat.selected}
                             clickHandler={ () => {
                                 handleChatClick(chat.conversation_id);
                                 chat.onChatClick(chat.conversation_id);
@@ -101,7 +101,7 @@ const ChatSidebar = ({ chats }: { chats: ChatSidebarItemType[] }) => {
                             status={chat.status} 
                             lastMessage={chat.lastMessage} 
                             lastMessageTime={formatHourMinute(chat.lastMessageTime.toString())} 
-                            selected={chat.conversation_id === selectedConversationId}
+                            selected={chat.selected}
                             clickHandler={ () => {
                                 handleChatClick(chat.conversation_id);
                                 chat.onChatClick(chat.conversation_id);

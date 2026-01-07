@@ -89,6 +89,12 @@ export class ConversationService {
           escrow: params.escrow,
           gig_id: params.gig_id ?? null,
           job_application_doc_id: params.job_application_doc_id ?? null,
+          participants: {
+            create: [
+              { user_id: params.client_id },
+              { user_id: params.freelancer_id },
+            ],
+          },
         },
         include: {
           participants: {
@@ -129,7 +135,7 @@ export class ConversationService {
 
   public async getConversationById(id: string){
     try {
-      const existingConversation = await prisma.conversations.findMany({
+      const existingConversation = await prisma.conversations.findFirst({
         where: {
           id
         },

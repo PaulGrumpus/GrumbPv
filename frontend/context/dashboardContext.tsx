@@ -213,36 +213,18 @@ export const DashboardProvider = ({ children }: Props) => {
             }
 
             const upsertConversationInfo = (conversation: DashboardConversation) => {
-                const normalizeConversations = (
-                    list: DashboardConversation[]
-                ): DashboardConversation[] => {
-                    const map = new Map<string, DashboardConversation>();
-                
-                    for (const c of list) {
-                        const existing = map.get(c.id);
-                
-                        if (!existing) {
-                            map.set(c.id, {
-                                ...c,
-                                messages: c.messages ?? [],
-                                participants: c.participants ?? [],
-                            });
-                        } else {
-                            // merge, keeping richer data
-                            map.set(c.id, {
-                                ...existing,
-                                ...c,
-                                messages:
-                                    c.messages?.length ? c.messages : existing.messages,
-                                participants:
-                                    c.participants?.length ? c.participants : existing.participants,
-                            });
-                        }
+                console.log("TEST-UPSERT-CONVERSATION:", conversation);
+                setConversationsInfo((prev) => {
+                    const existingIndex = prev.findIndex(
+                        (conversationInfo) => conversationInfo.id === conversation.id
+                    );
+                    if (existingIndex === -1) {
+                        return [...prev, conversation];
                     }
-                
-                    return Array.from(map.values());
-                };
-                
+                    const next = [...prev];
+                    next[existingIndex] = conversation;
+                    return next;
+                });
             };
 
             if (notification.entity_type === NotificationEntity.conversation) {
@@ -265,6 +247,10 @@ export const DashboardProvider = ({ children }: Props) => {
             socket.off(websocket.WEBSOCKET_NEW_NOTIFICATION, handleNotification);
         };
     }, [notificationSocket.isConnected, notificationSocket.socket, userInfo.id]);
+
+    useEffect(() => {
+        console.log("TEST-CONVERSATIONS-INFO:", conversationsInfo);
+    }, [conversationsInfo]);
 
   
     return (
