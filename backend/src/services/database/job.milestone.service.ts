@@ -279,7 +279,7 @@ export class JobMilestoneService {
                             ? notification_type.DISPUTE_RESOLVED
                             : notification_type.MILESTONE_ESCROW_DEPLOYED,
         entity_type: notification_entity.milestone,
-        entity_id: updatedJobMilestone.id,
+        entity_id: updatedJobMilestone.status === milestone_status.pending_fund ? updatedJobMilestone.escrow ?? "" : updatedJobMilestone.id,
         title:
           updatedJobMilestone.status === milestone_status.funded
             ? 'Milestone funded'

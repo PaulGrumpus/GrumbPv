@@ -104,7 +104,7 @@ const DashboardOverview = () => {
         } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState, dashboardLoadingState])
+    }, [userInfo, userLoadingState, dashboardLoadingState, jobsInfo])
     // }, [userInfo, userLoadingState, notificationLoadingState])
 
     useEffect(() => {

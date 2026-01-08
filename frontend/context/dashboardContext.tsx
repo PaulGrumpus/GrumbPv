@@ -164,7 +164,8 @@ export const DashboardProvider = ({ children }: Props) => {
                 const jobApplicationDocRes = await getJobApplicationById(notification.entity_id);
                 if (!jobApplicationDocRes.success || !jobApplicationDocRes.data) return;
                 const jobApplicationDoc = jobApplicationDocRes.data.job_application_info;
-                
+                let jobUpdated = false;
+
                 setJobsInfo(prevJobs => {
                     let didUpdate = false;
                     const nextJobs = prevJobs.map(job => {
@@ -182,8 +183,16 @@ export const DashboardProvider = ({ children }: Props) => {
                             jobApplicationsDocs: nextApplicationDocs,
                         };
                     });
+                    jobUpdated = didUpdate;
                     return didUpdate ? nextJobs : prevJobs;
                 });
+
+                if (!jobUpdated && userInfo.role === "freelancer" && userInfo.id) {
+                    const dashboardResult = await getDashboardDataByUserId(userInfo.id, userInfo.role);
+                    if (dashboardResult.success && dashboardResult.data) {
+                        setJobsInfo(dashboardResult.data.jobs ?? []);
+                    }
+                }
             }
 
             if (
