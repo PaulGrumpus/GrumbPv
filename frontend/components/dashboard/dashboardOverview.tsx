@@ -81,7 +81,7 @@ const DashboardOverview = () => {
                             })
                         );
 
-                    setOpenedJobs(jobMilestones.filter((jobMilestone) => jobMilestone.milestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.milestone.status === JobMilestoneStatus.FUNDED || jobMilestone.milestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.milestone.status === JobMilestoneStatus.APPROVED || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE).sort((a, b) => new Date(b.milestone.created_at ?? "").getTime() - new Date(a.milestone.created_at ?? "").getTime()));
+                    setOpenedJobs(jobMilestones.filter((jobMilestone) => jobMilestone.milestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.milestone.status === JobMilestoneStatus.FUNDED || jobMilestone.milestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.milestone.status === JobMilestoneStatus.APPROVED || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_BY_CLIENT || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_BY_FREELANCER || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE).sort((a, b) => new Date(b.milestone.created_at ?? "").getTime() - new Date(a.milestone.created_at ?? "").getTime()));
 
                     setFinishedJobs(jobMilestones.filter((jobMilestone) => jobMilestone.milestone.status === JobMilestoneStatus.RELEASED || jobMilestone.milestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.milestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.milestone.status === JobMilestoneStatus.CANCELLED).sort((a, b) => new Date(b.milestone.created_at ?? "").getTime() - new Date(a.milestone.created_at ?? "").getTime()));
 
@@ -137,7 +137,7 @@ const DashboardOverview = () => {
             })
         );
 
-        setOpenedJobs(jobMilestones.filter((jobMilestone) => jobMilestone.milestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.milestone.status === JobMilestoneStatus.FUNDED || jobMilestone.milestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.milestone.status === JobMilestoneStatus.APPROVED || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE).sort((a, b) => new Date(b.milestone.created_at ?? "").getTime() - new Date(a.milestone.created_at ?? "").getTime()));
+        setOpenedJobs(jobMilestones.filter((jobMilestone) => jobMilestone.milestone.status === JobMilestoneStatus.PENDING_FUND || jobMilestone.milestone.status === JobMilestoneStatus.FUNDED || jobMilestone.milestone.status === JobMilestoneStatus.DELIVERED || jobMilestone.milestone.status === JobMilestoneStatus.APPROVED || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_BY_CLIENT || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_BY_FREELANCER || jobMilestone.milestone.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE).sort((a, b) => new Date(b.milestone.created_at ?? "").getTime() - new Date(a.milestone.created_at ?? "").getTime()));
 
         setFinishedJobs(jobMilestones.filter((jobMilestone) => jobMilestone.milestone.status === JobMilestoneStatus.RELEASED || jobMilestone.milestone.status === JobMilestoneStatus.RESOLVED_TO_BUYER || jobMilestone.milestone.status === JobMilestoneStatus.RESOLVED_TO_VENDOR || jobMilestone.milestone.status === JobMilestoneStatus.CANCELLED).sort((a, b) => new Date(b.milestone.created_at ?? "").getTime() - new Date(a.milestone.created_at ?? "").getTime()));
     }, [jobsInfo])
@@ -189,7 +189,6 @@ const DashboardOverview = () => {
                                                 ipfs={openjob.milestone.ipfs}
                                                 applicationDocId={openjob.applicationDoc?.id?.toString() ?? ""}
                                                 clickHandler={() => {
-                                                    console.log("open milestone clicked");
                                                 }}
                                             />
                                         ))}

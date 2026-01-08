@@ -115,7 +115,6 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
     };
 
     const handlePrint = () => {
-        console.log("print");
     }
     const handleConfirm = async () => {
         if (!agreeToTerms) {

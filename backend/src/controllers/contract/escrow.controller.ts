@@ -216,13 +216,13 @@ export class EscrowController {
   async initiateDispute(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
-      const { privateKey } = req.body;
+      const { userId, chainId } = req.body;
 
-      const txHash = await escrowService.initiateDispute(job_milestone_id, privateKey);
+      const txData = await escrowService.buildDisputeTx(job_milestone_id, userId, chainId);
 
       res.json({
         success: true,
-        data: { transactionHash: txHash },
+        data: txData,
         message: 'Dispute initiated successfully',
       });
     } catch (error) {
@@ -236,13 +236,13 @@ export class EscrowController {
   async venderPayDisputeFee(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
-      const { privateKey } = req.body;
+      const { userId, chainId } = req.body;
 
-      const txHash = await escrowService.venderPayDisputeFee(job_milestone_id, privateKey);
+      const txData = await escrowService.buildVenderPayDisputeFeeTx(job_milestone_id, userId, chainId);
 
       res.json({
         success: true,
-        data: { transactionHash: txHash },
+        data: txData,
         message: 'Dispute fee paid successfully',
       });
     } catch (error) {
@@ -256,14 +256,14 @@ export class EscrowController {
   async buyerJoinDispute(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
-      const { privateKey } = req.body;
+      const { userId, chainId } = req.body;
 
-      const txHash = await escrowService.buyerJoinDispute(job_milestone_id, privateKey);
+      const txData = await escrowService.buildBuyerJoinDisputeTx(job_milestone_id, userId, chainId);
 
       res.json({
         success: true,
-        data: { transactionHash: txHash },
-        message: 'Dispute fee paid successfully',
+        data: txData,
+        message: 'Buyer joined the dispute successfully',
       });
     } catch (error) {
       next(error);

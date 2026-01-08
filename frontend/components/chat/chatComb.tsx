@@ -80,16 +80,18 @@ const ChatComb = ({ sender, receiver, job_id, job_token_symbol, job_title, job_d
                         nextStatus = 4;
                     } else if(jobMilestoneInfo?.status === JobMilestoneStatus.RELEASED) {
                         nextStatus = 5;
-                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE) {
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.DISPUTED_BY_CLIENT) {
                         nextStatus = 6;
-                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE) {
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.DISPUTED_BY_FREELANCER) {
                         nextStatus = 7;
-                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.RESOLVED_TO_BUYER) {
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE) {
                         nextStatus = 8;
-                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.RESOLVED_TO_VENDOR) {
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.RESOLVED_TO_BUYER) {
                         nextStatus = 9;
-                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.CANCELLED) {
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.RESOLVED_TO_VENDOR) {
                         nextStatus = 10;
+                    } else if(jobMilestoneInfo?.status === JobMilestoneStatus.CANCELLED) {
+                        nextStatus = 11;
                     }
                     setStatus(Number.isFinite(nextStatus) ? nextStatus : 0);
                     setIpfsUrl(jobMilestoneInfo?.ipfs ?? null);

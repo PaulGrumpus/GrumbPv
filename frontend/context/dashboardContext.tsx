@@ -19,11 +19,12 @@ import {
 
 import { UserLoadingCtx } from "./userLoadingContext";
 import { DashboardLoadingCtx } from "./dashboardLoadingContext";
-import { getBidById, getConversationById, getDashboardDataByUserId, getGigById, getGigsByFreelancerId, getJobBidForClientById, getJobById, getJobMilestoneById, getJobsByClientId } from "@/utils/functions";
+import { getBidById, getConversationById, getDashboardDataByUserId, getGigById, getJobBidForClientById, getJobById, getJobMilestoneById } from "@/utils/functions";
 import { UserInfoCtx } from "./userContext";
 import useSocket from "@/service/socket";
 import { NotificationEntity, NotificationType } from "@/types/notification";
 import { websocket } from "@/config/config";
+import { Message } from "@/types/message";
 
 const defaultProvider: DashboardContextType = {
     jobsInfo: [],
@@ -93,10 +94,6 @@ export const DashboardProvider = ({ children }: Props) => {
     };
 
     useEffect(() => {
-        console.log("test-dashboardLoadingState", dashboardLoadingState);
-    }, [dashboardLoadingState])
-  
-    useEffect(() => {
         init();
     }, [userLoadingState]);
 
@@ -106,8 +103,26 @@ export const DashboardProvider = ({ children }: Props) => {
         }
 
         const socket = notificationSocket.socket;
+        const handleIncomingMessage = (message: Message) => {
+            setConversationsInfo((prev) =>
+                prev.map((conversation) =>
+                    conversation.id === message.conversation_id
+                        ? {
+                              ...conversation,
+                              messages: [
+                                  ...conversation.messages,
+                                  {
+                                      ...message,
+                                      messageReceipt: [],
+                                  },
+                              ],
+                          }
+                        : conversation
+                )
+            );
+        };
+
         const handleNotification = async (notification: DashboardNotification) => {
-            console.log("TEST-NEW-NOTIFICATION:", notification);
             setNotificationsInfo((prev) => [...prev, notification]);
 
             if (notification.entity_type === NotificationEntity.milestone) {
@@ -213,7 +228,6 @@ export const DashboardProvider = ({ children }: Props) => {
             }
 
             const upsertConversationInfo = (conversation: DashboardConversation) => {
-                console.log("TEST-UPSERT-CONVERSATION:", conversation);
                 setConversationsInfo((prev) => {
                     const existingIndex = prev.findIndex(
                         (conversationInfo) => conversationInfo.id === conversation.id
@@ -242,17 +256,14 @@ export const DashboardProvider = ({ children }: Props) => {
 
         socket.emit("joinUserRoom", userInfo.id);
         socket.on(websocket.WEBSOCKET_NEW_NOTIFICATION, handleNotification);
+        socket.on(websocket.WEBSOCKET_NEW_MESSAGE, handleIncomingMessage);
 
         return () => {
             socket.off(websocket.WEBSOCKET_NEW_NOTIFICATION, handleNotification);
+            socket.off(websocket.WEBSOCKET_NEW_MESSAGE, handleIncomingMessage);
         };
     }, [notificationSocket.isConnected, notificationSocket.socket, userInfo.id]);
 
-    useEffect(() => {
-        console.log("TEST-CONVERSATIONS-INFO:", conversationsInfo);
-    }, [conversationsInfo]);
-
-  
     return (
         <DashboardCtx.Provider
             value={{

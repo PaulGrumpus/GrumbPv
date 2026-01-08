@@ -5,14 +5,15 @@ import Link from "next/link";
 import { User } from "@/types/user";
 import Image from "next/image";
 import { toast } from "react-toastify";
-import { fundEscrow, deliverWork, approveWork, updateJobMilestone, withdrawFunds } from "@/utils/functions";
+import { fundEscrow, deliverWork, approveWork, updateJobMilestone, withdrawFunds, initiateDispute, buyerJoinDispute, venderPayDisputeFee } from "@/utils/functions";
 import { useWallet } from "@/context/walletContext";
 import { CONFIG } from "@/config/config";
 import ModalTemplate from "../modalTemplate";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { JobMilestoneStatus } from "@/types/jobMilestone";
-import { useProjectInfo } from "@/context/projectInfoContext";
 import { useDashboard } from "@/context/dashboardContext";
+import { UserInfoCtx } from "@/context/userContext";
+import { DashboardMilestone } from "@/types/dashboard";
 
 interface ChatProjectStatusProps {
     status: number; // 1-4
@@ -40,10 +41,18 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
     const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
     const [projectDescription, setProjectDescription] = useState<string>("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
+    const { userInfo } = useContext(UserInfoCtx);
     const { sendTransaction } = useWallet();
+    const [ milestoneInfo, setMilestoneInfo] = useState<DashboardMilestone | undefined>(undefined);
+    const { jobsInfo, setJobsInfo } = useDashboard();
+
+    useEffect(() => {
+        const milestoneInfo = jobsInfo.find(job => job.id === job_id)?.milestones?.find(milestone => milestone.id === jobMilestoneId);
+        if (milestoneInfo) {
+            setMilestoneInfo(milestoneInfo);
+        }
+    }, [jobsInfo, job_id, jobMilestoneId]);
     // const { jobMilestonesInfo, setJobMilestonesInfo } = useProjectInfo();
-    const { setJobsInfo } = useDashboard();
     const handleDownload = async (url: string) => {
         try {
             const response = await fetch(url);
@@ -372,193 +381,457 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
         }
     }
 
+    const handleDispute = async () => {
+        const result = await initiateDispute(user.id, jobMilestoneId, Number(CONFIG.chainId));
+        const txHash = await sendTransaction({
+            to: result.data.to,
+            data: result.data.data,
+            value: result.data.value,
+            chainId: Number(result.data.chainId),
+        });
+        if (!txHash) {
+            toast.error("Failed to initiate dispute", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: userInfo.role === "client" ? JobMilestoneStatus.DISPUTED_BY_CLIENT : JobMilestoneStatus.DISPUTED_BY_FREELANCER});
+        if (updatedJobMilestone.success) {
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
+            toast.success("Dispute initiated successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.error(updatedJobMilestone.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
+    }
+
+    const handleTakePartInDispute = async () => {
+        let result = null;
+        if(userInfo.role === "client") {
+            result = await buyerJoinDispute(user.id, jobMilestoneId, Number(CONFIG.chainId));
+        }
+        else {
+            result = await venderPayDisputeFee(user.id, jobMilestoneId, Number(CONFIG.chainId));
+        }
+        const txHash = await sendTransaction({
+            to: result.data.to,
+            data: result.data.data,
+            value: result.data.value,
+            chainId: Number(result.data.chainId),
+        });
+        if (!txHash) {
+            toast.error("Failed to initiate dispute", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE});
+        if (updatedJobMilestone.success) {
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
+            toast.success("Dispute initiated successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.error(updatedJobMilestone.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
+    }
+
     return (
         <div className="py-3 px-3.75 bg-linear-to-b from-[#7E3FF2] to-[#6A32E8] rounded-xl shadow-[0_10px_35px_rgba(55,0,132,0.35)] flex justify-center lg:block ">
             <div className="max-w-62.5 w-full">
-                <div className="flex items-center justify-center mb-6 w-full mt-6">
-                    <p className="text-light-large font-bold text-[#DEE4F2]">Project Status</p>
-                </div>
+                {status <= 4 && (
+                    <div>
+                        <div className="flex items-center justify-center mb-6 w-full mt-6">
+                            <p className="text-light-large font-bold text-[#DEE4F2]">Project Status</p>
+                        </div>
 
-                <div className="flex gap-3 pb-6">
-                    <div className="flex-1">
-                        {steps.map((label, idx) => (
-                            <div className="p-3" key={label}>
-                                <p
-                                    key={label}
-                                    className={`text-normal font-regular text-[#DEE4F2] ${idx === activeIndex ? "font-semibold" : ""}`}
-                                >
-                                    {label}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="w-[22%] flex justify-center">
-                        <div className="flex flex-col items-center py-2.5 px-1.75">
-                        {steps.map((_, idx) => {
-                            const isActive = idx === activeIndex;
-                            const isCompleted = idx < activeIndex;
-                            const isReached = idx <= activeIndex;
-                            const showConnector = idx < steps.length - 1;
-
-                            return (
-                                <div key={idx} className="flex flex-col items-center">
-                                    <div
-                                        className={`w-7 h-7 rounded-full flex items-center justify-center text-lg font-bold cursor-pointer ${
-                                            isReached
-                                                ? `bg-[#2F3DF6] text-white ${isActive ? "shadow-[0_8px_24px_rgba(77,125,255,0.45)]" : ""}`
-                                                : "bg-[#A79FD9] text-[#0F1421]"
-                                        }`}
-                                    >
-                                        {idx + 1}
+                        <div className="flex gap-3 pb-6">
+                            <div className="flex-1">
+                                {steps.map((label, idx) => (
+                                    <div className="p-3" key={label}>
+                                        <p
+                                            key={label}
+                                            className={`text-normal font-regular text-[#DEE4F2] ${idx === activeIndex ? "font-semibold" : ""}`}
+                                        >
+                                            {label}
+                                        </p>
                                     </div>
-                                    {showConnector && (
-                                        <div
-                                            className={`w-[2px] h-5 ${
-                                                isCompleted ? "bg-[#2F3DF6]" : "bg-[#A79FD9]"
-                                            }`}
-                                        />
+                                ))}
+                            </div>
+
+                            <div className="w-[22%] flex justify-center">
+                                <div className="flex flex-col items-center py-2.5 px-1.75">
+                                {steps.map((_, idx) => {
+                                    const isActive = idx === activeIndex;
+                                    const isCompleted = idx < activeIndex;
+                                    const isReached = idx <= activeIndex;
+                                    const showConnector = idx < steps.length - 1;
+
+                                    return (
+                                        <div key={idx} className="flex flex-col items-center">
+                                            <div
+                                                className={`w-7 h-7 rounded-full flex items-center justify-center text-lg font-bold cursor-pointer ${
+                                                    isReached
+                                                        ? `bg-[#2F3DF6] text-white ${isActive ? "shadow-[0_8px_24px_rgba(77,125,255,0.45)]" : ""}`
+                                                        : "bg-[#A79FD9] text-[#0F1421]"
+                                                }`}
+                                            >
+                                                {idx + 1}
+                                            </div>
+                                            {showConnector && (
+                                                <div
+                                                    className={`w-[2px] h-5 ${
+                                                        isCompleted ? "bg-[#2F3DF6]" : "bg-[#A79FD9]"
+                                                    }`}
+                                                />
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-center">
+                            {status === 1 && ( 
+                                <div className="pb-20.5">
+                                    {user.role === "client" ? (
+                                        <Button padding="px-6 py-1.5" onClick={handleFundEscrow}>
+                                            <p className="text-normal font-regular text-[#FFFFFF]">
+                                                Escrow Fund
+                                            </p>
+                                        </Button>
+                                    ) : (
+                                        <div className="h-9"></div>
                                     )}
                                 </div>
-                            );
-                        })}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-center">
-                    {status === 1 && ( 
-                        <div className="pb-20.5">
-                            {user.role === "client" ? (
-                                <Button padding="px-6 py-1.5" onClick={handleFundEscrow}>
-                                    <p className="text-normal font-regular text-[#FFFFFF]">
-                                        Escrow Fund
-                                    </p>
-                                </Button>
-                            ) : (
-                                <div className="h-9"></div>
                             )}
-                        </div>
-                    )}
-                    {status === 2 && ( 
-                        <div className="pb-20.5">
-                            {user.role === "client" ? (
-                                <div className="h-9"></div>
-                            ) : (
-                                <Button padding="px-6 py-1.5" onClick={() => setIsOpen(true)}>
-                                    <p className="text-normal font-regular text-[#FFFFFF]">
-                                        Deliver Product
-                                    </p>
-                                </Button>
-                            )}
-                        </div>
-                    )}
-                    {status === 3 && ( 
-                        <div>
-                            {user.role === "client" ? (
-                                <div className="flex flex-col items-center justify-center pb-7">
-                                    <div className="flex items-center justify-center gap-3 pb-3">
-                                        <Link href={`${CONFIG.ipfsGateWay}/${ipfs}`} className="max-w-[15%] truncate">
-                                            <p className="text-normal font-regular text-[#2F3DF6] text-left truncate">{CONFIG.ipfsGateWay}/{ipfs}</p>
-                                        </Link>
-                                        <Button
-                                            onClick={() => handleDownload(`${CONFIG.ipfsGateWay}/${ipfs}`)}
-                                            padding="p-1"
-                                            variant="secondary"
-                                        >
-                                            <Image
-                                                src="/Grmps/download.svg"
-                                                alt="ipfs url"
-                                                width={24}
-                                                height={24}
-                                            />
+                            {status === 2 && ( 
+                                <div className="pb-20.5">
+                                    {user.role === "client" ? (
+                                        <div className="h-9"></div>
+                                    ) : (
+                                        <Button padding="px-6 py-1.5" onClick={() => setIsOpen(true)}>
+                                            <p className="text-normal font-regular text-[#FFFFFF]">
+                                                Deliver Product
+                                            </p>
                                         </Button>
-                                    </div>
-                                    <Button padding="px-6 py-1.5" onClick={handleApproveWork}>
-                                        <p className="text-normal font-regular text-[#FFFFFF]">
-                                            Approve Result
-                                        </p>
-                                    </Button>
+                                    )}
                                 </div>
-                            ) : (
-                                <div className="h-9 pb-20.5"></div>
+                            )}
+                            {status === 3 && ( 
+                                <div>
+                                    {user.role === "client" ? (
+                                        <div className="flex flex-col items-center justify-center pb-7">
+                                            <div className="flex items-center justify-center gap-3 pb-3">
+                                                <Link href={`${CONFIG.ipfsGateWay}/${ipfs}`} className="max-w-[15%] truncate">
+                                                    <p className="text-normal font-regular text-[#2F3DF6] text-left truncate">{CONFIG.ipfsGateWay}/{ipfs}</p>
+                                                </Link>
+                                                <Button
+                                                    onClick={() => handleDownload(`${CONFIG.ipfsGateWay}/${ipfs}`)}
+                                                    padding="p-1"
+                                                    variant="secondary"
+                                                >
+                                                    <Image
+                                                        src="/Grmps/download.svg"
+                                                        alt="ipfs url"
+                                                        width={24}
+                                                        height={24}
+                                                    />
+                                                </Button>
+                                            </div>
+                                            <Button padding="px-6 py-1.5" onClick={handleApproveWork}>
+                                                <p className="text-normal font-regular text-[#FFFFFF]">
+                                                    Approve Result
+                                                </p>
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="h-9 pb-20.5"></div>
+                                    )}
+                                </div>
+                            )}
+                            {status === 4 && ( 
+                                <div className="pb-20.5">
+                                    {user.role === "client" ? (
+                                        <div className="h-9"></div>
+                                    ) : (
+                                        <Button padding="px-6 py-1.5" onClick={handleWithdrawFunds}>
+                                            <p className="text-normal font-regular text-[#FFFFFF]">
+                                                Withdraw Payment
+                                            </p>
+                                        </Button>
+                                    )}
+                                </div>
+                            )}
+                            {status >= 5 && ( 
+                                <div className="pb-20.5">
+                                    <div className="h-9"></div>
+                                </div>
                             )}
                         </div>
-                    )}
-                    {status === 4 && ( 
-                        <div className="pb-20.5">
-                            {user.role === "client" ? (
-                                <div className="h-9"></div>
-                            ) : (
-                                <Button padding="px-6 py-1.5" onClick={handleWithdrawFunds}>
-                                    <p className="text-normal font-regular text-[#FFFFFF]">
-                                        Withdraw Payment
-                                    </p>
-                                </Button>
-                            )}
-                        </div>
-                    )}
-                    {status >= 5 && ( 
-                        <div className="pb-20.5">
-                            <div className="h-9"></div>
-                        </div>
-                    )}
-                </div>
 
-                <div className="flex items-center justify-center pb-6">
-                    {status === 1 && ( 
-                        <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
-                            <Button padding="px-4 py-1.5" variant="secondary">
-                                <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
-                            </Button>
-                        </Link>
-                    )}  
-                    {status === 2 && ( 
-                        <div>
-                            {user.role === "client" ? (
+                        <div className="flex items-center justify-center pb-6">
+                            {status === 1 && ( 
+                                <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
+                                    <Button padding="px-4 py-1.5" variant="secondary">
+                                        <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
+                                    </Button>
+                                </Link>
+                            )}  
+                            {status === 2 && ( 
+                                <div>
+                                    {user.role === "client" ? (
+                                        <div className="flex gap-2.5 justify-center w-full">
+                                            <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
+                                                <Button padding="px-4 py-1.5" variant="secondary">
+                                                    <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
+                                                </Button>
+                                            </Link>
+                                            <Button padding="px-5.5 py-1.5" variant="primary" onClick={handleDispute}>
+                                                <p className="text-normal font-regular text-white">Dispute</p>
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
+                                            <Button padding="px-4 py-1.5" variant="secondary">
+                                                <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
+                                            </Button>
+                                        </Link>
+                                    )}
+                                </div>
+                            )}      
+                            {status === 3 && ( 
                                 <div className="flex gap-2.5 justify-center w-full">
                                     <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
                                         <Button padding="px-4 py-1.5" variant="secondary">
                                             <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
                                         </Button>
                                     </Link>
-                                    <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
-                                        <Button padding="px-5.5 py-1.5" variant="primary">
-                                            <p className="text-normal font-regular text-white">Dispute</p>
-                                        </Button>
-                                    </Link>
+                                    <Button padding="px-5.5 py-1.5" variant="primary" onClick={handleDispute}>
+                                        <p className="text-normal font-regular text-white">Dispute</p>
+                                    </Button>
                                 </div>
-                            ) : (
+                            )}   
+                            {status >= 4 && ( 
                                 <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
                                     <Button padding="px-4 py-1.5" variant="secondary">
                                         <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
                                     </Button>
                                 </Link>
-                            )}
+                            )}           
                         </div>
-                    )}      
-                    {status === 3 && ( 
-                        <div className="flex gap-2.5 justify-center w-full">
-                            <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
-                                <Button padding="px-4 py-1.5" variant="secondary">
-                                    <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
-                                </Button>
-                            </Link>
-                            <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
-                                <Button padding="px-5.5 py-1.5" variant="primary">
-                                    <p className="text-normal font-regular text-white">Dispute</p>
-                                </Button>
-                            </Link>
+                    </div>
+                )}
+                {status === 5 && (
+                    <div>
+                        <div className="flex items-center justify-center mb-6 w-full mt-6">
+                            <p className="text-light-large font-bold text-[#DEE4F2]">Congratulations!</p>
                         </div>
-                    )}   
-                    {status >= 4 && ( 
-                        <Link href={`/reference?jobApplicationId=${jobApplicationDocId}&conversationId=${conversationId}`}>
-                            <Button padding="px-4 py-1.5" variant="secondary">
-                                <p className="text-normal font-regular text-[#7E3FF2]">Go to doc</p>
-                            </Button>
-                        </Link>
-                    )}           
-                </div>
+                        <div className="flex justify-start w-full">
+                            <p className="text-normal font-bold text-[#DEE4F2]">ID: <span className="font-regular">{jobMilestoneId}</span></p>
+                        </div>
+                        <div className="flex justify-start w-full mb-6">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Project: <span className="font-regular">{milestoneInfo?.title}</span></p>
+                        </div>
+                        <div className="flex flex-col justify-start w-full mb-12">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Milestone Summary:</p>
+                            <p className="text-normal font-regular text-[#DEE4F2]">{`The milestone has been successfully completed and the funds have been released to the freelancer.`}</p>
+                        </div>
+                    </div>
+                )}
+                {status === 6 && (
+                    <div>
+                        <div className="flex items-center justify-center mb-6 w-full mt-6">
+                            <p className="text-light-large font-bold text-[#DEE4F2]">Disputed By Client</p>
+                        </div>
+                        <div className="flex justify-start w-full">
+                            <p className="text-normal font-bold text-[#DEE4F2]">ID: <span className="font-regular">{jobMilestoneId}</span></p>
+                        </div>
+                        <div className="flex justify-start w-full mb-6">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Project: <span className="font-regular">{milestoneInfo?.title}</span></p>
+                        </div>
+                        <div className="flex flex-col justify-start w-full mb-12">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Disputed Summary:</p>
+                            <p className="text-normal font-regular text-[#DEE4F2]">{`The dispute was initiated by client due to certain issues with the project. ${userInfo.role === "client" ? "Please wait for the freelancer to participate in the dispute." : "To participate in this dispute, the freelancer must hold and pay a minimum of 0.5% of the escrowed amount in BNB from your wallet. This fee is required only for the lancer and is used to confirm your commitment to the dispute process."} `}</p>
+                        </div>
+                        {
+                            userInfo.role === "client" ? (
+                                <div>
+
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center mb-6">
+                                    <Button padding="px-4 py-1.5" variant="primary" onClick={handleTakePartInDispute}>
+                                        <p className="text-normal font-regular text-white">Take Part in Dispute</p>
+                                    </Button>
+                                </div>
+                            )
+                        }
+                    </div>
+                )}
+                {status === 7 && (
+                    <div>
+                        <div className="flex items-center justify-center mb-6 w-full mt-6">
+                            <p className="text-light-large font-bold text-[#DEE4F2]">Disputed By Freelancer</p>
+                        </div>
+                        <div className="flex justify-start w-full">
+                            <p className="text-normal font-bold text-[#DEE4F2]">ID: <span className="font-regular">{jobMilestoneId}</span></p>
+                        </div>
+                        <div className="flex justify-start w-full mb-6">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Project: <span className="font-regular">{milestoneInfo?.title}</span></p>
+                        </div>
+                        <div className="flex flex-col justify-start w-full mb-12">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Disputed Summary:</p>
+                            <p className="text-normal font-regular text-[#DEE4F2]">{`The dispute was initiated by freelancer due to certain issues with the project. ${userInfo.role === "client" ? "As the client, you can participate in the dispute without paying any additional BNB. No extra wallet balance or fee is required from your side." : "Please wait for the client to participate in the dispute."} `}</p>
+                        </div>
+                        {
+                            userInfo.role === "client" ? (
+                                <div className="flex items-center justify-center mb-6">
+                                    <Button padding="px-4 py-1.5" variant="primary" onClick={handleTakePartInDispute}>
+                                        <p className="text-normal font-regular text-white">Take Part in Dispute</p>
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div>
+                                    
+                                </div>
+                            )
+                        }
+                    </div>
+                )}
+                {status === 8 && (
+                    <div>
+                        <div className="flex items-center justify-center mb-6 w-full mt-6">
+                            <p className="text-light-large font-bold text-[#DEE4F2]">Dispute Started with both sides</p>
+                        </div>
+                        <div className="flex justify-start w-full">
+                            <p className="text-normal font-bold text-[#DEE4F2]">ID: <span className="font-regular">{jobMilestoneId}</span></p>
+                        </div>
+                        <div className="flex justify-start w-full mb-6">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Project: <span className="font-regular">{milestoneInfo?.title}</span></p>
+                        </div>
+                        <div className="flex flex-col justify-start w-full mb-12">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Disputed Summary:</p>
+                            <p className="text-normal font-regular text-[#DEE4F2]">{`The dispute was occured due to certain issues with the project. Both parties are required to participate in the dispute and they will be notified when the dispute is resolved. Please wait for the mediator to resolve the dispute.`}</p>
+                        </div>
+                    </div>
+                )}
+                {status === 9 && (
+                    <div>
+                        <div className="flex items-center justify-center mb-6 w-full mt-6">
+                            <p className="text-light-large font-bold text-[#DEE4F2]">Dispute Resolved to Buyer</p>
+                        </div>
+                        <div className="flex justify-start w-full">
+                            <p className="text-normal font-bold text-[#DEE4F2]">ID: <span className="font-regular">{jobMilestoneId}</span></p>
+                        </div>
+                        <div className="flex justify-start w-full mb-6">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Project: <span className="font-regular">{milestoneInfo?.title}</span></p>
+                        </div>
+                        <div className="flex flex-col justify-start w-full mb-12">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Disputed Summary:</p>
+                            <p className="text-normal font-regular text-[#DEE4F2]">{`The dispute was resolved in favor of the buyer. The funds have been released to the buyer.`}</p>
+                        </div>
+                    </div>
+                )}
+                {status === 10 && (
+                    <div>
+                        <div className="flex items-center justify-center mb-6 w-full mt-6">
+                            <p className="text-light-large font-bold text-[#DEE4F2]">Dispute Resolved to Vendor</p>
+                        </div>
+                        <div className="flex justify-start w-full">
+                            <p className="text-normal font-bold text-[#DEE4F2]">ID: <span className="font-regular">{jobMilestoneId}</span></p>
+                        </div>
+                        <div className="flex justify-start w-full mb-6">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Project: <span className="font-regular">{milestoneInfo?.title}</span></p>
+                        </div>
+                        <div className="flex flex-col justify-start w-full mb-12">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Disputed Summary:</p>
+                            <p className="text-normal font-regular text-[#DEE4F2]">{`The dispute was resolved in favor of the vendor. The funds have been released to the vendor.`}</p>
+                        </div>
+                    </div>
+                )}
             </div>
             <ModalTemplate
                 isOpen={isOpen}

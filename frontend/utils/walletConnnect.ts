@@ -91,7 +91,6 @@ const switchOrAddTargetChain = async (provider: MetaMaskProvider) => {
             });
             return;
         }
-        console.log("error", error);
         throw error;
     }
 };
@@ -132,8 +131,6 @@ export const connectMetaMaskWallet = async (email?: string): Promise<{ address: 
 
     try {
         const currentChainId = (await provider.request({ method: "eth_chainId" })) as string;
-        console.log("currentChainId", currentChainId);
-        console.log("NETWORK_PARAMS.chainId", NETWORK_PARAMS.chainId);
         if (!isSameChain(currentChainId, NETWORK_PARAMS.chainId)) {
             await switchOrAddTargetChain(provider);
             // throw new Error("Chain not supported. Please switch to the supported chain.");
@@ -143,8 +140,6 @@ export const connectMetaMaskWallet = async (email?: string): Promise<{ address: 
             method: "eth_requestAccounts",
         })) as string[];
 
-        console.log("accounts", accounts);
-           
         const invalidConnectingAccount = await existingWalletAccount(accounts[0], email);
         if(invalidConnectingAccount) {
             toast.error("Wallet address already exists! Connected to another wallet account!", {

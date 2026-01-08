@@ -51,7 +51,6 @@ const MyJobsSection = () => {
     }, [userInfo, userLoadingState, dashboardLoadingState])
 
     useEffect(() => {
-        console.log("test-jobsInfo", jobsInfo);
         setJobs(jobsInfo);
     }, [jobsInfo]);
 

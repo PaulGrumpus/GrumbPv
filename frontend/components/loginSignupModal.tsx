@@ -113,10 +113,6 @@ const getWalletErrorMessage = (error: unknown) => {
 
 const switchOrAddTargetChain = async (provider: MetaMaskProvider) => {
     try {
-        console.log("provider.request", provider.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: NETWORK_PARAMS.chainId }],
-        }));
         await provider.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId: NETWORK_PARAMS.chainId }],
@@ -130,7 +126,6 @@ const switchOrAddTargetChain = async (provider: MetaMaskProvider) => {
             });
             return;
         }
-        console.log("error", error);
         throw error;
     }
 };
@@ -318,8 +313,6 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
 
         try {
             const currentChainId = (await provider.request({ method: "eth_chainId" })) as string;
-            console.log("currentChainId", currentChainId);
-            console.log("NETWORK_PARAMS.chainId", NETWORK_PARAMS.chainId);
             if (!isSameChain(currentChainId, NETWORK_PARAMS.chainId)) {
                 switchOrAddTargetChain(provider);
                 // throw new Error("Chain not supported. Please switch to the supported chain.");
@@ -414,7 +407,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
             });
         }
         setIsOpen(false);
-        router.push("/profile");
+        router.push("/dashboard");
         setuserLoadingState("pending");
     };
 
@@ -484,7 +477,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
         setShowPassword(false);
         setRememberMe(false);
         setTermsAndPolicy(false);
-        router.push("/profile");
+        router.push("/dashboard");
         setuserLoadingState("pending");
     }
 
@@ -584,7 +577,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
         
         setRegisterProcessing(false);
         setIsOpen(false);
-        router.push("/profile");
+        router.push("/dashboard");
         setuserLoadingState("pending");
         setEmail("");
         setPassword("");
@@ -845,7 +838,6 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                                 <p 
                                     className="text-normal font-regular font-inter text-[#7E3FF2] text-center cursor-pointer"
                                     onClick={() => {
-                                        console.log("forgot password");
                                     }}
                                 >Forgot the password?</p>
                             )}

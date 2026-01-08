@@ -306,7 +306,8 @@ enum milestone_status {
   delivered
   approved
   released
-  disputedWithoutCounterSide
+  disputedByClient
+  disputedByFreelancer
   disputedWithCounterSide
   resolvedToBuyer
   resolvedToVendor

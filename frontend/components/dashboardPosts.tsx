@@ -52,16 +52,18 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
             nextStatus = 4;
         } else if(milestoneStatus === JobMilestoneStatus.RELEASED) {
             nextStatus = 5;
-        } else if(milestoneStatus === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE) {
+        } else if(milestoneStatus === JobMilestoneStatus.DISPUTED_BY_CLIENT) {
             nextStatus = 6;
-        } else if(milestoneStatus === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE) {
+        } else if(milestoneStatus === JobMilestoneStatus.DISPUTED_BY_FREELANCER) {
             nextStatus = 7;
-        } else if(milestoneStatus === JobMilestoneStatus.RESOLVED_TO_BUYER) {
+        } else if(milestoneStatus === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE) {
             nextStatus = 8;
-        } else if(milestoneStatus === JobMilestoneStatus.RESOLVED_TO_VENDOR) {
+        } else if(milestoneStatus === JobMilestoneStatus.RESOLVED_TO_BUYER) {
             nextStatus = 9;
-        } else if(milestoneStatus === JobMilestoneStatus.CANCELLED) {
+        } else if(milestoneStatus === JobMilestoneStatus.RESOLVED_TO_VENDOR) {
             nextStatus = 10;
+        } else if(milestoneStatus === JobMilestoneStatus.CANCELLED) {
+            nextStatus = 11;
         }
         setStatus(Number.isFinite(nextStatus) ? nextStatus : 0);
     }, [milestoneStatus, setStatus]);

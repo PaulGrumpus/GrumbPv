@@ -398,8 +398,8 @@ router.post(
  */
 router.post(
   '/:job_milestone_id/dispute/initiate',
-  [param('job_milestone_id').isString().notEmpty(), body('privateKey').isString().notEmpty()],
-  validate([param('job_milestone_id'), body('privateKey')]),
+  [param('job_milestone_id').isString().notEmpty(), body('userId').isString().notEmpty(), body('chainId').isInt().notEmpty()],
+  validate([param('job_milestone_id'), body('userId'), body('chainId')]),
   escrowController.initiateDispute.bind(escrowController)
 );
 
@@ -454,8 +454,8 @@ router.post(
  */
 router.post(
   '/:job_milestone_id/dispute/vender-pay-fee',
-  [param('job_milestone_id').isString().notEmpty(), body('privateKey').isString().notEmpty()],
-  validate([param('job_milestone_id'), body('privateKey')]),
+  [param('job_milestone_id').isString().notEmpty(), body('userId').isString().notEmpty(), body('chainId').isInt().notEmpty()],
+  validate([param('job_milestone_id'), body('userId'), body('chainId')]),
   escrowController.venderPayDisputeFee.bind(escrowController)
 );
 
@@ -510,8 +510,8 @@ router.post(
  */
 router.post(
   '/:job_milestone_id/dispute/buyer-join',
-  [param('job_milestone_id').isString().notEmpty(), body('privateKey').isString().notEmpty()],
-  validate([param('job_milestone_id'), body('privateKey')]),
+  [param('job_milestone_id').isString().notEmpty(), body('userId').isString().notEmpty(), body('chainId').isInt().notEmpty()],
+  validate([param('job_milestone_id'), body('userId'), body('chainId')]),
   escrowController.buyerJoinDispute.bind(escrowController)
 );
 
