@@ -80,6 +80,7 @@ export const DEFAULT_CONFIG = {
   vendorFeeBps: parseInt(process.env.DEFAULT_VENDOR_FEE_BPS || '50'),
   disputeFeeBps: parseInt(process.env.DEFAULT_DISPUTE_FEE_BPS || '50'),
   rewardRateBps: parseInt(process.env.DEFAULT_REWARD_RATE_BPS || '25'),
+  rewardRatePer1E18: process.env.DEFAULT_REWARD_RATE_PER_1_E_18 || '30000000000000000000000',
   feeRecipient: process.env.FEE_RECIPIENT_ADDRESS || '',
   arbiter: process.env.ARBITER_ADDRESS || '',
 };
