@@ -123,7 +123,6 @@ export const WalletProvider = ({ children }: Props) => {
       setError("MetaMask is required. Please install or unlock the extension.");
       return null;
     }
-    console.log("test-email", email);
     setProvider(eth);
     setIsConnecting(true);
     setError(null);

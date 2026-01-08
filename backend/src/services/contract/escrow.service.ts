@@ -7,6 +7,7 @@ import { jobMilestoneService } from '../database/job.milestone.service.js';
 import { chainTxsService } from '../database/chainTxs.service.js';
 import { jobService } from '../database/job.service.js';
 import { EscrowTxData } from '../../types/escrow.js';
+import { userService } from '../database/user.service.js';
 
 export interface EscrowInfo {
   buyer: string;
@@ -544,7 +545,7 @@ export class EscrowService {
       logger.info(`Dispute initiated successfully: ${tx.hash}`);
 
       await jobMilestoneService.updateJobMilestone(job_milestone_id, {
-        status: 'disputedWithoutCounterSide',
+        status: wallet.address === info.buyer ? 'disputedByClient' : 'disputedByFreelancer',
       });
 
       await chainTxsService.createChainTx(
@@ -562,6 +563,40 @@ export class EscrowService {
       logger.error('Error initiating dispute:', error);
       throw new AppError(`Failed to initiate dispute: ${error.message}`, 500);
     }
+  }
+
+  async buildDisputeTx(
+    job_milestone_id: string,
+    userId: string,
+    chainId: number
+  ): Promise<EscrowTxData> {
+    const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    if (!exsitingJobMilestone) {
+      throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
+    }
+    const escrowAddress = exsitingJobMilestone.escrow;
+    if (!escrowAddress) {
+      throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
+    }
+    const existingUser = await userService.getUserById(userId);
+    if (!existingUser) {
+      throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+    }
+    const info = await this.getEscrowInfo(escrowAddress);
+    let disputeFee = 0n;
+    if (info.buyer.toLowerCase() === existingUser.address?.toLowerCase()) {
+      disputeFee = 0n;
+    } else {
+      disputeFee = info.disputeFeeAmount;
+    }
+    const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
+    const data = iface.encodeFunctionData('initiateDispute', []);
+    return {
+      to: escrowAddress,
+      data,
+      value: disputeFee.toString(),
+      chainId,
+    };
   }
 
   /**
@@ -616,6 +651,34 @@ export class EscrowService {
     }
   }
 
+  async buildVenderPayDisputeFeeTx(
+    job_milestone_id: string,
+    userId: string,
+    chainId: number
+  ): Promise<EscrowTxData> {
+    const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    if (!exsitingJobMilestone) {
+      throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
+  }
+    const escrowAddress = exsitingJobMilestone.escrow;
+    if (!escrowAddress) {
+      throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
+    }
+    const existingUser = await userService.getUserById(userId);
+    if (!existingUser) {
+      throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+    }
+    const info = await this.getEscrowInfo(escrowAddress);
+    const disputeFee = info.disputeFeeAmount;
+    const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
+    const data = iface.encodeFunctionData('payDisputeFee', []);
+    return {
+      to: escrowAddress,
+      data,
+      value: disputeFee.toString(),
+      chainId,
+    };
+  }
   /**
    * Buyer join the
    */
@@ -670,6 +733,32 @@ export class EscrowService {
     }
   }
 
+  async buildBuyerJoinDisputeTx(
+    job_milestone_id: string,
+    userId: string,
+    chainId: number
+  ): Promise<EscrowTxData> {
+    const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    if (!exsitingJobMilestone) {
+      throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
+    }
+    const escrowAddress = exsitingJobMilestone.escrow;
+    if (!escrowAddress) {
+      throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
+    }
+    const existingUser = await userService.getUserById(userId);
+    if (!existingUser) {
+      throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+    }
+    const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
+    const data = iface.encodeFunctionData('payDisputeFee', []);
+    return {
+      to: escrowAddress,
+      data,
+      value: '0',
+      chainId,
+    };
+  }
   /**
    * Resolve dispute (arbiter)
    */

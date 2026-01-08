@@ -19,11 +19,12 @@ import {
 
 import { UserLoadingCtx } from "./userLoadingContext";
 import { DashboardLoadingCtx } from "./dashboardLoadingContext";
-import { getBidById, getConversationById, getDashboardDataByUserId, getGigById, getGigsByFreelancerId, getJobBidForClientById, getJobById, getJobMilestoneById, getJobsByClientId } from "@/utils/functions";
+import { getBidById, getConversationById, getDashboardDataByUserId, getGigById, getJobApplicationById, getJobBidForClientById, getJobById, getJobMilestoneByEscrowAddress, getJobMilestoneById } from "@/utils/functions";
 import { UserInfoCtx } from "./userContext";
 import useSocket from "@/service/socket";
 import { NotificationEntity, NotificationType } from "@/types/notification";
 import { websocket } from "@/config/config";
+import { Message } from "@/types/message";
 
 const defaultProvider: DashboardContextType = {
     jobsInfo: [],
@@ -93,10 +94,6 @@ export const DashboardProvider = ({ children }: Props) => {
     };
 
     useEffect(() => {
-        console.log("test-dashboardLoadingState", dashboardLoadingState);
-    }, [dashboardLoadingState])
-  
-    useEffect(() => {
         init();
     }, [userLoadingState]);
 
@@ -106,13 +103,36 @@ export const DashboardProvider = ({ children }: Props) => {
         }
 
         const socket = notificationSocket.socket;
+        const handleIncomingMessage = (message: Message) => {
+            setConversationsInfo((prev) =>
+                prev.map((conversation) =>
+                    conversation.id === message.conversation_id
+                        ? {
+                              ...conversation,
+                              messages: [
+                                  ...conversation.messages,
+                                  {
+                                      ...message,
+                                      messageReceipt: [],
+                                  },
+                              ],
+                          }
+                        : conversation
+                )
+            );
+        };
+
         const handleNotification = async (notification: DashboardNotification) => {
-            console.log("TEST-NEW-NOTIFICATION:", notification);
             setNotificationsInfo((prev) => [...prev, notification]);
 
             if (notification.entity_type === NotificationEntity.milestone) {
-                const updatedMilestoneInfo = await getJobMilestoneById(notification.entity_id);                                    
-                if (updatedMilestoneInfo.success && updatedMilestoneInfo.data) {
+                let updatedMilestoneInfo = null;
+                if(notification.type === NotificationType.milestoneEscrowDeployed) {
+                    updatedMilestoneInfo = await getJobMilestoneByEscrowAddress(notification.entity_id);
+                } else{
+                    updatedMilestoneInfo = await getJobMilestoneById(notification.entity_id);                                    
+                }
+                if (updatedMilestoneInfo && updatedMilestoneInfo.success && updatedMilestoneInfo.data) {
                     const updatedMilestone = updatedMilestoneInfo.data;
                     setJobsInfo(prevJobs => {
                         let didUpdate = false;
@@ -137,6 +157,41 @@ export const DashboardProvider = ({ children }: Props) => {
                     
                         return didUpdate ? nextJobs : prevJobs;
                     });
+                }
+            }
+
+            if (notification.entity_type === NotificationEntity.jobApplicationDoc) {
+                const jobApplicationDocRes = await getJobApplicationById(notification.entity_id);
+                if (!jobApplicationDocRes.success || !jobApplicationDocRes.data) return;
+                const jobApplicationDoc = jobApplicationDocRes.data.job_application_info;
+                let jobUpdated = false;
+
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== jobApplicationDoc.job_id) return job;
+                        
+                        didUpdate = true;
+
+                        const applicationDocs = job.jobApplicationsDocs ?? [];
+                        const nextApplicationDocs = [
+                            ...applicationDocs.filter(a => a.id !== jobApplicationDoc.id),
+                            { ...jobApplicationDoc }, // force new ref
+                        ];
+                        return {
+                            ...job,
+                            jobApplicationsDocs: nextApplicationDocs,
+                        };
+                    });
+                    jobUpdated = didUpdate;
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+
+                if (!jobUpdated && userInfo.role === "freelancer" && userInfo.id) {
+                    const dashboardResult = await getDashboardDataByUserId(userInfo.id, userInfo.role);
+                    if (dashboardResult.success && dashboardResult.data) {
+                        setJobsInfo(dashboardResult.data.jobs ?? []);
+                    }
                 }
             }
 
@@ -213,7 +268,6 @@ export const DashboardProvider = ({ children }: Props) => {
             }
 
             const upsertConversationInfo = (conversation: DashboardConversation) => {
-                console.log("TEST-UPSERT-CONVERSATION:", conversation);
                 setConversationsInfo((prev) => {
                     const existingIndex = prev.findIndex(
                         (conversationInfo) => conversationInfo.id === conversation.id
@@ -242,17 +296,14 @@ export const DashboardProvider = ({ children }: Props) => {
 
         socket.emit("joinUserRoom", userInfo.id);
         socket.on(websocket.WEBSOCKET_NEW_NOTIFICATION, handleNotification);
+        socket.on(websocket.WEBSOCKET_NEW_MESSAGE, handleIncomingMessage);
 
         return () => {
             socket.off(websocket.WEBSOCKET_NEW_NOTIFICATION, handleNotification);
+            socket.off(websocket.WEBSOCKET_NEW_MESSAGE, handleIncomingMessage);
         };
     }, [notificationSocket.isConnected, notificationSocket.socket, userInfo.id]);
 
-    useEffect(() => {
-        console.log("TEST-CONVERSATIONS-INFO:", conversationsInfo);
-    }, [conversationsInfo]);
-
-  
     return (
         <DashboardCtx.Provider
             value={{

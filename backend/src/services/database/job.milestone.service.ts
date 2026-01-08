@@ -198,17 +198,19 @@ export class JobMilestoneService {
                 ? notification_type.MILESTONE_APPROVED
                 : updatedJobMilestone.status === milestone_status.released
                   ? notification_type.MILESTONE_FUNDS_RELEASED
-                  : updatedJobMilestone.status === milestone_status.disputedWithoutCounterSide
+                  : updatedJobMilestone.status === milestone_status.disputedByClient
                     ? notification_type.DISPUTE_STARTED
-                    : updatedJobMilestone.status === milestone_status.disputedWithCounterSide
+                    : updatedJobMilestone.status === milestone_status.disputedByFreelancer
                       ? notification_type.DISPUTE_STARTED
-                      : updatedJobMilestone.status === milestone_status.resolvedToBuyer
-                        ? notification_type.DISPUTE_RESOLVED
-                        : updatedJobMilestone.status === milestone_status.resolvedToVendor
+                      : updatedJobMilestone.status === milestone_status.disputedWithCounterSide
+                        ? notification_type.DISPUTE_STARTED
+                        : updatedJobMilestone.status === milestone_status.resolvedToBuyer
                           ? notification_type.DISPUTE_RESOLVED
-                          : notification_type.MILESTONE_STARTED,
+                          : updatedJobMilestone.status === milestone_status.resolvedToVendor
+                            ? notification_type.DISPUTE_RESOLVED
+                            : notification_type.MILESTONE_ESCROW_DEPLOYED,
         entity_type: notification_entity.milestone,
-        entity_id: updatedJobMilestone.id,
+        entity_id: updatedJobMilestone.status === milestone_status.pending_fund ? updatedJobMilestone.escrow ?? "" : updatedJobMilestone.id,
         title:
           updatedJobMilestone.status === milestone_status.funded
             ? 'Milestone funded'
@@ -218,15 +220,17 @@ export class JobMilestoneService {
                 ? 'Milestone approved'
                 : updatedJobMilestone.status === milestone_status.released
                   ? 'Milestone funds released'
-                  : updatedJobMilestone.status === milestone_status.disputedWithoutCounterSide
-                    ? 'Dispute started without counter side'
-                    : updatedJobMilestone.status === milestone_status.disputedWithCounterSide
-                      ? 'Dispute started with counter side'
-                      : updatedJobMilestone.status === milestone_status.resolvedToBuyer
-                        ? 'Dispute resolved to buyer'
-                        : updatedJobMilestone.status === milestone_status.resolvedToVendor
-                          ? 'Dispute resolved to vendor'
-                          : 'Milestone started',
+                  : updatedJobMilestone.status === milestone_status.disputedByClient
+                    ? 'Dispute started by client'
+                    : updatedJobMilestone.status === milestone_status.disputedByFreelancer
+                      ? 'Dispute started by freelancer'
+                      : updatedJobMilestone.status === milestone_status.disputedWithCounterSide
+                        ? 'Dispute started with counter side'
+                        : updatedJobMilestone.status === milestone_status.resolvedToBuyer
+                          ? 'Dispute resolved to buyer'
+                          : updatedJobMilestone.status === milestone_status.resolvedToVendor
+                            ? 'Dispute resolved to vendor'
+                            : 'Milestone Escrow Deployed',
         body:
           updatedJobMilestone.status === milestone_status.funded
             ? 'Your milestone has been funded'
@@ -236,15 +240,17 @@ export class JobMilestoneService {
                 ? 'Your milestone has been approved'
                 : updatedJobMilestone.status === milestone_status.released
                   ? 'Your milestone funds have been released'
-                  : updatedJobMilestone.status === milestone_status.disputedWithoutCounterSide
-                    ? 'Your dispute has been started without counter side'
-                    : updatedJobMilestone.status === milestone_status.disputedWithCounterSide
-                      ? 'Your dispute has been started with counter side'
-                      : updatedJobMilestone.status === milestone_status.resolvedToBuyer
-                        ? 'Your dispute has been resolved to buyer'
-                        : updatedJobMilestone.status === milestone_status.resolvedToVendor
-                          ? 'Your dispute has been resolved to vendor'
-                          : 'Your milestone has been started',
+                  : updatedJobMilestone.status === milestone_status.disputedByClient
+                    ? 'Your dispute has been started by client'
+                    : updatedJobMilestone.status === milestone_status.disputedByFreelancer
+                      ? 'Your dispute has been started by freelancer'
+                      : updatedJobMilestone.status === milestone_status.disputedWithCounterSide
+                        ? 'Your dispute has been started with counter side'
+                        : updatedJobMilestone.status === milestone_status.resolvedToBuyer
+                          ? 'Your dispute has been resolved to buyer'
+                          : updatedJobMilestone.status === milestone_status.resolvedToVendor
+                            ? 'Your dispute has been resolved to vendor'
+                            : 'Your milestone escrow has been deployed',
         payload: Prisma.JsonNull,
         read_at: null,
         created_at: new Date(),
@@ -261,17 +267,19 @@ export class JobMilestoneService {
                 ? notification_type.MILESTONE_APPROVED
                 : updatedJobMilestone.status === milestone_status.released
                   ? notification_type.MILESTONE_FUNDS_RELEASED
-                  : updatedJobMilestone.status === milestone_status.disputedWithoutCounterSide
+                  : updatedJobMilestone.status === milestone_status.disputedByClient
                     ? notification_type.DISPUTE_STARTED
-                    : updatedJobMilestone.status === milestone_status.disputedWithCounterSide
+                    : updatedJobMilestone.status === milestone_status.disputedByFreelancer
                       ? notification_type.DISPUTE_STARTED
-                      : updatedJobMilestone.status === milestone_status.resolvedToBuyer
-                        ? notification_type.DISPUTE_RESOLVED
-                        : updatedJobMilestone.status === milestone_status.resolvedToVendor
+                      : updatedJobMilestone.status === milestone_status.disputedWithCounterSide
+                        ? notification_type.DISPUTE_STARTED
+                        : updatedJobMilestone.status === milestone_status.resolvedToBuyer
                           ? notification_type.DISPUTE_RESOLVED
-                          : notification_type.MILESTONE_STARTED,
+                          : updatedJobMilestone.status === milestone_status.resolvedToVendor
+                            ? notification_type.DISPUTE_RESOLVED
+                            : notification_type.MILESTONE_ESCROW_DEPLOYED,
         entity_type: notification_entity.milestone,
-        entity_id: updatedJobMilestone.id,
+        entity_id: updatedJobMilestone.status === milestone_status.pending_fund ? updatedJobMilestone.escrow ?? "" : updatedJobMilestone.id,
         title:
           updatedJobMilestone.status === milestone_status.funded
             ? 'Milestone funded'
@@ -281,15 +289,17 @@ export class JobMilestoneService {
                 ? 'Milestone approved'
                 : updatedJobMilestone.status === milestone_status.released
                   ? 'Milestone funds released'
-                  : updatedJobMilestone.status === milestone_status.disputedWithoutCounterSide
-                    ? 'Dispute started without counter side'
-                    : updatedJobMilestone.status === milestone_status.disputedWithCounterSide
-                      ? 'Dispute started with counter side'
-                      : updatedJobMilestone.status === milestone_status.resolvedToBuyer
-                        ? 'Dispute resolved to buyer'
-                        : updatedJobMilestone.status === milestone_status.resolvedToVendor
-                          ? 'Dispute resolved to vendor'
-                          : 'Milestone started',
+                  : updatedJobMilestone.status === milestone_status.disputedByClient
+                    ? 'Dispute started by client'
+                    : updatedJobMilestone.status === milestone_status.disputedByFreelancer
+                      ? 'Dispute started by freelancer'
+                      : updatedJobMilestone.status === milestone_status.disputedWithCounterSide
+                        ? 'Dispute started with counter side'
+                        : updatedJobMilestone.status === milestone_status.resolvedToBuyer
+                          ? 'Dispute resolved to buyer'
+                          : updatedJobMilestone.status === milestone_status.resolvedToVendor
+                            ? 'Dispute resolved to vendor'
+                            : 'Milestone Escrow Deployed',
         body:
           updatedJobMilestone.status === milestone_status.funded
             ? 'Your milestone has been funded'
@@ -299,15 +309,17 @@ export class JobMilestoneService {
                 ? 'Your milestone has been approved'
                 : updatedJobMilestone.status === milestone_status.released
                   ? 'Your milestone funds have been released'
-                  : updatedJobMilestone.status === milestone_status.disputedWithoutCounterSide
-                    ? 'Your dispute has been started without counter side'
-                    : updatedJobMilestone.status === milestone_status.disputedWithCounterSide
-                      ? 'Your dispute has been started with counter side'
-                      : updatedJobMilestone.status === milestone_status.resolvedToBuyer
-                        ? 'Your dispute has been resolved to buyer'
-                        : updatedJobMilestone.status === milestone_status.resolvedToVendor
-                          ? 'Your dispute has been resolved to vendor'
-                          : 'Your milestone has been started',
+                  : updatedJobMilestone.status === milestone_status.disputedByClient
+                    ? 'Your dispute has been started by client'
+                    : updatedJobMilestone.status === milestone_status.disputedByFreelancer
+                      ? 'Your dispute has been started by freelancer'
+                      : updatedJobMilestone.status === milestone_status.disputedWithCounterSide
+                        ? 'Your dispute has been started with counter side'
+                        : updatedJobMilestone.status === milestone_status.resolvedToBuyer
+                          ? 'Your dispute has been resolved to buyer'
+                          : updatedJobMilestone.status === milestone_status.resolvedToVendor
+                            ? 'Your dispute has been resolved to vendor'
+                            : 'Your milestone escrow has been deployed',
         payload: Prisma.JsonNull,
         read_at: null,
         created_at: new Date(),
@@ -344,6 +356,27 @@ export class JobMilestoneService {
       }
       logger.error('Error deleting job milestone', { error });
       throw new AppError('Error deleting job milestone', 500, 'DB_JOB_MILESTONE_DELETION_FAILED');
+    }
+  }
+
+  public async getJobMilestoneByEscrowAddress(escrow_address: string): Promise<job_milestones> {
+    try {
+      if (!escrow_address) {
+        throw new AppError('Escrow address is required', 400, 'ESCROW_ADDRESS_REQUIRED');
+      }
+      const existingJobMilestone = await this.prisma.job_milestones.findFirst({
+        where: { escrow: escrow_address },
+      });
+      if (!existingJobMilestone) {
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
+      }
+      return existingJobMilestone;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      logger.error('Error getting job milestone by escrow address', { error });
+      throw new AppError('Error getting job milestone by escrow address', 500, 'DB_JOB_MILESTONE_GET_BY_ESCROW_ADDRESS_FAILED');
     }
   }
 

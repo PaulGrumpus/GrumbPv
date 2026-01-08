@@ -5,7 +5,6 @@ let ioInstance: Server | null = null;
 
 export const emitNotification = (userId: string, notification: notifications) => {
   if (!ioInstance) return;
-  console.log('test-emitNotification', notification);
   ioInstance.to(`user:${userId}`).emit('newNotification', notification);
 };
 
@@ -14,6 +13,5 @@ export const notification_socket_route = (socket: Socket, io: Server) => {
   socket.on('joinUserRoom', (userId: string) => {
     if (!userId) return;
     socket.join(`user:${userId}`);
-    console.log(`🔔 User ${userId} joined notification room`);
   });
 };

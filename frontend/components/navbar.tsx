@@ -12,7 +12,7 @@ import { UserInfoCtx } from "@/context/userContext";
 import { toast } from "react-toastify";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { NotificationCtx } from "@/context/notificationContext";
-import { Notification, NotificationEntity } from "@/types/notification";
+import { Notification, NotificationEntity, NotificationType } from "@/types/notification";
 import { formatHourMinute, markAllNotificationsAsRead, updateNotification } from "@/utils/functions";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
@@ -296,7 +296,7 @@ const Navbar = () => {
                             { showPlaceholder && (
                                 <>
                                     <div className="flex items-center gap-0.75">
-                                        <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
+                                        <div className="w-8.75 h-8.75 overflow-hidden rounded-full to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
                                             <Image
                                                 src={logoImage}
                                                 alt="Logo"
@@ -321,9 +321,26 @@ const Navbar = () => {
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="h-11 w-28 rounded-2xl bg-linear-to-br from-[#2F3DF6] via-[#7E3FF2] to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
-                                        Login
-                                    </div>
+                                    {loggedIn ? (
+                                        <div className="flex items-center gap-2">
+                                            {
+                                                userInfo.image_id && <div className="w-9 h-9 overflow-hidden rounded-full to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
+                                                    <Image 
+                                                        src={EscrowBackendConfig.uploadedImagesURL + userInfo.image_id} 
+                                                        alt="User Photo" 
+                                                        width={36} 
+                                                        height={36} 
+                                                        className="h-full w-full rounded-full object-cover"
+                                                    />
+                                                </div>
+                                            }
+                                            <p className="h-11 rounded-2xl from-white via-slate-100 to-slate-200 animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-gray-400">{username}</p>
+                                        </div>
+                                    ) : (
+                                        <div className="h-11 w-28 rounded-2xl bg-linear-to-br from-[#2F3DF6] via-[#7E3FF2] to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
+                                            Login
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </div>
@@ -577,6 +594,8 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
         return parsedDate.toLocaleString();
     };
 
+    const blockExplorerUrl = (CONFIG.blockExplorerUrls ?? "https://testnet.bscscan.com").replace(/\/$/, "");
+
     useEffect(() => {
         const unread = notifications
             .filter(n => !n.read_at)
@@ -592,8 +611,28 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
 
     const handleMarkAsRead = async (notificationId: string) => {
         const notification = notifications.find(n => n.id === notificationId);
+        
         if (notification && notification.entity_type === NotificationEntity.milestone) {
-            router.push(`/dashboard?view=dashboard`);
+            if(notification.type === NotificationType.milestoneEscrowDeployed) {
+                const entityId = notification.entity_id?.trim();
+                const isMilestoneEscrowNotification =
+                    notification.entity_type === NotificationEntity.milestone &&
+                    notification.type === NotificationType.milestoneEscrowDeployed &&
+                    Boolean(entityId);
+                const milestoneEscrowScanUrl = isMilestoneEscrowNotification
+                    ? `${blockExplorerUrl}/address/${entityId}`
+                    : undefined;
+                if (milestoneEscrowScanUrl) {
+                    if (typeof window !== "undefined") {
+                        window.open(milestoneEscrowScanUrl, "_blank", "noopener,noreferrer");
+                    }
+                } else {
+                    router.push(`/dashboard?view=dashboard`);
+                }
+            }
+            else{
+                router.push(`/dashboard?view=dashboard`);
+            }
         }   
         if (notification && notification.entity_type === NotificationEntity.job) {
             router.push(`/dashboard?view=my-jobs`);
@@ -660,6 +699,14 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
                     <li className="px-4 py-3 text-sm text-gray-500 text-left">You're all caught up!</li>
                 )}
                 {unreadNotifications.map((notification) => {
+                    const entityId = notification.entity_id?.trim();
+                    const isMilestoneEscrowNotification =
+                        notification.entity_type === NotificationEntity.milestone &&
+                        notification.type === NotificationType.milestoneEscrowDeployed &&
+                        Boolean(entityId);
+                    const milestoneEscrowScanUrl = isMilestoneEscrowNotification
+                        ? `${blockExplorerUrl}/address/${entityId}`
+                        : undefined;
                     const formattedDate = formatDate(notification.created_at);
                     return (
                         <li
@@ -668,9 +715,22 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
                             className="cursor-pointer border-b last:border-b-0 px-4 py-3 hover:bg-[#2F3DF633]"
                         >
                             <div className="flex justify-between">
-                                <div>
+                                <div className="w-full max-w-[80%]">
                                     <p className="text-sm font-semibold text-gray-800 text-left">{notification.title}</p>
                                     <p className="text-xs text-gray-600 text-left">{notification.body}</p>
+                                    {milestoneEscrowScanUrl && (
+                                        <div className="mt-1 flex flex-col gap-1">
+                                            <a
+                                                // href={milestoneEscrowScanUrl}
+                                                target="_blank"
+                                                rel="noreferrer noopener"
+                                                className="text-[11px] font-semibold text-blue-600 hover:underline"
+                                            >
+                                                View escrow on BscScan
+                                            </a>
+                                            <p className="text-[10px] text-gray-500 truncate">{entityId}</p>
+                                        </div>
+                                    )}
                                     {/* {formattedDate && (
                                         <p className="mt-1 text-[11px] text-gray-400">{formattedDate}</p>
                                     )} */}

@@ -5,7 +5,6 @@ import { AppError } from '../../middlewares/errorHandler.js';
 class DashboardService {
   public async getDashboardData(userId: string, role: 'client' | 'freelancer') {
     try {
-      console.log("UserID is ", userId);
       const jobsPromise =
         role === 'client'
           ? prisma.jobs.findMany({

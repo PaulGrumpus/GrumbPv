@@ -54,10 +54,6 @@ const ConversationsInfoProvider = ({ children }: Props) => {
         init();
     }, [projectInfoLoadingState]);
 
-    useEffect(() => {
-        console.log("test-conversationsInfo", conversationsInfo);
-    }, [conversationsInfo]);
-
     return (
         <ConversationsInfoCtx.Provider value={{ conversationsInfo, setConversationsInfo, conversationsError, setConversationsError }}>
             {children}

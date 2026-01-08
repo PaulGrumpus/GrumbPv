@@ -124,7 +124,6 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
                                 </div>
                                 <div 
                                     onClick={() => {
-                                        console.log("edit");
                                     }}
                                     className="cursor-pointer hover:scale-110 transition-transform duration-200"
                                 >

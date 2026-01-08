@@ -44,7 +44,13 @@ const ChatPageContent = () => {
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
     const searchParams = useSearchParams();
-    const conversationId = searchParams.get("conversation_id");
+    const [conversationId, setConversationId] = useState<string | null>(null);
+    useEffect(() => {
+        const id = searchParams.get("conversation_id");
+        if(id) {
+            setConversationId(id);
+        }
+    }, [searchParams]);
     const chatSocket = useSocket();   
     const router = useRouter();
     const { conversationsInfo, setConversationsInfo, jobsInfo, bidsInfo } = useDashboard();    
@@ -80,7 +86,6 @@ const ChatPageContent = () => {
 
         const userName = conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.participants[0].user.role === "client" ? conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.participants[0].user.display_name ?? "" : conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.participants[1].user.display_name ?? "";
 
-        console.log("test-clientName", userName);
         setClientName(userName);
     }, [selectedConversationId])
 
@@ -131,16 +136,12 @@ const ChatPageContent = () => {
     };
 
     const handleAcceptHandler = (conversation_id: string) => {
-        console.log("handleAcceptHandler");
         const job_application_doc_id = conversationsInfo.find((conversation) => conversation.id === conversation_id)?.job_application_doc_id;
         router.push(`/reference?jobApplicationId=${job_application_doc_id}&conversationId=${conversation_id}`);
     };
 
     useEffect(() => {
-        console.log("chatSocket.isConnected =", chatSocket.isConnected);
-
         if (chatSocket.isConnected && selectedConversationId) {
-            console.log("Joining room:", selectedConversationId);
             chatSocket.socket?.emit("joinRoom", selectedConversationId);
         }
     }, [chatSocket.isConnected, selectedConversationId]);
@@ -155,22 +156,7 @@ const ChatPageContent = () => {
             //     ...message,
             //     messageReceipt: [],
             // }]);
-            setConversationsInfo(prev =>
-                prev.map(conversation =>
-                    conversation.id === message.conversation_id
-                    ? {
-                        ...conversation,
-                        messages: [
-                            ...conversation.messages,
-                            {
-                                ...message,
-                                messageReceipt: [],
-                            }
-                        ],
-                    }
-                    : conversation
-                )
-            );
+            setConversationId(message.conversation_id); 
         };
     
         chatSocket.socket.on(websocket.WEBSOCKET_NEW_MESSAGE, handler);
@@ -206,8 +192,6 @@ const ChatPageContent = () => {
                         return;
                     }
 
-                    console.log("TEST_CONVERSATIONSINFO:", conversationsInfo);
-
                     const now = new Date();
                     const builtChats: ChatSidebarItem[] = conversationsInfo.map((conversation) => ({
                         conversation_id: conversation.id,
@@ -224,16 +208,12 @@ const ChatPageContent = () => {
                         onUnpinChat: () => {},
                     }));
 
-                    console.log("TEST_builtChats:", builtChats);
-
                     setChatSidebarItems(builtChats);
 
                     const targetConversationId = conversationId ?? conversationsInfo[0]?.id;
                     if (targetConversationId) {
                         handleChatClick(targetConversationId);
                     }                    
-                    console.log("TEST_AFTER")
-
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     setLoading("success");
                 }

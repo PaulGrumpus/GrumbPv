@@ -43,12 +43,10 @@ const SocketContextProvider = ({ children }: Props) => {
 
         // Connection event handlers
         newSocket.on('connect', () => {
-            console.log('Socket connected:', newSocket.id);
             setIsConnected(true);
         });
 
         newSocket.on('disconnect', (reason) => {
-            console.log('Socket disconnected:', reason);
             setIsConnected(false);
         });
 
@@ -58,12 +56,10 @@ const SocketContextProvider = ({ children }: Props) => {
         });
 
         newSocket.on('reconnect', (attemptNumber) => {
-            console.log('Socket reconnected after', attemptNumber, 'attempts');
             setIsConnected(true);
         });
 
         newSocket.on('reconnect_attempt', (attemptNumber) => {
-            console.log('Socket reconnection attempt:', attemptNumber);
         });
 
         newSocket.on('reconnect_error', (error) => {

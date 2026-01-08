@@ -9,7 +9,6 @@ export const socket_router = (socket: Socket, io: any) => {
   // User joins a conversation room
   socket.on('joinRoom', (conversationId: string) => {
     socket.join(conversationId);
-    console.log(`User ${socket.id} joined room ${conversationId}`);
   });
 
   // Fetch messages in a room
@@ -27,9 +26,6 @@ export const socket_router = (socket: Socket, io: any) => {
   socket.on(websocket.WEBSOCKET_SEND_NEW_MESSAGE, async (param: newMessageParam) => {
     try {
       const { user_id, conversation_id, body_text, kind, created_at } = param;
-
-      console.log('test-param', param);
-      console.log('created_at is Date?', created_at instanceof Date);
 
       if (!user_id || !conversation_id || !body_text) {
         throw new Error('Invalid parameters');

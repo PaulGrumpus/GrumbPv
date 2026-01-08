@@ -5,13 +5,15 @@ import Image from "next/image";
 import { toast } from "react-toastify";
 import { CONFIG } from "@/config/config";
 import ModalTemplate from "./modalTemplate";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { JobMilestoneStatus } from "@/types/jobMilestone";
-import { approveWork, deliverWork, fundEscrow, updateJobMilestone, withdrawFunds } from "@/utils/functions";
+import { approveWork, buyerJoinDispute, deliverWork, fundEscrow, initiateDispute, updateJobMilestone, venderPayDisputeFee, withdrawFunds } from "@/utils/functions";
 import { User } from "@/types/user";
 import { useWallet } from "@/context/walletContext";
 import { useProjectInfo } from "@/context/projectInfoContext";
 import { useRouter } from "next/navigation";
+import { UserInfoCtx } from "@/context/userContext";
+import { useDashboard } from "@/context/dashboardContext";
 
 const STATUSES = [
     { key: "started", label: "Started the job" },
@@ -39,6 +41,8 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
     const { sendTransaction } = useWallet();
     const { setJobMilestonesInfo } = useProjectInfo();
     const router = useRouter();
+    const { jobsInfo, setJobsInfo } = useDashboard();
+    const { userInfo } = useContext(UserInfoCtx);
     
     useEffect(() => {
         let nextStatus = 0;
@@ -52,16 +56,18 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
             nextStatus = 4;
         } else if(milestoneStatus === JobMilestoneStatus.RELEASED) {
             nextStatus = 5;
-        } else if(milestoneStatus === JobMilestoneStatus.DISPUTED_WITHOUT_COUNTER_SIDE) {
+        } else if(milestoneStatus === JobMilestoneStatus.DISPUTED_BY_CLIENT) {
             nextStatus = 6;
-        } else if(milestoneStatus === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE) {
+        } else if(milestoneStatus === JobMilestoneStatus.DISPUTED_BY_FREELANCER) {
             nextStatus = 7;
-        } else if(milestoneStatus === JobMilestoneStatus.RESOLVED_TO_BUYER) {
+        } else if(milestoneStatus === JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE) {
             nextStatus = 8;
-        } else if(milestoneStatus === JobMilestoneStatus.RESOLVED_TO_VENDOR) {
+        } else if(milestoneStatus === JobMilestoneStatus.RESOLVED_TO_BUYER) {
             nextStatus = 9;
-        } else if(milestoneStatus === JobMilestoneStatus.CANCELLED) {
+        } else if(milestoneStatus === JobMilestoneStatus.RESOLVED_TO_VENDOR) {
             nextStatus = 10;
+        } else if(milestoneStatus === JobMilestoneStatus.CANCELLED) {
+            nextStatus = 11;
         }
         setStatus(Number.isFinite(nextStatus) ? nextStatus : 0);
     }, [milestoneStatus, setStatus]);
@@ -86,7 +92,32 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
         }
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.FUNDED });
         if (updatedJobMilestone.success) {
-            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
             toast.success("Escrow funded successfully", {
                 position: "top-right",
                 autoClose: 5000,
@@ -129,7 +160,32 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
         }
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.APPROVED });
         if (updatedJobMilestone.success) {
-            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
             toast.success("Work approved successfully", {
                 position: "top-right",
                 autoClose: 5000,
@@ -168,7 +224,32 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
         }
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.RELEASED });
         if (updatedJobMilestone.success) {
-            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
             toast.success("Funds withdrawn successfully", {
                 position: "top-right",
                 autoClose: 5000,
@@ -187,19 +268,133 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
         }
     }
 
-    const handleDispute = () => {
-        if ((status >= 2 && status < 4 && user.role === "client") || (status === 3 && user.role === "freelancer"))
-        {
-            toast.success("Processing dispute...", {
+    const handleDispute = async () => {
+        const result = await initiateDispute(user.id, jobMilestoneId, Number(CONFIG.chainId));
+        const txHash = await sendTransaction({
+            to: result.data.to,
+            data: result.data.data,
+            value: result.data.value,
+            chainId: Number(result.data.chainId),
+        });
+        if (!txHash) {
+            toast.error("Failed to initiate dispute", {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: true,
-            })
-            clickHandler();
+            });
+            return;
+        }
+
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: userInfo.role === "client" ? JobMilestoneStatus.DISPUTED_BY_CLIENT : JobMilestoneStatus.DISPUTED_BY_FREELANCER});
+        if (updatedJobMilestone.success) {
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
+            toast.success("Dispute initiated successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
         } else {
-            toast.info("You are not allowed to dispute", {
+            toast.error(updatedJobMilestone.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
+    }
+
+    const handleTakePartInDispute = async () => {
+        let result = null;
+        if(userInfo.role === "client") {
+            result = await buyerJoinDispute(user.id, jobMilestoneId, Number(CONFIG.chainId));
+        }
+        else {
+            result = await venderPayDisputeFee(user.id, jobMilestoneId, Number(CONFIG.chainId));
+        }
+        const txHash = await sendTransaction({
+            to: result.data.to,
+            data: result.data.data,
+            value: result.data.value,
+            chainId: Number(result.data.chainId),
+        });
+        if (!txHash) {
+            toast.error("Failed to initiate dispute", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.DISPUTED_WITH_COUNTER_SIDE});
+        if (updatedJobMilestone.success) {
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
+            toast.success("Dispute initiated successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.error(updatedJobMilestone.error, {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -319,7 +514,32 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
         }
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.DELIVERED, ipfs: result.data.cid });
         if (updatedJobMilestone.success) {
-            setJobMilestonesInfo((prev) => prev.map((jobMilestone) => jobMilestone.id === jobMilestoneId ? updatedJobMilestone.data : jobMilestone));
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
             toast.success("Work delivered successfully", {
                 position: "top-right",
                 autoClose: 5000,
@@ -512,19 +732,36 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                                             </Button>
                                         )}
                                         <div className="lg:w-auto w-full">
-                                            <Button 
-                                                padding="px-8.5 py-3.25"
-                                                className="w-full"
-                                                variant={
-                                                    (status >= 2 && status < 4 && user.role === "client") ||
-                                                    (status === 3 && user.role === "freelancer")
-                                                        ? "secondary"
-                                                        : "disable"
-                                                }
-                                                onClick={handleDispute}
-                                            >
-                                                Dispute
-                                            </Button>
+                                            {status >= 2 && status < 4 && (
+                                                <Button 
+                                                    padding="px-8.5 py-3.25"
+                                                    className="w-full"
+                                                    variant={
+                                                        (status >= 2 && status < 4 && user.role === "client") ||
+                                                        (status === 3 && user.role === "freelancer")
+                                                            ? "secondary"
+                                                            : "disable"
+                                                    }
+                                                    onClick={handleDispute}
+                                                >
+                                                    Dispute
+                                                </Button>
+                                            )}
+                                            {status >= 6 && status < 8 && (
+                                                <Button 
+                                                    padding="px-8.5 py-3.25"
+                                                    className="w-full"
+                                                    variant={
+                                                        (status === 7 && user.role === "client") ||
+                                                        (status === 6 && user.role === "freelancer")
+                                                            ? "secondary"
+                                                            : "disable"
+                                                    }
+                                                    onClick={handleTakePartInDispute}
+                                                >
+                                                    Dispute
+                                                </Button>
+                                            )}
                                         </div>
                                         <Button 
                                             padding="px-6.25 py-3"

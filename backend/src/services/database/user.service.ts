@@ -61,7 +61,6 @@ export class UserService {
       if (user.role !== user_role.client && user.role !== user_role.freelancer) {
         throw new AppError('Invalid role', 400, 'INVALID_ROLE');
       }
-      console.log('Before find user');
       const existingUser = await this.prisma.users.findFirst({
         where: {
           email: user.email,
@@ -73,7 +72,6 @@ export class UserService {
       const hashedPassword = await this.hashPasswordIfPresent(user.password);
       const imageId = user.image_id ? user.image_id : 'default.jpg';
 
-      console.log('Before create user');
       const newUser = await this.prisma.users.create({
         data: {
           ...user,
@@ -226,8 +224,6 @@ export class UserService {
       if (!email || !password) {
         throw new AppError('Email and password are required', 400, 'EMAIL_PASSWORD_REQUIRED');
       }
-      const hashedPassword = await this.hashPasswordIfPresent(password);
-      console.log(hashedPassword);
       const user = await this.prisma.users.findFirst({
         where: { email },
       });

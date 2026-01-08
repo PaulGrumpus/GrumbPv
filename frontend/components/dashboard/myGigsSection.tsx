@@ -52,7 +52,6 @@ const MyGigsSection = () => {
     }, [userInfo, userLoadingState, dashboardLoadingState])
 
     useEffect(() => {
-        console.log("test-gigsInfo", gigsInfo);
         setGigs(gigsInfo);
     }, [gigsInfo]);
 

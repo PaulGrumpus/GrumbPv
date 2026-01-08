@@ -20,16 +20,6 @@ const formatDate = (date: string) => {
 
 const ChatProjectInfo = ({ job_id, job_token_symbol, job_title, job_description, job_max_budget, job_deadline_at, job_min_budget, clientName, acceptHandler }: ChatProjectInfoProps) => {    
 
-    console.log("job_id", job_id);
-    console.log("job_title", job_title);
-    console.log("job_deadline_at", job_deadline_at);
-    console.log("job_description", job_description);
-    console.log("job_max_budget", job_max_budget);
-    console.log("job_token_symbol", job_token_symbol);
-    console.log("job_min_budget", job_min_budget);
-    console.log("clientName", clientName);
-
-
     return (
         <div className="bg-[#7E3FF2] rounded-xl py-3 px-3.75">
             <div className="lg:max-w-62.5 w-full">
@@ -44,16 +34,18 @@ const ChatProjectInfo = ({ job_id, job_token_symbol, job_title, job_description,
                     <p className="text-normal font-medium text-[#DEE4F2]">Project Info:</p>
                     <p className="text-normal font-medium text-[#DEE4F2] max-h-30 overflow-y-auto hide-scrollbar">{job_id? job_description : "No description"}</p>
                 </div>
-                <div className="flex items-center justify-center pt-2.5 pb-6">
-                    <Button 
-                        padding="px-5 py-1.5" 
-                        onClick={() => {
-                            acceptHandler();
-                        }}
-                    >
-                        <p className="text-normal font-normal text-[#FFFFFF]">Accept</p>
-                    </Button>
-                </div>
+                {job_id && (
+                    <div className="flex items-center justify-center pt-2.5 pb-6">
+                        <Button 
+                            padding="px-5 py-1.5" 
+                            onClick={() => {
+                                acceptHandler();
+                            }}
+                        >
+                            <p className="text-normal font-normal text-[#FFFFFF]">Accept</p>
+                        </Button>
+                    </div>
+                )}
             </div>
         </div>
     );
