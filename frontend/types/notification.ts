@@ -20,6 +20,7 @@ export enum NotificationType {
     bidAccepted = "BID_ACCEPTED",
     bidDeclined = "BID_DECLIEND",
     bidWithdrawn = "BID_WITHDRAWN",
+    milestoneEscrowDeployed = "MILESTONE_ESCROW_DEPLOYED",
     milestoneStarted = "MILESTONE_STARTED",
     milestoneFunded = "MILESTONE_FUNDED",
     milestoneDelivered = "MILESTONE_DELIVERED",

@@ -208,9 +208,9 @@ export class JobMilestoneService {
                           ? notification_type.DISPUTE_RESOLVED
                           : updatedJobMilestone.status === milestone_status.resolvedToVendor
                             ? notification_type.DISPUTE_RESOLVED
-                            : notification_type.MILESTONE_STARTED,
+                            : notification_type.MILESTONE_ESCROW_DEPLOYED,
         entity_type: notification_entity.milestone,
-        entity_id: updatedJobMilestone.id,
+        entity_id: updatedJobMilestone.status === milestone_status.pending_fund ? updatedJobMilestone.escrow ?? "" : updatedJobMilestone.id,
         title:
           updatedJobMilestone.status === milestone_status.funded
             ? 'Milestone funded'
@@ -230,7 +230,7 @@ export class JobMilestoneService {
                           ? 'Dispute resolved to buyer'
                           : updatedJobMilestone.status === milestone_status.resolvedToVendor
                             ? 'Dispute resolved to vendor'
-                            : 'Milestone started',
+                            : 'Milestone Escrow Deployed',
         body:
           updatedJobMilestone.status === milestone_status.funded
             ? 'Your milestone has been funded'
@@ -250,7 +250,7 @@ export class JobMilestoneService {
                           ? 'Your dispute has been resolved to buyer'
                           : updatedJobMilestone.status === milestone_status.resolvedToVendor
                             ? 'Your dispute has been resolved to vendor'
-                            : 'Your milestone has been started',
+                            : 'Your milestone escrow has been deployed',
         payload: Prisma.JsonNull,
         read_at: null,
         created_at: new Date(),
@@ -277,7 +277,7 @@ export class JobMilestoneService {
                           ? notification_type.DISPUTE_RESOLVED
                           : updatedJobMilestone.status === milestone_status.resolvedToVendor
                             ? notification_type.DISPUTE_RESOLVED
-                            : notification_type.MILESTONE_STARTED,
+                            : notification_type.MILESTONE_ESCROW_DEPLOYED,
         entity_type: notification_entity.milestone,
         entity_id: updatedJobMilestone.id,
         title:
@@ -299,7 +299,7 @@ export class JobMilestoneService {
                           ? 'Dispute resolved to buyer'
                           : updatedJobMilestone.status === milestone_status.resolvedToVendor
                             ? 'Dispute resolved to vendor'
-                            : 'Milestone started',
+                            : 'Milestone Escrow Deployed',
         body:
           updatedJobMilestone.status === milestone_status.funded
             ? 'Your milestone has been funded'
@@ -319,7 +319,7 @@ export class JobMilestoneService {
                           ? 'Your dispute has been resolved to buyer'
                           : updatedJobMilestone.status === milestone_status.resolvedToVendor
                             ? 'Your dispute has been resolved to vendor'
-                            : 'Your milestone has been started',
+                            : 'Your milestone escrow has been deployed',
         payload: Prisma.JsonNull,
         read_at: null,
         created_at: new Date(),

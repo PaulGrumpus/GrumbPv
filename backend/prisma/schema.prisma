@@ -239,7 +239,7 @@ model notifications {
 
   type        notification_type
   entity_type notification_entity
-  entity_id   String              @db.Uuid
+  entity_id   String
 
   actor_user_id String? @db.Uuid
 
@@ -368,6 +368,7 @@ enum notification_type {
   BID_ACCEPTED
   BID_DECLIEND
   BID_WITHDRAWN
+  MILESTONE_ESCROW_DEPLOYED
   MILESTONE_STARTED
   MILESTONE_FUNDED
   MILESTONE_DELIVERED
