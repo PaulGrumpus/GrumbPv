@@ -19,7 +19,7 @@ import {
 
 import { UserLoadingCtx } from "./userLoadingContext";
 import { DashboardLoadingCtx } from "./dashboardLoadingContext";
-import { getBidById, getConversationById, getDashboardDataByUserId, getGigById, getJobBidForClientById, getJobById, getJobMilestoneById } from "@/utils/functions";
+import { getBidById, getConversationById, getDashboardDataByUserId, getGigById, getJobApplicationById, getJobBidForClientById, getJobById, getJobMilestoneByEscrowAddress, getJobMilestoneById } from "@/utils/functions";
 import { UserInfoCtx } from "./userContext";
 import useSocket from "@/service/socket";
 import { NotificationEntity, NotificationType } from "@/types/notification";
@@ -126,8 +126,13 @@ export const DashboardProvider = ({ children }: Props) => {
             setNotificationsInfo((prev) => [...prev, notification]);
 
             if (notification.entity_type === NotificationEntity.milestone) {
-                const updatedMilestoneInfo = await getJobMilestoneById(notification.entity_id);                                    
-                if (updatedMilestoneInfo.success && updatedMilestoneInfo.data) {
+                let updatedMilestoneInfo = null;
+                if(notification.type === NotificationType.milestoneEscrowDeployed) {
+                    updatedMilestoneInfo = await getJobMilestoneByEscrowAddress(notification.entity_id);
+                } else{
+                    updatedMilestoneInfo = await getJobMilestoneById(notification.entity_id);                                    
+                }
+                if (updatedMilestoneInfo && updatedMilestoneInfo.success && updatedMilestoneInfo.data) {
                     const updatedMilestone = updatedMilestoneInfo.data;
                     setJobsInfo(prevJobs => {
                         let didUpdate = false;
@@ -153,6 +158,32 @@ export const DashboardProvider = ({ children }: Props) => {
                         return didUpdate ? nextJobs : prevJobs;
                     });
                 }
+            }
+
+            if (notification.entity_type === NotificationEntity.jobApplicationDoc) {
+                const jobApplicationDocRes = await getJobApplicationById(notification.entity_id);
+                if (!jobApplicationDocRes.success || !jobApplicationDocRes.data) return;
+                const jobApplicationDoc = jobApplicationDocRes.data.job_application_info;
+                
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== jobApplicationDoc.job_id) return job;
+                        
+                        didUpdate = true;
+
+                        const applicationDocs = job.jobApplicationsDocs ?? [];
+                        const nextApplicationDocs = [
+                            ...applicationDocs.filter(a => a.id !== jobApplicationDoc.id),
+                            { ...jobApplicationDoc }, // force new ref
+                        ];
+                        return {
+                            ...job,
+                            jobApplicationsDocs: nextApplicationDocs,
+                        };
+                    });
+                    return didUpdate ? nextJobs : prevJobs;
+                });
             }
 
             if (

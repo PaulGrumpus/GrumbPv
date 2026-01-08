@@ -611,7 +611,6 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
 
     const handleMarkAsRead = async (notificationId: string) => {
         const notification = notifications.find(n => n.id === notificationId);
-        console.log("notification", notification);
         
         if (notification && notification.entity_type === NotificationEntity.milestone) {
             if(notification.type === NotificationType.milestoneEscrowDeployed) {
@@ -623,7 +622,6 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
                 const milestoneEscrowScanUrl = isMilestoneEscrowNotification
                     ? `${blockExplorerUrl}/address/${entityId}`
                     : undefined;
-                console.log("milestoneEscrowScanUrl", milestoneEscrowScanUrl);
                 if (milestoneEscrowScanUrl) {
                     if (typeof window !== "undefined") {
                         window.open(milestoneEscrowScanUrl, "_blank", "noopener,noreferrer");

@@ -100,6 +100,20 @@ export class JobMilestoneController {
       next(error);
     }
   }
+
+  async getJobMilestoneByEscrowAddress(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { escrow_address } = req.params;
+      const result = await jobMilestoneService.getJobMilestoneByEscrowAddress(escrow_address);
+      res.json({
+        success: true,
+        data: result,
+        message: 'Job milestone retrieved successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const jobMilestoneController = new JobMilestoneController();

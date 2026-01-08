@@ -359,6 +359,27 @@ export class JobMilestoneService {
     }
   }
 
+  public async getJobMilestoneByEscrowAddress(escrow_address: string): Promise<job_milestones> {
+    try {
+      if (!escrow_address) {
+        throw new AppError('Escrow address is required', 400, 'ESCROW_ADDRESS_REQUIRED');
+      }
+      const existingJobMilestone = await this.prisma.job_milestones.findFirst({
+        where: { escrow: escrow_address },
+      });
+      if (!existingJobMilestone) {
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
+      }
+      return existingJobMilestone;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      logger.error('Error getting job milestone by escrow address', { error });
+      throw new AppError('Error getting job milestone by escrow address', 500, 'DB_JOB_MILESTONE_GET_BY_ESCROW_ADDRESS_FAILED');
+    }
+  }
+
   public async getJobMilestoneById(id: string): Promise<job_milestones> {
     try {
       if (!id) {

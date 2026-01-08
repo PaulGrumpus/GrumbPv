@@ -237,6 +237,15 @@ router.get(
   jobMilestoneController.getJobMilestoneById.bind(jobMilestoneController)
 );
 
+
+router.get(
+  '/by-escrow-address/:escrow_address',
+  [param('escrow_address').isString().notEmpty()],
+  validate([param('escrow_address')]),
+  jobMilestoneController.getJobMilestoneByEscrowAddress.bind(jobMilestoneController)
+);
+
+
 /**
  * @swagger
  * /api/v1/database/job-milestones/by-job-id/{job_id}:

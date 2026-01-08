@@ -403,6 +403,22 @@ export const getJobMilestonesByUserId = async (user_id: string) => {
     }
 }
 
+export const getJobMilestoneByEscrowAddress = async (escrow_address: string) => {
+    try {
+        const response = await EscrowBackend.get(`/database/job-milestones/by-escrow-address/${escrow_address}`);
+        return {
+            success: true,
+            data: response.data.data,
+        };  
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 // Gigs
 export const createGig = async (gig: Gig, imageFile?: File | null) => {
     try {
