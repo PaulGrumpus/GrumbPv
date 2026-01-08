@@ -206,6 +206,8 @@ export class FactoryService {
         escrow: escrowAddress,
       });
 
+      await this.setupEscrowRewards(escrowAddress, CONTRACT_ADDRESSES.grmpsToken, DEFAULT_CONFIG.rewardRatePer1E18);
+
       await chainTxsService.createChainTx(
         'create_escrow',
         97,
