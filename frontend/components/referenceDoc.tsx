@@ -280,22 +280,28 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                                     value={deliverables}
                                     onChange={(e) => {
                                         const value = e.target.value;
-                                        if (value.length <= charCount) {
-                                            setDeliverables(value);
-                                        }
+                                        // if (value.length <= charCount) {
+                                        // }
+                                        setDeliverables(value);
                                     }}
-                                    maxLength={charCount}
+                                    // maxLength={charCount}
                                 />
                             </div>
                         </div>
                         <div className="flex flex-col gap-2">
                             <p className='text-normal font-medium text-[#8F99AF] text-left'>Out of Scope</p>
-                            <input
+                            <textarea
+                                className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-45 resize-none mb-2'
+                                value={outOfScope}
+                                onChange={(e) => setOutOfScope(e.target.value)}
+                                // maxLength={charCount}
+                            />
+                            {/* <input
                                 value={outOfScope}
                                 onChange={(e) => setOutOfScope(e.target.value)}
                                 className='w-full border border-[#8F99AF] rounded-lg p-3 flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none'
                                 placeholder='Out of Scope'
-                            />
+                            /> */}
                         </div>
                         <div className="flex flex-col gap-2">
                             <p className='text-normal font-medium text-[#8F99AF] text-left'>Budget</p>
@@ -491,7 +497,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                                     <p className="text-normal font-regular text-black text-left">{projectDescription}</p>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-2 max-h-45 overflow-y-auto">
                                 <p className="text-normal font-medium text-[#7E3FF2] text-left">Deliverables</p>
                                 <div className="flex flex-col gap-2 p-3">
                                     <ul>
@@ -501,7 +507,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                                     </ul>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-2 max-h-45 overflow-y-auto">
                                 <p className="text-normal font-medium text-[#7E3FF2] text-left">Out of Scope</p>
                                 <div className="flex flex-col gap-2 p-3">
                                     <p className="text-normal font-regular text-black text-left">{outOfScope}</p>
