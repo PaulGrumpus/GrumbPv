@@ -325,7 +325,21 @@ export class JobService {
 
   public async getJobs(): Promise<jobs[]> {
     try {
-      const jobs = await this.prisma.jobs.findMany();
+      const now = new Date();
+      const jobs = await this.prisma.jobs.findMany({
+        where: {
+          OR: [
+            {
+              deadline_at: {
+                gte: now,
+              },
+            },
+            {
+              deadline_at: null,
+            },
+          ],
+        },
+      });
       if (!jobs) {
         throw new AppError('Jobs not found', 404, 'JOBS_NOT_FOUND');
       }
