@@ -82,6 +82,7 @@ const MyGigsSection = () => {
                             {gigs.map((gig) => (
                                 <UserJobOrGigPost
                                     key={gig.id}
+                                    gig_id={gig.id}
                                     title={gig.title}
                                     description={gig.description_md}
                                     minBudget={Number(gig.budget_min_usd)}

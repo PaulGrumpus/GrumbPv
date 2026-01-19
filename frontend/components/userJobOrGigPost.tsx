@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { LocationType } from "@/types/jobs";
 import Button from "./button";
 import ModalTemplate from "./modalTemplate";
@@ -68,6 +69,7 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
     const [loading, setLoading] = useState("success");
 
     const { jobsInfo } = useDashboard();
+    const router = useRouter();
 
     useEffect(() => {
         const el = descriptionRef.current;
@@ -124,6 +126,16 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
                                 </div>
                                 <div 
                                     onClick={() => {
+                                        const targetId = variant === "gig" ? gig_id : job_id;
+                                        if (!targetId) {
+                                            return;
+                                        }
+                                        const view = variant === "gig" ? "create-gig" : "create-job";
+                                        const queryParam = variant === "gig" ? "gigId" : "jobId";
+                                        const params = new URLSearchParams();
+                                        params.set("view", view);
+                                        params.set(queryParam, targetId);
+                                        router.push(`/dashboard?${params.toString()}`);
                                     }}
                                     className="cursor-pointer hover:scale-110 transition-transform duration-200"
                                 >

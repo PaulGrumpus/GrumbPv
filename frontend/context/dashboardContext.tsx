@@ -196,8 +196,7 @@ export const DashboardProvider = ({ children }: Props) => {
             }
 
             if (
-                notification.entity_type === NotificationEntity.job &&
-                notification.type === NotificationType.jobPosted
+                notification.entity_type === NotificationEntity.job
             ) {
                 const jobRes = await getJobById(notification.entity_id);
                 if (!jobRes.success || !jobRes.data) return;

@@ -269,11 +269,60 @@ export const createJob = async (job: Job, imageFile?: File | null) => {
 
             formData.append(field, value.toString());
         });
-        formData.append('tags', JSON.stringify(job.tags ?? []));
         if (imageFile) {
             formData.append('image', imageFile);
         }
         const response = await EscrowBackend.post('/database/jobs', formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const updateJob = async (job_id: string, job: Job, imageFile?: File | null) => {
+    try {
+        const formData = new FormData();
+        const fieldsToSend: Array<keyof Job> = [
+            'title',
+            'description_md',
+            'budget_min_usd',
+            'budget_max_usd',
+            'location',
+            'deadline_at',
+            'client_id',
+            'status',
+        ];
+
+        fieldsToSend.forEach((field) => {
+            const value = job[field];
+
+            if (value === undefined || value === null || value === '') {
+                return;
+            }
+
+            if (typeof value === 'boolean') {
+                formData.append(field, value ? 'true' : 'false');
+                return;
+            }
+
+            formData.append(field, value.toString());
+        });
+        formData.append('tags', JSON.stringify(job.tags ?? []));
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+        const response = await EscrowBackend.post(`/database/jobs/${job_id}`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
@@ -452,6 +501,54 @@ export const createGig = async (gig: Gig, imageFile?: File | null) => {
             formData.append('image', imageFile);
         }
         const response = await EscrowBackend.post('/database/gigs', formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const updateGig = async (gig_id: string, gig: Gig, imageFile?: File | null) => {
+    try {
+        const formData = new FormData();
+        const fieldsToSend: Array<keyof Gig> = [
+            'title',
+            'description_md',
+            'budget_min_usd',
+            'budget_max_usd',
+            'tags',
+            'link',
+            'freelancer_id',
+        ];
+
+        fieldsToSend.forEach((field) => {
+            const value = gig[field];
+
+            if (value === undefined || value === null || value === '') {
+                return;
+            }
+
+            if (typeof value === 'boolean') {
+                formData.append(field, value ? 'true' : 'false');
+                return;
+            }
+
+            formData.append(field, value.toString());
+        });
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+        const response = await EscrowBackend.post(`/database/gigs/${gig_id}`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },

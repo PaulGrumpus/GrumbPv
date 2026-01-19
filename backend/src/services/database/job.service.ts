@@ -235,6 +235,18 @@ export class JobService {
           ...(normalizedImageId !== undefined ? { image_id: normalizedImageId as string } : {}),
         },
       });
+      await notificationService.createNotification({
+        user_id: existingJob.client_id,
+        actor_user_id: existingJob.client_id,
+        type: notification_type.JOB_UPDATED,
+        entity_type: notification_entity.job,
+        entity_id: existingJob.id,
+        title: 'Job updated',
+        body: 'Your job has been updated',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
+      });
       return updatedJob;
     } catch (error) {
       if (error instanceof AppError) {

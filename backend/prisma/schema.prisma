@@ -362,7 +362,9 @@ enum read_state {
 
 enum notification_type {
   JOB_POSTED
+  JOB_UPDATED
   GIG_POSTED
+  GIG_UPDATED
   BID_SENT
   BID_RECEIVED
   BID_ACCEPTED

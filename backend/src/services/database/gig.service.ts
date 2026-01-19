@@ -166,6 +166,18 @@ export class GigService {
           ...(normalizedImageId !== undefined ? { image_id: normalizedImageId as string } : {}),
         },
       });
+      await notificationService.createNotification({
+        user_id: existingGig.freelancer_id,
+        actor_user_id: existingGig.freelancer_id,
+        type: notification_type.GIG_UPDATED,
+        entity_type: notification_entity.gig,
+        entity_id: existingGig.id,
+        title: 'Gig updated',
+        body: 'Your gig has been updated',
+        payload: Prisma.JsonNull,
+        read_at: null,
+        created_at: new Date(),
+      });
       return updatedGig;
     } catch (error) {
       if (error instanceof AppError) {

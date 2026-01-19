@@ -1,21 +1,22 @@
 'use client';
 
-import { useRef, useState, useEffect, useContext } from "react";
+import { useRef, useState, useEffect, useContext, useMemo } from "react";
 import SectionPlaceholder from "./sectionPlaceholder";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
 import Button from "../button";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { UserInfoCtx } from "@/context/userContext";
 import Loading from "../loading";
-import { createJob } from "@/utils/functions";
+import { createJob, updateJob } from "@/utils/functions";
 import { JobStatus, LocationType } from "@/types/jobs";
 import { formatISODate, parseISODate, formatDisplayDate, calendarIcon, CalendarDropdown } from "@/utils/calendar";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 import SmallLoading from "../smallLoading";
 import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
+import { useDashboard } from "@/context/dashboardContext";
 
 const uploadImage = "/Grmps/upload.svg";
 
@@ -29,10 +30,10 @@ const CreateJobSection = () => {
     const [maxBudget, setMaxBudget] = useState<string>("");
     const [minBudget, setMinBudget] = useState<string>("");
     const dueDatePickerRef = useRef<HTMLDivElement | null>(null);
-    const initialDate = formatISODate(new Date());
-    const [dueDate, setDueDate] = useState(initialDate);
+    const initialDueDate = useMemo(() => formatISODate(new Date()), []);
+    const [dueDate, setDueDate] = useState(initialDueDate);
     const [isDueDateCalendarOpen, setIsDueDateCalendarOpen] = useState(false);
-    const [dueDateCalendarMonth, setDueDateCalendarMonth] = useState(parseISODate(initialDate) ?? new Date());
+    const [dueDateCalendarMonth, setDueDateCalendarMonth] = useState(parseISODate(initialDueDate) ?? new Date());
     const [error, setError] = useState("");
     const [checkError, setCheckError] = useState(false);
 
@@ -45,6 +46,11 @@ const CreateJobSection = () => {
     const router = useRouter();
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
     const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
+    const searchParams = useSearchParams();
+    const editingJobId = searchParams.get("jobId") ?? "";
+    const isEditing = Boolean(editingJobId);
+    const { jobsInfo, setJobsInfo } = useDashboard();
+    const editingJob = jobsInfo.find((job) => job.id === editingJobId);
     
     useEffect(() => {
         if (!isDueDateCalendarOpen) {
@@ -71,6 +77,24 @@ const CreateJobSection = () => {
         setIsDueDateCalendarOpen(false);
     };
     
+
+    useEffect(() => {
+        if (!editingJob) {
+            return;
+        }
+
+        setTitle(editingJob.title ?? "");
+        setSelectedLocation(editingJob.location ?? "");
+        setDescription(editingJob.description_md ?? "");
+        setMaxBudget(editingJob.budget_max_usd ?? "");
+        setMinBudget(editingJob.budget_min_usd ?? "");
+        setDueDate(
+            editingJob.deadline_at
+                ? formatISODate(new Date(editingJob.deadline_at))
+                : initialDueDate
+        );
+    }, [editingJob, initialDueDate]);
+
 
     const handleUploadFile = () => {
         const fileInput = document.createElement("input");
@@ -158,22 +182,24 @@ const CreateJobSection = () => {
 
         setLoading("pending");
 
-        const response = await createJob(
-            { 
-                title, 
-                location: selectedLocation as LocationType, 
-                description_md: description, 
-                budget_max_usd: Number(maxBudget), 
-                budget_min_usd: Number(minBudget), 
-                deadline_at: new Date(dueDate).toISOString() ?? "",
-                client_id: userInfo.id,
-                status: JobStatus.OPEN,
-            },
-            selectedFile
-        );
+        const jobPayload = {
+            title,
+            location: selectedLocation as LocationType,
+            description_md: description,
+            budget_max_usd: Number(maxBudget),
+            budget_min_usd: Number(minBudget),
+            deadline_at: new Date(dueDate).toISOString() ?? "",
+            client_id: userInfo.id,
+            status: JobStatus.OPEN,
+        };
+
+        const response = isEditing && editingJobId
+            ? await updateJob(editingJobId, jobPayload, selectedFile)
+            : await createJob(jobPayload, selectedFile);
 
         if (response.success) {
-            toast.success("Job created successfully", {
+            const successMessage = isEditing ? "Job updated successfully" : "Job created successfully";
+            toast.success(successMessage, {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -181,15 +207,38 @@ const CreateJobSection = () => {
                 pauseOnHover: true,
             });
 
-            setTitle("");
-            setSelectedLocation("");
-            setDescription("");
-            setMaxBudget("");
-            setMinBudget("");
-            setDueDate(initialDate);
-            setSelectedFile(null);
-            setUploadedFileName("");
-            setPreviewUrl(null);
+            if (isEditing && editingJobId && response.data) {
+                const updatedJob = response.data;
+                setJobsInfo((prev) =>
+                    prev.map((job) =>
+                        job.id === editingJobId
+                            ? {
+                                  ...job,
+                                  title: updatedJob.title,
+                                  description_md: updatedJob.description_md,
+                                  location: updatedJob.location ?? job.location,
+                                  tags: updatedJob.tags ?? job.tags,
+                                  image_id: updatedJob.image_id,
+                                  deadline_at: updatedJob.deadline_at,
+                                  budget_max_usd: updatedJob.budget_max_usd,
+                                  budget_min_usd: updatedJob.budget_min_usd,
+                                  token_symbol: updatedJob.token_symbol,
+                                  status: updatedJob.status ?? job.status,
+                              }
+                            : job
+                    )
+                );
+            } else {
+                setTitle("");
+                setSelectedLocation("");
+                setDescription("");
+                setMaxBudget("");
+                setMinBudget("");
+                setDueDate(initialDueDate);
+                setSelectedFile(null);
+                setUploadedFileName("");
+                setPreviewUrl(null);
+            }
 
         } else {
             toast.error(response.error, {
@@ -232,8 +281,8 @@ const CreateJobSection = () => {
         return (
             <div>
                 <SectionPlaceholder
-                    title="Create Job"
-                    description="Set up a new job to showcase your services to clients."
+                    title={isEditing ? "Edit Job" : "Create Job"}
+                    description={isEditing ? "Update an existing job listing." : "Set up a new job to showcase your services to clients."}
                 /> 
                 <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
                     <div className="linear-border__inner rounded-[0.4375rem] bg-white py-8 px-3 lg:p-8">
@@ -422,7 +471,7 @@ const CreateJobSection = () => {
                                         padding='px-10.75 py-3'
                                         onClick={handlePostJob}
                                     >
-                                        <p className='text-normal font-regular'>Post</p>
+                                        <p className='text-normal font-regular'>{isEditing ? "Update" : "Post"}</p>
                                     </Button>
                                 </div>
                             </div>
