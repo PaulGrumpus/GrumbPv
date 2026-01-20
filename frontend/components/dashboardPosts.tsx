@@ -135,6 +135,53 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
             });
         }
     }
+    
+    const handleCancel = async () => {
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.CANCELLED });
+        if (updatedJobMilestone.success) {
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
+            toast.success("Project cancelled successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.error(updatedJobMilestone.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
+    }
 
     const handleDeliver = () => {
         setIsOpen(true);
@@ -705,6 +752,14 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                                                 onClick={handleFund}
                                             >
                                                 Fund
+                                            </Button>
+                                        )}
+                                        {status == 1 && user.role === "client" && (
+                                            <Button 
+                                                padding="px-10.375 py-3"
+                                                onClick={handleCancel}
+                                            >
+                                                Cancel
                                             </Button>
                                         )}
                                         {status == 2 && user.role === "freelancer" && (

@@ -148,6 +148,8 @@ export const DashboardProvider = ({ children }: Props) => {
                                 ...milestones.filter(m => m.id !== updatedMilestone.id),
                                 { ...updatedMilestone }, // force new ref
                             ].sort((a, b) => a.order_index - b.order_index);
+
+                            console.log("nextMilestones", nextMilestones);
                     
                             return {
                                 ...job,

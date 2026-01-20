@@ -239,31 +239,33 @@ const ChatPageContent = () => {
                         return;
                     }
 
-                    const builtChats: ChatSidebarItem[] = conversationsInfo.map((conversation) => {
-                        const latestMessage = conversation.messages?.[conversation.messages.length - 1];
-                        const lastMessageTime = latestMessage
-                            ? new Date(latestMessage.created_at)
-                            : new Date(conversation.created_at ?? Date.now());
+                    const builtChats: ChatSidebarItem[] = conversationsInfo
+                        .map((conversation) => {
+                            const latestMessage = conversation.messages?.[conversation.messages.length - 1];
+                            const lastMessageTime = latestMessage
+                                ? new Date(latestMessage.created_at)
+                                : new Date(conversation.created_at ?? Date.now());
 
-                        return {
-                            conversation_id: conversation.id,
-                            receiver: conversation.participants[0].user.id === userInfo.id ? conversation.participants[1].user as User : conversation.participants[0].user as User,
-                            status: "idle",
-                            lastMessage: latestMessage?.body_text ?? "",
-                            lastMessageTime,
-                            pinned: false,
-                            selected: false,
-                            onChatClick: () => {
-                                handleChatClick(conversation.id);
-                            },
-                            onPinChat: () => {},
-                            onUnpinChat: () => {},
-                        };
-                    });
+                            return {
+                                conversation_id: conversation.id,
+                                receiver: conversation.participants[0].user.id === userInfo.id ? conversation.participants[1].user as User : conversation.participants[0].user as User,
+                                status: "idle",
+                                lastMessage: latestMessage?.body_text ?? "",
+                                lastMessageTime,
+                                pinned: false,
+                                selected: false,
+                                onChatClick: () => {
+                                    handleChatClick(conversation.id);
+                                },
+                                onPinChat: () => {},
+                                onUnpinChat: () => {},
+                            };
+                        })
+                        .sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
 
                     setChatSidebarItems(builtChats);
 
-                    const targetConversationId = conversationId ?? conversationsInfo[0]?.id;
+                    const targetConversationId = conversationId ?? builtChats[0]?.conversation_id;
                     if (targetConversationId) {
                         handleChatClick(targetConversationId);
                     }                    

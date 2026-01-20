@@ -260,7 +260,7 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                             <ChevronRightIcon onClick={onMobileProfileClick} className="w-6 h-6 text-white cursor-pointer" />
                         )}
                     </div>
-                    {/* <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                         {isMobile && (
                             <div 
                                 onClick={onMobileProjectInfoClick}
@@ -268,13 +268,13 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                             >
                                 <Image 
                                     src="/Grmps/docs.svg"
-                                    alt="Call"
+                                    alt="Docs"
                                     width={24}
                                     height={24}
                                 />
                             </div>
                         )}
-                        <div className="w-10 h-10 p-2 bg-[#7E3FF2] rounded-lg hover:bg-[#6E35E0] transition-colors duration-150 hover:scale-90">
+                        {/* <div className="w-10 h-10 p-2 bg-[#7E3FF2] rounded-lg hover:bg-[#6E35E0] transition-colors duration-150 hover:scale-90">
                             <Image 
                                 src="/Grmps/video.svg"
                                 alt="Call"
@@ -289,8 +289,8 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                                 width={24}
                                 height={24}
                             />
-                        </div>
-                    </div> */}
+                        </div> */}
+                    </div>
                 </div>
             </div>
             <div>
