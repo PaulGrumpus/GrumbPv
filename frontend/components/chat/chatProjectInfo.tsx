@@ -42,7 +42,7 @@ const ChatProjectInfo = ({ job_id, job_token_symbol, job_title, job_description,
                                 acceptHandler();
                             }}
                         >
-                            <p className="text-normal font-normal text-[#FFFFFF]">Accept</p>
+                            <p className="text-normal font-normal text-[#FFFFFF]">View Document</p>
                         </Button>
                     </div>
                 )}

@@ -33,7 +33,7 @@ interface ChatMainProps {
 
 const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWriting, onSendMessage, onEditMessage, onDeleteMessage, onReadMessage, onUnreadMessage, onPinMessage, onUnpinMessage, onReplyToMessage, onForwardMessage, onSaveMessage, onPhoneCall, onVideoCall, onWritingMessage, onStopWritingMessage, onMobileProfileClick, onMobileProjectInfoClick }: ChatMainProps) => {
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    // const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const textareaWrapperRef = useRef<HTMLDivElement>(null);
@@ -299,7 +299,7 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                             ref={messagesContainerRef}
                             className="flex-1 overflow-y-auto min-h-[calc(100vh-19.5rem)] max-h-[calc(100vh-19.5rem)] decorate-scrollbar pb-2"
                         >
-                            {messages && messages.length && messages.map((message, index) => {
+                            {messages?.length ? messages.map((message, index) => {
                                 // Check if this is the last message in a sequence from the same sender
                                 const isLastInSequence = index === messages.length - 1 || 
                                     messages[index + 1]?.sender_id !== message.sender_id;
@@ -366,9 +366,9 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                                         </div>
                                     </div>
                                 );
-                            })}
+                            }) : null}
                             
-                            <div ref={messagesEndRef} />
+                            {/* <div ref={messagesEndRef} /> */}
                         </div>
 
                         {isWriting && (
