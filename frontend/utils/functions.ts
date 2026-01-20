@@ -1187,3 +1187,17 @@ export const formatHourMinute = (date: string) => {
     }
     return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 };
+
+export const formatLabel = (value?: string) => {
+    if (!value) {
+        return "";
+    }
+
+    if (value.length <= 8) {
+        return value;
+    }
+
+    const prefix = value.slice(0, 4);
+    const suffix = value.slice(-4);
+    return `${prefix}...${suffix}`;
+};

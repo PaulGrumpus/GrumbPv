@@ -5,6 +5,7 @@ import { User } from "@/types/user";
 import { Message } from "@/types/message";
 import { EscrowBackendConfig } from "@/config/config";
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
+import { formatLabel } from "@/utils/functions";
 
 interface ChatMainProps {
     isMobile: boolean;  
@@ -245,21 +246,21 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
             <div className="absolute top-0 left-0 w-full">
                 <div className="flex items-center justify-between bg-linear-to-r from-[#7E3FF2] to-[#2F3DF6] p-4">
                     <div className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-full overflow-hidden">
+                        <div className="w-10 h-10 rounded-full overflow-hidden">
                             <Image 
                                 src={receiver? EscrowBackendConfig.uploadedImagesURL + receiver.image_id : EscrowBackendConfig.uploadedImagesURL + "/default.jpg"}
                                 alt="Receiver Photo"
-                                width={36}
-                                height={36}
+                                width={40}
+                                height={40}
                                 className="w-full h-full object-cover"
                             />
                         </div>
-                        <p className="text-small font-regular text-[#DEE4F2]">{receiver? receiver.display_name : "No receiver"}</p>
+                        <p className="text-small font-regular text-[#DEE4F2]">{receiver?.display_name || formatLabel(receiver?.email ?? "") || formatLabel(receiver?.address ?? "") || "No receiver"}</p>
                         {isMobile && (
                             <ChevronRightIcon onClick={onMobileProfileClick} className="w-6 h-6 text-white cursor-pointer" />
                         )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    {/* <div className="flex items-center gap-2">
                         {isMobile && (
                             <div 
                                 onClick={onMobileProjectInfoClick}
@@ -289,7 +290,7 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                                 height={24}
                             />
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
             <div>
