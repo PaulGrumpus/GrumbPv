@@ -69,7 +69,6 @@ export const socket_router = (socket: Socket, io: any) => {
       if (!result) {
         throw new Error('Message receipt not created');
       }
-      io.to(message_id).emit(websocket.WEBSOCKET_MESSAGE_RECEIPT, result);
     } catch (error) {
       console.error('❌ Error sending message receipt:', error);
     }

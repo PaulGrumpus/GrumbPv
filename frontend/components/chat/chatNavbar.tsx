@@ -12,10 +12,10 @@ const ChatNavbar = ({ onBack }: ChatNavbarProps) => {
                 <div className="flex justify-between items-center">
                     <h1 
                     onClick={onBack}
-                    className="text-title font-bold text-black">
+                    className="text-title font-bold text-black min-h-10 text-center flex items-center justify-center">
                         Chats
                     </h1>
-                    <div className="flex items-center gap-2">
+                    {/* <div className="flex items-center gap-2">
                         <Button padding="p-2">
                             <Image 
                                 src="/Grmps/search.svg" 
@@ -34,7 +34,7 @@ const ChatNavbar = ({ onBack }: ChatNavbarProps) => {
                                 className="h-full w-full object-cover"
                             />
                         </Button>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </div>

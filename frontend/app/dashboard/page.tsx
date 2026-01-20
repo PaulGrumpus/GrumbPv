@@ -140,6 +140,8 @@ const DashboardPageContent = () => {
     const handleSectionChange = (label: string) => {
         const slug = LABEL_TO_SLUG[label] ?? DEFAULT_SECTION;
         const params = new URLSearchParams(searchParams.toString());
+        params.delete("jobId");
+        params.delete("gigId");
         params.set("view", slug);
         router.replace(`/dashboard?${params.toString()}`, { scroll: false });
     };

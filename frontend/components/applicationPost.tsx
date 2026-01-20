@@ -282,7 +282,7 @@ const ApplicationPost = ({ item, job_id }: ApplicationPostProps) => {
                                         padding='px-5 py-2' 
                                         onClick={() => handleAccept(id ?? "")}
                                     >
-                                        Accept
+                                        Contact
                                     </Button>
                                     <Button 
                                         variant='secondary' 

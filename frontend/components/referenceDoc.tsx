@@ -10,6 +10,7 @@ import { User } from "@/types/user";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import SmallLoading from "./smallLoading";
+import { jsPDF } from "jspdf";
 
 interface ReferenceDocProps {
     jobId: string;
@@ -59,7 +60,6 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
     const [error, setError] = useState("");
     const router = useRouter();
     const [loading, setLoading] = useState("success");
-
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (
@@ -117,6 +117,56 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
     };
 
     const handlePrint = () => {
+        const doc = new jsPDF("p", "pt", "a4");
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 40;
+        let cursorY = 50;
+        const usableWidth = pageWidth - margin * 2;
+
+        const addText = (text: string, fontSize = 12, color = "#000000") => {
+            doc.setFontSize(fontSize);
+            doc.setTextColor(color);
+            doc.text(text, margin, cursorY);
+            cursorY += fontSize + 6;
+        };
+
+        const addSection = (label: string, content: string) => {
+            addText(label, 14, "#2F3DF6");
+            const lines = doc.splitTextToSize(content || "N/A", usableWidth);
+            doc.setFontSize(11);
+            doc.setTextColor("#000000");
+            doc.text(lines, margin, cursorY);
+            cursorY += lines.length * 14 + 10;
+            if (cursorY > doc.internal.pageSize.getHeight() - 60) {
+                doc.addPage();
+                cursorY = 40;
+            }
+        };
+
+        doc.setFontSize(22);
+        doc.setTextColor("#2F3DF6");
+        const title = projectTitle || "Project Agreement";
+        doc.text(title, pageWidth / 2, cursorY, { align: "center" });
+        cursorY += 30;
+
+        doc.setFontSize(12);
+        doc.setTextColor("#000000");
+        doc.text(`Client: ${clientName || "N/A"}`, margin, cursorY);
+        doc.text(`Freelancer: ${freelancerName || "N/A"}`, pageWidth - margin - 160, cursorY);
+        cursorY += 24;
+
+        addSection("Project Description", projectDescription);
+        addSection("Deliverables", deliverables);
+        addSection("Out of Scope", outOfScope);
+        addSection("Timeline", `${formatDisplayDate(startDate)} - ${formatDisplayDate(endDate)}`);
+        addSection("Budget", `${budget || "N/A"} ${currency || ""}`.trim());
+        addSection(
+            "Agreement Status",
+            `${freelancerConfirmed ? "✅ Freelancer confirmed" : "❌ Freelancer pending"}\n${clientConfirmed ? "✅ Client confirmed" : "❌ Client pending"}`
+        );
+
+        const safeTitle = projectTitle ? projectTitle.replace(/\s+/g, "-").toLowerCase() : "reference-document";
+        doc.save(`${safeTitle}.pdf`);
     }
     const handleConfirm = async () => {
         if (!agreeToTerms) {
@@ -280,22 +330,28 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                                     value={deliverables}
                                     onChange={(e) => {
                                         const value = e.target.value;
-                                        if (value.length <= charCount) {
-                                            setDeliverables(value);
-                                        }
+                                        // if (value.length <= charCount) {
+                                        // }
+                                        setDeliverables(value);
                                     }}
-                                    maxLength={charCount}
+                                    // maxLength={charCount}
                                 />
                             </div>
                         </div>
                         <div className="flex flex-col gap-2">
                             <p className='text-normal font-medium text-[#8F99AF] text-left'>Out of Scope</p>
-                            <input
+                            <textarea
+                                className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-45 resize-none mb-2'
+                                value={outOfScope}
+                                onChange={(e) => setOutOfScope(e.target.value)}
+                                // maxLength={charCount}
+                            />
+                            {/* <input
                                 value={outOfScope}
                                 onChange={(e) => setOutOfScope(e.target.value)}
                                 className='w-full border border-[#8F99AF] rounded-lg p-3 flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none'
                                 placeholder='Out of Scope'
-                            />
+                            /> */}
                         </div>
                         <div className="flex flex-col gap-2">
                             <p className='text-normal font-medium text-[#8F99AF] text-left'>Budget</p>
@@ -491,7 +547,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                                     <p className="text-normal font-regular text-black text-left">{projectDescription}</p>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-2 max-h-45 overflow-y-auto">
                                 <p className="text-normal font-medium text-[#7E3FF2] text-left">Deliverables</p>
                                 <div className="flex flex-col gap-2 p-3">
                                     <ul>
@@ -501,7 +557,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                                     </ul>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-2 max-h-45 overflow-y-auto">
                                 <p className="text-normal font-medium text-[#7E3FF2] text-left">Out of Scope</p>
                                 <div className="flex flex-col gap-2 p-3">
                                     <p className="text-normal font-regular text-black text-left">{outOfScope}</p>

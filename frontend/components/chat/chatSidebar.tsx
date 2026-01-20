@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import ChatSidebarItem from "./chatSidebarItem";
 import Image from "next/image";
 import { User } from "@/types/user";
-import { formatHourMinute } from "@/utils/functions";
+import { formatHourMinute, formatLabel } from "@/utils/functions";
 
 interface ChatSidebarItemType {
     conversation_id: string;
@@ -68,7 +68,12 @@ const ChatSidebar = ({ chats }: { chats: ChatSidebarItemType[] }) => {
                     {pinnedChats.map((chat) => (
                         <ChatSidebarItem 
                             key={chat.conversation_id} 
-                            name={chat.receiver.display_name ?? ""} 
+                            name={
+                                chat.receiver.display_name ??
+                                (chat.receiver.email ? formatLabel(chat.receiver.email) : undefined) ??
+                                formatLabel(chat.receiver.address) ??
+                                ""
+                            } 
                             image={chat.receiver.image_id ?? ""} 
                             status={chat.status} 
                             lastMessage={chat.lastMessage} 
@@ -96,7 +101,12 @@ const ChatSidebar = ({ chats }: { chats: ChatSidebarItemType[] }) => {
                     {unpinnedChats.map((chat) => (
                         <ChatSidebarItem 
                             key={chat.conversation_id} 
-                            name={chat.receiver.display_name ?? ""} 
+                            name={
+                                chat.receiver.display_name ??
+                                (chat.receiver.email ? formatLabel(chat.receiver.email) : undefined) ??
+                                formatLabel(chat.receiver.address) ??
+                                ""
+                            }
                             image={chat.receiver.image_id ?? ""} 
                             status={chat.status} 
                             lastMessage={chat.lastMessage} 

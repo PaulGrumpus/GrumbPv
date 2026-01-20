@@ -8,11 +8,12 @@ import Image from "next/image";
 import { toast } from "react-toastify";
 import { UserInfoCtx } from "@/context/userContext";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
-import { useRouter } from "next/navigation";
-import { createGig } from "@/utils/functions";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createGig, updateGig } from "@/utils/functions";
 import { NotificationLoadingCtx } from "@/context/notificationLoadingContext";
 import SmallLoading from "../smallLoading";
 import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
+import { useDashboard } from "@/context/dashboardContext";
 
 const uploadImage = "/Grmps/upload.svg";
 
@@ -37,6 +38,11 @@ const CreateGigSection = () => {
     const router = useRouter();
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
     const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
+    const searchParams = useSearchParams();
+    const editingGigId = searchParams.get("gigId") ?? "";
+    const isEditing = Boolean(editingGigId);
+    const { gigsInfo, setGigsInfo } = useDashboard();
+    const editingGig = gigsInfo.find((gig) => gig.id === editingGigId);
 
     const handleUploadFile = () => {
         const fileInput = document.createElement("input");
@@ -91,21 +97,23 @@ const CreateGigSection = () => {
 
         setLoading("pending");        
 
-        const response = await createGig(
-            {
-                title,
-                description_md: description,
-                budget_max_usd: Number(budgetMaxUsd),
-                budget_min_usd: Number(budgetMinUsd),
-                tags: [selectedCategory ?? ""],
-                freelancer_id: userInfo.id,
-                link,
-            },
-            selectedFile
-        );
+        const gigPayload = {
+            title,
+            description_md: description,
+            budget_max_usd: Number(budgetMaxUsd),
+            budget_min_usd: Number(budgetMinUsd),
+            tags: [selectedCategory ?? ""],
+            freelancer_id: userInfo.id,
+            link,
+        };
+
+        const response = isEditing && editingGigId
+            ? await updateGig(editingGigId, gigPayload, selectedFile)
+            : await createGig(gigPayload, selectedFile);
 
         if (response.success) {
-            toast.success("Gig created successfully", {
+            const successMessage = isEditing ? "Gig updated successfully" : "Gig created successfully";
+            toast.success(successMessage, {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -113,15 +121,36 @@ const CreateGigSection = () => {
                 pauseOnHover: true,
             });
 
-            setTitle("");
-            setSelectedCategory("");
-            setDescription("");
-            setBudgetMaxUsd("");
-            setBudgetMinUsd("");
-            setLink("");
-            setSelectedFile(null);
-            setUploadedFileName("");
-            setPreviewUrl(null);
+            if (isEditing && editingGigId && response.data) {
+                const updatedGig = response.data;
+                setGigsInfo((prev) =>
+                    prev.map((gig) =>
+                        gig.id === editingGigId
+                            ? {
+                                  ...gig,
+                                  title: updatedGig.title,
+                                  description_md: updatedGig.description_md,
+                                  budget_max_usd: updatedGig.budget_max_usd,
+                                  budget_min_usd: updatedGig.budget_min_usd,
+                                  token_symbol: updatedGig.token_symbol,
+                                  link: updatedGig.link,
+                                  image_id: updatedGig.image_id,
+                                  tags: updatedGig.tags ?? gig.tags,
+                              }
+                            : gig
+                    )
+                );
+            } else {
+                setTitle("");
+                setSelectedCategory("");
+                setDescription("");
+                setBudgetMaxUsd("");
+                setBudgetMinUsd("");
+                setLink("");
+                setSelectedFile(null);
+                setUploadedFileName("");
+                setPreviewUrl(null);
+            }
 
         } else {
             toast.error(response.error, {
@@ -164,6 +193,19 @@ const CreateGigSection = () => {
     }
 
     useEffect(() => {
+        if (!editingGig) {
+            return;
+        }
+
+        setTitle(editingGig.title ?? "");
+        setDescription(editingGig.description_md ?? "");
+        setBudgetMaxUsd(editingGig.budget_max_usd ?? "");
+        setBudgetMinUsd(editingGig.budget_min_usd ?? "");
+        setLink(editingGig.link ?? "");
+        setSelectedCategory(editingGig.tags?.[0] ?? "");
+    }, [editingGig]);
+
+    useEffect(() => {
         if(userLoadingState === "success") {
             if(userInfo.id === "") {
                 setuserLoadingState("failure");
@@ -191,8 +233,8 @@ const CreateGigSection = () => {
         return (
             <div>
                 <SectionPlaceholder
-                    title="Create Gig"
-                    description="Set up a new gig to showcase your services to clients."
+                    title={isEditing ? "Edit Gig" : "Create Gig"}
+                    description={isEditing ? "Update an existing gig listing." : "Set up a new gig to showcase your services to clients."}
                 /> 
                 <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
                     <div className="linear-border__inner rounded-[0.4375rem] bg-white py-8 px-3 lg:p-8">
@@ -344,7 +386,7 @@ const CreateGigSection = () => {
                                         padding='px-10.75 py-3'
                                         onClick={handlePostGig}
                                     >
-                                        <p className='text-normal font-regular'>Post</p>
+                                        <p className='text-normal font-regular'>{isEditing ? "Update" : "Post"}</p>
                                     </Button>
                                 </div>
                             </div>

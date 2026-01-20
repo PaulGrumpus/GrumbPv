@@ -5,6 +5,7 @@ import { User } from "@/types/user";
 import { Message } from "@/types/message";
 import { EscrowBackendConfig } from "@/config/config";
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
+import { formatLabel } from "@/utils/functions";
 
 interface ChatMainProps {
     isMobile: boolean;  
@@ -33,7 +34,7 @@ interface ChatMainProps {
 
 const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWriting, onSendMessage, onEditMessage, onDeleteMessage, onReadMessage, onUnreadMessage, onPinMessage, onUnpinMessage, onReplyToMessage, onForwardMessage, onSaveMessage, onPhoneCall, onVideoCall, onWritingMessage, onStopWritingMessage, onMobileProfileClick, onMobileProjectInfoClick }: ChatMainProps) => {
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    // const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const textareaWrapperRef = useRef<HTMLDivElement>(null);
@@ -245,16 +246,16 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
             <div className="absolute top-0 left-0 w-full">
                 <div className="flex items-center justify-between bg-linear-to-r from-[#7E3FF2] to-[#2F3DF6] p-4">
                     <div className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-full overflow-hidden">
+                        <div className="w-10 h-10 rounded-full overflow-hidden">
                             <Image 
                                 src={receiver? EscrowBackendConfig.uploadedImagesURL + receiver.image_id : EscrowBackendConfig.uploadedImagesURL + "/default.jpg"}
                                 alt="Receiver Photo"
-                                width={36}
-                                height={36}
+                                width={40}
+                                height={40}
                                 className="w-full h-full object-cover"
                             />
                         </div>
-                        <p className="text-small font-regular text-[#DEE4F2]">{receiver? receiver.display_name : "No receiver"}</p>
+                        <p className="text-small font-regular text-[#DEE4F2]">{receiver?.display_name || formatLabel(receiver?.email ?? "") || formatLabel(receiver?.address ?? "") || "No receiver"}</p>
                         {isMobile && (
                             <ChevronRightIcon onClick={onMobileProfileClick} className="w-6 h-6 text-white cursor-pointer" />
                         )}
@@ -267,13 +268,13 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                             >
                                 <Image 
                                     src="/Grmps/docs.svg"
-                                    alt="Call"
+                                    alt="Docs"
                                     width={24}
                                     height={24}
                                 />
                             </div>
                         )}
-                        <div className="w-10 h-10 p-2 bg-[#7E3FF2] rounded-lg hover:bg-[#6E35E0] transition-colors duration-150 hover:scale-90">
+                        {/* <div className="w-10 h-10 p-2 bg-[#7E3FF2] rounded-lg hover:bg-[#6E35E0] transition-colors duration-150 hover:scale-90">
                             <Image 
                                 src="/Grmps/video.svg"
                                 alt="Call"
@@ -288,7 +289,7 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                                 width={24}
                                 height={24}
                             />
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
@@ -299,7 +300,7 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                             ref={messagesContainerRef}
                             className="flex-1 overflow-y-auto min-h-[calc(100vh-19.5rem)] max-h-[calc(100vh-19.5rem)] decorate-scrollbar pb-2"
                         >
-                            {messages && messages.length && messages.map((message, index) => {
+                            {messages?.length ? messages.map((message, index) => {
                                 // Check if this is the last message in a sequence from the same sender
                                 const isLastInSequence = index === messages.length - 1 || 
                                     messages[index + 1]?.sender_id !== message.sender_id;
@@ -366,9 +367,9 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                                         </div>
                                     </div>
                                 );
-                            })}
+                            }) : null}
                             
-                            <div ref={messagesEndRef} />
+                            {/* <div ref={messagesEndRef} /> */}
                         </div>
 
                         {isWriting && (

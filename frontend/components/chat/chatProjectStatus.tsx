@@ -152,6 +152,53 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
         }
     }
 
+    const handleCancelProject = async () => {
+        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.CANCELLED });
+        if (updatedJobMilestone.success) {
+            if (updatedJobMilestone.data) {
+                const updatedMilestone = updatedJobMilestone.data
+                setJobsInfo(prevJobs => {
+                    let didUpdate = false;
+                
+                    const nextJobs = prevJobs.map(job => {
+                        if (job.id !== updatedMilestone.job_id) return job;
+                
+                        didUpdate = true;
+                
+                        const milestones = job.milestones ?? [];
+                
+                        const nextMilestones = [
+                            ...milestones.filter(m => m.id !== updatedMilestone.id),
+                            { ...updatedMilestone }, // force new ref
+                        ].sort((a, b) => a.order_index - b.order_index);
+                
+                        return {
+                            ...job,
+                            milestones: nextMilestones,
+                        };
+                    });
+                
+                    return didUpdate ? nextJobs : prevJobs;
+                });
+            }
+            toast.success("Project cancelled successfully", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        } else {
+            toast.error(updatedJobMilestone.error, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+        }
+    }
+
     const handleDeliverWork = async () => {
         const result = await deliverWork(user.id, jobMilestoneId, Number(CONFIG.chainId), selectedFile);
         const txHash = await sendTransaction({
@@ -520,7 +567,7 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
     return (
         <div className="py-3 px-3.75 bg-linear-to-b from-[#7E3FF2] to-[#6A32E8] rounded-xl shadow-[0_10px_35px_rgba(55,0,132,0.35)] flex justify-center lg:block ">
             <div className="max-w-62.5 w-full">
-                {status <= 4 && (
+                {status <= 4 && status >= 1 && (
                     <div>
                         <div className="flex items-center justify-center mb-6 w-full mt-6">
                             <p className="text-light-large font-bold text-[#DEE4F2]">Project Status</p>
@@ -575,13 +622,20 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
 
                         <div className="flex items-center justify-center">
                             {status === 1 && ( 
-                                <div className="pb-20.5">
+                                <div className="pb-12">
                                     {user.role === "client" ? (
-                                        <Button padding="px-6 py-1.5" onClick={handleFundEscrow}>
-                                            <p className="text-normal font-regular text-[#FFFFFF]">
-                                                Escrow Fund
-                                            </p>
-                                        </Button>
+                                        <div className="flex flex-col gap-2.5 justify-center w-full">
+                                            <Button padding="px-6 py-1.5" onClick={handleFundEscrow}>
+                                                <p className="text-normal font-regular text-[#FFFFFF]">
+                                                    Escrow Fund
+                                                </p>
+                                            </Button>
+                                            <Button padding="px-6 py-1.5" onClick={handleCancelProject}>
+                                                <p className="text-normal font-regular text-[#FFFFFF]">
+                                                    Cancel Project
+                                                </p>
+                                            </Button>
+                                        </div>
                                     ) : (
                                         <div className="h-9"></div>
                                     )}
@@ -829,6 +883,23 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
                         <div className="flex flex-col justify-start w-full mb-12">
                             <p className="text-normal font-bold text-[#DEE4F2]">Disputed Summary:</p>
                             <p className="text-normal font-regular text-[#DEE4F2]">{`The dispute was resolved in favor of the vendor. The funds have been released to the vendor.`}</p>
+                        </div>
+                    </div>
+                )}
+                {status === 11 && (
+                    <div>
+                        <div className="flex items-center justify-center mb-6 w-full mt-6">
+                            <p className="text-light-large font-bold text-[#DEE4F2]">Project Cancelled</p>
+                        </div>
+                        <div className="flex justify-start w-full">
+                            <p className="text-normal font-bold text-[#DEE4F2]">ID: <span className="font-regular">{jobMilestoneId}</span></p>
+                        </div>
+                        <div className="flex justify-start w-full mb-6">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Project: <span className="font-regular">{milestoneInfo?.title}</span></p>
+                        </div>
+                        <div className="flex flex-col justify-start w-full mb-12">
+                            <p className="text-normal font-bold text-[#DEE4F2]">Summary:</p>
+                            <p className="text-normal font-regular text-[#DEE4F2]">{`The project has been cancelled by the client.`}</p>
                         </div>
                     </div>
                 )}
