@@ -142,6 +142,7 @@ export class EscrowService {
       await chainTxsService.createChainTx(
         'fund_escrow',
         97,
+        job_milestone_id,
         wallet.address,
         escrowAddress,
         tx.hash,
@@ -263,6 +264,7 @@ export class EscrowService {
       await chainTxsService.createChainTx(
         'deliver_work',
         97,
+        job_milestone_id,
         wallet.address,
         escrowAddress,
         tx.hash,
@@ -379,6 +381,7 @@ export class EscrowService {
       await chainTxsService.createChainTx(
         'approve_work',
         97,
+        job_milestone_id,
         wallet.address,
         escrowAddress,
         tx.hash,
@@ -460,6 +463,7 @@ export class EscrowService {
       await chainTxsService.createChainTx(
         'withdraw_funds',
         97,
+        job_milestone_id,
         wallet.address,
         escrowAddress,
         tx.hash,
@@ -551,6 +555,7 @@ export class EscrowService {
       await chainTxsService.createChainTx(
         'initiate_dispute',
         97,
+        job_milestone_id,
         wallet.address,
         escrowAddress,
         tx.hash,
@@ -637,6 +642,7 @@ export class EscrowService {
       await chainTxsService.createChainTx(
         'pay_dispute_fee',
         97,
+        job_milestone_id,
         wallet.address,
         escrowAddress,
         tx.hash,
@@ -719,6 +725,7 @@ export class EscrowService {
       await chainTxsService.createChainTx(
         'buyer_join_dispute',
         97,
+        job_milestone_id,
         wallet.address,
         escrowAddress,
         tx.hash,

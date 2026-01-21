@@ -634,6 +634,28 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
                 router.push(`/dashboard?view=dashboard`);
             }
         }   
+        if (notification && notification.entity_type === NotificationEntity.chainTx) {
+            if(notification.type === NotificationType.withdrawFunds) {
+                const entityId = notification.entity_id?.trim();
+                const isChainTxWithdrawFundsNotification =
+                    notification.entity_type === NotificationEntity.chainTx &&
+                    notification.type === NotificationType.withdrawFunds &&
+                    Boolean(entityId);
+                const chainTxWithdrawFundsScanUrl = isChainTxWithdrawFundsNotification
+                    ? `${blockExplorerUrl}/tx/${entityId}`
+                    : undefined;
+                if (chainTxWithdrawFundsScanUrl) {
+                    if (typeof window !== "undefined") {
+                        window.open(chainTxWithdrawFundsScanUrl, "_blank", "noopener,noreferrer");
+                    }
+                } else {
+                    router.push(`/dashboard?view=dashboard`);
+                }
+            }
+            else{
+                router.push(`/dashboard?view=dashboard`);
+            }
+        }   
         if (notification && notification.entity_type === NotificationEntity.job) {
             router.push(`/dashboard?view=my-jobs`);
         }   
@@ -704,10 +726,16 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
                         notification.entity_type === NotificationEntity.milestone &&
                         notification.type === NotificationType.milestoneEscrowDeployed &&
                         Boolean(entityId);
+                    const isChainTxWithdrawFundsNotification =
+                        notification.entity_type === NotificationEntity.chainTx &&
+                        notification.type === NotificationType.withdrawFunds &&
+                        Boolean(entityId);
                     const milestoneEscrowScanUrl = isMilestoneEscrowNotification
                         ? `${blockExplorerUrl}/address/${entityId}`
                         : undefined;
-                    const formattedDate = formatDate(notification.created_at);
+                    const chainTxWithdrawFundsScanUrl = isChainTxWithdrawFundsNotification
+                        ? `${blockExplorerUrl}/tx/${entityId}`
+                        : undefined;
                     return (
                         <li
                             key={`${notification.id}-${notification.created_at ?? ""}-${notification.read_at ?? ""}`}
@@ -727,6 +755,19 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
                                                 className="text-[11px] font-semibold text-blue-600 hover:underline"
                                             >
                                                 View escrow on BscScan
+                                            </a>
+                                            <p className="text-[10px] text-gray-500 truncate">{entityId}</p>
+                                        </div>
+                                    )}
+                                    {chainTxWithdrawFundsScanUrl && (
+                                        <div className="mt-1 flex flex-col gap-1">
+                                            <a
+                                                href={chainTxWithdrawFundsScanUrl}
+                                                target="_blank"
+                                                rel="noreferrer noopener"
+                                                className="text-[11px] font-semibold text-blue-600 hover:underline"
+                                            >
+                                                View transaction on BscScan
                                             </a>
                                             <p className="text-[10px] text-gray-500 truncate">{entityId}</p>
                                         </div>
