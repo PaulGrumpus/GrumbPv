@@ -1,8 +1,11 @@
-import { chain_txs } from '@prisma/client';
+import { chain_txs, notification_entity, notification_type, Prisma } from '@prisma/client';
 import { AppError } from '../../middlewares/errorHandler.js';
 import { userService } from './user.service.js';
 import { logger } from '../../utils/logger.js';
 import { prisma } from '../../prisma.js';
+import { notificationService } from './notification.service.js';
+import { jobMilestoneService } from './job.milestone.service.js';
+import { jobService } from './job.service.js';
 
 export class ChainTxsService {
   private prisma = prisma;
@@ -10,6 +13,7 @@ export class ChainTxsService {
   async createChainTx(
     purpose: string,
     chain_id: number,
+    job_milestone_id: string,
     from_address: string,
     to_address: string,
     tx_hash: string,
@@ -17,11 +21,11 @@ export class ChainTxsService {
     user_id: string
   ): Promise<chain_txs> {
     try {
-      if (!tx_hash || !from_address || !to_address || !user_id) {
+      if (!tx_hash || !from_address || !to_address || !user_id || !job_milestone_id) {
         throw new AppError(
-          'Tx hash, from address, to address, and user id are required',
+          'Tx hash, from address, to address, user id, and job milestone id are required',
           400,
-          'TX_HASH_FROM_ADDRESS_TO_ADDRESS_USER_ID_REQUIRED'
+          'TX_HASH_FROM_ADDRESS_TO_ADDRESS_USER_ID_JOB_MILESTONE_ID_REQUIRED'
         );
       }
 
@@ -37,17 +41,56 @@ export class ChainTxsService {
         throw new AppError('Chain tx already exists', 400, 'CHAIN_TX_ALREADY_EXISTS');
       }
 
-      return this.prisma.chain_txs.create({
+      const existingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+      if (!existingJobMilestone) {
+        throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
+      }
+
+      const existingJob = await jobService.getJobById(existingJobMilestone.job_id);
+      if (!existingJob) {
+        throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
+      }
+
+      const createChainTxData = await this.prisma.chain_txs.create({
         data: {
           purpose,
           chain_id,
+          job_milestone_id,
           from_address,
           to_address,
           tx_hash,
           status,
           user_id,
         },
-      });
+      })
+
+      if(purpose === "withdraw_funds") {
+        await notificationService.createNotification({
+          user_id: existingJobMilestone.freelancer_id,
+          type: notification_type.WITHDRAW_FUNDS,
+          entity_type: notification_entity.chain_tx,
+          entity_id: createChainTxData.tx_hash ?? "",
+          title: "Funds withdrawn",
+          body: "Funds have been withdrawn from the escrow",
+          payload: Prisma.JsonNull,
+          read_at: null,
+          created_at: new Date(),
+        });
+
+        await notificationService.createNotification({
+          user_id: existingJob.client_id,
+          type: notification_type.WITHDRAW_FUNDS,
+          entity_type: notification_entity.chain_tx,
+          entity_id: createChainTxData.tx_hash ?? "",
+          title: "Funds withdrawn",
+          body: "Funds have been withdrawn from the escrow",
+          payload: Prisma.JsonNull,
+          read_at: null,
+          created_at: new Date(),
+        });
+      }
+
+      return createChainTxData;
     } catch (error) {
       if (error instanceof AppError) {
         throw error;

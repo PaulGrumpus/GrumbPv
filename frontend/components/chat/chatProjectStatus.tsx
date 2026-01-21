@@ -5,7 +5,7 @@ import Link from "next/link";
 import { User } from "@/types/user";
 import Image from "next/image";
 import { toast } from "react-toastify";
-import { fundEscrow, deliverWork, approveWork, updateJobMilestone, withdrawFunds, initiateDispute, buyerJoinDispute, venderPayDisputeFee } from "@/utils/functions";
+import { fundEscrow, deliverWork, approveWork, updateJobMilestone, withdrawFunds, initiateDispute, buyerJoinDispute, venderPayDisputeFee, createChainTx } from "@/utils/functions";
 import { useWallet } from "@/context/walletContext";
 import { CONFIG } from "@/config/config";
 import ModalTemplate from "../modalTemplate";
@@ -236,6 +236,17 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
 
         if(!selectedFile) {
             toast.error("Please select a file to deliver", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+
+        if(selectedFile.size > 100 * 1024 * 1024) {
+            toast.error("File size exceeds 100MB (Max 100MB - beta version)", {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -489,6 +500,7 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
                     return didUpdate ? nextJobs : prevJobs;
                 });
             }
+            await createChainTx("withdraw_funds", Number(CONFIG.chainId), jobMilestoneId, user.address ?? "", result.data.to, txHash, "success", user.id);
             toast.success("Funds withdrawn successfully", {
                 position: "top-right",
                 autoClose: 5000,
@@ -505,6 +517,7 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
                 pauseOnHover: true,
             });
         }
+        
     }
 
     const handleDispute = async () => {
@@ -994,7 +1007,7 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
                 isOpen={isOpen}
                 onClose={() => setIsOpen(false)}
                 title={"Deliver Product"}
-                subtitle={"Deliver your product to the client"}
+                subtitle={"Deliver your product to the client (Max 100MB - beta version)"}
                 actionLabel="Confirm"
                 className="p-10.5"
                 onAction={() => {                    

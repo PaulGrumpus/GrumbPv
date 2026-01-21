@@ -99,6 +99,7 @@ router.post(
     body('tx_hash').isString().notEmpty(),
     body('status').isString().notEmpty(),
     body('user_id').isString().notEmpty(),
+    body('job_milestone_id').isString().notEmpty(),
   ],
   validate([
     body('purpose'),
@@ -108,6 +109,7 @@ router.post(
     body('tx_hash'),
     body('status'),
     body('user_id'),
+    body('job_milestone_id'),
   ]),
   chainTxsController.createChainTx.bind(chainTxsController)
 );

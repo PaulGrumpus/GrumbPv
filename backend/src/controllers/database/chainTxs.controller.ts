@@ -4,10 +4,11 @@ import { chainTxsService } from '../../services/database/chainTxs.service.js';
 export class ChainTxsController {
   async createChainTx(req: Request, res: Response, next: NextFunction) {
     try {
-      const { purpose, chain_id, from_address, to_address, tx_hash, status, user_id } = req.body;
+      const { purpose, chain_id, job_milestone_id, from_address, to_address, tx_hash, status, user_id } = req.body;
       const result = await chainTxsService.createChainTx(
         purpose,
         chain_id,
+        job_milestone_id,
         from_address,
         to_address,
         tx_hash,

@@ -7,7 +7,7 @@ import { CONFIG } from "@/config/config";
 import ModalTemplate from "./modalTemplate";
 import { useContext, useEffect, useState } from "react";
 import { JobMilestoneStatus } from "@/types/jobMilestone";
-import { approveWork, buyerJoinDispute, deliverWork, fundEscrow, initiateDispute, updateJobMilestone, venderPayDisputeFee, withdrawFunds } from "@/utils/functions";
+import { approveWork, buyerJoinDispute, createChainTx, deliverWork, fundEscrow, initiateDispute, updateJobMilestone, venderPayDisputeFee, withdrawFunds } from "@/utils/functions";
 import { User } from "@/types/user";
 import { useWallet } from "@/context/walletContext";
 import { useProjectInfo } from "@/context/projectInfoContext";
@@ -307,6 +307,7 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                     return didUpdate ? nextJobs : prevJobs;
                 });
             }
+            await createChainTx("withdraw_funds", Number(CONFIG.chainId), jobMilestoneId, user.address ?? "", result.data.to, txHash, "success", user.id);
             toast.success("Funds withdrawn successfully", {
                 position: "top-right",
                 autoClose: 5000,
@@ -579,6 +580,17 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
 
         if(!selectedFile) {
             toast.error("Please select a file to deliver", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+
+        if(selectedFile.size > 100 * 1024 * 1024) {
+            toast.error("File size exceeds 100MB (Max 100MB - beta version)", {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -993,7 +1005,7 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                         <div className="mt-6">
                             <div className="lg:text-title text-subtitle lg:text-left text-center font-bold text-[#2F3DF6] py-6">Deliver Product</div>
                             <div className="lg:text-normal text-light-large text-gray-500 lg:text-left text-center">
-                                Deliver your product to the client
+                                Deliver your product to the client (Max 100MB - beta version)
                             </div>
                             <div className="flex lg:justify-end justify-center">
                                 <div className="flex items-center gap-2.5">

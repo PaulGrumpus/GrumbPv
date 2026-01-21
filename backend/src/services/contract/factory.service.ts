@@ -211,6 +211,7 @@ export class FactoryService {
       await chainTxsService.createChainTx(
         'create_escrow',
         97,
+        exsitingJobMilestone.id,
         wallet.address,
         escrowAddress,
         tx.hash,

@@ -1151,6 +1151,32 @@ export const getDashboardDataByUserId = async (user_id: string, role: string) =>
     }
 }
 
+// Chain Txs
+export const createChainTx = async (purpose: string, chain_id: number, job_milestone_id: string, from_address: string, to_address: string, tx_hash: string, status: string, user_id: string) => {
+    try {
+        const response = await EscrowBackend.post(`/database/chain-txs/create`, {
+            purpose,
+            chain_id,
+            job_milestone_id,
+            from_address,
+            to_address,
+            tx_hash,
+            status,
+            user_id,
+        });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 // Utils
 export const formatDueDate = (deadline: number | string | undefined) => {
     if (deadline === null || deadline === undefined) {

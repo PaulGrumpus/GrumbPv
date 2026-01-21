@@ -33,6 +33,10 @@ export enum NotificationType {
     requirementDocsConfirmed = "REQUIREMENT_DOCS_CONFIRMED",
     chatCreated = "CHAT_CREATED",
     chatUpdated = "CHAT_UPDATED",
+    depositFunds = "DEPOSIT_FUNDS",
+    deliverWork = "DELIVER_WORK",
+    approveWork = "APPROVE_WORK",
+    withdrawFunds = "WITHDRAW_FUNDS",
   }   
 
 export enum NotificationEntity {
@@ -44,6 +48,7 @@ export enum NotificationEntity {
     dispute = "dispute",
     conversation = "conversation",
     jobApplicationDoc = "job_application_doc",
+    chainTx = "chain_tx",
 }
 
 

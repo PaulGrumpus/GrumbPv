@@ -118,6 +118,7 @@ model job_milestones {
   freelancer          users                   @relation("MilestoneCreators", fields: [freelancer_id], references: [id])
   job                 jobs                    @relation(fields: [job_id], references: [id], onDelete: Cascade)
   jobApplicationsDocs job_applications_docs[]
+  chainTxs            chain_txs[]
 
   @@unique([job_id, order_index])
   @@map("job_milestones")
@@ -218,17 +219,19 @@ model message_receipts {
 }
 
 model chain_txs {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  purpose      String
-  chain_id     Int
-  from_address String
-  to_address   String?
-  tx_hash      String?  @unique
-  status       String
-  created_at   DateTime @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime @default(now()) @db.Timestamptz(6)
-  user_id      String?  @db.Uuid
-  user         users?   @relation(fields: [user_id], references: [id])
+  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  purpose          String
+  chain_id         Int
+  job_milestone_id String?         @db.Uuid
+  from_address     String
+  to_address       String?
+  tx_hash          String?         @unique
+  status           String
+  created_at       DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime        @default(now()) @db.Timestamptz(6)
+  user_id          String?         @db.Uuid
+  user             users?          @relation(fields: [user_id], references: [id])
+  job_milestone    job_milestones? @relation(fields: [job_milestone_id], references: [id], onDelete: Cascade)
 
   @@map("chain_txs")
 }
@@ -384,6 +387,10 @@ enum notification_type {
   REQUIREMENT_DOCS_CONFIRMED
   CHAT_CREATED
   CHAT_UPDATED
+  DEPOSIT_FUNDS
+  DELIVER_WORK
+  APPROVE_WORK
+  WITHDRAW_FUNDS
 }
 
 enum notification_entity {
@@ -395,4 +402,5 @@ enum notification_entity {
   escrow
   dispute
   conversation
+  chain_tx
 }
