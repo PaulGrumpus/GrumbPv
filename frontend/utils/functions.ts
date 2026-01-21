@@ -2,7 +2,7 @@ import { EscrowBackend } from "../service/axios";
 import { decodeToken } from "./jwt";
 import { User } from "../types/user";
 import { NextResponse } from "next/server";
-import { Job } from "@/types/jobs";
+import { Job, JobStatus } from "@/types/jobs";
 import { Gig } from "@/types/gigs";
 import { Bid, BidStatus } from "@/types/bid";
 import { JobApplication } from "@/types/jobApplication";
@@ -333,6 +333,22 @@ export const updateJob = async (job_id: string, job: Job, imageFile?: File | nul
             data: response.data.data,
         };
     } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const updateJobStatusById = async (job_id: string, status: JobStatus) => {
+    try {
+        const response = await EscrowBackend.post(`/database/jobs/${job_id}/status`, { status });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
         return {
             success: false,
             error: error.response?.data?.error?.message || error.message || "Unknown error"

@@ -7,6 +7,7 @@ import multer from 'multer';
 import { mkdirSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
+import { job_status } from '@prisma/client';
 
 const router = Router();
 const IMAGE_UPLOAD_DIR = path.resolve(process.cwd(), 'uploads', 'images');
@@ -135,6 +136,13 @@ router.post(
   [param('id').isString().notEmpty()],
   validate([param('id')]),
   jobController.updateJob.bind(jobController)
+);
+
+router.post(
+  '/:id/status',
+  [param('id').isString().notEmpty(), body('status').isIn(Object.values(job_status))],
+  validate([param('id'), body('status')]),
+  jobController.updateJobStatusById.bind(jobController)
 );
 
 /**

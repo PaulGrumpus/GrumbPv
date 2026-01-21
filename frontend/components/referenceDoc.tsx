@@ -33,7 +33,7 @@ interface ReferenceDocProps {
     initialEndDate: Date;
 }
 
-const currencies = ["USD", "USDT", "USDC", "BNB", "ETH"];
+const currencies = ["USD", "USDT", "USDC", "BNB"];
 const charCount = 300;
 
 const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clientId, freelancerId, projectName, clientFullName, freelancerFullName, description, freelancerConfirmed, clientConfirmed, initialBudget, initialCurrency, initialDeliverables, initialOutOfScope, initialStartDate, initialEndDate }: ReferenceDocProps) => {
@@ -373,7 +373,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                             />
                         </div>
                         <div className="flex flex-col gap-2">
-                            <p className='text-normal font-medium text-[#8F99AF] text-left'>Currency</p>
+                            <p className='text-normal font-medium text-[#8F99AF] text-left'>Currency (beta version only supports BNB)</p>
                             <div ref={dropdownRef} className={`relative cursor-pointer ${dropdownMenuOpen ? 'border-blue-500' : ''}`}>
                                 <select
                                     value={currency}

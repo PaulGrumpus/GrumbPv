@@ -200,8 +200,8 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
     const [title, setTitle] = useState("");
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState(""); 
-    const categories = ["BNB", "USDC", "USDT", "USD"];
+    const currencies = ["BNB", "USDC", "USDT", "USD"];
+    const [selectedCurrency, setSelectedCurrency] = useState("");
     const [coverLetter, setCoverLetter] = useState("");
     const [budget, setBudget] = useState("");
     const initialDate = formatISODate(new Date());
@@ -292,8 +292,8 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
             return;
         }
 
-        if (selectedCategory === "") {
-            setError("Please select a category");
+        if (selectedCurrency === "") {
+            setError("Please select a currency");
             return;
         }
 
@@ -309,7 +309,7 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
             freelancer_id: freelancerId,
             cover_letter_md: coverLetter,
             bid_amount: Number(budget),
-            token_symbol: selectedCategory ?? "USD",
+            token_symbol: selectedCurrency ?? "USD",
             period: Number(period),
             status: BidStatus.PENDING,
         });
@@ -388,12 +388,12 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
                                                 />
                                             </div>
                                             <div className='flex flex-col gap-2 lg:w-full w-auto'>
-                                                <p className='text-normal font-regular text-black text-left'>Category</p>
+                                                <p className='text-normal font-regular text-black text-left'>Currency</p>
                                                 <div ref={dropdownRef} className={`relative lg:w-full w-auto ${dropdownMenuOpen ? 'border-blue-500' : ''}`}>
                                                     <select
-                                                        value={selectedCategory}
+                                                        value={selectedCurrency}
                                                         onChange={(e) => {
-                                                            setSelectedCategory(e.target.value);
+                                                            setSelectedCurrency(e.target.value);
                                                             setError("");
                                                             setDropdownMenuOpen(false);
                                                         }}
@@ -406,9 +406,9 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
                                                         <option value='' disabled>
                                                             Select one ...
                                                         </option>
-                                                        {categories.map((category) => (
-                                                            <option key={category} value={category} className='text-normal font-regular text-black bg-white py-2 px-3'>
-                                                                {category}
+                                                        {currencies.map((currency) => (
+                                                            <option key={currency} value={currency} className='text-normal font-regular text-black bg-white py-2 px-3'>
+                                                                {currency}
                                                             </option>
                                                         ))}
                                                     </select>
