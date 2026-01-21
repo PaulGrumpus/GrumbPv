@@ -3,6 +3,12 @@ import { prisma } from '../../prisma.js';
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
 import { emitNotification } from '../../routes/notification.socket.route.js';
+import {
+  sendEmailNotification,
+  generateNotificationActionUrl,
+  generateNotificationActionText,
+} from '../../utils/email.helper.js';
+import { userService } from './user.service.js';
 
 export class NotificationService {
   private prisma = prisma;
@@ -28,7 +34,37 @@ export class NotificationService {
       if (!newNotification) {
         throw new AppError('Notification not created', 400, 'NOTIFICATION_NOT_CREATED');
       }
+      
+      // Emit socket notification
       emitNotification(newNotification.user_id, newNotification);
+
+      const user = await userService.getUserById(notification.user_id);
+
+      if(!user) {
+        throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+      }
+      
+      // Send email notification (non-blocking)
+      const actionUrl = generateNotificationActionUrl(
+        newNotification.entity_type,
+        newNotification.entity_id,
+        newNotification?.type,
+        user.role === "client" ? "client" : "freelancer"
+      );
+      const actionText = generateNotificationActionText(newNotification.type);
+      
+      sendEmailNotification(
+        newNotification.user_id,
+        newNotification.title,
+        newNotification.body,
+        actionUrl,
+        actionText
+      ).catch((error) => {
+        // Email sending errors are already logged in the helper function
+        logger.error('Error sending email notification', { error });
+        logger.debug('Email notification sent asynchronously', { notificationId: newNotification.id });
+      });
+      
       return newNotification;
     } catch (error) {
       logger.error('Error creating notification', { error });
