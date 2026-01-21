@@ -20,6 +20,7 @@ import { NotificationProvider } from "@/context/notificationContext";
 import { NotificationLoadingProvider } from "@/context/notificationLoadingContext";
 import { DashboardLoadingProvider } from "@/context/dashboardLoadingContext";
 import { DashboardProvider } from "@/context/dashboardContext";
+import { MilestoneDeliveryProvider } from "@/context/milestoneDeliveryContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -73,6 +74,7 @@ export default function RootLayout({
               <UserInfoProvider>
                 <DashboardLoadingProvider>
                   <DashboardProvider>
+                    <MilestoneDeliveryProvider>
                     {/* <ProjectInfoLoadingProvider>
                       <ProjectInfoProvider>
                         <ConversationLoadingProvider>
@@ -93,6 +95,7 @@ export default function RootLayout({
                         </ConversationLoadingProvider>                    
                       </ProjectInfoProvider>
                     </ProjectInfoLoadingProvider> */}
+                    </MilestoneDeliveryProvider>
                   </DashboardProvider>
                 </DashboardLoadingProvider>
               </UserInfoProvider>

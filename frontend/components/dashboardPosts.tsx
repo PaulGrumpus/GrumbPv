@@ -14,6 +14,8 @@ import { useProjectInfo } from "@/context/projectInfoContext";
 import { useRouter } from "next/navigation";
 import { UserInfoCtx } from "@/context/userContext";
 import { useDashboard } from "@/context/dashboardContext";
+import SmallLoading from "./smallLoading";
+import { useMilestoneDelivery } from "@/context/milestoneDeliveryContext";
 
 const STATUSES = [
     { key: "started", label: "Started the job" },
@@ -43,7 +45,15 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
     const router = useRouter();
     const { jobsInfo, setJobsInfo } = useDashboard();
     const { userInfo } = useContext(UserInfoCtx);
-    
+    const [loading, setLoading] = useState("success");
+    const { 
+        isMilestoneDelivering, 
+        isMilestoneDelivered, 
+        setMilestoneDelivering, 
+        setMilestoneDelivered,
+        resetMilestoneDelivery 
+    } = useMilestoneDelivery();
+
     useEffect(() => {
         let nextStatus = 0;
         if(milestoneStatus === JobMilestoneStatus.PENDING_FUND) {
@@ -542,15 +552,22 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
     const [projectDescription, setProjectDescription] = useState<string>("");
 
     const handleDeliverUploadedFile = async () => {
-        const result = await deliverWork(user.id, jobMilestoneId, Number(CONFIG.chainId), selectedFile);
-        const txHash = await sendTransaction({
-            to: result.data.to,
-            data: result.data.data,
-            value: result.data.value,
-            chainId: Number(result.data.chainId),
-        });
-        if (!txHash) {
-            toast.error("Failed to deliver work", {
+        // Check if already delivered
+        if (isMilestoneDelivered(jobMilestoneId)) {
+            toast.error("Work has already been delivered for this milestone", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            setIsOpen(false);
+            return;
+        }
+
+        // Check if currently delivering (prevent double-click)
+        if (isMilestoneDelivering(jobMilestoneId)) {
+            toast.error("Delivery is already in progress. Please wait...", {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -559,43 +576,106 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
             });
             return;
         }
-        const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.DELIVERED, ipfs: result.data.cid });
-        if (updatedJobMilestone.success) {
-            if (updatedJobMilestone.data) {
-                const updatedMilestone = updatedJobMilestone.data
-                setJobsInfo(prevJobs => {
-                    let didUpdate = false;
-                
-                    const nextJobs = prevJobs.map(job => {
-                        if (job.id !== updatedMilestone.job_id) return job;
-                
-                        didUpdate = true;
-                
-                        const milestones = job.milestones ?? [];
-                
-                        const nextMilestones = [
-                            ...milestones.filter(m => m.id !== updatedMilestone.id),
-                            { ...updatedMilestone }, // force new ref
-                        ].sort((a, b) => a.order_index - b.order_index);
-                
-                        return {
-                            ...job,
-                            milestones: nextMilestones,
-                        };
-                    });
-                
-                    return didUpdate ? nextJobs : prevJobs;
-                });
-            }
-            toast.success("Work delivered successfully", {
+
+        if(!selectedFile) {
+            toast.error("Please select a file to deliver", {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: true,
             });
-        } else {
-            toast.error(updatedJobMilestone.error, {
+            return;
+        }
+
+        // Set status to delivering (1) immediately when user clicks confirm
+        setMilestoneDelivering(jobMilestoneId);
+        setLoading("pending");
+        
+        try {
+            const result = await deliverWork(user.id, jobMilestoneId, Number(CONFIG.chainId), selectedFile);
+            
+            const txHash = await sendTransaction({
+                to: result.data.to,
+                data: result.data.data,
+                value: result.data.value,
+                chainId: Number(result.data.chainId),
+            });
+            
+            if (!txHash) {
+                // Reset to initial state if transaction fails
+                resetMilestoneDelivery(jobMilestoneId);
+                setLoading("success");
+                setIsOpen(false);
+                toast.error("Failed to deliver work", {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                });
+                return;
+            }
+            
+            const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.DELIVERED, ipfs: result.data.cid });
+            
+            if (updatedJobMilestone.success) {
+                if (updatedJobMilestone.data) {
+                    const updatedMilestone = updatedJobMilestone.data
+                    setJobsInfo(prevJobs => {
+                        let didUpdate = false;
+                    
+                        const nextJobs = prevJobs.map(job => {
+                            if (job.id !== updatedMilestone.job_id) return job;
+                    
+                            didUpdate = true;
+                    
+                            const milestones = job.milestones ?? [];
+                    
+                            const nextMilestones = [
+                                ...milestones.filter(m => m.id !== updatedMilestone.id),
+                                { ...updatedMilestone }, // force new ref
+                            ].sort((a, b) => a.order_index - b.order_index);
+                    
+                            return {
+                                ...job,
+                                milestones: nextMilestones,
+                            };
+                        });
+                    
+                        return didUpdate ? nextJobs : prevJobs;
+                    });
+                    // Mark as delivered (2) after successful milestone update
+                    setMilestoneDelivered(jobMilestoneId);
+                }
+                setIsOpen(false);
+                setLoading("success");
+                toast.success("Work delivered successfully", {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                });
+            } else {
+                // Reset to initial state if milestone update fails
+                resetMilestoneDelivery(jobMilestoneId);
+                setLoading("success");
+                setIsOpen(false);
+                toast.error(updatedJobMilestone.error, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                });
+            }
+        } catch (error) {
+            // Reset to initial state if any error occurs
+            resetMilestoneDelivery(jobMilestoneId);
+            setLoading("success");
+            setIsOpen(false);
+            toast.error("An error occurred while delivering work", {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -766,8 +846,17 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                                             <Button 
                                                 padding="px-8.75 py-3"
                                                 onClick={handleDeliver}
+                                                variant={
+                                                    isMilestoneDelivered(jobMilestoneId) || isMilestoneDelivering(jobMilestoneId) 
+                                                        ? "disable" 
+                                                        : "primary"
+                                                }
                                             >
-                                                Deliver 
+                                                {isMilestoneDelivered(jobMilestoneId) 
+                                                    ? "Already Delivered" 
+                                                    : isMilestoneDelivering(jobMilestoneId)
+                                                    ? "Delivering..."
+                                                    : "Deliver"}
                                             </Button>
                                         )}
                                         {status == 3 && user.role === "client" && (
@@ -889,59 +978,69 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                 actionLabel="Confirm"
                 className="lg:p-10.5 p-3"
                 onAction={() => {
-                    handleDeliverUploadedFile();
-                    setIsOpen(false);
+                    handleDeliverUploadedFile();                    
                 }}
             >
-                <div className="mt-6">
-                    <div className="lg:text-title text-subtitle lg:text-left text-center font-bold text-[#2F3DF6] py-6">Deliver Product</div>
-                    <div className="lg:text-normal text-light-large text-gray-500 lg:text-left text-center">
-                        {description}
-                    </div>
-                    <div className="flex lg:justify-end justify-center">
-                        <div className="flex items-center gap-2.5">
-                            { uploadedFileName 
-                            ? 
-                            <p 
-                                className="text-light-large font-regular text-[#2F3DF6] underline cursor-pointer"
-                                onClick={removeUploadedFile}
-                            >
-                                {uploadedFileName}
-                            </p> 
-                            : 
-                            <div>
-                                <Button
-                                    padding="p-3"
-                                    variant="secondary"
-                                    onClick={() => handleUploadFile()}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <div>
-                                            <Image
-                                                src="/Grmps/upload.svg"
-                                                alt="upload"
-                                                width={24}
-                                                height={24}
-                                            />
-                                        </div>
-                                        <p className="text-light-large font-regular text-[#7E3FF2]">Upload Project</p>
-                                    </div>
-                                </Button>
-                            </div>
-                        }
-                            
+                {
+                    loading === "pending" && (
+                        <div className="flex items-center justify-center">
+                            <SmallLoading />
                         </div>
-                    </div>
-                    <div className="my-6">
-                        <p className="text-normal font-regular text-black pb-2">Project Description</p>
-                        <textarea
-                            className="w-full h-20 border border-[#8F99AF] text-normal font-regular text-black text-left focus:outline-none rounded-lg p-3 min-h-33.5 resize-none"
-                            placeholder="About your product or anything"
-                            value={projectDescription}
-                            onChange={(e) => setProjectDescription(e.target.value)}
-                        />
-                    </div>
-                </div>
+                    )
+                }
+                {
+                    loading === "success" && (
+                        <div className="mt-6">
+                            <div className="lg:text-title text-subtitle lg:text-left text-center font-bold text-[#2F3DF6] py-6">Deliver Product</div>
+                            <div className="lg:text-normal text-light-large text-gray-500 lg:text-left text-center">
+                                Deliver your product to the client
+                            </div>
+                            <div className="flex lg:justify-end justify-center">
+                                <div className="flex items-center gap-2.5">
+                                    { uploadedFileName 
+                                    ? 
+                                    <p 
+                                        className="text-light-large font-regular text-[#2F3DF6] underline cursor-pointer"
+                                        onClick={removeUploadedFile}
+                                    >
+                                        {uploadedFileName}
+                                    </p> 
+                                    : 
+                                    <div>
+                                        <Button
+                                            padding="p-3"
+                                            variant="secondary"
+                                            onClick={() => handleUploadFile()}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div>
+                                                    <Image
+                                                        src="/Grmps/upload.svg"
+                                                        alt="upload"
+                                                        width={24}
+                                                        height={24}
+                                                    />
+                                                </div>
+                                                <p className="text-light-large font-regular text-[#7E3FF2]">Upload Project</p>
+                                            </div>
+                                        </Button>
+                                    </div>
+                                }
+                                    
+                                </div>
+                            </div>
+                            <div className="my-6">
+                                <p className="text-normal font-regular text-black pb-2">Project Description</p>
+                                <textarea
+                                    className="w-full h-20 border border-[#8F99AF] text-normal font-regular text-black text-left focus:outline-none rounded-lg p-3 min-h-33.5 resize-none"
+                                    placeholder="About your product or anything"
+                                    value={projectDescription}
+                                    onChange={(e) => setProjectDescription(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    )
+                }
             </ModalTemplate>
         </div>
     )
