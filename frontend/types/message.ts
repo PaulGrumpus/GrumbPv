@@ -9,6 +9,7 @@ export interface Message {
     created_at: Date;
     edited_at?: Date;
     deleted_at?: Date;
+    receipts: MessageReceipt[];
 }
 
 export type MessageKind = 'text' | 'image' | 'file' | 'system';

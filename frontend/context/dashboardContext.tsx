@@ -24,7 +24,7 @@ import { UserInfoCtx } from "./userContext";
 import useSocket from "@/service/socket";
 import { NotificationEntity, NotificationType } from "@/types/notification";
 import { websocket } from "@/config/config";
-import { Message } from "@/types/message";
+import { Message, MessageInfo, ReadState } from "@/types/message";
 
 const defaultProvider: DashboardContextType = {
     jobsInfo: [],
@@ -98,28 +98,36 @@ export const DashboardProvider = ({ children }: Props) => {
     }, [userLoadingState]);
 
     useEffect(() => {
+        console.log("conversationsInfo", conversationsInfo);
+    }, [conversationsInfo]);
+
+    useEffect(() => {
         if (!userInfo.id || !notificationSocket.socket || !notificationSocket.isConnected) {
             return;
         }
 
         const socket = notificationSocket.socket;
         const handleIncomingMessage = (message: Message) => {
+            console.log("message", message);
             setConversationsInfo((prev) =>
                 prev.map((conversation) =>
                     conversation.id === message.conversation_id
                         ? {
-                              ...conversation,
-                              messages: [
-                                  ...conversation.messages,
-                                  {
-                                      ...message,
-                                      messageReceipt: [],
-                                  },
-                              ],
-                          }
+                            ...conversation,
+                            messages: [
+                                ...conversation.messages,
+                                message,
+                            ],
+                        }
                         : conversation
                 )
             );
+
+            socket.emit(websocket.WEBSOCKET_SEND_MESSAGE_RECEIPT, {
+                message_id: message.id,
+                user_id: userInfo.id,
+                state: 'delivered' as ReadState,
+            });
         };
 
         const handleNotification = async (notification: DashboardNotification) => {
@@ -293,9 +301,26 @@ export const DashboardProvider = ({ children }: Props) => {
             }
         };
 
+        const handleMessageReceiptUpdated = (message: Message) => {
+            console.log("message", message);
+            setConversationsInfo((prev) =>
+                prev.map((conversation) =>
+                    conversation.id === message.conversation_id
+                        ? {
+                              ...conversation,
+                              messages: conversation.messages.some(m => m.id === message.id)
+                                  ? conversation.messages.map(m => m.id === message.id ? message : m)
+                                  : [...conversation.messages, message]
+                          }
+                        : conversation
+                )
+            );
+        };
+
         socket.emit("joinUserRoom", userInfo.id);
         socket.on(websocket.WEBSOCKET_NEW_NOTIFICATION, handleNotification);
         socket.on(websocket.WEBSOCKET_NEW_MESSAGE, handleIncomingMessage);
+        socket.on(websocket.WEBSOCKET_MESSAGE_RECEIPT_UPDATED, handleMessageReceiptUpdated);
 
         return () => {
             socket.off(websocket.WEBSOCKET_NEW_NOTIFICATION, handleNotification);

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState, forwardRef, useContext } from "react";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Button from "./button";
 import Image from "next/image";
 import Link from "next/link";
@@ -64,9 +64,10 @@ const Navbar = () => {
 
     // const { notificationLoadingState } = useContext(NotificationLoadingCtx);
     const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
-    const { notificationsInfo } = useDashboard();
+    const { notificationsInfo, conversationsInfo } = useDashboard();
     const [ isMobile, setIsMobile ] = useState(true);
     const { setuserLoadingState } = useContext(UserLoadingCtx);
+    const pathname = usePathname();
 
     const mobileMenuItems = 
     userRole === "freelancer" ? [
@@ -105,6 +106,36 @@ const Navbar = () => {
             notificationsInfo.filter(n => !n.read_at).length
         );
     }, [notificationsInfo]);
+
+    useEffect(() => {
+        if (!userInfo.id) {
+            setMessageCount(0);
+            return;
+        }
+
+        const unreadCount = conversationsInfo.reduce((count, conversation) => {
+            if (!conversation.messages || conversation.messages.length === 0) {
+                return count;
+            }
+
+            const lastMessage = conversation.messages[conversation.messages.length - 1];
+            if (!lastMessage || lastMessage.sender_id === userInfo.id) {
+                return count;
+            }
+
+            const participant = conversation.participants.find(
+                (p) => p.user.id === userInfo.id
+            );
+
+            if (!participant || participant.last_read_msg_id !== lastMessage.id) {
+                return count + 1;
+            }
+
+            return count;
+        }, 0);
+
+        setMessageCount(unreadCount);
+    }, [conversationsInfo, userInfo.id]);
 
     const handleDropdownMenuOpen = () => {
         setDropdownMenuOpen((prev) => !prev);
@@ -228,7 +259,7 @@ const Navbar = () => {
                                                     height={24} 
                                                     className="h-full w-full object-cover"
                                                 />
-                                                {messageCount >= 1 && (
+                                                {pathname !== "/chat" && messageCount >= 1 && (
                                                     <span 
                                                         className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
                                                 )}
@@ -375,11 +406,14 @@ const Navbar = () => {
                             <button
                                 type="button"
                                 onClick={() => router.push("/chat")}
-                                className="focus:outline-none pr-3"
+                                className="relative focus:outline-none pr-3"
                             >
                                 <div className="w-6 h-6">
                                     <Image src={chatIcon} alt="Chat Icon" width={24} height={24} className="h-6 w-6" />
                                 </div>
+                                {pathname !== "/chat" && messageCount >= 1 && (
+                                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
+                                )}
                             </button>
                             <button
                                 type="button"

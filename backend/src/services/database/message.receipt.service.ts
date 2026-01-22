@@ -157,6 +157,40 @@ export class MessageReceiptService {
     }
   }
 
+  public async markMessageAsDelivered(message_id: string, user_id: string): Promise<message_receipts> {
+    try {
+      const updatedMessageReceipt = await this.prisma.message_receipts.update({
+        where: {
+          message_id_user_id_state: { message_id, user_id, state: 'sent' },
+        },
+        data: {
+          state: 'delivered',
+        },
+      });
+      return updatedMessageReceipt;
+    } catch (error) {
+      logger.error('Error marking message as delivered', { error });
+      throw new AppError('Error marking message as delivered', 500, 'MESSAGE_RECEIPT_MARK_AS_DELIVERED_FAILED');
+    }
+  }
+
+  public async markMessageAsRead(message_id: string, user_id: string): Promise<message_receipts> {
+    try {
+      const updatedMessageReceipt = await this.prisma.message_receipts.update({
+      where: {
+        message_id_user_id_state: { message_id, user_id, state: 'delivered' },
+      },
+      data: {
+        state: 'read',
+      },
+      });
+      return updatedMessageReceipt;
+    } catch (error) {
+      logger.error('Error marking message as read', { error });
+      throw new AppError('Error marking message as read', 500, 'MESSAGE_RECEIPT_MARK_AS_READ_FAILED');
+    }
+  }
+
   public async deleteMessageReceipt(id: string): Promise<void> {
     try {
       await this.prisma.message_receipts.delete({

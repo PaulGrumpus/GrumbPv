@@ -1,4 +1,4 @@
-import { Message, MessageKind } from "./message";
+import { Message, MessageKind, MessageInfo } from "./message";
 import { User } from "./user";
 
 export type DashboardResponse = {

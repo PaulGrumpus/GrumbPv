@@ -206,6 +206,9 @@ class DashboardService {
           messages: {
             orderBy: { created_at: 'asc' },
             take: 100,
+            include: {
+              receipts: true,
+            },
           },
         },
       });
@@ -230,11 +233,20 @@ class DashboardService {
         notificationsPromise,
       ]);
 
+      // Transform conversations to map receipts to messageReceipt for frontend compatibility
+      const transformedConversations = conversations.map(conversation => ({
+        ...conversation,
+        messages: conversation.messages.map(({ receipts, ...message }) => ({
+          ...message,
+          messageReceipt: receipts || [],
+        })),
+      }));
+
       return {
         jobs,
         bids, // ✅ freelancer bid results live here
         gigs,
-        conversations,
+        conversations: transformedConversations,
         notifications,
       };
     } catch (error) {

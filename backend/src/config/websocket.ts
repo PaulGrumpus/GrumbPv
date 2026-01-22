@@ -15,4 +15,6 @@ export const websocket = {
     process.env.WEBSOCKET_SEND_STOP_WRITING_MESSAGE || 'sendStopWritingMessage',
   WEBSOCKET_STOP_WRITING_MESSAGE:
     process.env.WEBSOCKET_STOP_WRITING_MESSAGE || 'stopWritingMessage',
+  WEBSOCKET_MESSAGE_RECEIPT_UPDATED: 
+    process.env.WEBSOCKET_MESSAGE_RECEIPT_UPDATED || 'messageReceiptUpdated',
 };
