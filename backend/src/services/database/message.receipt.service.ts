@@ -169,12 +169,12 @@ export class MessageReceiptService {
       // If not found or state is not 'sent', return null
       if (!existingReceipt) {
         logger.warn('Message receipt not found with sent state', { message_id, user_id });
-        return null;
+        throw new AppError('Message receipt not found with sent state', 404, 'MESSAGE_RECEIPT_NOT_FOUND');
       }
 
       if (existingReceipt.state !== 'sent') {
         logger.warn('Message not sent', { message_id, user_id });
-        return null;
+        throw new AppError('Message not sent', 400, 'MESSAGE_NOT_SENT');
       }
 
       // Update to 'delivered' state
@@ -205,7 +205,7 @@ export class MessageReceiptService {
       // If not found with 'delivered', check for 'sent' state
       if (!existingReceipt) {
         logger.warn('Message receipt not found with delivered state', { message_id, user_id });
-        return null;
+        throw new AppError('Message receipt not found with delivered state', 404, 'MESSAGE_RECEIPT_NOT_FOUND');
       }
 
       const updatedMessageReceipt = await this.prisma.message_receipts.update({

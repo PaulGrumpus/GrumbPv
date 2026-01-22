@@ -421,7 +421,7 @@ const Navbar = () => {
                             <button
                                 type="button"
                                 onClick={() => router.push("/chat")}
-                                className="relative focus:outline-none pr-3"
+                                className="relative focus:outline-none mr-3"
                             >
                                 <div className="w-6 h-6">
                                     <Image src={chatIcon} alt="Chat Icon" width={24} height={24} className="h-6 w-6" />
@@ -433,7 +433,7 @@ const Navbar = () => {
                             <button
                                 type="button"
                                 onClick={handleNotificationClick}
-                                className="relative focus:outline-none pr-1"
+                                className="relative focus:outline-none mr-1"
                             >
                                 <div>
                                     <Image src={bellIcon} alt="Bell Icon" width={24} height={24} className="h-6 w-6" />

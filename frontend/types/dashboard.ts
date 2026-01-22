@@ -185,4 +185,7 @@ export interface DashboardContextType {
     /* -------- Error handling -------- */
     dashboardError: string;
     setDashboardError: React.Dispatch<React.SetStateAction<string>>;
+    
+    /* -------- Message receipt helpers -------- */
+    markMessageAsPendingRead: (messageId: string) => void;
 }

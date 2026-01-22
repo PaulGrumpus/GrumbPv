@@ -38,7 +38,7 @@ const ChatSidebarItem = ({ name, image, status, lastMessage, lastMessageTime, se
             <div className="flex flex-col items-end gap-1">
                 <p className="text-tiny font-regular group-hover:text-white">{lastMessageTime}</p>
                 {unreadCount > 0 && (
-                    <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-semibold">
+                    <span className="flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-semibold">
                         {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                 )}

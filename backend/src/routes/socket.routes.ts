@@ -6,8 +6,6 @@ import { messageReceiptService } from '../services/database/message.receipt.serv
 import { websocket } from '../config/websocket.js';
 import { messageService } from '../services/database/message.service.js';
 import { conversationService } from '../services/database/conversation.service.js';
-import { conversationParticipantService } from '../services/database/conversation.participant.service.js';
-import { read_state } from '@prisma/client';
 import { logger } from '../utils/logger.js';
 
 export const socket_router = (socket: Socket, io: any) => {
@@ -62,40 +60,47 @@ export const socket_router = (socket: Socket, io: any) => {
 
       logger.info('Sending message receipt', { message_id, user_id, state });
 
-      let newState = state;
-
       if(state === 'delivered') {
         const updatedMessageReceipt = await messageReceiptService.markMessageAsDelivered(message_id, user_id);
         if (updatedMessageReceipt) {
-          newState = updatedMessageReceipt.state;
+          const message = await messageService.getMessageById(message_id);
+          const conversation = await conversationService.getConversationById(message.conversation_id);
+          if(!conversation) {
+            throw new Error('Conversation not found');
+          }
+          
+          // Fetch actual receipts from database, not create fake ones from participants
+          const actualReceipts = await messageReceiptService.getMessageReceiptsByMessageId(message_id);
+          
+          io.to(conversation.id).emit(websocket.WEBSOCKET_MESSAGE_RECEIPT_UPDATED, {
+            ...message,
+            receipts: actualReceipts,
+          });
         } else {
           logger.warn('Failed to mark message as delivered - receipt not found with sent state', { message_id, user_id });
-          return; // Exit early if update failed
+          throw new Error('Failed to mark message as delivered - receipt not found with sent state');
         }
       } else if(state === 'read') {
         const updatedMessageReceipt = await messageReceiptService.markMessageAsRead(message_id, user_id);
         if (updatedMessageReceipt) {
-          newState = updatedMessageReceipt.state;
+          const message = await messageService.getMessageById(message_id);
+          const conversation = await conversationService.getConversationById(message.conversation_id);
+          if(!conversation) {
+            throw new Error('Conversation not found');
+          }
+          
+          // Fetch actual receipts from database, not create fake ones from participants
+          const actualReceipts = await messageReceiptService.getMessageReceiptsByMessageId(message_id);
+          
+          io.to(conversation.id).emit(websocket.WEBSOCKET_MESSAGE_RECEIPT_UPDATED, {
+            ...message,
+            receipts: actualReceipts,
+          });
         } else {
           logger.warn('Failed to mark message as read - receipt not found with delivered state', { message_id, user_id });
-          return; // Exit early if update failed
+          throw new Error('Failed to mark message as read - receipt not found with delivered state');
         }
-      }
-
-      const message = await messageService.getMessageById(message_id);
-      const conversation = await conversationService.getConversationById(message.conversation_id);
-      if(!conversation) {
-        throw new Error('Conversation not found');
-      }
-      const conversationParticipants = await conversationParticipantService.getConversationParticipantsByConversationId(conversation.id);
-      
-      io.to(conversation.id).emit(websocket.WEBSOCKET_MESSAGE_RECEIPT_UPDATED, {
-        ...message,
-        receipts: conversationParticipants.map(participant => ({
-          ...participant,
-          state: participant.user_id === user_id ? newState : state,
-        })),
-      });
+      }      
     } catch (error) {
       console.error('❌ Error sending message receipt:', error);
     }
