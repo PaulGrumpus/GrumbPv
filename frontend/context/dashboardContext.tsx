@@ -108,7 +108,6 @@ export const DashboardProvider = ({ children }: Props) => {
 
         const socket = notificationSocket.socket;
         const handleIncomingMessage = (message: Message) => {
-            console.log("message", message);
             setConversationsInfo((prev) =>
                 prev.map((conversation) =>
                     conversation.id === message.conversation_id
@@ -302,7 +301,6 @@ export const DashboardProvider = ({ children }: Props) => {
         };
 
         const handleMessageReceiptUpdated = (message: Message) => {
-            console.log("message", message);
             setConversationsInfo((prev) =>
                 prev.map((conversation) =>
                     conversation.id === message.conversation_id

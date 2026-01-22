@@ -66,10 +66,20 @@ export const socket_router = (socket: Socket, io: any) => {
 
       if(state === 'delivered') {
         const updatedMessageReceipt = await messageReceiptService.markMessageAsDelivered(message_id, user_id);
-        newState = updatedMessageReceipt.state;
+        if (updatedMessageReceipt) {
+          newState = updatedMessageReceipt.state;
+        } else {
+          logger.warn('Failed to mark message as delivered - receipt not found with sent state', { message_id, user_id });
+          return; // Exit early if update failed
+        }
       } else if(state === 'read') {
         const updatedMessageReceipt = await messageReceiptService.markMessageAsRead(message_id, user_id);
-        newState = updatedMessageReceipt.state;
+        if (updatedMessageReceipt) {
+          newState = updatedMessageReceipt.state;
+        } else {
+          logger.warn('Failed to mark message as read - receipt not found with delivered state', { message_id, user_id });
+          return; // Exit early if update failed
+        }
       }
 
       const message = await messageService.getMessageById(message_id);
@@ -83,7 +93,7 @@ export const socket_router = (socket: Socket, io: any) => {
         ...message,
         receipts: conversationParticipants.map(participant => ({
           ...participant,
-          state: participant.user_id === user_id ? newState : 'sent' as read_state,
+          state: participant.user_id === user_id ? newState : state,
         })),
       });
     } catch (error) {
