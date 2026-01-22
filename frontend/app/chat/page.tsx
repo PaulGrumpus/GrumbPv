@@ -29,6 +29,7 @@ interface ChatSidebarItem {
     lastMessageTime: Date;
     pinned: boolean;
     selected: boolean;
+    unreadCount: number;
     onChatClick: () => void;
     onPinChat: () => void;
     onUnpinChat: () => void;
@@ -246,6 +247,31 @@ const ChatPageContent = () => {
                                 ? new Date(latestMessage.created_at)
                                 : new Date(conversation.created_at ?? Date.now());
 
+                            // Calculate unread count for this conversation
+                            const unreadCount = conversation.messages?.filter((message) => {
+                                // Skip messages sent by current user
+                                if (message.sender_id === userInfo.id) {
+                                    return false;
+                                }
+
+                                // Get receipts (handle both 'receipts' and 'messageReceipt' for compatibility)
+                                const receipts = (message as any).receipts || (message as any).messageReceipt || [];
+
+                                // Check if message has receipts
+                                if (!receipts || receipts.length === 0) {
+                                    // No receipts means not read
+                                    return true;
+                                }
+
+                                // Check if there's a 'read' receipt for the current user
+                                const hasReadReceipt = receipts.some(
+                                    (receipt: any) => receipt.user_id === userInfo.id && receipt.state === 'read'
+                                );
+
+                                // If no 'read' receipt found, message is unread
+                                return !hasReadReceipt;
+                            }).length ?? 0;
+
                             return {
                                 conversation_id: conversation.id,
                                 receiver: conversation.participants[0].user.id === userInfo.id ? conversation.participants[1].user as User : conversation.participants[0].user as User,
@@ -254,6 +280,7 @@ const ChatPageContent = () => {
                                 lastMessageTime,
                                 pinned: false,
                                 selected: false,
+                                unreadCount,
                                 onChatClick: () => {
                                     handleChatClick(conversation.id);
                                 },

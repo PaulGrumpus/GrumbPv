@@ -113,25 +113,40 @@ const Navbar = () => {
             return;
         }
 
+        // Count unread messages based on message receipts
+        // A message is unread if:
+        // 1. It's not sent by the current user
+        // 2. The message doesn't have a 'read' receipt for the current user
         const unreadCount = conversationsInfo.reduce((count, conversation) => {
             if (!conversation.messages || conversation.messages.length === 0) {
                 return count;
             }
 
-            const lastMessage = conversation.messages[conversation.messages.length - 1];
-            if (!lastMessage || lastMessage.sender_id === userInfo.id) {
-                return count;
-            }
+            const unreadInConversation = conversation.messages.filter((message) => {
+                // Skip messages sent by current user
+                if (message.sender_id === userInfo.id) {
+                    return false;
+                }
 
-            const participant = conversation.participants.find(
-                (p) => p.user.id === userInfo.id
-            );
+                // Get receipts (handle both 'receipts' and 'messageReceipt' for compatibility)
+                const receipts = (message as any).receipts || (message as any).messageReceipt || [];
 
-            if (!participant || participant.last_read_msg_id !== lastMessage.id) {
-                return count + 1;
-            }
+                // Check if message has receipts
+                if (!receipts || receipts.length === 0) {
+                    // No receipts means not read
+                    return true;
+                }
 
-            return count;
+                // Check if there's a 'read' receipt for the current user
+                const hasReadReceipt = receipts.some(
+                    (receipt: any) => receipt.user_id === userInfo.id && receipt.state === 'read'
+                );
+
+                // If no 'read' receipt found, message is unread
+                return !hasReadReceipt;
+            }).length;
+
+            return count + unreadInConversation;
         }, 0);
 
         setMessageCount(unreadCount);
