@@ -5,7 +5,7 @@ import Link from "next/link";
 import { User } from "@/types/user";
 import Image from "next/image";
 import { toast } from "react-toastify";
-import { fundEscrow, deliverWork, approveWork, updateJobMilestone, withdrawFunds, initiateDispute, buyerJoinDispute, venderPayDisputeFee, createChainTx } from "@/utils/functions";
+import { fundEscrow, deliverWork, approveWork, updateJobMilestone, withdrawFunds, initiateDispute, buyerJoinDispute, venderPayDisputeFee, createChainTx, updateJobStatusById } from "@/utils/functions";
 import { useWallet } from "@/context/walletContext";
 import { CONFIG } from "@/config/config";
 import ModalTemplate from "../modalTemplate";
@@ -16,6 +16,7 @@ import { UserInfoCtx } from "@/context/userContext";
 import { DashboardMilestone } from "@/types/dashboard";
 import SmallLoading from "../smallLoading";
 import { useMilestoneDelivery } from "@/context/milestoneDeliveryContext";
+import { JobStatus } from "@/types/jobs";
 
 interface ChatProjectStatusProps {
     status: number; // 1-4
@@ -501,6 +502,7 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
                 });
             }
             await createChainTx("withdraw_funds", Number(CONFIG.chainId), jobMilestoneId, user.address ?? "", result.data.to, txHash, "success", user.id);
+            await updateJobStatusById(job_id, JobStatus.COMPLETED);
             toast.success("Funds withdrawn successfully", {
                 position: "top-right",
                 autoClose: 5000,

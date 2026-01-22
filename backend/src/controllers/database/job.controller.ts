@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { jobService } from '../../services/database/job.service.js';
+import { job_status } from '@prisma/client';
 
 export class JobController {
   async createJob(req: Request, res: Response, next: NextFunction) {
@@ -27,6 +28,21 @@ export class JobController {
         success: true,
         data: result,
         message: 'Job updated successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateJobStatusById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      const result = await jobService.updateJobStatusById(id, status as job_status);
+      res.json({
+        success: true,
+        data: result,
+        message: 'Job status updated successfully',
       });
     } catch (error) {
       next(error);

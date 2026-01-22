@@ -1,13 +1,13 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { messages, msg_type } from '@prisma/client';
+import { message_receipts, messages, msg_type } from '@prisma/client';
 import { newMessageParam } from '../../types/message.js';
 import { prisma } from '../../prisma.js';
 
 export class MessageService {
   private prisma = prisma;
 
-  public async createMessage(message: newMessageParam): Promise<messages> {
+  public async createMessage(message: newMessageParam): Promise<messages & { receipts: message_receipts[] }> {
     try {
       const newMessage = await this.prisma.messages.create({
         data: {
@@ -20,7 +20,25 @@ export class MessageService {
           created_at: message.created_at as Date,
         },
       });
-      return newMessage;
+
+      const participants = await this.prisma.conversation_participants.findMany({
+        where: { conversation_id: message.conversation_id },
+      });
+
+      const newMessageReceipts = [];
+      for (const participant of participants) {
+        newMessageReceipts.push(
+          await this.prisma.message_receipts.create({
+            data: {
+              message_id: newMessage.id,
+              user_id: participant.user_id,
+              state: 'sent',
+            },
+          })
+        );
+      }
+
+      return { ...newMessage, receipts: newMessageReceipts };
     } catch (error) {
       logger.error('Error creating message', { error });
       throw new AppError('Error creating message', 500, 'MESSAGE_CREATE_FAILED');

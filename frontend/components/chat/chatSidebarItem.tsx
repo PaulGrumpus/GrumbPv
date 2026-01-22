@@ -10,12 +10,13 @@ interface ChatSidebarItemProps {
     lastMessage: string;
     lastMessageTime: string;
     selected: boolean;
+    unreadCount: number;
     clickHandler: () => void;
     onPinChat: () => void;
     onUnpinChat: () => void;
 }
 
-const ChatSidebarItem = ({ name, image, status, lastMessage, lastMessageTime, selected, clickHandler, onPinChat, onUnpinChat }: ChatSidebarItemProps) => {
+const ChatSidebarItem = ({ name, image, status, lastMessage, lastMessageTime, selected, unreadCount, clickHandler, onPinChat, onUnpinChat }: ChatSidebarItemProps) => {
     return (
         <div 
             className={`flex justify-between group hover:text-white hover:bg-linear-to-r hover:from-(--color-light-blue) hover:to-(--color-purple) ${selected ? "bg-linear-to-r from-(--color-light-blue) to-(--color-purple) text-white" : ""} p-4 border-b border-[#8F99AFCC] cursor-pointer text-black`}
@@ -34,7 +35,14 @@ const ChatSidebarItem = ({ name, image, status, lastMessage, lastMessageTime, se
                     )}
                 </div>
             </div>
-            <p className="text-tiny font-regular group-hover:text-white">{lastMessageTime}</p>
+            <div className="flex flex-col items-end gap-1">
+                <p className="text-tiny font-regular group-hover:text-white">{lastMessageTime}</p>
+                {unreadCount > 0 && (
+                    <span className="flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-semibold">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                )}
+            </div>
         </div>
     );
 };

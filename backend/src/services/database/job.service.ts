@@ -257,6 +257,38 @@ export class JobService {
     }
   }
 
+  public async updateJobStatusById(id: string, status: job_status): Promise<jobs> {
+    try {
+      if (!id) {
+        throw new AppError('Job ID is required', 400, 'JOB_ID_REQUIRED');
+      }
+      if (!status) {
+        throw new AppError('Status is required', 400, 'STATUS_REQUIRED');
+      }
+      const existingJob = await this.prisma.jobs.findUnique({
+        where: { id },
+      });
+      if (!existingJob) {
+        throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
+      }
+      if (existingJob.status === status) {
+        throw new AppError('Job status is already set to the same status', 400, 'JOB_STATUS_ALREADY_SET');
+      }
+      const updatedJob = await this.prisma.jobs.update({
+        where: { id },
+        data: { status },
+      });
+      return updatedJob;
+    }
+    catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      logger.error('Error updating job status by id', { error });
+      throw new AppError('Error updating job status by id', 500, 'DB_JOB_STATUS_UPDATE_BY_ID_FAILED');
+    }
+  }
+
   //  make this admin only
   public async deleteJob(id: string): Promise<void> {
     try {

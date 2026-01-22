@@ -5,7 +5,7 @@ import Button from "@/components/button";
 import PubJobOrGigPost from "@/components/pubJobOrGigPost";
 import ModalTemplate from "@/components/modalTemplate";
 import { useContext, useEffect, useState } from "react";
-import { Job, LocationType } from "@/types/jobs";
+import { Job, JobStatus, LocationType } from "@/types/jobs";
 import { useRouter } from "next/navigation";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
 import { UserInfoCtx } from "@/context/userContext";
@@ -32,7 +32,7 @@ const JobsPage = () => {
         
                 if (result.success) {
                     setJobs(
-                        (result.data ?? []).sort(
+                        (result.data ?? []).filter((job: Job) => job.status === JobStatus.OPEN).sort(
                             (a: Job, b: Job) =>
                             new Date(b.created_at ?? "").getTime() -
                             new Date(a.created_at ?? "").getTime()

@@ -4,6 +4,9 @@ import { messageController } from '../controllers/chat/message.controller.js';
 import { newMessageReceiptParam } from '../types/message.receipt.js';
 import { messageReceiptService } from '../services/database/message.receipt.service.js';
 import { websocket } from '../config/websocket.js';
+import { messageService } from '../services/database/message.service.js';
+import { conversationService } from '../services/database/conversation.service.js';
+import { logger } from '../utils/logger.js';
 
 export const socket_router = (socket: Socket, io: any) => {
   // User joins a conversation room
@@ -54,21 +57,50 @@ export const socket_router = (socket: Socket, io: any) => {
       if (!message_id || !user_id || !state) {
         throw new Error('Invalid parameters');
       }
-      let result;
-      const existingMessageReceipt =
-        await messageReceiptService.getMessageReceiptsByMessageIdAndUserId(message_id, user_id);
-      if (existingMessageReceipt) {
-        result = await messageReceiptService.updateMessageReceipt(message_id, user_id, state);
-      } else {
-        result = await messageReceiptService.createMessageReceipt({
-          message_id: message_id,
-          user_id: user_id,
-          state: state,
-        });
-      }
-      if (!result) {
-        throw new Error('Message receipt not created');
-      }
+
+      logger.info('Sending message receipt', { message_id, user_id, state });
+
+      if(state === 'delivered') {
+        const updatedMessageReceipt = await messageReceiptService.markMessageAsDelivered(message_id, user_id);
+        if (updatedMessageReceipt) {
+          const message = await messageService.getMessageById(message_id);
+          const conversation = await conversationService.getConversationById(message.conversation_id);
+          if(!conversation) {
+            throw new Error('Conversation not found');
+          }
+          
+          // Fetch actual receipts from database, not create fake ones from participants
+          const actualReceipts = await messageReceiptService.getMessageReceiptsByMessageId(message_id);
+          
+          io.to(conversation.id).emit(websocket.WEBSOCKET_MESSAGE_RECEIPT_UPDATED, {
+            ...message,
+            receipts: actualReceipts,
+          });
+        } else {
+          logger.warn('Failed to mark message as delivered - receipt not found with sent state', { message_id, user_id });
+          throw new Error('Failed to mark message as delivered - receipt not found with sent state');
+        }
+      } else if(state === 'read') {
+        const updatedMessageReceipt = await messageReceiptService.markMessageAsRead(message_id, user_id);
+        if (updatedMessageReceipt) {
+          const message = await messageService.getMessageById(message_id);
+          const conversation = await conversationService.getConversationById(message.conversation_id);
+          if(!conversation) {
+            throw new Error('Conversation not found');
+          }
+          
+          // Fetch actual receipts from database, not create fake ones from participants
+          const actualReceipts = await messageReceiptService.getMessageReceiptsByMessageId(message_id);
+          
+          io.to(conversation.id).emit(websocket.WEBSOCKET_MESSAGE_RECEIPT_UPDATED, {
+            ...message,
+            receipts: actualReceipts,
+          });
+        } else {
+          logger.warn('Failed to mark message as read - receipt not found with delivered state', { message_id, user_id });
+          throw new Error('Failed to mark message as read - receipt not found with delivered state');
+        }
+      }      
     } catch (error) {
       console.error('❌ Error sending message receipt:', error);
     }

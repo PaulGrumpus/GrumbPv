@@ -29,6 +29,7 @@ interface ChatSidebarItem {
     lastMessageTime: Date;
     pinned: boolean;
     selected: boolean;
+    unreadCount: number;
     onChatClick: () => void;
     onPinChat: () => void;
     onUnpinChat: () => void;
@@ -53,7 +54,7 @@ const ChatPageContent = () => {
     }, [searchParams]);
     const chatSocket = useSocket();   
     const router = useRouter();
-    const { conversationsInfo, setConversationsInfo, jobsInfo, bidsInfo } = useDashboard();    
+    const { conversationsInfo, setConversationsInfo, jobsInfo, bidsInfo, markMessageAsPendingRead } = useDashboard();    
 
     const [jobId, setJobId] = useState("");
     const [jobTitle, setJobTitle] = useState("");
@@ -106,6 +107,10 @@ const ChatPageContent = () => {
         }
 
         sentReceiptIds.current.add(message.id);
+        
+        // Notify dashboard context that we're marking this as read (to prevent 'delivered' from overwriting)
+        markMessageAsPendingRead(message.id);
+        
         chatSocket.socket.emit(websocket.WEBSOCKET_SEND_MESSAGE_RECEIPT, {
             message_id: message.id,
             user_id: userInfo.id,
@@ -120,9 +125,15 @@ const ChatPageContent = () => {
         }
 
         conversation.messages.forEach((message) => {
-            if (message.sender_id !== userInfo.id) {
-                emitMessageReceipt(message);
-            }
+            conversation.messages.forEach((message) => {
+                if (message.sender_id !== userInfo.id) {
+                    if(message.receipts && message.receipts.some((receipt) => receipt.user_id === userInfo.id && receipt.state === 'read')) {
+                        return;
+                    }
+                    console.log("marking message as read", message);
+                    emitMessageReceipt(message);
+                }
+            });
         });
     };
 
@@ -184,9 +195,10 @@ const ChatPageContent = () => {
     }, [chatSocket.isConnected, selectedConversationId]);
 
     useEffect(() => {
-        if (!chatSocket.socket) return;
+        if (!chatSocket.socket) return;        
 
         const handler = (message: Message) => {
+            // Update sidebar items with new message info
             setChatSidebarItems((prev) =>
                 prev.map((chat) => {
                     if (chat.conversation_id !== message.conversation_id) {
@@ -200,11 +212,13 @@ const ChatPageContent = () => {
                     };
                 })
             );
-            if (selectedConversationId === message.conversation_id) {
+            
+            // If this message is in the currently selected conversation, mark it as read immediately
+            if (selectedConversationId === message.conversation_id && message.sender_id !== userInfo.id) {
                 emitMessageReceipt(message);
             }
             setConversationId(message.conversation_id);
-        };
+        };        
 
         chatSocket.socket.on(websocket.WEBSOCKET_NEW_MESSAGE, handler);
         chatSocket.socket.on(websocket.WEBSOCKET_WRITING_MESSAGE, (param: { conversation_id: string, sender_id: string }) => {
@@ -223,8 +237,69 @@ const ChatPageContent = () => {
             chatSocket.socket?.off(websocket.WEBSOCKET_WRITING_MESSAGE, handler);
             chatSocket.socket?.off(websocket.WEBSOCKET_STOP_WRITING_MESSAGE, handler);
         };
-    }, [chatSocket.socket, userInfo.id, selectedConversationId]);
+    }, [chatSocket.socket, userInfo.id, selectedConversationId, conversationsInfo]);
 
+    // Helper function to build chat sidebar items
+    const buildChatSidebarItems = (conversations: typeof conversationsInfo, currentItems: ChatSidebarItem[] = []) => {
+        if (!conversations.length) {
+            return [];
+        }
+
+        return conversations
+            .map((conversation) => {
+                const latestMessage = conversation.messages?.[conversation.messages.length - 1];
+                const lastMessageTime = latestMessage
+                    ? new Date(latestMessage.created_at)
+                    : new Date(conversation.created_at ?? Date.now());
+
+                // Calculate unread count for this conversation
+                const unreadCount = conversation.messages?.filter((message) => {
+                    // Skip messages sent by current user
+                    if (message.sender_id === userInfo.id) {
+                        return false;
+                    }
+
+                    // Get receipts (handle both 'receipts' and 'messageReceipt' for compatibility)
+                    const receipts = (message as any).receipts || (message as any).messageReceipt || [];
+
+                    // Check if message has receipts
+                    if (!receipts || receipts.length === 0) {
+                        // No receipts means not read
+                        return true;
+                    }
+
+                    // Check if there's a 'read' receipt for the current user
+                    const hasReadReceipt = receipts.some(
+                        (receipt: any) => receipt.user_id === userInfo.id && receipt.state === 'read'
+                    );
+
+                    // If no 'read' receipt found, message is unread
+                    return !hasReadReceipt;
+                }).length ?? 0;
+
+                // Preserve selection and status from current items
+                const existingItem = currentItems.find(item => item.conversation_id === conversation.id);
+
+                return {
+                    conversation_id: conversation.id,
+                    receiver: conversation.participants[0].user.id === userInfo.id ? conversation.participants[1].user as User : conversation.participants[0].user as User,
+                    status: existingItem?.status ?? "idle",
+                    lastMessage: latestMessage?.body_text ?? "",
+                    lastMessageTime,
+                    pinned: false,
+                    selected: existingItem?.selected ?? false,
+                    unreadCount,
+                    onChatClick: () => {
+                        handleChatClick(conversation.id);
+                    },
+                    onPinChat: () => {},
+                    onUnpinChat: () => {},
+                };
+            })
+            .sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
+    };
+
+    // Initial load of conversations
     useEffect(() => {
         if(userLoadingState === "success") {
             if(userInfo.id === "") {
@@ -239,30 +314,7 @@ const ChatPageContent = () => {
                         return;
                     }
 
-                    const builtChats: ChatSidebarItem[] = conversationsInfo
-                        .map((conversation) => {
-                            const latestMessage = conversation.messages?.[conversation.messages.length - 1];
-                            const lastMessageTime = latestMessage
-                                ? new Date(latestMessage.created_at)
-                                : new Date(conversation.created_at ?? Date.now());
-
-                            return {
-                                conversation_id: conversation.id,
-                                receiver: conversation.participants[0].user.id === userInfo.id ? conversation.participants[1].user as User : conversation.participants[0].user as User,
-                                status: "idle",
-                                lastMessage: latestMessage?.body_text ?? "",
-                                lastMessageTime,
-                                pinned: false,
-                                selected: false,
-                                onChatClick: () => {
-                                    handleChatClick(conversation.id);
-                                },
-                                onPinChat: () => {},
-                                onUnpinChat: () => {},
-                            };
-                        })
-                        .sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
-
+                    const builtChats = buildChatSidebarItems(conversationsInfo, []);
                     setChatSidebarItems(builtChats);
 
                     const targetConversationId = conversationId ?? builtChats[0]?.conversation_id;
@@ -279,7 +331,17 @@ const ChatPageContent = () => {
         } else if (userLoadingState === "failure") {
             router.push("/");
         }
-    }, [userInfo, userLoadingState, router, dashboardLoadingState, conversationsInfo]);
+    }, [userInfo, userLoadingState, router, dashboardLoadingState]);
+
+    // Update chat sidebar items when conversationsInfo changes (for real-time updates)
+    useEffect(() => {
+        if (dashboardLoadingState === "success" && conversationsInfo.length > 0 && userInfo.id) {
+            setChatSidebarItems((prevItems) => {
+                const builtChats = buildChatSidebarItems(conversationsInfo, prevItems);
+                return builtChats;
+            });
+        }
+    }, [conversationsInfo, dashboardLoadingState, userInfo.id]);
 
     if(loading === "pending") {
         return <Loading />;

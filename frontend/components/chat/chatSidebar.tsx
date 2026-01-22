@@ -14,6 +14,7 @@ interface ChatSidebarItemType {
     lastMessageTime: Date;
     pinned: boolean;
     selected: boolean;
+    unreadCount: number;
     onChatClick: (conversation_id: string) => void;
     onPinChat: (conversation_id: string) => void;
     onUnpinChat: (conversation_id: string) => void;
@@ -79,6 +80,7 @@ const ChatSidebar = ({ chats }: { chats: ChatSidebarItemType[] }) => {
                             lastMessage={chat.lastMessage} 
                             lastMessageTime={formatHourMinute(chat.lastMessageTime.toString())} 
                             selected={chat.selected}
+                            unreadCount={chat.unreadCount}
                             clickHandler={ () => {
                                 handleChatClick(chat.conversation_id);
                                 chat.onChatClick(chat.conversation_id);
@@ -112,6 +114,7 @@ const ChatSidebar = ({ chats }: { chats: ChatSidebarItemType[] }) => {
                             lastMessage={chat.lastMessage} 
                             lastMessageTime={formatHourMinute(chat.lastMessageTime.toString())} 
                             selected={chat.selected}
+                            unreadCount={chat.unreadCount}
                             clickHandler={ () => {
                                 handleChatClick(chat.conversation_id);
                                 chat.onChatClick(chat.conversation_id);

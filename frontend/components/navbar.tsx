@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState, forwardRef, useContext } from "react";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Button from "./button";
 import Image from "next/image";
 import Link from "next/link";
@@ -64,9 +64,10 @@ const Navbar = () => {
 
     // const { notificationLoadingState } = useContext(NotificationLoadingCtx);
     const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
-    const { notificationsInfo } = useDashboard();
+    const { notificationsInfo, conversationsInfo } = useDashboard();
     const [ isMobile, setIsMobile ] = useState(true);
     const { setuserLoadingState } = useContext(UserLoadingCtx);
+    const pathname = usePathname();
 
     const mobileMenuItems = 
     userRole === "freelancer" ? [
@@ -105,6 +106,51 @@ const Navbar = () => {
             notificationsInfo.filter(n => !n.read_at).length
         );
     }, [notificationsInfo]);
+
+    useEffect(() => {
+        if (!userInfo.id) {
+            setMessageCount(0);
+            return;
+        }
+
+        // Count unread messages based on message receipts
+        // A message is unread if:
+        // 1. It's not sent by the current user
+        // 2. The message doesn't have a 'read' receipt for the current user
+        const unreadCount = conversationsInfo.reduce((count, conversation) => {
+            if (!conversation.messages || conversation.messages.length === 0) {
+                return count;
+            }
+
+            const unreadInConversation = conversation.messages.filter((message) => {
+                // Skip messages sent by current user
+                if (message.sender_id === userInfo.id) {
+                    return false;
+                }
+
+                // Get receipts (handle both 'receipts' and 'messageReceipt' for compatibility)
+                const receipts = (message as any).receipts || (message as any).messageReceipt || [];
+
+                // Check if message has receipts
+                if (!receipts || receipts.length === 0) {
+                    // No receipts means not read
+                    return true;
+                }
+
+                // Check if there's a 'read' receipt for the current user
+                const hasReadReceipt = receipts.some(
+                    (receipt: any) => receipt.user_id === userInfo.id && receipt.state === 'read'
+                );
+
+                // If no 'read' receipt found, message is unread
+                return !hasReadReceipt;
+            }).length;
+
+            return count + unreadInConversation;
+        }, 0);
+
+        setMessageCount(unreadCount);
+    }, [conversationsInfo, userInfo.id]);
 
     const handleDropdownMenuOpen = () => {
         setDropdownMenuOpen((prev) => !prev);
@@ -228,7 +274,7 @@ const Navbar = () => {
                                                     height={24} 
                                                     className="h-full w-full object-cover"
                                                 />
-                                                {messageCount >= 1 && (
+                                                {pathname !== "/chat" && messageCount >= 1 && (
                                                     <span 
                                                         className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
                                                 )}
@@ -375,16 +421,19 @@ const Navbar = () => {
                             <button
                                 type="button"
                                 onClick={() => router.push("/chat")}
-                                className="focus:outline-none pr-3"
+                                className="relative focus:outline-none mr-3"
                             >
                                 <div className="w-6 h-6">
                                     <Image src={chatIcon} alt="Chat Icon" width={24} height={24} className="h-6 w-6" />
                                 </div>
+                                {pathname !== "/chat" && messageCount >= 1 && (
+                                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
+                                )}
                             </button>
                             <button
                                 type="button"
                                 onClick={handleNotificationClick}
-                                className="relative focus:outline-none pr-1"
+                                className="relative focus:outline-none mr-1"
                             >
                                 <div>
                                     <Image src={bellIcon} alt="Bell Icon" width={24} height={24} className="h-6 w-6" />

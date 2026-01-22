@@ -5,7 +5,7 @@ import { User } from "@/types/user";
 import { Message } from "@/types/message";
 import { EscrowBackendConfig } from "@/config/config";
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
-import { formatLabel } from "@/utils/functions";
+import { formatLabel, formatHourMinute } from "@/utils/functions";
 
 interface ChatMainProps {
     isMobile: boolean;  
@@ -305,6 +305,25 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                                 const isLastInSequence = index === messages.length - 1 || 
                                     messages[index + 1]?.sender_id !== message.sender_id;
                                 
+                                // Get receipt status for sender's messages
+                                const getMessageStatus = () => {
+                                    if (message.sender_id !== sender.id || !message.receipts || !receiver) {
+                                        return null;
+                                    }
+                                    // Find all receipts for the receiver
+                                    const receiverReceipts = message.receipts.filter(receipt => receipt.user_id === receiver.id);
+                                    if (!receiverReceipts || receiverReceipts.length === 0) {
+                                        return 'sent';
+                                    }
+                                    // Get the highest state (read > delivered > sent)
+                                    const states = receiverReceipts.map(r => r.state);
+                                    if (states.includes('read')) return 'read';
+                                    if (states.includes('delivered')) return 'delivered';
+                                    return 'sent';
+                                };
+
+                                const messageStatus = getMessageStatus();
+                                
                                 return (
                                     <div
                                         key={index}
@@ -315,14 +334,31 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                                         <div className="flex flex-col max-w-[80%]">
                                             {message.sender_id === sender.id ? (
                                                 <div className="flex items-end gap-2">
-                                                    <div
-                                                        className={`py-4 px-5 rounded-[1.125rem] wrap-break-word whitespace-pre-wrap ${
-                                                        message.sender_id === sender.id
-                                                            ? "bg-[#2F3DF6]"
-                                                            : "bg-[#7E3FF2]"
-                                                        } text-white text-sm ${isLastInSequence ? "chat-bubble-sender" : ""}`}
-                                                    >
-                                                        {message.body_text}
+                                                    <div className="flex flex-col">
+
+                                                        <div className="flex items-center justify-end gap-1 mt-2">
+                                                            <span className="text-xs text-[#8F99AF]">
+                                                                {formatHourMinute(message.created_at.toString())}
+                                                            </span>
+                                                            {messageStatus && (
+                                                                <Image
+                                                                    src={messageStatus === 'sent' ? "/Grmps/sent.svg" : "/Grmps/received.svg"}
+                                                                    alt={messageStatus === 'sent' ? "Sent" : messageStatus === 'delivered' ? "Delivered" : "Read"}
+                                                                    width={16}
+                                                                    height={16}
+                                                                    className="ml-1"
+                                                                />
+                                                            )}
+                                                        </div>
+                                                        <div
+                                                            className={`py-4 px-5 rounded-[1.125rem] wrap-break-word whitespace-pre-wrap ${
+                                                            message.sender_id === sender.id
+                                                                ? "bg-[#2F3DF6]"
+                                                                : "bg-[#7E3FF2]"
+                                                            } text-white text-sm ${isLastInSequence ? "chat-bubble-sender" : ""}`}
+                                                        >
+                                                            {message.body_text}                                                        
+                                                        </div>
                                                     </div>
                                                     {isLastInSequence ? (
                                                         <div className="min-w-9 w-9 h-9 rounded-full overflow-hidden">
@@ -353,14 +389,19 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                                                     ) : (
                                                         <div className="min-w-9 w-9 h-9"></div>
                                                     )}
-                                                    <div
-                                                        className={`py-4 px-5 rounded-[1.125rem] wrap-break-word whitespace-pre-wrap ${
-                                                        message.sender_id === sender.id
-                                                            ? "bg-[#2F3DF6]"
-                                                            : "bg-[#7E3FF2]"
-                                                        } text-white text-sm ${isLastInSequence ? "chat-bubble-receiver" : ""}`}
-                                                    >
-                                                        {message.body_text}
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs text-[#8F99AF]">
+                                                            {formatHourMinute(message.created_at.toString())}
+                                                        </span>
+                                                        <div
+                                                            className={`py-4 px-5 rounded-[1.125rem] wrap-break-word whitespace-pre-wrap ${
+                                                            message.sender_id === sender.id
+                                                                ? "bg-[#2F3DF6]"
+                                                                : "bg-[#7E3FF2]"
+                                                            } text-white text-sm ${isLastInSequence ? "chat-bubble-receiver" : ""}`}
+                                                        >
+                                                            {message.body_text}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )}
@@ -374,7 +415,7 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
 
                         {isWriting && (
                             <div className="flex justify-start items-center py-1 max-h-2">
-                                <p className="text-xs text-gray-400">{receiver? receiver.display_name : "No receiver"} is typing...</p>
+                                <p className="text-xs text-gray-400">{receiver? receiver.display_name ?? receiver.role : "No receiver"} is typing...</p>
                                 <div className="flex items-center gap-1.5 px-3">
                                     <div className="w-2 h-2 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: '0ms' }}></div>
                                     <div className="w-2 h-2 bg-gray-400 rounded-full typing-dot" style={{ animationDelay: '200ms' }}></div>

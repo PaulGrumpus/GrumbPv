@@ -83,7 +83,7 @@ export class MessageReceiptService {
     try {
       const messageReceipt = await this.prisma.message_receipts.findUnique({
         where: {
-          message_id_user_id_state: { message_id: messageId, user_id: userId, state: 'read' },
+          message_id_user_id: { message_id: messageId, user_id: userId },
         },
       });
       if (!messageReceipt) {
@@ -144,7 +144,7 @@ export class MessageReceiptService {
     try {
       const updatedMessageReceipt = await this.prisma.message_receipts.update({
         where: {
-          message_id_user_id_state: { message_id: message_id, user_id: user_id, state: state },
+          message_id_user_id: { message_id, user_id },
         },
         data: {
           state: state,
@@ -154,6 +154,72 @@ export class MessageReceiptService {
     } catch (error) {
       logger.error('Error updating message receipt', { error });
       throw new AppError('Error updating message receipt', 500, 'MESSAGE_RECEIPT_UPDATE_FAILED');
+    }
+  }
+
+  public async markMessageAsDelivered(message_id: string, user_id: string): Promise<message_receipts | null> {
+    try {
+      // First check if receipt exists with 'sent' state
+      const existingReceipt = await this.prisma.message_receipts.findUnique({
+        where: {
+          message_id_user_id: { message_id, user_id },
+        },
+      });
+
+      // If not found or state is not 'sent', return null
+      if (!existingReceipt) {
+        logger.warn('Message receipt not found with sent state', { message_id, user_id });
+        throw new AppError('Message receipt not found with sent state', 404, 'MESSAGE_RECEIPT_NOT_FOUND');
+      }
+
+      if (existingReceipt.state !== 'sent') {
+        logger.warn('Message not sent', { message_id, user_id });
+        throw new AppError('Message not sent', 400, 'MESSAGE_NOT_SENT');
+      }
+
+      // Update to 'delivered' state
+      const updatedMessageReceipt = await this.prisma.message_receipts.update({
+        where: {
+          message_id_user_id: { message_id, user_id },
+        },
+        data: {
+          state: 'delivered',
+        },
+      });
+      return updatedMessageReceipt;
+    } catch (error) {
+      logger.error('Error marking message as delivered', { error });
+      throw new AppError('Error marking message as delivered', 500, 'MESSAGE_RECEIPT_MARK_AS_DELIVERED_FAILED');
+    }
+  }
+
+  public async markMessageAsRead(message_id: string, user_id: string): Promise<message_receipts | null> {
+    try {
+      // First check if receipt exists with 'delivered' state (preferred)
+      let existingReceipt = await this.prisma.message_receipts.findUnique({
+        where: {
+          message_id_user_id: { message_id, user_id },
+        },
+      });
+
+      // If not found with 'delivered', check for 'sent' state
+      if (!existingReceipt) {
+        logger.warn('Message receipt not found with delivered state', { message_id, user_id });
+        throw new AppError('Message receipt not found with delivered state', 404, 'MESSAGE_RECEIPT_NOT_FOUND');
+      }
+
+      const updatedMessageReceipt = await this.prisma.message_receipts.update({
+        where: {
+          message_id_user_id: { message_id, user_id },
+        },
+        data: {
+          state: 'read',
+        },
+      });
+      return updatedMessageReceipt;
+    } catch (error) {
+      logger.error('Error marking message as read', { error });
+      throw new AppError('Error marking message as read', 500, 'MESSAGE_RECEIPT_MARK_AS_READ_FAILED');
     }
   }
 

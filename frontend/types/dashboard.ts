@@ -1,4 +1,4 @@
-import { Message, MessageKind } from "./message";
+import { Message, MessageKind, MessageInfo } from "./message";
 import { User } from "./user";
 
 export type DashboardResponse = {
@@ -185,4 +185,7 @@ export interface DashboardContextType {
     /* -------- Error handling -------- */
     dashboardError: string;
     setDashboardError: React.Dispatch<React.SetStateAction<string>>;
+    
+    /* -------- Message receipt helpers -------- */
+    markMessageAsPendingRead: (messageId: string) => void;
 }

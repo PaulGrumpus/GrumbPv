@@ -7,6 +7,7 @@ import {
   users as User,
   notification_entity,
   notification_type,
+  job_status,
 } from '@prisma/client';
 import { jobService } from './job.service.js';
 import { jobMilestoneService } from './job.milestone.service.js';
@@ -135,6 +136,9 @@ export class JobApplicationService {
         });
         if (milestone.token_symbol !== 'BNB') {
           throw new AppError('Only BNB is supported for now', 400, 'ONLY_BNB_SUPPORTED');
+        }
+        if (jobInfo.status === job_status.open) {
+          await jobService.updateJobStatusById(updateResult.job_id, job_status.in_progress);
         }
         escrow = await factoryService.createEscrow({
           job_milestone_id: milestone.id,

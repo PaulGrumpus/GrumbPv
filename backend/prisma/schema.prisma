@@ -214,7 +214,7 @@ model message_receipts {
   message    messages   @relation(fields: [message_id], references: [id], onDelete: Cascade)
   user       users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  @@unique([message_id, user_id, state])
+  @@unique([message_id, user_id])
   @@map("message_receipts")
 }
 
