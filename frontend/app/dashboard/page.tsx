@@ -86,10 +86,6 @@ const DashboardPageContent = () => {
     const [myGigsCount, setMyGigsCount] = useState(0);
     const [myJobsCount, setMyJobsCount] = useState(0);
 
-    // const { gigsInfo } = useProjectInfo();
-    // const { jobsInfo } = useProjectInfo();
-    // const { bidsInfo } = useProjectInfo();
-
     const { jobsInfo, gigsInfo, bidsInfo } = useDashboard();
 
     useEffect(() => {
@@ -145,62 +141,6 @@ const DashboardPageContent = () => {
         params.set("view", slug);
         router.replace(`/dashboard?${params.toString()}`, { scroll: false });
     };
-
-    const getMyGigsCount = async () => {
-        try {
-            const result = await getGigsByFreelancerId(userInfo.id);
-            if(result.success) {
-                setMyGigsCount(result.data?.length ?? 0);
-            }
-        } catch (error) {
-            toast.error(error as string, {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-            });
-        }
-    }
-
-    const getMyBidsCount = async () => {
-        try {
-            const result = await getBidsByFreelancerId(userInfo.id);
-            if(result.success) {
-                setMyBidsCount(result.data?.length ?? 0);
-            }
-        }
-        catch (error) {
-            toast.error(error as string, {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-            });
-        }
-    }
-
-    const getMyJobsCount = async () => {
-        try {
-            const result = await getJobsByClientId(userInfo.id);
-            if(result.success) {
-                setMyJobsCount(result.data?.length ?? 0);
-            }
-        }
-        catch (error) {
-            toast.error(error as string, {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-            });
-        }
-    }
 
     useEffect(() => {
         if(userLoadingState === "success") {

@@ -246,7 +246,7 @@ const Navbar = () => {
                                                 className="h-full w-full rounded-full object-cover"
                                             />
                                         </div>
-                                        <p className="text-logo font-poppins font-bold text-black">Grumpus</p>
+                                        <p className="text-logo font-poppins font-bold text-black">GrumBuild</p>
                                     </div>
                                     {userRole === "freelancer" ? (  
                                         <div className="flex gap-8 text-normal font-regular text-black">    
@@ -354,7 +354,7 @@ const Navbar = () => {
                                         <div
                                             className="h-11 w-28 animate-pulse flex items-center justify-left text-xl font-semibold uppercase tracking-wide text-gray-400"
                                         >
-                                            Grumpus
+                                            GrumBuild
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
@@ -489,7 +489,7 @@ const Navbar = () => {
                                         className="h-full w-full object-cover"
                                     />
                                 </div>
-                                <p className="text-logo font-poppins font-bold text-black">Grumpus</p>
+                                <p className="text-logo font-poppins font-bold text-black">GrumBuild</p>
                             </div>
                         </div>
 

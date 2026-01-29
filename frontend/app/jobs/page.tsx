@@ -73,7 +73,7 @@ const JobsPage = () => {
             <div className="lg:px-16 px-4 bg-white lg:pt-46 pt-22">
                 <div className="container mx-auto">
                     <p className="lg:text-display text-title lg:text-left text-center font-bold text-black pb-6">Jobs</p>
-                    <p className="text-normal font-regular text-black pb-20">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.</p>
+                    <p className="text-normal font-regular text-black pb-20">Discover high-quality projects waiting for the right expertise. Browse and Apply Now.</p>
                     <div className="grid lg:grid-cols-2 grid-cols-1 gap-8 pb-28">  
                         {jobs.map((job) => (
                             <PubJobOrGigPost 

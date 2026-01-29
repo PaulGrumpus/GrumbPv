@@ -153,7 +153,7 @@ const baseTemplate = (content: string, data: EmailTemplateData): string => {
 };
 
 export const getEmailTemplate = (
-  template: 'notification' | 'welcome' | 'job_update' | 'application_update',
+  template: 'notification' | 'welcome' | 'job_update' | 'application_update' | 'contact',
   data: EmailTemplateData
 ): string => {
   switch (template) {
@@ -165,6 +165,8 @@ export const getEmailTemplate = (
       return getJobUpdateTemplate(data);
     case 'application_update':
       return getApplicationUpdateTemplate(data);
+    case 'contact':
+      return getContactTemplate(data);
     default:
       return getNotificationTemplate(data);
   }
@@ -258,5 +260,23 @@ const getApplicationUpdateTemplate = (data: EmailTemplateData): string => {
     }
   `;
   return baseTemplate(content, data);
+};
+
+const getContactTemplate = (data: EmailTemplateData): string => {
+  const content = `
+    <h2>New Contact Form Submission</h2>
+    <p>You have received a new contact form submission from your website.</p>
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0;">
+      ${data.name ? `<p><strong>Name:</strong> ${data.name}</p>` : ''}
+      ${data.email ? `<p><strong>Email:</strong> <a href="mailto:${data.email}">${data.email}</a></p>` : ''}
+      ${data.inquiry ? `<p><strong>Inquiry:</strong></p><p style="white-space: pre-wrap; margin-top: 10px;">${data.inquiry}</p>` : ''}
+    </div>
+    <p style="margin-top: 20px;">You can reply directly to this email to respond to the inquiry.</p>
+  `;
+  return baseTemplate(content, {
+    ...data,
+    title: 'New Contact Form Submission',
+    footerText: 'This is an automated notification from your contact form.',
+  });
 };
 

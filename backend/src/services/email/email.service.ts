@@ -5,7 +5,7 @@ import { getEmailTemplate } from './email.templates.js';
 export interface EmailOptions {
   to: string;
   subject: string;
-  template: 'notification' | 'welcome' | 'job_update' | 'application_update';
+  template: 'notification' | 'welcome' | 'job_update' | 'application_update' | 'contact';
   data: {
     title?: string;
     body?: string;
@@ -13,6 +13,9 @@ export interface EmailOptions {
     actionUrl?: string;
     actionText?: string;
     footerText?: string;
+    name?: string;
+    email?: string;
+    enquiry?: string;
     [key: string]: any;
   };
 }
@@ -153,6 +156,24 @@ export class EmailService {
         body,
         actionUrl,
         actionText: actionText || 'View Details',
+      },
+    });
+  }
+
+  public async sendContactEmail(
+    to: string,
+    name: string,
+    email: string,
+    inquiry: string
+  ): Promise<void> {
+    await this.sendEmail({
+      to,
+      subject: `New Contact Form Submission from ${name}`,
+      template: 'contact',
+      data: {
+        name,
+        email,
+        inquiry,
       },
     });
   }
