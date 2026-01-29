@@ -8,6 +8,9 @@ export interface EmailTemplateData {
   [key: string]: any;
 }
 
+import { config } from 'dotenv';
+config();
+
 const baseStyles = `
   <style>
     * {

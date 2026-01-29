@@ -2,7 +2,8 @@ import { emailService } from '../services/email/email.service.js';
 import { userService } from '../services/database/user.service.js';
 import { logger } from './logger.js';
 import { notification_type, notification_entity } from '@prisma/client';
-
+import { config } from 'dotenv';
+config();
 /**
  * Helper function to send email notifications
  * This function fetches the user's email and sends a notification email
