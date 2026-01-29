@@ -151,8 +151,7 @@ const DashboardOverview = () => {
             <div>
                 <h1 className="lg:text-display text-title lg:text-left text-center font-bold text-black pb-6">Dashboard</h1>
                 <p className="text-normal font-regular text-black pb-20">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in
-                    eros elementum tristique.
+                    Overview of Job statuses
                 </p>
                 <div className="flex flex-col gap-20">
                     <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">

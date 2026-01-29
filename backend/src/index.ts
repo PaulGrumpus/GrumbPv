@@ -28,6 +28,7 @@ import messageRoutes from './routes/chat/message.routes.js';
 import messageReceiptRoutes from './routes/chat/message.receipt.routes.js';
 import notificationRoutes from './routes/database/notification.routes.js';
 import dashboardRoutes from './routes/database/dashboard.routes.js';
+import contactRoutes from './routes/contact.routes.js';
 import http from 'http';
 import { Server } from 'socket.io';
 import { socket_router } from './routes/socket.routes.js';
@@ -90,6 +91,7 @@ app.use(`${API_PREFIX}/database/messages`, messageRoutes);
 app.use(`${API_PREFIX}/database/message-receipts`, messageReceiptRoutes);
 app.use(`${API_PREFIX}/database/notifications`, notificationRoutes);
 app.use(`${API_PREFIX}/database/dashboard`, dashboardRoutes);
+app.use(`${API_PREFIX}/contact`, contactRoutes);
 
 // Error handlers (must be last)
 app.use(notFoundHandler);
