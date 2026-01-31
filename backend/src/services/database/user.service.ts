@@ -269,7 +269,6 @@ export class UserService {
 
   public async resetPassword(email: string): Promise<boolean> {
     try {
-      logger.info('reset password email', email);
       if (!email) {
         throw new AppError('Email is required', 400, 'EMAIL_REQUIRED');
       }
@@ -286,7 +285,7 @@ export class UserService {
         data: {
           name: user.display_name as string,
           body: 'A password reset request has been sent to your email address. Please click the link to reset your password.',
-          actionUrl: `${process.env.FRONTEND_URL}/reset-password?id=${user.id}`,
+          actionUrl: `${process.env.FRONTEND_URL}/resetPassword?id=${user.id}`,
           actionText: 'Reset Password',
         },
       });

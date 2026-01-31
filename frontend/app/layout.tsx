@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Roboto, Poppins, Inter } from "next/font/google";
 import "./globals.css";
-import FooterToggle from "@/components/footerToggle";
-import Navbar from "@/components/navbar";
-import { ToastContainer } from "react-toastify";
+import ConditionalShell from "@/components/ConditionalShell";
 import "react-toastify/dist/ReactToastify.css";
 
 import { UserInfoProvider } from "@/context/userContext";
@@ -83,10 +81,7 @@ export default function RootLayout({
                               <MessagesInfoProvider>
                                 <NotificationLoadingProvider>
                                   <NotificationProvider> */}
-                                    <Navbar />
-                                    {children}
-                                    <FooterToggle />
-                                    <ToastContainer />
+                                    <ConditionalShell>{children}</ConditionalShell>
                                   {/* </NotificationProvider>
                                 </NotificationLoadingProvider>
                               </MessagesInfoProvider>
