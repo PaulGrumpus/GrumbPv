@@ -13,6 +13,7 @@ import Loading from "@/components/loading";
 import { toast } from "react-toastify";
 import { getJobs } from "@/utils/functions";
 import { EscrowBackendConfig } from "@/config/config";
+import Input from "@/components/Input";
 
 const JobsPage = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -22,6 +23,7 @@ const JobsPage = () => {
     // const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
     const [loading, setLoading] = useState("pending");
     const [jobs, setJobs] = useState<Job[]>([]);
+    const [search, setSearch] = useState("");
     
     useEffect(() => {
         let mounted = true;
@@ -68,14 +70,41 @@ const JobsPage = () => {
         return <Loading />;
     }
     
+    const normalizedSearch = search.trim().toLowerCase();
+    const filteredJobs = normalizedSearch
+        ? jobs.filter((job) => {
+            const haystack = [
+                job.title,
+                job.description_md,
+                ...(job.tags ?? []),
+            ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+            return haystack.includes(normalizedSearch);
+        })
+        : jobs;
+
     return (
         <div>
             <div className="lg:px-16 px-4 bg-white lg:pt-46 pt-22">
                 <div className="container mx-auto">
                     <p className="lg:text-display text-title lg:text-left text-center font-bold text-black pb-6">Jobs</p>
                     <p className="text-normal font-regular text-black pb-20">Discover high-quality projects waiting for the right expertise. Browse and Apply Now.</p>
+                    {filteredJobs.length > 0 && (
+                        <div className="flex items-center gap-2 pb-20 justify-end">
+                            <Input 
+                                type="text" 
+                                placeholder="Search" 
+                                wrapperClassName="text-black" 
+                                value={search} 
+                                onChange={(e) => setSearch(e.target.value)} 
+                            />
+                        </div>
+                    )}
                     <div className="grid lg:grid-cols-2 grid-cols-1 gap-8 pb-28">  
-                        {jobs.map((job) => (
+                        {filteredJobs.map((job) => (
                             <PubJobOrGigPost 
                                 key={job.id} 
                                 description={job.description_md} 

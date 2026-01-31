@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
 import { useDashboard } from "@/context/dashboardContext";
 import { useRouter } from "next/navigation";
+import Input from "@/components/Input";
 
 const GigsPage = () => {
 
@@ -22,6 +23,8 @@ const GigsPage = () => {
     const { userInfo } = useContext(UserInfoCtx);
     const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
     const { setConversationsInfo } = useDashboard();
+
+    const [search, setSearch] = useState("");
 
     const router = useRouter();
     
@@ -107,14 +110,42 @@ const GigsPage = () => {
         }
     }
 
+    const normalizedSearch = search.trim().toLowerCase();
+    const filteredGigs = normalizedSearch
+        ? gigs.filter((gig) => {
+            const haystack = [
+                gig.title,
+                gig.description_md,
+                ...(gig.tags ?? []),
+            ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+            return haystack.includes(normalizedSearch);
+        })
+        : gigs;
+
     return (
         <div>
             <div className="lg:px-16 px-4 bg-white lg:pt-46 pt-22">
                 <div className="container mx-auto">
                     <p className="lg:text-display text-title lg:text-left text-center font-bold text-black pb-6">Gigs</p>
                     <p className="text-normal font-regular text-black pb-20">Discover skilled talent, ready to deliver your next job.</p>
+                   
+                    {filteredGigs.length > 0 && (
+                        <div className="flex items-center gap-2 pb-20 justify-end">
+                        <Input 
+                            type="text" 
+                            placeholder="Search" 
+                            wrapperClassName="text-black" 
+                            value={search} 
+                                onChange={(e) => setSearch(e.target.value)} 
+                        />
+                        </div>
+                    )}
                     <div className="grid lg:grid-cols-2 grid-cols-1 gap-8 pb-28">  
-                        {gigs.map((gig) => (
+                        {filteredGigs.map((gig) => (
                             <PubJobOrGigPost 
                                 key={gig.id} 
                                 description={gig.description_md} 
