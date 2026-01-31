@@ -7,10 +7,11 @@ import Image from "next/image";
 import { useContext, useEffect, useState } from "react";
 import { CONFIG } from "@/config/config";
 import { toast } from "react-toastify";
-import { createUserWithAddress, createUserWithEmail, loginWithAddress, loginWithEmail } from "@/utils/functions";
+import { createUserWithAddress, createUserWithEmail, loginWithAddress, loginWithEmail, resetPassword } from "@/utils/functions";
 import { UserInfoCtx } from "@/context/userContext";
 import { useRouter } from "next/navigation";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
+import Input from "./Input";
 
 interface LoginSignupModalProps {
     isOpen: boolean;
@@ -149,6 +150,10 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     const { setUserInfo } = useContext(UserInfoCtx);
     const { setuserLoadingState } = useContext(UserLoadingCtx);
     const [error, setError] = useState("");
+    const [isForgotPassword, setIsForgotPassword] = useState(false);
+    const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+    const [forgotPasswordAlert, setForgotPasswordAlert] = useState("");
+    const [forgotPasswordError, setForgotPasswordError] = useState("");
 
     useEffect(() => {
         if (typeof window === "undefined") {
@@ -272,8 +277,32 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
         };
     }, []);
 
+    const handleForgotPassword = () => {
+        
+        setIsForgotPassword(true);
+    }
+
+    const handleResetPassword = async () => {
+        setForgotPasswordError("");
+        setForgotPasswordAlert("");
+        if(!forgotPasswordEmail){
+            setForgotPasswordError("Email is required");
+            return;
+        }
+        const response = await resetPassword(forgotPasswordEmail);
+        if(!response.success) {
+            setForgotPasswordError("Invalid email");
+            return;
+        }
+        setForgotPasswordAlert("A password reset email has been sent to your email address.");
+    }
+
     const handleClose = () => {
         setError("");
+        setIsForgotPassword(false);
+        setForgotPasswordEmail("");
+        setForgotPasswordAlert("");
+        setForgotPasswordError("");
         setIsOpen(false);
         setEmail("");
         setPassword("");
@@ -606,7 +635,32 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
             loginModal={true}
             children={
                 <div>
-                    {registerProcessing ? (
+                    {isForgotPassword ? (
+                        <div className="flex flex-col gap-5 mt-15">
+                            <p className="text-normal font-regular font-inter text-black">Forgot password?</p>
+                            <Input 
+                                type="email" 
+                                placeholder="Enter your email" 
+                                value={forgotPasswordEmail} 
+                                onChange={(e) => setForgotPasswordEmail(e.target.value)} 
+                                wrapperClassName="w-full"
+                            />
+                            {forgotPasswordError && (
+                                <div className="text-small font-regular text-red-500 text-left">
+                                    {forgotPasswordError}
+                                </div>
+                            )}
+                            {forgotPasswordAlert && (
+                                <div className="text-small font-regular text-green-500 text-left">
+                                    {forgotPasswordAlert}
+                                </div>
+                            )}
+                            <div className="flex justify-end">
+                                <Button variant="primary" padding="px-4 py-2" onClick={handleResetPassword}>Reset password</Button>
+                            </div>
+                        </div>
+                    ) 
+                    : registerProcessing ? (
                         <div className="flex flex-col gap-8">
                             <h1 className="text-center text-[2.375rem] leading-[2.85rem] font-regular text-black font-inter">Join as a client or freelancer</h1>
                             <div className="flex gap-6 px-3 py-15.25">
@@ -837,8 +891,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                             {isRegistered && (
                                 <p 
                                     className="text-normal font-regular font-inter text-[#7E3FF2] text-center cursor-pointer"
-                                    onClick={() => {
-                                    }}
+                                    onClick={handleForgotPassword}
                                 >Forgot the password?</p>
                             )}
                             {error && (

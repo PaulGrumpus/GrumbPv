@@ -125,6 +125,13 @@ router.post(
   userController.createUserWithEmail.bind(userController)
 );
 
+router.post(
+  '/reset-password',
+  [body('email').isEmail().notEmpty()],
+  validate([body('email')]),
+  userController.resetPassword.bind(userController)
+);
+
 /**
  * @openapi
  * /api/v1/database/users/{id}:
@@ -256,6 +263,13 @@ router.get(
   [param('id').isString().notEmpty()],
   validate([param('id')]),
   userController.getUserById.bind(userController)
+);
+
+router.post(
+  '/by-id/:id/password',
+  [param('id').isString().notEmpty(), body('password').isString().notEmpty()],
+  validate([param('id'), body('password')]),
+  userController.updateUserPassword.bind(userController)
 );
 
 /**

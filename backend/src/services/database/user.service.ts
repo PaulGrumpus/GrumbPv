@@ -9,6 +9,7 @@ import {
   type UploadedImage,
 } from '../../utils/imageStorage.js';
 import { prisma } from '../../prisma.js';
+import { emailService } from '../email/email.service.js';
 
 const PASSWORD_SALT_ROUNDS = Number(process.env.PASSWORD_SALT_ROUNDS || 10);
 
@@ -96,6 +97,7 @@ export class UserService {
     uploadedImage?: UploadedImage
   ): Promise<string> {
     try {
+      logger.info('update user id', id);
       if (!id) {
         throw new AppError('User ID is required', 400, 'USER_ID_REQUIRED');
       }
@@ -262,6 +264,67 @@ export class UserService {
       }
       logger.error('Error getting user by email', { error });
       throw new AppError('Error getting user by email', 500, 'DB_USER_GET_BY_EMAIL_FAILED');
+    }
+  }
+
+  public async resetPassword(email: string): Promise<boolean> {
+    try {
+      logger.info('reset password email', email);
+      if (!email) {
+        throw new AppError('Email is required', 400, 'EMAIL_REQUIRED');
+      }
+      const user = await this.prisma.users.findFirst({
+        where: { email },
+      });
+      if (!user) {
+        throw new AppError('Invalid email', 400, 'INVALID_EMAIL');
+      }
+      await emailService.sendEmail({
+        to: user.email as string,
+        subject: 'Password Reset Request',
+        template: 'notification',
+        data: {
+          name: user.display_name as string,
+          body: 'A password reset request has been sent to your email address. Please click the link to reset your password.',
+          actionUrl: `${process.env.FRONTEND_URL}/reset-password?id=${user.id}`,
+          actionText: 'Reset Password',
+        },
+      });
+      return true;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      logger.error('Error resetting password', { error });
+      throw new AppError('Error resetting password', 500, 'DB_USER_RESET_PASSWORD_FAILED');
+    }
+  }
+
+  public async updateUserPassword(id: string, password: string): Promise<boolean> {
+    logger.info('update user password id', id);
+    try {
+      if (!id || !password) {
+        throw new AppError('User ID and password are required', 400, 'USER_ID_PASSWORD_REQUIRED');
+      }
+      const user = await this.prisma.users.findUnique({
+        where: { id },
+      });
+      if (!user) {
+        throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+      }
+      const hashedPassword = await this.hashPasswordIfPresent(password);
+      await this.prisma.users.update({
+        where: { id },
+        data: { password: hashedPassword },
+      });
+      return true;
+    }
+    catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      logger.error('Error updating user password', { error });
+      throw new AppError('Error updating user password', 500, 'DB_USER_PASSWORD_UPDATE_FAILED');
     }
   }
 
