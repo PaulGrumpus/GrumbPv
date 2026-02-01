@@ -121,7 +121,7 @@ export class JobApplicationService {
           title: `Agreement - ${jobInfo.title}`,
           amount:
             updateResult.budget ??
-            (Number(jobInfo.budget_min_usd) + Number(jobInfo.budget_max_usd)) / 2,
+            (Number(jobInfo.budget_min) + Number(jobInfo.budget_max)) / 2,
           due_at: new Date(updateResult.end_date ?? new Date(jobInfo.deadline_at ?? new Date())),
           freelancer_id: updateResult.freelancer_id,
           token_symbol: updateResult.token_symbol ?? jobInfo.token_symbol ?? 'BNB',

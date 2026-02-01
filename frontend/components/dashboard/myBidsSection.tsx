@@ -120,8 +120,8 @@ const MyBidsSection = () => {
                                 job_title={bid.job.title}
                                 job_location={bid.job.location}
                                 job_tags={bid.job.tags}
-                                job_max_budget={Number(bid.job.budget_max_usd)}
-                                job_min_budget={Number(bid.job.budget_min_usd)}
+                                job_max_budget={Number(bid.job.budget_max)}
+                                job_min_budget={Number(bid.job.budget_min)}
                                 job_deadline={bid.job.deadline_at ?? ""}
                                 bid_cover_letter={bid.cover_letter_md ?? ""}
                                 bid_amount={Number(bid.bid_amount)}

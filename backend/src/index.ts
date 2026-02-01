@@ -37,6 +37,11 @@ import { notification_socket_route } from './routes/notification.socket.route.js
 // Load environment variables
 config();
 
+// Keep server running on unhandled promise rejections (log instead of crash)
+process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
+  logger.error('Unhandled Rejection at:', { promise, reason });
+});
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 const API_PREFIX = process.env.API_PREFIX || '/api/v1';

@@ -71,8 +71,8 @@ const ChatPageContent = () => {
             setJobTitle(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.title ?? "");
             setJobTokenSymbol(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.token_symbol ?? "");
             setJobDescription(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.description_md ?? "");
-            setJobMaxBudget(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.budget_max_usd ?? "");
-            setJobMinBudget(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.budget_min_usd ?? "");
+            setJobMaxBudget(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.budget_max ?? "");
+            setJobMinBudget(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.budget_min ?? "");
             setJobDeadlineAt(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.deadline_at ?? "");        
         } else {
             const Id = conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id ?? "": "";
@@ -80,8 +80,8 @@ const ChatPageContent = () => {
             setJobTitle(bidsInfo.find(bid => bid.job.id === Id)?.job.title ?? "");
             setJobTokenSymbol(bidsInfo.find(bid => bid.job.id === Id)?.job.token_symbol ?? "");
             setJobDescription(bidsInfo.find(bid => bid.job.id === Id)?.job.description_md ?? "");
-            setJobMaxBudget(bidsInfo.find(bid => bid.job.id === Id)?.job.budget_max_usd ?? "");
-            setJobMinBudget(bidsInfo.find(bid => bid.job.id === Id)?.job.budget_min_usd ?? "");
+            setJobMaxBudget(bidsInfo.find(bid => bid.job.id === Id)?.job.budget_max ?? "");
+            setJobMinBudget(bidsInfo.find(bid => bid.job.id === Id)?.job.budget_min ?? "");
             setJobDeadlineAt(bidsInfo.find(bid => bid.job.id === Id)?.job.deadline_at ?? "");
         }
 

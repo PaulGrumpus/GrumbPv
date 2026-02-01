@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect, useState } from "react";
+import { Suspense, useContext, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
 import Loading from "@/components/loading";
@@ -16,7 +16,7 @@ import { updateUserPassword } from "@/utils/functions";
 import { toast } from "react-toastify";
 import router from "next/router";
 
-const ResetPassword = () => {
+const ResetPasswordContent = () => {
   const { userLoadingState } = useContext(UserLoadingCtx);
   const [loading, setLoading] = useState("pending");
   const { address, chainId, provider, isConnecting, isConnected, connect, disconnect, sendTransaction } = useWallet();
@@ -149,5 +149,11 @@ const ResetPassword = () => {
     return <Loading />;
   }
 };
+
+const ResetPassword = () => (
+  <Suspense fallback={<Loading />}>
+    <ResetPasswordContent />
+  </Suspense>
+);
 
 export default ResetPassword;
