@@ -3,8 +3,8 @@ export interface Gig {
     freelancer_id: string
     title: string
     description_md: string
-    budget_min_usd?: number
-    budget_max_usd?: number
+    budget_min?: number
+    budget_max?: number
     token_symbol?: string
     tags?: string[]
     link?: string

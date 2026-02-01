@@ -406,9 +406,18 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
                                                         <option value='' disabled>
                                                             Select one ...
                                                         </option>
-                                                        {currencies.map((currency) => (
-                                                            <option key={currency} value={currency} className='text-normal font-regular text-black bg-white py-2 px-3'>
-                                                                {currency}
+                                                        {currencies.map((curr) => (
+                                                            <option 
+                                                                key={curr} 
+                                                                value={curr} 
+                                                                className={`text-normal cursor-pointer bg-white py-2 px-3 ${
+                                                                    curr === "BNB" 
+                                                                        ? 'font-bold text-black' 
+                                                                        : 'font-regular text-gray-400'
+                                                                }`}
+                                                                disabled={curr !== "BNB"}
+                                                            >
+                                                                {curr}
                                                             </option>
                                                         ))}
                                                     </select>

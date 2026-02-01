@@ -19,8 +19,8 @@ export type DashboardJob = {
     tags: string[];
     image_id: string | null;
     deadline_at: string | null;
-    budget_min_usd: string | null;
-    budget_max_usd: string | null;
+    budget_min: string | null;
+    budget_max: string | null;
     token_symbol: string | null;
     is_remote: boolean;
     // client only
@@ -54,8 +54,8 @@ export type DashboardBid = {
         id: string;
         title: string;
         location: string;
-        budget_min_usd: string | null;
-        budget_max_usd: string | null;
+        budget_min: string | null;
+        budget_max: string | null;
         deadline_at: string | null;
         description_md: string;
         tags: string[];
@@ -114,8 +114,8 @@ export type DashboardGig = {
     id: string;
     title: string;
     description_md: string;
-    budget_min_usd: string | null;
-    budget_max_usd: string | null;
+    budget_min: string | null;
+    budget_max: string | null;
     token_symbol: string | null;
     tags: string[];
     image_id: string | null;

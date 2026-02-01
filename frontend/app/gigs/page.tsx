@@ -151,8 +151,8 @@ const GigsPage = () => {
                                 description={gig.description_md} 
                                 title={gig.title} 
                                 tags={gig.tags ?? []} 
-                                minBudget={gig.budget_min_usd ?? 0} 
-                                maxBudget={gig.budget_max_usd ?? 0} 
+                                minBudget={gig.budget_min ?? 0} 
+                                maxBudget={gig.budget_max ?? 0} 
                                 image={gig.image_id ? EscrowBackendConfig.uploadedImagesURL + gig.image_id : undefined}
                                 currency={gig.token_symbol ?? "USD"} 
                                 createdAt={gig.created_at ? new Date(gig.created_at).getTime() / 1000 : 0}

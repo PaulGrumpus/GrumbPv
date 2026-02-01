@@ -35,8 +35,8 @@ export class GigService {
         );
       }
 
-      const budgetMin = this.toNumber(gig.budget_min_usd);
-      const budgetMax = this.toNumber(gig.budget_max_usd);
+      const budgetMin = this.toNumber(gig.budget_min);
+      const budgetMax = this.toNumber(gig.budget_max);
 
       if (budgetMin !== null && budgetMin <= 0) {
         throw new AppError(
@@ -128,8 +128,8 @@ export class GigService {
           'TITLE_DESCRIPTION_FREELANCER_ID_REQUIRED'
         );
       }
-      const budgetMin = this.toNumber(gig.budget_min_usd);
-      const budgetMax = this.toNumber(gig.budget_max_usd);
+      const budgetMin = this.toNumber(gig.budget_min);
+      const budgetMax = this.toNumber(gig.budget_max);
 
       if (budgetMin !== null && budgetMin <= 0) {
         throw new AppError(
@@ -309,8 +309,8 @@ export class GigService {
     const allowedKeys: Array<keyof Prisma.gigsUncheckedUpdateInput> = [
       'title',
       'description_md',
-      'budget_min_usd',
-      'budget_max_usd',
+      'budget_min',
+      'budget_max',
       'token_symbol',
       'tags',
       'link',

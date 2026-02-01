@@ -758,9 +758,20 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                             <div className="text-black flex flex-wrap justify-between gap-6">
                                 <div className="flex flex-col max-w-180 w-full gap-6">
                                     <p className="lg:text-subtitle text-large font-bold text-black">{title}</p>
-                                    <p className="text-normal font-regular text-black">
-                                        {description}
-                                    </p>
+                                    <div className={`overflow-hidden transition-[max-height] duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}>
+                                        <p className="text-normal font-regular text-black" ref={descriptionRef}>
+                                            {description}
+                                        </p>
+                                    </div>
+                                    {canToggle && (
+                                        <button
+                                            type="button"
+                                            className="mt-3 text-left text-small font-regular text-gray-500 cursor-pointer"
+                                            onClick={() => setExpanded((prev) => !prev)}
+                                        >
+                                            {expanded ? "show less" : "show more"}
+                                        </button>
+                                    )}
                                     <div className="relative mt-2 h-3.5 min-w-[280px]">
                                         <div className="absolute inset-0 rounded-full bg-[#e8e8f0]" />
                                         {STATUSES.slice(1).map((_, index) => {
@@ -951,7 +962,7 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                             <div className="text-black flex flex-col justify-between gap-6">
                                 <div className="flex flex-col gap-6">
                                     <p className="lg:text-subtitle text-large font-bold text-black">{title}</p>
-                                    <div className={`${expanded ? "max-h-none" : "max-h-42"}`}>
+                                    <div className={`overflow-hidden transition-[max-height] duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}>
                                         <p className="text-normal font-regular text-black" ref={descriptionRef}>
                                             {description}
                                         </p>
@@ -959,7 +970,7 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                                     {canToggle && (
                                         <button
                                             type="button"
-                                            className="mt-3 text-small font-regular text-gray-500 cursor-pointer"
+                                            className="mt-3 text-left text-small font-regular text-gray-500 cursor-pointer"
                                             onClick={() => setExpanded((prev) => !prev)}
                                         >
                                             {expanded ? "show less" : "show more"}

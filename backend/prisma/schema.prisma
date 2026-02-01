@@ -42,8 +42,8 @@ model jobs {
   client_id           String                  @db.Uuid
   title               String
   description_md      String
-  budget_min_usd      Decimal?                @db.Decimal(18, 8)
-  budget_max_usd      Decimal?                @db.Decimal(18, 8)
+  budget_min          Decimal?                @db.Decimal(18, 8)
+  budget_max          Decimal?                @db.Decimal(18, 8)
   token_symbol        String?
   deadline_at         DateTime?               @db.Timestamptz(6)
   status              job_status              @default(open)
@@ -68,8 +68,8 @@ model gigs {
   freelancer_id  String          @db.Uuid
   title          String
   description_md String
-  budget_min_usd Decimal?        @db.Decimal(18, 8)
-  budget_max_usd Decimal?        @db.Decimal(18, 8)
+  budget_min     Decimal?        @db.Decimal(18, 8)
+  budget_max     Decimal?        @db.Decimal(18, 8)
   token_symbol   String?
   tags           String[]
   image_id       String?

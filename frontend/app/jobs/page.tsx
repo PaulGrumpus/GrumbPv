@@ -111,8 +111,8 @@ const JobsPage = () => {
                                 title={job.title} 
                                 location={job.location ?? LocationType.REMOTE} 
                                 tags={job.tags ?? []} 
-                                minBudget={job.budget_min_usd ?? 0} 
-                                maxBudget={job.budget_max_usd ?? 0} 
+                                minBudget={job.budget_min ?? 0} 
+                                maxBudget={job.budget_max ?? 0} 
                                 image={job.image_id ? EscrowBackendConfig.uploadedImagesURL + job.image_id : undefined}
                                 currency={job.token_symbol ?? "USD"} 
                                 deadline={job.deadline_at ? new Date(job.deadline_at).getTime() / 1000 : undefined}

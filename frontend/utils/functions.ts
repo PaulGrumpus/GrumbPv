@@ -278,12 +278,14 @@ export const createJob = async (job: Job, imageFile?: File | null) => {
         const fieldsToSend: Array<keyof Job> = [
             'title',
             'description_md',
-            'budget_min_usd',
-            'budget_max_usd',
+            'budget_min',
+            'budget_max',
+            'token_symbol',
+            'tags',
             'location',
             'deadline_at',
-            'client_id',
             'status',
+            'client_id',
         ];
 
         fieldsToSend.forEach((field) => {
@@ -327,12 +329,13 @@ export const updateJob = async (job_id: string, job: Job, imageFile?: File | nul
         const fieldsToSend: Array<keyof Job> = [
             'title',
             'description_md',
-            'budget_min_usd',
-            'budget_max_usd',
+            'budget_min',
+            'budget_max',
+            'token_symbol',
             'location',
             'deadline_at',
-            'client_id',
             'status',
+            'client_id',
         ];
 
         fieldsToSend.forEach((field) => {
@@ -522,8 +525,9 @@ export const createGig = async (gig: Gig, imageFile?: File | null) => {
         const fieldsToSend: Array<keyof Gig> = [
             'title',
             'description_md',
-            'budget_min_usd',
-            'budget_max_usd',
+            'budget_min',
+            'budget_max',
+            'token_symbol',
             'tags',
             'link',
             'freelancer_id',
@@ -571,8 +575,9 @@ export const updateGig = async (gig_id: string, gig: Gig, imageFile?: File | nul
         const fieldsToSend: Array<keyof Gig> = [
             'title',
             'description_md',
-            'budget_min_usd',
-            'budget_max_usd',
+            'budget_min',
+            'budget_max',
+            'token_symbol',
             'tags',
             'link',
             'freelancer_id',
