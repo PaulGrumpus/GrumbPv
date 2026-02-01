@@ -119,51 +119,218 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
     const handlePrint = () => {
         const doc = new jsPDF("p", "pt", "a4");
         const pageWidth = doc.internal.pageSize.getWidth();
-        const margin = 40;
-        let cursorY = 50;
-        const usableWidth = pageWidth - margin * 2;
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 36; // Reduced margin for fuller text width
+        const topMargin = 50;
+        const bottomMargin = 70;
+        const usableWidth = pageWidth - margin * 2; // ~523pt usable width on A4
+        let cursorY = topMargin;
+        let currentPage = 1;
 
-        const addText = (text: string, fontSize = 12, color = "#000000") => {
+        // Consistent colors
+        const headerColor = "#2F3DF6";
+        const contentColor = "#000000"; // Same black color for ALL content text
+        const mutedColor = "#8F99AF";
+
+        const checkAndAddPage = (requiredHeight: number): boolean => {
+            if (cursorY + requiredHeight > pageHeight - bottomMargin) {
+                doc.addPage();
+                currentPage++;
+                cursorY = topMargin;
+                return true;
+            }
+            return false;
+        };
+
+        const addSectionHeader = (label: string) => {
+            checkAndAddPage(30);
+            doc.setFontSize(14);
+            doc.setTextColor(headerColor);
+            doc.setFont("helvetica", "bold");
+            doc.text(label, margin, cursorY);
+            cursorY += 20;
+        };
+
+        const addSectionContent = (content: string, fontSize = 11) => {
+            // Set font BEFORE calculating line splits (affects width calculation)
             doc.setFontSize(fontSize);
-            doc.setTextColor(color);
-            doc.text(text, margin, cursorY);
-            cursorY += fontSize + 6;
+            doc.setTextColor(contentColor);
+            doc.setFont("helvetica", "normal");
+            
+            const lines = doc.splitTextToSize(content || "N/A", usableWidth);
+            const lineHeight = fontSize + 4;
+            
+            for (let i = 0; i < lines.length; i++) {
+                checkAndAddPage(lineHeight);
+                // Reset text styling after page break (footer might change it)
+                doc.setFontSize(fontSize);
+                doc.setTextColor(contentColor);
+                doc.setFont("helvetica", "normal");
+                doc.text(lines[i], margin, cursorY);
+                cursorY += lineHeight;
+            }
+            cursorY += 15;
         };
 
         const addSection = (label: string, content: string) => {
-            addText(label, 14, "#2F3DF6");
-            const lines = doc.splitTextToSize(content || "N/A", usableWidth);
-            doc.setFontSize(11);
-            doc.setTextColor("#000000");
-            doc.text(lines, margin, cursorY);
-            cursorY += lines.length * 14 + 10;
-            if (cursorY > doc.internal.pageSize.getHeight() - 60) {
-                doc.addPage();
-                cursorY = 40;
-            }
+            addSectionHeader(label);
+            addSectionContent(content);
         };
 
-        doc.setFontSize(22);
-        doc.setTextColor("#2F3DF6");
+        const addKeyValuePair = (key: string, value: string) => {
+            checkAndAddPage(20);
+            // Set styling after potential page break
+            doc.setFontSize(11);
+            doc.setTextColor(contentColor);
+            doc.setFont("helvetica", "bold");
+            doc.text(`${key}: `, margin, cursorY);
+            const keyWidth = doc.getTextWidth(`${key}: `);
+            doc.setFont("helvetica", "normal");
+            doc.text(value || "N/A", margin + keyWidth, cursorY);
+            cursorY += 18;
+        };
+
+        // === HEADER SECTION ===
+        doc.setFontSize(24);
+        doc.setTextColor(headerColor);
+        doc.setFont("helvetica", "bold");
         const title = projectTitle || "Project Agreement";
         doc.text(title, pageWidth / 2, cursorY, { align: "center" });
+        cursorY += 15;
+
+        doc.setFontSize(11);
+        doc.setTextColor(mutedColor);
+        doc.setFont("helvetica", "normal");
+        doc.text("Project Agreement Document", pageWidth / 2, cursorY, { align: "center" });
         cursorY += 30;
 
-        doc.setFontSize(12);
-        doc.setTextColor("#000000");
-        doc.text(`Client: ${clientName || "N/A"}`, margin, cursorY);
-        doc.text(`Freelancer: ${freelancerName || "N/A"}`, pageWidth - margin - 160, cursorY);
-        cursorY += 24;
+        // Divider line
+        doc.setDrawColor(headerColor);
+        doc.setLineWidth(2);
+        doc.line(margin, cursorY, pageWidth - margin, cursorY);
+        cursorY += 25;
 
+        // === PARTIES INFO ===
+        doc.setFillColor("#F8F9FC");
+        doc.roundedRect(margin, cursorY - 5, usableWidth, 55, 5, 5, "F");
+        
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(contentColor);
+        doc.text("Client:", margin + 15, cursorY + 15);
+        doc.setFont("helvetica", "normal");
+        doc.text(clientName || "N/A", margin + 60, cursorY + 15);
+
+        doc.setFont("helvetica", "bold");
+        doc.text("Freelancer:", margin + 15, cursorY + 35);
+        doc.setFont("helvetica", "normal");
+        doc.text(freelancerName || "N/A", margin + 85, cursorY + 35);
+
+        cursorY += 70;
+
+        // === JOB ID SECTION ===
+        addSectionHeader("Job ID");
+        doc.setFontSize(11);
+        doc.setTextColor(contentColor);
+        doc.setFont("helvetica", "normal");
+        doc.text(jobId || "N/A", margin, cursorY);
+        cursorY += 25;
+
+        // === PROJECT DESCRIPTION ===
         addSection("Project Description", projectDescription);
+
+        // === DELIVERABLES ===
         addSection("Deliverables", deliverables);
+
+        // === OUT OF SCOPE ===
         addSection("Out of Scope", outOfScope);
-        addSection("Timeline", `${formatDisplayDate(startDate)} - ${formatDisplayDate(endDate)}`);
-        addSection("Budget", `${budget || "N/A"} ${currency || ""}`.trim());
-        addSection(
-            "Agreement Status",
-            `${freelancerConfirmed ? "✅ Freelancer confirmed" : "❌ Freelancer pending"}\n${clientConfirmed ? "✅ Client confirmed" : "❌ Client pending"}`
-        );
+
+        // === TIMELINE ===
+        addSectionHeader("Timeline");
+        addKeyValuePair("Start Date", formatDisplayDate(startDate));
+        addKeyValuePair("End Date", formatDisplayDate(endDate));
+        cursorY += 10;
+
+        // === BUDGET ===
+        addSectionHeader("Budget & Payment");
+        addKeyValuePair("Amount", `${budget || "N/A"} ${currency || ""}`);
+        cursorY += 10;
+
+        // === AGREEMENT STATUS ===
+        addSectionHeader("Agreement Status");
+        
+        checkAndAddPage(25);
+        doc.setFontSize(11);
+        const freelancerStatus = freelancerConfirmed ? "[CONFIRMED]" : "[PENDING]";
+        const freelancerStatusColor = freelancerConfirmed ? "#22C55E" : "#EAB308";
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(freelancerStatusColor);
+        doc.text(freelancerStatus, margin, cursorY);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(contentColor);
+        doc.text(` ${freelancerName} - Freelancer`, margin + doc.getTextWidth(freelancerStatus), cursorY);
+        cursorY += 20;
+
+        checkAndAddPage(25);
+        const clientStatus = clientConfirmed ? "[CONFIRMED]" : "[PENDING]";
+        const clientStatusColor = clientConfirmed ? "#22C55E" : "#EAB308";
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(clientStatusColor);
+        doc.text(clientStatus, margin, cursorY);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(contentColor);
+        doc.text(` ${clientName} - Client`, margin + doc.getTextWidth(clientStatus), cursorY);
+        cursorY += 30;
+
+        // === SIGNATURE SECTION ===
+        checkAndAddPage(100);
+        
+        const signatureBoxWidth = (usableWidth - 30) / 2;
+        const signatureY = cursorY + 20;
+        
+        doc.setDrawColor("#E5E7EB");
+        doc.setLineWidth(1);
+        
+        // Client signature box
+        doc.roundedRect(margin, signatureY, signatureBoxWidth, 60, 3, 3, "S");
+        doc.setFontSize(10);
+        doc.setTextColor(mutedColor);
+        doc.text("Client Signature", margin + 10, signatureY + 15);
+        doc.setFontSize(11);
+        doc.setTextColor(contentColor);
+        doc.text(clientName || "N/A", margin + 10, signatureY + 45);
+        if (clientConfirmed) {
+            doc.setTextColor("#22C55E");
+            doc.setFontSize(9);
+            doc.text("SIGNED", margin + signatureBoxWidth - 45, signatureY + 15);
+        }
+        
+        // Freelancer signature box
+        const freelancerBoxX = margin + signatureBoxWidth + 30;
+        doc.roundedRect(freelancerBoxX, signatureY, signatureBoxWidth, 60, 3, 3, "S");
+        doc.setFontSize(10);
+        doc.setTextColor(mutedColor);
+        doc.text("Freelancer Signature", freelancerBoxX + 10, signatureY + 15);
+        doc.setFontSize(11);
+        doc.setTextColor(contentColor);
+        doc.text(freelancerName || "N/A", freelancerBoxX + 10, signatureY + 45);
+        if (freelancerConfirmed) {
+            doc.setTextColor("#22C55E");
+            doc.setFontSize(9);
+            doc.text("SIGNED", freelancerBoxX + signatureBoxWidth - 45, signatureY + 15);
+        }
+
+        // Add footer to all pages with total page count
+        const totalPagesCount = doc.getNumberOfPages();
+        for (let i = 1; i <= totalPagesCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(10);
+            doc.setTextColor(mutedColor);
+            doc.text(`Page ${i} of ${totalPagesCount}`, pageWidth / 2, pageHeight - 30, { align: "center" });
+            doc.setDrawColor("#E5E7EB");
+            doc.setLineWidth(0.5);
+            doc.line(margin, pageHeight - 50, pageWidth - margin, pageHeight - 50);
+        }
 
         const safeTitle = projectTitle ? projectTitle.replace(/\s+/g, "-").toLowerCase() : "reference-document";
         doc.save(`${safeTitle}.pdf`);
@@ -539,6 +706,12 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                                 <div className="flex flex-col gap-2 p-3">
                                     <p className="text-normal font-bold text-black text-left">{clientName}</p>
                                     <p className="text-normal font-bold text-black text-left">{freelancerName}</p>
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <p className="text-normal font-medium text-[#7E3FF2] text-left">Job ID</p>
+                                <div className="flex flex-col gap-2 p-3 max-w-full">
+                                    <p className="text-normal font-regular text-black text-left">{jobId}</p>
                                 </div>
                             </div>
                             <div className="flex flex-col gap-2">

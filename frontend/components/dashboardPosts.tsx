@@ -5,7 +5,7 @@ import Image from "next/image";
 import { toast } from "react-toastify";
 import { CONFIG } from "@/config/config";
 import ModalTemplate from "./modalTemplate";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { JobMilestoneStatus } from "@/types/jobMilestone";
 import { approveWork, buyerJoinDispute, createChainTx, deliverWork, fundEscrow, initiateDispute, updateJobMilestone, venderPayDisputeFee, withdrawFunds } from "@/utils/functions";
 import { User } from "@/types/user";
@@ -36,6 +36,8 @@ interface DashboardPostsProps {
     clickHandler: () => void;
 }
 
+const COLLAPSED_MAX_HEIGHT = 120;
+
 const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneStatus, ipfs, variant, applicationDocId, clickHandler }: DashboardPostsProps) => {
     const totalSteps = STATUSES.length;
     const [isOpen, setIsOpen] = useState(false);
@@ -53,6 +55,19 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
         setMilestoneDelivered,
         resetMilestoneDelivery 
     } = useMilestoneDelivery();
+
+    const [canToggle, setCanToggle] = useState(false);
+    const [expanded, setExpanded] = useState(false);
+    const descriptionRef = useRef<HTMLParagraphElement>(null);
+
+    useEffect(() => {
+        const el = descriptionRef.current;
+        if (!el) {
+            return;
+        }
+
+        setCanToggle(el.scrollHeight > COLLAPSED_MAX_HEIGHT);
+    }, [description]);
 
     useEffect(() => {
         let nextStatus = 0;
@@ -936,9 +951,20 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                             <div className="text-black flex flex-col justify-between gap-6">
                                 <div className="flex flex-col gap-6">
                                     <p className="lg:text-subtitle text-large font-bold text-black">{title}</p>
-                                    <p className="text-normal font-regular text-black">
-                                        {description}
-                                    </p>
+                                    <div className={`${expanded ? "max-h-none" : "max-h-42"}`}>
+                                        <p className="text-normal font-regular text-black" ref={descriptionRef}>
+                                            {description}
+                                        </p>
+                                    </div>
+                                    {canToggle && (
+                                        <button
+                                            type="button"
+                                            className="mt-3 text-small font-regular text-gray-500 cursor-pointer"
+                                            onClick={() => setExpanded((prev) => !prev)}
+                                        >
+                                            {expanded ? "show less" : "show more"}
+                                        </button>
+                                    )}
                                 </div>
                                 {ipfs && user.role === "client" && (
                                     <div className='flex items-center border justify-between border-[#8F99AF] rounded-lg p-3 gap-3'>

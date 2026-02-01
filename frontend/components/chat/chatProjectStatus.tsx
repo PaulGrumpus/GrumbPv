@@ -721,7 +721,7 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
                                         <div className="flex flex-col gap-2.5 justify-center w-full">
                                             <Button padding="px-6 py-1.5" onClick={handleFundEscrow}>
                                                 <p className="text-normal font-regular text-[#FFFFFF]">
-                                                    Escrow Fund
+                                                    Fund Escrow
                                                 </p>
                                             </Button>
                                             <Button padding="px-6 py-1.5" onClick={handleCancelProject}>
@@ -761,7 +761,7 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
                                         <div className="flex flex-col items-center justify-center pb-7">
                                             <div className="flex items-center justify-center gap-3 pb-3">
                                                 <Link href={`${CONFIG.ipfsGateWay}/${ipfs}`} className="max-w-[15%] truncate">
-                                                    <p className="text-normal font-regular text-[#2F3DF6] text-left truncate">{CONFIG.ipfsGateWay}/{ipfs}</p>
+                                                    <p className="text-normal font-regular text-white text-left truncate">{CONFIG.ipfsGateWay}/{ipfs}</p>
                                                 </Link>
                                                 <Button
                                                     onClick={() => handleDownload(`${CONFIG.ipfsGateWay}/${ipfs}`)}
