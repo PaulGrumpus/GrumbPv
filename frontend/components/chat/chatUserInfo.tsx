@@ -18,6 +18,7 @@ const formatDate = (date: string) => {
 const formatSecondsToDuration = (totalSeconds: number): string => {
     if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return "N/A";
     const sec = Math.floor(totalSeconds);
+    if (sec < 60) return `${sec} sec${sec !== 1 ? "s" : ""}`;
     const days = Math.floor(sec / 86400);
     const hours = Math.floor((sec % 86400) / 3600);
     const mins = Math.floor((sec % 3600) / 60);
@@ -72,7 +73,7 @@ const ChatUserInfo = ({ user }: { user: User | null }) => {
                             <div className="flex py-2 px-2.5 flex-col gap-2">
                                 <p className="text-normal font-medium text-[#DEE4F2]">Finished Jobs: {user? user.finished_job_num : "No Finished Jobs"}</p>
                                 <p className="text-normal font-medium text-[#DEE4F2]">Total Spent: {user? Number(user.total_fund).toFixed(2) + " BNB" : "No total fund"}</p>
-                                <p className="text-normal font-medium text-[#DEE4F2]">Avg Fund Time: {user.fund_num && user.fund_cycle ? formatSecondsToDuration(user.fund_cycle / user.fund_num) : "N/A"}</p>
+                                <p className="text-normal font-medium text-[#DEE4F2]">Avg Fund Time: {user.fund_num && user.fund_cycle ? formatSecondsToDuration(Number(user.fund_cycle) / Number(user.fund_num)) : "N/A"}</p>
                             </div>
                         )}
                     </div>

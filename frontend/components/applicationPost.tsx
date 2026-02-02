@@ -247,7 +247,7 @@ const ApplicationPost = ({ item, job_id }: ApplicationPostProps) => {
                                     <p className="text-light-large font-regular text-black truncate">Email: {freelancer?.email}</p>
                                     <p className="text-light-large font-regular text-black truncate">Address: {freelancer?.address}</p>
                                     <p className="text-light-large font-regular text-black truncate">Finished Jobs: {freelancer?.finished_job_num}</p>
-                                    <p className="text-light-large font-regular text-black truncate">Total Fund: {freelancer?.total_fund}</p>
+                                    <p className="text-light-large font-regular text-black truncate">Total Earned: {Number(freelancer?.total_fund).toFixed(2) + " BNB"}</p>
                                 </div>
             
                                 <div

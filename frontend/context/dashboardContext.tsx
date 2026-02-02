@@ -198,6 +198,43 @@ export const DashboardProvider = ({ children }: Props) => {
                         return didUpdate ? nextJobs : prevJobs;
                     });
                 }
+                if(notification.type === NotificationType.milestoneFunded) {
+                    if(updatedMilestoneInfo.data.job_id) {
+                        const currentConversations = conversationsInfoRef.current;
+                        const conversationId = currentConversations.find(c => c.job_id === updatedMilestoneInfo.data.job_id)?.id;
+                        if(conversationId) {
+                            const newConversationInfo = await getConversationById(conversationId);
+                            if(newConversationInfo.success && newConversationInfo.data) {
+                                const fresh = newConversationInfo.data;
+                                setConversationsInfo((prev) =>
+                                    prev.map((conv) =>
+                                        conv.id !== conversationId
+                                            ? conv
+                                            : {
+                                                  ...conv,
+                                                  participants: conv.participants.map((p) => {
+                                                      const freshP = fresh.participants.find(
+                                                          (fp: { user: { id: string } }) => fp.user.id === p.user.id
+                                                      );
+                                                      if (!freshP) return p;
+                                                      return {
+                                                          ...p,
+                                                          user: {
+                                                              ...p.user,
+                                                              finished_job_num: freshP.user.finished_job_num,
+                                                              total_fund: freshP.user.total_fund,
+                                                              fund_num: freshP.user.fund_num,
+                                                              fund_cycle: freshP.user.fund_cycle,
+                                                          },
+                                                      };
+                                                  }),
+                                              }
+                                    )
+                                );
+                            }
+                        }
+                    }
+                }
                 if(notification.type === NotificationType.milestoneFundsReleased) {
                     if(userInfo.role === "client") {
                         const updatedFreelancerInfo = await getUserById(updatedMilestoneInfo.data.freelancer_id);
@@ -236,7 +273,32 @@ export const DashboardProvider = ({ children }: Props) => {
                         if(conversationId) {
                             const newConversationInfo = await getConversationById(conversationId);
                             if(newConversationInfo.success && newConversationInfo.data) {
-                                upsertConversationInfo(newConversationInfo.data);
+                                const fresh = newConversationInfo.data;
+                                setConversationsInfo((prev) =>
+                                    prev.map((conv) =>
+                                        conv.id !== conversationId
+                                            ? conv
+                                            : {
+                                                  ...conv,
+                                                  participants: conv.participants.map((p) => {
+                                                      const freshP = fresh.participants.find(
+                                                          (fp: { user: { id: string } }) => fp.user.id === p.user.id
+                                                      );
+                                                      if (!freshP) return p;
+                                                      return {
+                                                          ...p,
+                                                          user: {
+                                                              ...p.user,
+                                                              finished_job_num: freshP.user.finished_job_num,
+                                                              total_fund: freshP.user.total_fund,
+                                                              fund_num: freshP.user.fund_num,
+                                                              fund_cycle: freshP.user.fund_cycle,
+                                                          },
+                                                      };
+                                                  }),
+                                              }
+                                    )
+                                );
                             }
                         }
                     }

@@ -179,11 +179,16 @@ export class JobMilestoneService {
           );
         }
       }
+      const now = new Date();
+      if(jobMilestone.status === milestone_status.funded) {
+        const fundCycle = (now.getTime() - existingJobMilestone.created_at.getTime()) / 1000;
+        await userService.updateClientFundTime(existingJob.client_id, fundCycle);
+      }
       const updatedJobMilestone = await this.prisma.job_milestones.update({
         where: { id },
         data: {
           ...jobMilestone,
-          updated_at: new Date(),
+          updated_at: now,
         },
       });
       await notificationService.createNotification({

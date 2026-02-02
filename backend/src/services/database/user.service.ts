@@ -381,6 +381,33 @@ export class UserService {
     }
   }
 
+  public async updateClientFundTime(id: string, fund_cycle: number): Promise<boolean> {
+    try {
+      if (!id || !fund_cycle) {
+        throw new AppError('User ID and fund cycle are required', 400, 'USER_ID_FUND_CYCLE_REQUIRED');
+      }
+      const user = await this.prisma.users.findFirst({
+        where: { id },
+      });
+      if (!user) {
+        throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+      }
+      const newFundCycle = user.fund_cycle ? Number(user.fund_cycle) + fund_cycle : fund_cycle;
+      await this.prisma.users.update({
+        where: { id },
+        data: { fund_cycle: newFundCycle, fund_num: user.fund_num ? Number(user.fund_num) + 1 : 1 },
+      });
+      return true;
+    }
+    catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      logger.error('Error updating client fund time', { error });
+      throw new AppError('Error updating client fund time', 500, 'DB_CLIENT_FUND_TIME_UPDATE_FAILED');
+    }
+  }
+
   private async hashPasswordIfPresent(password?: string | null): Promise<string | undefined> {
     if (!password) {
       return undefined;
