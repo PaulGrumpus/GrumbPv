@@ -216,7 +216,6 @@ export class FactoryService {
         escrowAddress,
         tx.hash,
         'success',
-        MEDIATOR_ID
       );
 
       return {

@@ -18,20 +18,15 @@ export class ChainTxsService {
     to_address: string,
     tx_hash: string,
     status: string,
-    user_id: string
+    user_id?: string
   ): Promise<chain_txs> {
     try {
-      if (!tx_hash || !from_address || !to_address || !user_id || !job_milestone_id) {
+      if (!tx_hash || !from_address || !to_address || !job_milestone_id) {
         throw new AppError(
-          'Tx hash, from address, to address, user id, and job milestone id are required',
+          'Tx hash, from address, to address, and job milestone id are required',
           400,
-          'TX_HASH_FROM_ADDRESS_TO_ADDRESS_USER_ID_JOB_MILESTONE_ID_REQUIRED'
+          'TX_HASH_FROM_ADDRESS_TO_ADDRESS_JOB_MILESTONE_ID_REQUIRED'
         );
-      }
-
-      const validUserId = await userService.getUserById(user_id);
-      if (!validUserId) {
-        throw new AppError('User not found', 404, 'USER_NOT_FOUND');
       }
 
       const existingChainTx = await this.prisma.chain_txs.findUnique({
@@ -60,7 +55,7 @@ export class ChainTxsService {
           to_address,
           tx_hash,
           status,
-          user_id,
+          user_id: user_id ?? null,
         },
       })
 

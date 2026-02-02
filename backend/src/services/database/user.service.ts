@@ -361,6 +361,26 @@ export class UserService {
     }
   }
 
+  public async updateUserFunds(id: string, total_fund: number, finished_job_num: number): Promise<boolean> {
+    try {
+      if (!id || !total_fund || !finished_job_num) {
+        throw new AppError('User ID, total fund and finished job number are required', 400, 'USER_ID_TOTAL_FUND_FINISHED_JOB_NUM_REQUIRED');
+      }
+      await this.prisma.users.update({
+        where: { id },
+        data: { total_fund, finished_job_num },
+      });
+      return true;
+    }
+    catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      logger.error('Error updating user funds', { error });
+      throw new AppError('Error updating user funds', 500, 'DB_USER_FUNDS_UPDATE_FAILED');
+    }
+  }
+
   private async hashPasswordIfPresent(password?: string | null): Promise<string | undefined> {
     if (!password) {
       return undefined;

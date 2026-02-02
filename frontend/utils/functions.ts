@@ -69,6 +69,22 @@ export const createUserWithEmail = async (email: string, password: string, role:
     }
 }
 
+export const updateUserFunds = async (user_id: string, total_fund: number, finished_job_num: number) => {
+    try {
+        const response = await EscrowBackend.post(`/database/users/by-id/${user_id}/funds`, { total_fund, finished_job_num });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 export const updateUser = async (user: User, imageFile?: File | null) => {
     try {
         const formData = new FormData();
@@ -97,7 +113,7 @@ export const updateUser = async (user: User, imageFile?: File | null) => {
                 return;
             }
 
-            formData.append(field, value);
+            formData.append(field, value.toString());
         });
 
         if (imageFile) {

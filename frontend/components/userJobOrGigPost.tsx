@@ -43,6 +43,8 @@ type freelancer = {
     email: string;
     address: string;
     image_id: string;
+    finished_job_num: number;
+    total_fund: number;
 }
 
 interface ApplicationItem {

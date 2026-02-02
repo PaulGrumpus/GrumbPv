@@ -217,6 +217,10 @@ const Navbar = () => {
             bio: '',
             country_code: '',
             is_verified: false,
+            finished_job_num: 0,
+            total_fund: 0,
+            fund_cycle: 0,
+            fund_num: 0,
             image_id: '',
             created_at: '',
             updated_at: ''
@@ -574,7 +578,11 @@ const DropdownMenu = forwardRef<HTMLDivElement>((_, ref) => {
             is_verified: false,
             image_id: '',
             created_at: '',
-            updated_at: ''
+            updated_at: '',
+            finished_job_num: 0,
+            total_fund: 0,
+            fund_cycle: 0,
+            fund_num: 0,
         });
         setuserLoadingState("pending");        
         router.push('/');

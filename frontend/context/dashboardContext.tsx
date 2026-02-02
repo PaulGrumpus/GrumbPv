@@ -20,7 +20,7 @@ import {
 
 import { UserLoadingCtx } from "./userLoadingContext";
 import { DashboardLoadingCtx } from "./dashboardLoadingContext";
-import { getBidById, getConversationById, getDashboardDataByUserId, getGigById, getJobApplicationById, getJobBidForClientById, getJobById, getJobMilestoneByEscrowAddress, getJobMilestoneById } from "@/utils/functions";
+import { getBidById, getConversationById, getDashboardDataByUserId, getGigById, getJobApplicationById, getJobBidForClientById, getJobById, getJobMilestoneByEscrowAddress, getJobMilestoneById, getUserById } from "@/utils/functions";
 import { UserInfoCtx } from "./userContext";
 import useSocket from "@/service/socket";
 import { NotificationEntity, NotificationType } from "@/types/notification";
@@ -69,6 +69,8 @@ export const DashboardProvider = ({ children }: Props) => {
 
     const notificationSocket = useSocket();
     const pendingReadReceipts = useRef<Set<string>>(new Set());
+    const conversationsInfoRef = useRef<DashboardConversation[]>(conversationsInfo);
+    conversationsInfoRef.current = conversationsInfo;
   
     const init = async () => {
         if (userLoadingState === "success") {
@@ -146,6 +148,20 @@ export const DashboardProvider = ({ children }: Props) => {
             }
         };
 
+        const upsertConversationInfo = (conversation: DashboardConversation) => {
+            setConversationsInfo((prev) => {
+                const existingIndex = prev.findIndex(
+                    (conversationInfo) => conversationInfo.id === conversation.id
+                );
+                if (existingIndex === -1) {
+                    return [...prev, conversation];
+                }
+                const next = [...prev];
+                next[existingIndex] = conversation;
+                return next;
+            });
+        };
+
         const handleNotification = async (notification: DashboardNotification) => {
             setNotificationsInfo((prev) => [...prev, notification]);
 
@@ -181,6 +197,49 @@ export const DashboardProvider = ({ children }: Props) => {
                     
                         return didUpdate ? nextJobs : prevJobs;
                     });
+                }
+                if(notification.type === NotificationType.milestoneFundsReleased) {
+                    if(userInfo.role === "client") {
+                        const updatedFreelancerInfo = await getUserById(updatedMilestoneInfo.data.freelancer_id);
+                        if (updatedFreelancerInfo.success && updatedFreelancerInfo.data) {
+                            const user = updatedFreelancerInfo.data;
+                            const updatedFreelancer = {
+                                id: user.id,
+                                display_name: user.display_name ?? null,
+                                email: user.email,
+                                address: user.address,
+                                image_id: user.image_id,
+                                finished_job_num: user.finished_job_num,
+                                total_fund: user.total_fund,
+                            };
+                            setJobsInfo(prevJobs => {
+                                let didUpdate = false;
+                                const nextJobs = prevJobs.map(job => {
+                                    const bids = job.bids ?? [];
+                                    const hasBidFromFreelancer = bids.some(b => b.freelancer?.id === user.id);
+                                    if (!hasBidFromFreelancer) return job;
+                                    didUpdate = true;
+                                    const nextBids = bids.map(b =>
+                                        b.freelancer?.id === user.id
+                                            ? { ...b, freelancer: { ...b.freelancer, ...updatedFreelancer } }
+                                            : b
+                                    );
+                                    return { ...job, bids: nextBids };
+                                });
+                                return didUpdate ? nextJobs : prevJobs;
+                            });
+                        }
+                    }
+                    if(updatedMilestoneInfo.data.job_id) {
+                        const currentConversations = conversationsInfoRef.current;
+                        const conversationId = currentConversations.find(c => c.job_id === updatedMilestoneInfo.data.job_id)?.id;
+                        if(conversationId) {
+                            const newConversationInfo = await getConversationById(conversationId);
+                            if(newConversationInfo.success && newConversationInfo.data) {
+                                upsertConversationInfo(newConversationInfo.data);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -288,21 +347,7 @@ export const DashboardProvider = ({ children }: Props) => {
                         })
                     );
                 }
-            }
-
-            const upsertConversationInfo = (conversation: DashboardConversation) => {
-                setConversationsInfo((prev) => {
-                    const existingIndex = prev.findIndex(
-                        (conversationInfo) => conversationInfo.id === conversation.id
-                    );
-                    if (existingIndex === -1) {
-                        return [...prev, conversation];
-                    }
-                    const next = [...prev];
-                    next[existingIndex] = conversation;
-                    return next;
-                });
-            };
+            }            
 
             if (notification.entity_type === NotificationEntity.conversation) {
                 if (

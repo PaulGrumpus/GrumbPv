@@ -5,7 +5,7 @@ import Link from "next/link";
 import { User } from "@/types/user";
 import Image from "next/image";
 import { toast } from "react-toastify";
-import { fundEscrow, deliverWork, approveWork, updateJobMilestone, withdrawFunds, initiateDispute, buyerJoinDispute, venderPayDisputeFee, createChainTx, updateJobStatusById } from "@/utils/functions";
+import { fundEscrow, deliverWork, approveWork, updateJobMilestone, withdrawFunds, initiateDispute, buyerJoinDispute, venderPayDisputeFee, createChainTx, updateJobStatusById, getJobApplicationById, updateUser, updateUserFunds } from "@/utils/functions";
 import { useWallet } from "@/context/walletContext";
 import { CONFIG } from "@/config/config";
 import ModalTemplate from "../modalTemplate";
@@ -473,6 +473,9 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
             });
             return;
         }
+        const jobApplicationDocInfo = await getJobApplicationById(jobApplicationDocId);
+        await updateUserFunds(jobApplicationDocInfo.data.freelancer_info.id, Number(jobApplicationDocInfo.data.freelancer_info.total_fund) + Number(jobApplicationDocInfo.data.job_application_info.budget), Number(jobApplicationDocInfo.data.freelancer_info.finished_job_num) + 1);
+        await updateUserFunds(jobApplicationDocInfo.data.client_info.id, Number(jobApplicationDocInfo.data.client_info.total_fund) + Number(jobApplicationDocInfo.data.job_application_info.budget), Number(jobApplicationDocInfo.data.client_info.finished_job_num) + 1);
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.RELEASED });
         if (updatedJobMilestone.success) {
             if (updatedJobMilestone.data) {

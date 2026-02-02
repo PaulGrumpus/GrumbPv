@@ -88,7 +88,7 @@ const ChatPageContent = () => {
         const userName = conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.participants[0].user.role === "client" ? conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.participants[0].user.display_name ?? "" : conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.participants[1].user.display_name ?? "";
 
         setClientName(userName);
-    }, [selectedConversationId])
+    }, [selectedConversationId, conversationsInfo])
 
 
     const sentReceiptIds = useRef<Set<string>>(new Set());

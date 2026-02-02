@@ -129,6 +129,23 @@ export class UserController {
     }
   }
 
+  async updateUserFunds(req: Request, res: Response, next: NextFunction) {
+
+    try {
+      const { id } = req.params;
+      const { total_fund, finished_job_num } = req.body;
+      const result = await userService.updateUserFunds(id, total_fund, finished_job_num);
+      res.json({
+        success: true,
+        data: result,
+        message: 'User funds updated successfully',
+      });
+    }
+    catch (error) {
+      next(error);
+    }
+  }
+
   async resetPassword(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.body;

@@ -22,6 +22,8 @@ type freelancer = {
     email: string;
     address: string;
     image_id: string;
+    finished_job_num: number;
+    total_fund: number;
 }
 
 interface ApplicationItem {
@@ -244,6 +246,8 @@ const ApplicationPost = ({ item, job_id }: ApplicationPostProps) => {
                                     <h1 className="text-normal font-bold text-black truncate">Name: {freelancer?.display_name}</h1>
                                     <p className="text-light-large font-regular text-black truncate">Email: {freelancer?.email}</p>
                                     <p className="text-light-large font-regular text-black truncate">Address: {freelancer?.address}</p>
+                                    <p className="text-light-large font-regular text-black truncate">Finished Jobs: {freelancer?.finished_job_num}</p>
+                                    <p className="text-light-large font-regular text-black truncate">Total Fund: {freelancer?.total_fund}</p>
                                 </div>
             
                                 <div

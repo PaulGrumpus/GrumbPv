@@ -239,6 +239,8 @@ export class JobBidService {
                   email: true,
                   address: true,
                   image_id: true,
+                  finished_job_num: true,
+                  total_fund: true,
                 },
               },
             }
@@ -277,6 +279,8 @@ export class JobBidService {
               chain: true,
               image_id: true,
               country_code: true,
+              finished_job_num: true,
+              total_fund: true,
             },
           },
         },

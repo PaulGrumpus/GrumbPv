@@ -101,6 +101,8 @@ export type DashboardFreelancer = {
     email?: string;
     address?: string;
     image_id?: string;
+    finished_job_num: number;
+    total_fund: number;
 };
   
 export type DashboardClient = {
@@ -108,6 +110,10 @@ export type DashboardClient = {
     display_name: string | null;
     email?: string;
     image_id?: string;
+    finished_job_num: number;
+    total_fund: number;
+    fund_cycle?: number;
+    fund_num?: number;
 };
 
 export type DashboardGig = {

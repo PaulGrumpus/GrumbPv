@@ -40,6 +40,8 @@ class DashboardService {
                         email: true,
                         address: true,
                         image_id: true,
+                        finished_job_num: true,
+                        total_fund: true,
                       },
                     },
                   },
@@ -105,7 +107,11 @@ class DashboardService {
                   id: true,
                   display_name: true,
                   image_id: true,
-                  email: true
+                  email: true,
+                  finished_job_num: true,
+                  total_fund: true,
+                  fund_cycle: true,
+                  fund_num: true,
                 }
               },
           
@@ -144,7 +150,8 @@ class DashboardService {
                   client_confirm: true,
                   freelancer_confirm: true,
                   job_milestone_id: true,
-                  client_id: true
+                  client_id: true,
+                  freelancer_id: true,
                 }
               }
             }

@@ -21,6 +21,10 @@ model users {
   address                 String?                     @unique
   chain                   chain_type                  @default(evm)
   image_id                String                      @default("default.jpg")
+  finished_job_num        Decimal                     @default(0)
+  total_fund              Decimal                     @default(0)
+  fund_cycle              Decimal?
+  fund_num                Decimal?             
   audits                  audit_log[]                 @relation("ActorAudits")
   chain_txs               chain_txs[]
   conversations           conversation_participants[]
