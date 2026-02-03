@@ -433,6 +433,10 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                 image_id: response.data?.image_id || '',
                 created_at: response.data?.created_at || '',
                 updated_at: response.data?.updated_at || '',
+                finished_job_num: response.data?.finished_job_num || 0,
+                total_fund: response.data?.total_fund || 0,
+                fund_cycle: response.data?.fund_cycle || 0,
+                fund_num: response.data?.fund_num || 0,
             });
         }
         setIsOpen(false);
@@ -565,6 +569,10 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                     image_id: response.data?.image_id || '',
                     created_at: response.data?.created_at || '',
                     updated_at: response.data?.updated_at || '',
+                    finished_job_num: response.data?.finished_job_num || 0,
+                    total_fund: response.data?.total_fund || 0,
+                    fund_cycle: response.data?.fund_cycle || 0,
+                    fund_num: response.data?.fund_num || 0,
                 });
             }
         }
@@ -600,6 +608,10 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                     image_id: response.data?.image_id || '',
                     created_at: response.data?.created_at || '',
                     updated_at: response.data?.updated_at || '',
+                    finished_job_num: response.data?.finished_job_num || 0,
+                    total_fund: response.data?.total_fund || 0,
+                    fund_cycle: response.data?.fund_cycle || 0,
+                    fund_num: response.data?.fund_num || 0,
                 });
             }
         }

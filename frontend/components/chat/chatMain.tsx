@@ -40,8 +40,27 @@ function parseMessageBody(bodyText: string | undefined): { type: 'image' | 'file
     return { type: 'text', caption: trimmed || undefined };
 }
 
+// Extensions aligned with backend fileUpload (videos, images, docs, sounds)
+const VIDEO_EXTENSIONS = /\.(mp4|webm|ogg|mov|avi|wmv)$/i;
+const IMAGE_EXTENSIONS = /\.(jpg|jpeg|png|gif|webp|svg)$/i;
+const AUDIO_EXTENSIONS = /\.(mp3|wav|aac|m4a|ogg|webm)$/i;
+const TEXT_EXTENSIONS = /\.(txt|md|json|csv|log|xml|html|htm|ts|tsx|js|jsx|yml|yaml|env|ini|cfg|conf)$/i;
+
+function getFilePreviewType(filename: string): 'video' | 'audio' | 'image' | 'pdf' | 'text' | 'unsupported' {
+    const lower = filename.toLowerCase();
+    if (lower.endsWith('.pdf')) return 'pdf';
+    if (IMAGE_EXTENSIONS.test(lower)) return 'image';
+    if (VIDEO_EXTENSIONS.test(lower)) return 'video';
+    if (AUDIO_EXTENSIONS.test(lower)) return 'audio';
+    if (TEXT_EXTENSIONS.test(lower)) return 'text';
+    return 'unsupported';
+}
+
 function MessageBubbleContent({ bodyText, bubbleClass }: { bodyText: string | undefined; bubbleClass: string }) {
     const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+    const [fileViewer, setFileViewer] = useState<{ url: string; filename: string } | null>(null);
+    const [textContent, setTextContent] = useState<string | null>(null);
+    const [textLoadError, setTextLoadError] = useState(false);
     const parsed = parseMessageBody(bodyText);
 
     useEffect(() => {
@@ -52,6 +71,30 @@ function MessageBubbleContent({ bodyText, bubbleClass }: { bodyText: string | un
         window.addEventListener('keydown', onEscape);
         return () => window.removeEventListener('keydown', onEscape);
     }, [lightboxUrl]);
+
+    useEffect(() => {
+        if (!fileViewer) return;
+        const onEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setFileViewer(null);
+        };
+        window.addEventListener('keydown', onEscape);
+        return () => window.removeEventListener('keydown', onEscape);
+    }, [fileViewer]);
+
+    useEffect(() => {
+        if (!fileViewer) {
+            setTextContent(null);
+            setTextLoadError(false);
+            return;
+        }
+        if (getFilePreviewType(fileViewer.filename) !== 'text') return;
+        setTextContent(null);
+        setTextLoadError(false);
+        fetch(fileViewer.url)
+            .then((res) => (res.ok ? res.text() : Promise.reject(new Error('Failed to load'))))
+            .then(setTextContent)
+            .catch(() => setTextLoadError(true));
+    }, [fileViewer?.url, fileViewer?.filename]);
 
     if (parsed.type === 'image' && parsed.url) {
         return (
@@ -72,14 +115,28 @@ function MessageBubbleContent({ bodyText, bubbleClass }: { bodyText: string | un
                         aria-modal="true"
                         aria-label="Image preview"
                     >
-                        <button
-                            type="button"
-                            onClick={() => setLightboxUrl(null)}
-                            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
-                            aria-label="Close"
-                        >
-                            <XMarkIcon className="w-6 h-6" />
-                        </button>
+                        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+                            <a
+                                href={lightboxUrl}
+                                download
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                                aria-label="Download image"
+                                title="Download"
+                            >
+                                <ArrowDownTrayIcon className="w-6 h-6" />
+                            </a>
+                            <button
+                                type="button"
+                                onClick={() => setLightboxUrl(null)}
+                                className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                                aria-label="Close"
+                            >
+                                <XMarkIcon className="w-6 h-6" />
+                            </button>
+                        </div>
                         <img
                             src={lightboxUrl}
                             alt="Preview"
@@ -93,6 +150,7 @@ function MessageBubbleContent({ bodyText, bubbleClass }: { bodyText: string | un
     }
     if (parsed.type === 'file' && parsed.url) {
         const displayName = parsed.originalFilename || 'Download';
+
         return (
             <div className={`${bubbleClass} flex items-center gap-3`}>
                 <DocumentIcon className="w-8 h-8 shrink-0 text-white/90" />
@@ -108,17 +166,158 @@ function MessageBubbleContent({ bodyText, bubbleClass }: { bodyText: string | un
                         >
                             <ArrowDownTrayIcon className="w-4 h-4" />
                         </a>
-                        <a
-                            href={parsed.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm font-medium text-white underline hover:text-white/90 truncate max-w-full"
-                            title={displayName}
+                        <button
+                            type="button"
+                            onClick={() => setFileViewer({ url: parsed.url!, filename: displayName })}
+                            className="text-sm font-medium text-white underline hover:text-white/90 truncate max-w-full text-left"
+                            title={`View ${displayName}`}
                         >
                             <span className="truncate">{displayName}</span>
-                        </a>
+                        </button>
                     </div>
                 </div>
+                {fileViewer && fileViewer.url === parsed.url && (
+                    <div
+                        className="fixed inset-0 z-9999 flex flex-col bg-black/90 p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="File preview"
+                        onClick={() => setFileViewer(null)}
+                    >
+                        <div
+                            className="flex flex-1 flex-col min-h-0"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                        <div className="flex items-center justify-between shrink-0 py-2 border-b border-white/20">
+                            <span className="text-sm font-medium text-white truncate max-w-[70%]" title={fileViewer.filename}>
+                                {fileViewer.filename}
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <a
+                                    href={fileViewer.url}
+                                    download={fileViewer.filename}
+                                    rel="noopener noreferrer"
+                                    className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                                    title="Download"
+                                >
+                                    <ArrowDownTrayIcon className="w-5 h-5" />
+                                </a>
+                                <a
+                                    href={fileViewer.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-white/90 hover:text-white underline"
+                                >
+                                    Open in new tab
+                                </a>
+                                <button
+                                    type="button"
+                                    onClick={() => setFileViewer(null)}
+                                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                                    aria-label="Close"
+                                >
+                                    <XMarkIcon className="w-6 h-6" />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex-1 min-h-0 mt-4 rounded-lg overflow-hidden bg-[#1E293B] flex items-center justify-center">
+                            {getFilePreviewType(fileViewer.filename) === 'pdf' && (
+                                <iframe
+                                    src={fileViewer.url}
+                                    title={fileViewer.filename}
+                                    className="w-full h-full min-h-[60vh] border-0"
+                                />
+                            )}
+                            {getFilePreviewType(fileViewer.filename) === 'image' && (
+                                <div className="w-full h-full min-h-[60vh] flex items-center justify-center p-4">
+                                    <img
+                                        src={fileViewer.url}
+                                        alt={fileViewer.filename}
+                                        className="max-w-full max-h-full object-contain rounded-lg"
+                                    />
+                                </div>
+                            )}
+                            {getFilePreviewType(fileViewer.filename) === 'video' && (
+                                <div className="w-full h-full min-h-[60vh] flex items-center justify-center p-4">
+                                    <video
+                                        src={fileViewer.url}
+                                        controls
+                                        className="max-w-full max-h-full rounded-lg"
+                                        title={fileViewer.filename}
+                                    >
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                            )}
+                            {getFilePreviewType(fileViewer.filename) === 'audio' && (
+                                <div className="w-full min-h-[60vh] flex flex-col items-center justify-center gap-4 p-8">
+                                    <DocumentIcon className="w-20 h-20 text-white/50" />
+                                    <p className="text-sm text-white/80 truncate max-w-full" title={fileViewer.filename}>
+                                        {fileViewer.filename}
+                                    </p>
+                                    <audio
+                                        src={fileViewer.url}
+                                        controls
+                                        className="w-full max-w-md"
+                                        title={fileViewer.filename}
+                                    >
+                                        Your browser does not support the audio tag.
+                                    </audio>
+                                </div>
+                            )}
+                            {getFilePreviewType(fileViewer.filename) === 'text' && (
+                                <div className="w-full h-full min-h-[60vh] overflow-auto p-4">
+                                    {textContent === null && !textLoadError && (
+                                        <p className="text-white/70">Loading...</p>
+                                    )}
+                                    {textLoadError && (
+                                        <div className="space-y-2">
+                                            <p className="text-amber-400">Could not load content (e.g. CORS or network).</p>
+                                            <a
+                                                href={fileViewer.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-sm text-white underline"
+                                            >
+                                                Open in new tab
+                                            </a>
+                                        </div>
+                                    )}
+                                    {textContent !== null && (
+                                        <pre className="text-sm text-[#E5E7EB] whitespace-pre-wrap font-sans wrap-break-word">
+                                            {textContent}
+                                        </pre>
+                                    )}
+                                </div>
+                            )}
+                            {getFilePreviewType(fileViewer.filename) === 'unsupported' && (
+                                <div className="flex flex-col items-center justify-center gap-4 p-8 min-h-[40vh] text-white/80">
+                                    <DocumentIcon className="w-16 h-16 text-white/50" />
+                                    <p>Preview not available for this file type.</p>
+                                    <div className="flex gap-3">
+                                        <a
+                                            href={fileViewer.url}
+                                            download={fileViewer.filename}
+                                            rel="noopener noreferrer"
+                                            className="px-4 py-2 rounded-lg bg-[#7E3FF2] hover:bg-[#6E35E0] text-white transition-colors"
+                                        >
+                                            Download
+                                        </a>
+                                        <a
+                                            href={fileViewer.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-4 py-2 rounded-lg border border-white/30 hover:bg-white/10 transition-colors"
+                                        >
+                                            Open in new tab
+                                        </a>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
@@ -753,7 +952,7 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                                                 className="cursor-pointer"
                                             />
                                         </button>
-                                        <button className="hover:scale-90 transition-transform duration-150">
+                                        {/* <button className="hover:scale-90 transition-transform duration-150">
                                             <Image 
                                                 src="/Grmps/face-smile.svg"
                                                 alt="Smile"
@@ -761,7 +960,7 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                                                 height={24}
                                                 className="cursor-pointer"
                                             />
-                                        </button>
+                                        </button> */}
                                         <button
                                             type="submit"
                                             className="p-2.5 cursor-pointer bg-[#7E3FF2] rounded-lg hover:bg-[#6E35E0] transition-colors duration-150 hover:scale-90"                                    
