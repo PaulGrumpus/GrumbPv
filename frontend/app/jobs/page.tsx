@@ -103,7 +103,7 @@ const JobsPage = () => {
                             />
                         </div>
                     )}
-                    <div className="grid lg:grid-cols-2 grid-cols-1 gap-8 pb-28">  
+                    <div className="grid lg:grid-cols-2 grid-cols-1 gap-8 pb-28 items-start">  
                         {filteredJobs.map((job) => (
                             <PubJobOrGigPost 
                                 key={job.id} 

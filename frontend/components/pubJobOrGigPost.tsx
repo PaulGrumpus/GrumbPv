@@ -19,12 +19,13 @@ interface pubJobOrGigPostProps {
     createdAt: number;   
     image?: string;
     label: string;
+    link?: string;
     clickHandler: () => void;
 }
 
 const COLLAPSED_MAX_HEIGHT = 120;
 
-const PubJobOrGigPost = ({ description, title, location, tags, minBudget, maxBudget, currency, deadline, clickHandler, image, label }: pubJobOrGigPostProps) => {
+const PubJobOrGigPost = ({ description, title, location, tags, minBudget, maxBudget, currency, deadline, clickHandler, image, label, link }: pubJobOrGigPostProps) => {
     const [expanded, setExpanded] = useState(false);
     const [canToggle, setCanToggle] = useState(false);
     const descriptionRef = useRef<HTMLParagraphElement>(null);
@@ -46,9 +47,15 @@ const PubJobOrGigPost = ({ description, title, location, tags, minBudget, maxBud
                         <div className="flex flex-col lg:max-w-[75%] max-w-[60%]">
                             <h1 className="text-subtitle font-bold text-black">{title}</h1>
                             <div className="flex flex-col">
-                                <p className="text-light-large font-regular text-black">Location: {location === LocationType.REMOTE ? "Remote" : location === LocationType.ON_SITE ? "On Site" : "Hybrid"}</p>
+                                {/* <p className="text-light-large font-regular text-black">Location: {location === LocationType.REMOTE ? "Remote" : location === LocationType.ON_SITE ? "On Site" : "Hybrid"}</p> */}
                                 <p className="text-light-large font-regular text-black">Budget: {minBudget} - {maxBudget}{currency}</p>
                                 <p className="text-light-large font-regular text-black">Due Date: {formatDueDate(deadline)}</p>
+                                {link && (
+                                    <p className="text-light-large font-regular text-black">Link: {link}</p>
+                                )}
+                                {!link && (
+                                    <div className="h-6"></div>
+                                )}
                             </div>
                         </div>
                         <div className="fit-content">
@@ -62,20 +69,18 @@ const PubJobOrGigPost = ({ description, title, location, tags, minBudget, maxBud
                         </div>
                     </div>
 
-                    {image && (
-                        <div className="py-6">
-                            <Image 
-                                src={image || ""}
-                                alt="job image"
-                                width={1000}
-                                height={500}
-                                className="rounded-lg h-100 w-full object-cover"
-                            />
-                        </div>
-                    )}
+                    <div className="py-6">
+                        <Image 
+                            src={image || "/Grmps/default.png"}
+                            alt="job image"
+                            width={1000}
+                            height={500}
+                            className="rounded-lg h-100 w-full object-cover"
+                        />
+                    </div>
 
                     <div
-                        className={`overflow-hidden transition-[max-height] duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}
+                        className={`overflow-hidden transition-[max-height] min-h-42 duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}
                     >
                         <p
                             className="text-normal font-regular text-black"
@@ -97,6 +102,10 @@ const PubJobOrGigPost = ({ description, title, location, tags, minBudget, maxBud
                         >
                             {expanded ? "show less" : "show more"}
                         </button>
+                    )}
+
+                    {!canToggle && (
+                        <div className="h-8.25"></div>
                     )}
 
                     <div className="flex justify-end pt-6">

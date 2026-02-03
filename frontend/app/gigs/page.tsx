@@ -144,7 +144,7 @@ const GigsPage = () => {
                         />
                         </div>
                     )}
-                    <div className="grid lg:grid-cols-2 grid-cols-1 gap-8 pb-28">  
+                    <div className="grid lg:grid-cols-2 grid-cols-1 gap-8 pb-28 items-start">  
                         {filteredGigs.map((gig) => (
                             <PubJobOrGigPost 
                                 key={gig.id} 
@@ -157,6 +157,7 @@ const GigsPage = () => {
                                 currency={gig.token_symbol ?? "USD"} 
                                 createdAt={gig.created_at ? new Date(gig.created_at).getTime() / 1000 : 0}
                                 label="Contact"
+                                link={gig.link}
                                 clickHandler={() => {contactHandler(gig.id ?? "", gig.freelancer_id)}}
                             />
                         ))}

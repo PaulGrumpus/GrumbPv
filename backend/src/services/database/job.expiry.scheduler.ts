@@ -4,12 +4,19 @@ import { notificationService } from './notification.service.js';
 import { job_status, notification_entity, notification_type } from '@prisma/client';
 
 const EXPIRY_WINDOW_HOURS = 24;
-const CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+const CHECK_INTERVAL_MS = 3 * 60 * 60 * 1000; // 3 hours
+
+function formatExpiryTime(deadlineAt: Date): string {
+  return deadlineAt.toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+}
 
 /**
- * Find open/in_review/in_progress jobs whose deadline is within the next 24 hours
- * and send a single platform + email notification to the client.
- * Skips jobs that already have a JOB_EXPIRING_SOON notification.
+ * Every 3 hours: find open jobs whose deadline is within the next 24 hours from now,
+ * and send platform + email notification with the exact expiry time.
+ * No deduplication: each run notifies for all jobs in the window.
  */
 export async function runJobExpiryNotifications(): Promise<void> {
   try {
@@ -30,28 +37,14 @@ export async function runJobExpiryNotifications(): Promise<void> {
         id: true,
         title: true,
         client_id: true,
+        deadline_at: true,
       },
     });
-
-    if (jobsExpiringSoon.length === 0) {
-      return;
-    }
-
-    const notifiedRows = await prisma.notifications.findMany({
-      where: {
-        entity_type: notification_entity.job,
-        type: 'JOB_EXPIRING_SOON' as notification_type,
-        entity_id: { in: jobsExpiringSoon.map((j) => j.id) },
-      },
-      select: { entity_id: true },
-    });
-    const alreadyNotifiedJobIds = new Set(notifiedRows.map((r) => r.entity_id));
 
     for (const job of jobsExpiringSoon) {
-      if (alreadyNotifiedJobIds.has(job.id)) continue;
-
+      const expiryTime = job.deadline_at ? formatExpiryTime(job.deadline_at) : 'soon';
       const title = 'Job expiring soon';
-      const body = `Your job "${job.title}" will expire in 24 hours. You can update the deadline or create a new one.`;
+      const body = `Your job "${job.title}" expires at ${expiryTime}. You can update the deadline or create a new one.`;
 
       try {
         await notificationService.createNotification({
@@ -63,7 +56,7 @@ export async function runJobExpiryNotifications(): Promise<void> {
           title,
           body,
         });
-        logger.info('Job expiry notification sent', { jobId: job.id, clientId: job.client_id });
+        logger.info('Job expiry notification sent', { jobId: job.id, clientId: job.client_id, expiryTime });
       } catch (err) {
         logger.error('Failed to send job expiry notification', { jobId: job.id, error: err });
       }
@@ -76,7 +69,7 @@ export async function runJobExpiryNotifications(): Promise<void> {
 let intervalId: ReturnType<typeof setInterval> | null = null;
 
 /**
- * Start the job-expiry notification scheduler (runs every hour).
+ * Start the job-expiry notification scheduler (runs every 3 hours).
  * Call stopJobExpiryScheduler() on shutdown.
  */
 export function startJobExpiryScheduler(): void {
@@ -85,7 +78,7 @@ export function startJobExpiryScheduler(): void {
     logger.error('Initial job expiry run failed', { error: err })
   );
   intervalId = setInterval(() => void runJobExpiryNotifications(), CHECK_INTERVAL_MS);
-  logger.info('Job expiry scheduler started', { intervalMinutes: CHECK_INTERVAL_MS / 60000 });
+  logger.info('Job expiry scheduler started', { intervalHours: CHECK_INTERVAL_MS / (60 * 60 * 1000) });
 }
 
 /**

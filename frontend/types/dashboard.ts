@@ -38,6 +38,7 @@ export type DashboardJobBid = {
     cover_letter_md: string | null;
     period: number | null;
     status: string;
+    created_at: string;
     job_id: string,
     freelancer: DashboardFreelancer;
 };

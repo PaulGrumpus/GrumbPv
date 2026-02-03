@@ -33,6 +33,7 @@ class DashboardService {
                     cover_letter_md: true,
                     period: true,
                     status: true,
+                    created_at: true,
                     freelancer: {
                       select: {
                         id: true,

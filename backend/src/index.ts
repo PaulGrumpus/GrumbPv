@@ -38,7 +38,6 @@ import {
   startJobExpiryScheduler,
   stopJobExpiryScheduler,
 } from './services/database/job.expiry.scheduler.js';
-import { sign } from 'node:crypto';
 
 // Load environment variables
 config();
@@ -128,7 +127,7 @@ async function bootstrap() {
     notification_socket_route(socket, io);
   });
 
-  startJobExpiryScheduler();sign
+  startJobExpiryScheduler();
 
   httpServer.listen(PORT, () => {
     logger.info(`🚀 HTTP Server running on port ${PORT}`);

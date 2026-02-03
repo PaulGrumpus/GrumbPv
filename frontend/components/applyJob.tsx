@@ -196,6 +196,8 @@ const CalendarDropdown = ({ id, selectedDate, monthDate, onSelectDate, onMonthCh
     );
 };
 
+const COLLAPSED_MAX_HEIGHT = 120;
+
 const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler }: ApplyJobProps) => {
     const [title, setTitle] = useState("");
     const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -214,6 +216,19 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
     const [period, setPeriod] = useState("");
     const startPickerRef = useRef<HTMLDivElement | null>(null);
     const endPickerRef = useRef<HTMLDivElement | null>(null);
+
+    const [expanded, setExpanded] = useState(false);
+    const [canToggle, setCanToggle] = useState(false);
+    const descriptionRef = useRef<HTMLParagraphElement>(null);
+
+    useEffect(() => {
+        const el = descriptionRef.current;
+        if (!el) {
+            return;
+        }
+
+        setCanToggle(el.scrollHeight > COLLAPSED_MAX_HEIGHT);
+    }, [jobDescription]);
 
     const [loading, setLoading] = useState("success");
 
@@ -345,7 +360,26 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
                     loading === "success" &&
                         <div>
                             <p className='lg:text-display text-title lg:text-left text-center font-bold text-black pb-6'>{jobTitle}</p>
-                            <p className='text-light-large font-regular text-black lg:text-left text-center pb-6'>{jobDescription}</p>
+                            <div className={`overflow-hidden transition-[max-height] duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}>
+                                <p
+                                    ref={descriptionRef}
+                                    className="text-light-large font-regular text-black lg:text-left text-center pb-6"
+                                >
+                                    {jobDescription}
+                                </p>
+                            </div>
+                            {canToggle && (
+                                <button
+                                    type="button"
+                                    className="mt-3 text-small font-regular text-gray-500 cursor-pointer"
+                                    onClick={() => setExpanded((prev) => !prev)}
+                                >
+                                    {expanded ? "show less" : "show more"}
+                                </button>
+                            )}
+
+                            <div className="pb-6"></div>
+
                             <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
                                 <div className="linear-border__inner rounded-[0.4375rem] bg-white py-8 px-3 lg:p-8">
                                     <div className='flex flex-col gap-6'>
@@ -459,98 +493,6 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* <div className='flex flex-col gap-4 md:flex-row md:gap-2.5'>
-                                            <div className="flex-1" ref={startPickerRef}>
-                                                <p className='text-normal font-regular text-black text-left pb-2'>Start Date</p>
-                                                <div className='relative'>
-                                                    <div className='flex items-center border border-[#8F99AF] rounded-lg p-3 gap-3'>
-                                                        <input
-                                                            id="start-date-input"
-                                                            type='text'
-                                                            readOnly
-                                                            value={formatDisplayDate(startDate)}
-                                                            onClick={() => setIsStartCalendarOpen(true)}
-                                                            className='flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none cursor-pointer'
-                                                            placeholder='Select start date'
-                                                            aria-haspopup="dialog"
-                                                            aria-expanded={isStartCalendarOpen}
-                                                            aria-controls="start-date-calendar"
-                                                        />
-                                                        <button
-                                                            type='button'
-                                                            onClick={() => setIsStartCalendarOpen((prev) => !prev)}
-                                                            className='text-black'
-                                                            aria-label='Open start date calendar'
-                                                            aria-controls="start-date-calendar"
-                                                            aria-expanded={isStartCalendarOpen}
-                                                        >
-                                                            <div>
-                                                                <Image 
-                                                                    src={calendarIcon} 
-                                                                    alt='calendar icon' 
-                                                                    width={24} 
-                                                                    height={24} 
-                                                                />
-                                                            </div>
-                                                        </button>
-                                                    </div>
-                                                    {isStartCalendarOpen && (
-                                                        <CalendarDropdown
-                                                            id="start-date-calendar"
-                                                            selectedDate={startDate}
-                                                            monthDate={startCalendarMonth}
-                                                            onSelectDate={handleStartSelect}
-                                                            onMonthChange={(date) => setStartCalendarMonth(new Date(date.getFullYear(), date.getMonth(), 1))}
-                                                        />
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="flex-1" ref={endPickerRef}>
-                                                <p className='text-normal font-regular text-black text-left pb-2'>End Date</p>
-                                                <div className='relative'>
-                                                    <div className='flex items-center border border-[#8F99AF] rounded-lg p-3 gap-3'>
-                                                        <input
-                                                            id="end-date-input"
-                                                            type='text'
-                                                            readOnly
-                                                            value={formatDisplayDate(endDate)}
-                                                            onClick={() => setIsEndCalendarOpen(true)}
-                                                            className='flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none cursor-pointer'
-                                                            placeholder='Select end date'
-                                                            aria-haspopup="dialog"
-                                                            aria-expanded={isEndCalendarOpen}
-                                                            aria-controls="end-date-calendar"
-                                                        />
-                                                        <button
-                                                            type='button'
-                                                            onClick={() => setIsEndCalendarOpen((prev) => !prev)}
-                                                            className='text-black'
-                                                            aria-label='Open end date calendar'
-                                                            aria-controls="end-date-calendar"
-                                                            aria-expanded={isEndCalendarOpen}
-                                                        >
-                                                            <div>
-                                                                <Image 
-                                                                    src={calendarIcon} 
-                                                                    alt='calendar icon' 
-                                                                    width={24} 
-                                                                    height={24} 
-                                                                />
-                                                            </div>
-                                                        </button>
-                                                    </div>
-                                                    {isEndCalendarOpen && (
-                                                        <CalendarDropdown
-                                                            id="end-date-calendar"
-                                                            selectedDate={endDate}
-                                                            monthDate={endCalendarMonth}
-                                                            onSelectDate={handleEndSelect}
-                                                            onMonthChange={(date) => setEndCalendarMonth(new Date(date.getFullYear(), date.getMonth(), 1))}
-                                                        />
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div> */}
                                         {error && (
                                             <div className="text-small font-regular text-red-500 text-left">
                                                 {error}

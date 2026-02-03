@@ -94,7 +94,7 @@ const BidPost = ({ bid_id, job_description, job_title, job_location, job_tags, j
                         )}
                     </div>
                     <div
-                        className={`overflow-hidden transition-[max-height] duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}
+                        className={`overflow-hidden transition-[max-height] min-h-42 duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}
                     >
                         <p
                             className="text-normal font-regular text-black"
@@ -117,6 +117,10 @@ const BidPost = ({ bid_id, job_description, job_title, job_location, job_tags, j
                             {expanded ? "show less" : "show more"}
                         </button>
                     )}  
+
+                    {!canToggle && (
+                        <div className="h-8.25"></div>
+                    )}
 
                     <div className="pb-6"></div>
 

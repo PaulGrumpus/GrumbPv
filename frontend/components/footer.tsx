@@ -13,84 +13,6 @@ const Footer = () => {
     const [email, setEmail] = useState("");
     const [inquiry, setInquiry] = useState("");
 
-    const footerLinks = [
-        {
-            title: "Column One",
-            items: [
-                {
-                    title: "Link One",
-                    href: "/link-one"
-                },
-                {
-                    title: "Link Two",
-                    href: "/link-two"
-                },
-                {
-                    title: "Link Three",
-                    href: "/link-three"
-                },
-                {
-                    title: "Link Four",
-                    href: "/link-four"
-                },
-                {
-                    title: "Link Five",
-                    href: "/link-five"
-                }
-            ]
-        },
-        {
-            title: "Column Tow",
-            items: [
-                {
-                    title: "Link Six",
-                    href: "/link-six"
-                },
-                {
-                    title: "Link Seven",
-                    href: "/link-seven"
-                },
-                {
-                    title: "Link Eight",
-                    href: "/link-eight"
-                },
-                {
-                    title: "Link Nine",
-                    href: "/link-nine"
-                },
-                {
-                    title: "Link Ten",
-                    href: "/link-ten"
-                }
-            ]
-        },
-        {
-            title: "Column Three",
-            items: [
-                {
-                    title: "Link Eleven",
-                    href: "/link-eleven"
-                },
-                {
-                    title: "Link Twelve",
-                    href: "/link-twelve"
-                },
-                {
-                    title: "Link Thirteen",
-                    href: "/link-thirteen"
-                },
-                {
-                    title: "Link Fourteen",
-                    href: "/link-fourteen"
-                },
-                {
-                    title: "Link Fifteen",
-                    href: "/link-fifteen"
-                }
-            ]
-        },
-    ]
-
     const footerUnderlinedLinks = [
         {
             title: "Privacy Policy",
@@ -130,7 +52,7 @@ const Footer = () => {
         {
             alt: "LinkedIn",
             src: "/Grmps/link.png",
-            href: "/"
+            href: "https://www.linkedin.com/in/grumbuild/"
         }
     ]
 
@@ -184,7 +106,7 @@ const Footer = () => {
             <div className="container mx-auto">
                 <div className="flex flex-col justify-center gap-12 md:gap-16 lg:flex-row lg:items-start lg:justify-between pb-12 lg:pb-20">
                     <div className="flex flex-col gap-12 max-w-[640px] lg:flex-row md:items-start">
-                        <div className="flex items-center gap-1">
+                        <a href="/" className="flex items-center gap-1 cursor-pointer">
                             <div className="w-8.75 h-8.75 overflow-hidden rounded-full">
                                 <Image
                                     src="/Grmps/grmps.jpg"
@@ -195,10 +117,10 @@ const Footer = () => {
                                 />
                             </div>
                             <p className="text-logo font-poppins font-bold">GrumBuild</p>
-                        </div>
+                        </a>
                         <div className="flex flex-col gap-4 md:gap-6">
                             {footerSocialIcons.map((icon) => (
-                                <a href={icon.href} className="text-small font-roboto font-regular" key={icon.alt}>
+                                <a href={icon.href} target="_blank" rel="noopener noreferrer" className="text-small font-roboto font-regular" key={icon.alt}>
                                     <div className="flex items-center gap-3">
                                         <Image src={icon.src} alt={icon.alt} width={24} height={24} />
                                         <p className="text-small font-roboto font-regular">{icon.alt}</p>
