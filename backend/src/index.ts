@@ -29,6 +29,7 @@ import messageReceiptRoutes from './routes/chat/message.receipt.routes.js';
 import notificationRoutes from './routes/database/notification.routes.js';
 import dashboardRoutes from './routes/database/dashboard.routes.js';
 import contactRoutes from './routes/contact.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
 import http from 'http';
 import { Server } from 'socket.io';
 import { socket_router } from './routes/socket.routes.js';
@@ -37,6 +38,7 @@ import {
   startJobExpiryScheduler,
   stopJobExpiryScheduler,
 } from './services/database/job.expiry.scheduler.js';
+import { sign } from 'node:crypto';
 
 // Load environment variables
 config();
@@ -101,6 +103,7 @@ app.use(`${API_PREFIX}/database/message-receipts`, messageReceiptRoutes);
 app.use(`${API_PREFIX}/database/notifications`, notificationRoutes);
 app.use(`${API_PREFIX}/database/dashboard`, dashboardRoutes);
 app.use(`${API_PREFIX}/contact`, contactRoutes);
+app.use(`${API_PREFIX}/upload`, uploadRoutes);
 
 // Error handlers (must be last)
 app.use(notFoundHandler);
@@ -125,7 +128,7 @@ async function bootstrap() {
     notification_socket_route(socket, io);
   });
 
-  startJobExpiryScheduler();
+  startJobExpiryScheduler();sign
 
   httpServer.listen(PORT, () => {
     logger.info(`🚀 HTTP Server running on port ${PORT}`);
