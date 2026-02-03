@@ -66,7 +66,7 @@ function MessageBubbleContent({ bodyText, bubbleClass }: { bodyText: string | un
                 {parsed.caption && <p className="mt-2 whitespace-pre-wrap wrap-break-word">{parsed.caption}</p>}
                 {lightboxUrl && (
                     <div
-                        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 p-4"
+                        className="fixed inset-0 z-9999 flex items-center justify-center bg-black/85 p-4"
                         onClick={() => setLightboxUrl(null)}
                         role="dialog"
                         aria-modal="true"

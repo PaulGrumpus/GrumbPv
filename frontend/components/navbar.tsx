@@ -402,66 +402,97 @@ const Navbar = () => {
             {isMobile && (
                 <div className="fixed top-0 left-0 right-0 z-50 border-t border-[#d6d6d6] bg-white px-4 py-3 shadow-xl lg:hidden">
                     <div className="flex items-center justify-between">
-                        <button
-                            className="flex items-center gap-2 cursor-pointer" 
-                            onClick={() => router.push("/profile")}
-                        >
-                            <div className="w-8 h-8 overflow-hidden rounded-full">
-                                <Image
-                                    src={userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : EscrowBackendConfig.uploadedImagesURL + defaultProfileImage}
-                                    alt="User Photo"
-                                    width={32}
-                                    height={32}
-                                    className="h-full w-full object-cover"
-                                />
-                            </div>
-                            {userInfo.display_name ? (
-                                <p className="text-normal font-regular text-black">{userInfo.display_name}</p>
-                            ) : (
-                                <p className="text-normal font-regular text-black"></p>
-                            )}
-                        </button>
-                        <div className="flex items-center">
-                            <button
-                                type="button"
-                                onClick={() => router.push("/chat")}
-                                className="relative focus:outline-none mr-3"
-                            >
-                                <div className="w-6 h-6">
-                                    <Image src={chatIcon} alt="Chat Icon" width={24} height={24} className="h-6 w-6" />
+                        {loggedIn ? (
+                            <>
+                                <button
+                                    className="flex items-center gap-2 cursor-pointer"
+                                    onClick={() => router.push("/profile")}
+                                >
+                                    <div className="w-8 h-8 overflow-hidden rounded-full">
+                                        <Image
+                                            src={userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : EscrowBackendConfig.uploadedImagesURL + defaultProfileImage}
+                                            alt="User Photo"
+                                            width={32}
+                                            height={32}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    </div>
+                                    {userInfo.display_name ? (
+                                        <p className="text-normal font-regular text-black">{userInfo.display_name}</p>
+                                    ) : (
+                                        <p className="text-normal font-regular text-black"></p>
+                                    )}
+                                </button>
+                                <div className="flex items-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => router.push("/chat")}
+                                        className="relative focus:outline-none mr-3"
+                                    >
+                                        <div className="w-6 h-6">
+                                            <Image src={chatIcon} alt="Chat Icon" width={24} height={24} className="h-6 w-6" />
+                                        </div>
+                                        {pathname !== "/chat" && messageCount >= 1 && (
+                                            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
+                                        )}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleNotificationClick}
+                                        className="relative focus:outline-none mr-1"
+                                    >
+                                        <div>
+                                            <Image src={bellIcon} alt="Bell Icon" width={24} height={24} className="h-6 w-6" />
+                                        </div>
+                                        {notificationCount >= 1 && (
+                                            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
+                                        )}
+                                        {notificationDropdownOpen && (
+                                            <NotificationDropdownMenu
+                                                ref={notificationDropdownRef}
+                                                notifications={notificationsInfo}
+                                            />
+                                        )}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="focus:outline-none"
+                                        onClick={() => setMobileMenuOpen((prev) => !prev)}
+                                    >
+                                        <div className="w-6 h-6">
+                                            <Image src="/Grmps/pink-three-dots.svg" alt="pink three dots" width={24} height={24} className="h-full w-full object-cover" />
+                                        </div>
+                                    </button>
                                 </div>
-                                {pathname !== "/chat" && messageCount >= 1 && (
-                                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
-                                )}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleNotificationClick}
-                                className="relative focus:outline-none mr-1"
-                            >
-                                <div>
-                                    <Image src={bellIcon} alt="Bell Icon" width={24} height={24} className="h-6 w-6" />
+                            </>
+                        ) : (
+                            <>
+                                <div
+                                    className="flex items-center gap-2 cursor-pointer"
+                                    onClick={() => router.push("/")}
+                                >
+                                    <div className="w-8 h-8 overflow-hidden rounded-full">
+                                        <Image
+                                            src={logoImage}
+                                            alt="Logo"
+                                            width={32}
+                                            height={32}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    </div>
+                                    <p className="text-logo font-poppins font-bold text-black">GrumBuild</p>
                                 </div>
-                                {notificationCount >= 1 && (
-                                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-1 ring-white" />
-                                )}
-                                {notificationDropdownOpen && (
-                                    <NotificationDropdownMenu
-                                        ref={notificationDropdownRef}
-                                        notifications={notificationsInfo}
-                                    />
-                                )}
-                            </button>
-                            <button
-                                type="button"
-                                className="focus:outline-none"
-                                onClick={() => setMobileMenuOpen((prev) => !prev)}
-                            >
-                                <div className="w-6 h-6">
-                                    <Image src="/Grmps/pink-three-dots.svg" alt="pink three dots" width={24} height={24} className="h-full w-full object-cover" />
-                                </div>
-                            </button>
-                        </div>
+                                <Button
+                                    padding="px-5 py-2"
+                                    onClick={() => {
+                                        router.push("/");
+                                        setLoginSignupModalOpen(true);
+                                    }}
+                                >
+                                    <p>Login</p>
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
