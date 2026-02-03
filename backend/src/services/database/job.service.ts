@@ -443,6 +443,12 @@ export class JobService {
         continue;
       }
 
+      // Prisma expects tags as String[], not a JSON string
+      if (key === 'tags') {
+        normalized[key as string] = this.normalizeTags(value);
+        continue;
+      }
+
       normalized[key as string] = value;
     }
 

@@ -352,6 +352,8 @@ export const updateJob = async (job_id: string, job: Job, imageFile?: File | nul
             'deadline_at',
             'status',
             'client_id',
+            'image_id',
+            'tags',
         ];
 
         fieldsToSend.forEach((field) => {
