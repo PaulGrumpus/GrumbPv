@@ -343,6 +343,7 @@ export const DashboardProvider = ({ children }: Props) => {
             if (
                 notification.entity_type === NotificationEntity.job
             ) {
+                console.log("JOB NOTIFICATION ********************************", notification);
                 const jobRes = await getJobById(notification.entity_id);
                 if (!jobRes.success || !jobRes.data) return;
               

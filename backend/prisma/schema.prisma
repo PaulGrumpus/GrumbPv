@@ -129,21 +129,22 @@ model job_milestones {
 }
 
 model job_applications_docs {
-  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  job_id             String          @db.Uuid
-  job_milestone_id   String?         @db.Uuid
-  client_id          String          @db.Uuid
-  freelancer_id      String          @db.Uuid
-  client_confirm     Boolean         @default(false)
-  freelancer_confirm Boolean         @default(false)
-  deliverables       String?
-  out_of_scope       String?
-  budget             Decimal?
-  token_symbol       String?
-  start_date         DateTime?       @db.Timestamptz(6)
-  end_date           DateTime?       @db.Timestamptz(6)
-  created_at         DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime        @default(now()) @db.Timestamptz(6)
+  id                   String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id               String          @db.Uuid
+  job_milestone_id     String?         @db.Uuid
+  client_id            String          @db.Uuid
+  freelancer_id        String          @db.Uuid
+  client_confirm       Boolean         @default(false)
+  freelancer_confirm   Boolean         @default(false)
+  confirm_edit_rounds  Int             @default(0) // 0..2: max 2 rounds of edit-then-confirm (other must re-confirm)
+  deliverables         String?
+  out_of_scope         String?
+  budget               Decimal?
+  token_symbol         String?
+  start_date           DateTime?       @db.Timestamptz(6)
+  end_date             DateTime?       @db.Timestamptz(6)
+  created_at           DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime        @default(now()) @db.Timestamptz(6)
   job                jobs            @relation(fields: [job_id], references: [id], onDelete: Cascade)
   job_milestone      job_milestones? @relation(fields: [job_milestone_id], references: [id], onDelete: Cascade)
   client             users           @relation("ClientApplications", fields: [client_id], references: [id], onDelete: Cascade)
@@ -370,6 +371,7 @@ enum read_state {
 enum notification_type {
   JOB_POSTED
   JOB_UPDATED
+  JOB_EXPIRING_SOON
   GIG_POSTED
   GIG_UPDATED
   BID_SENT

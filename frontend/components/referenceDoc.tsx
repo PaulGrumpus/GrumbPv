@@ -25,6 +25,7 @@ interface ReferenceDocProps {
     description: string;
     freelancerConfirmed: boolean;
     clientConfirmed: boolean;
+    confirmEditRounds: number; // 0..2; when >= 2, user can only confirm (no field edits)
     initialBudget: number;
     initialCurrency: string;
     initialDeliverables: string;
@@ -36,7 +37,8 @@ interface ReferenceDocProps {
 const currencies = ["USD", "USDT", "USDC", "BNB"];
 const charCount = 300;
 
-const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clientId, freelancerId, projectName, clientFullName, freelancerFullName, description, freelancerConfirmed, clientConfirmed, initialBudget, initialCurrency, initialDeliverables, initialOutOfScope, initialStartDate, initialEndDate }: ReferenceDocProps) => {
+const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clientId, freelancerId, projectName, clientFullName, freelancerFullName, description, freelancerConfirmed, clientConfirmed, confirmEditRounds, initialBudget, initialCurrency, initialDeliverables, initialOutOfScope, initialStartDate, initialEndDate }: ReferenceDocProps) => {
+    const canEditContent = confirmEditRounds < 2;
     const [projectTitle, setProjectTitle] = useState(projectName);
     const [clientName, setClientName] = useState(clientFullName);
     const [freelancerName, setFreelancerName] = useState(freelancerFullName);
@@ -399,20 +401,8 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
             
             router.push(`/chat?conversationId=${conversationId}`);
         } catch (error) {
-            error instanceof Error ? toast.error(error.message, {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-            }) : toast.error(error as string, {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-            });
-            toast.error(error as string, {
+            const message = error instanceof Error ? error.message : String(error);
+            toast.error(message, {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -438,6 +428,12 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
         return (
             <div>
                 <h1 className="lg:text-display text-title font-bold text-black lg:pb-10.25 pb-6">Project Agreement Form</h1>
+                {confirmEditRounds > 0 && (
+                    <p className="text-normal font-regular text-[#8F99AF] mb-2">
+                        Edit round {confirmEditRounds} of 2
+                        {confirmEditRounds >= 2 && " — you can only confirm (no more edits)."}
+                    </p>
+                )}
                 <div className="flex lg:flex-row flex-col gap-8">
                     <div className="lg:w-[53.87%] w-full max-w-full flex flex-col gap-6">
                         <div className="flex flex-col gap-2">
@@ -474,15 +470,17 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                             <p className='text-normal font-medium text-[#8F99AF] text-left pb-2'>Project Description</p>
                             <div className='flex flex-col'>
                                 <textarea
-                                    className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-45 resize-none mb-2'
+                                    className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-45 resize-none mb-2 disabled:opacity-60 disabled:cursor-not-allowed'
                                     value={projectDescription}
                                     onChange={(e) => {
+                                        if (!canEditContent) return;
                                         const value = e.target.value;
                                         if (value.length <= charCount) {
                                             setProjectDescription(value);
                                         }
                                     }}
                                     maxLength={charCount}
+                                    disabled={!canEditContent}
                                 />
                                 <div className='flex justify-flex-end'>
                                     <p className='text-normal font-regular text-gray-400 text-left'>{charCount - projectDescription.length} characters left</p>
@@ -493,25 +491,20 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                             <p className='text-normal font-medium text-[#8F99AF] text-left pb-2'>Deliverables</p>
                             <div className='flex flex-col'>
                                 <textarea
-                                    className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-45 resize-none mb-2'
+                                    className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-45 resize-none mb-2 disabled:opacity-60 disabled:cursor-not-allowed'
                                     value={deliverables}
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        // if (value.length <= charCount) {
-                                        // }
-                                        setDeliverables(value);
-                                    }}
-                                    // maxLength={charCount}
+                                    onChange={(e) => canEditContent && setDeliverables(e.target.value)}
+                                    disabled={!canEditContent}
                                 />
                             </div>
                         </div>
                         <div className="flex flex-col gap-2">
                             <p className='text-normal font-medium text-[#8F99AF] text-left'>Out of Scope</p>
                             <textarea
-                                className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-45 resize-none mb-2'
+                                className='text-normal font-regular text-black text-left p-3 border border-[#8F99AF] rounded-lg max-w-full min-h-45 resize-none mb-2 disabled:opacity-60 disabled:cursor-not-allowed'
                                 value={outOfScope}
-                                onChange={(e) => setOutOfScope(e.target.value)}
-                                // maxLength={charCount}
+                                onChange={(e) => canEditContent && setOutOfScope(e.target.value)}
+                                disabled={!canEditContent}
                             />
                             {/* <input
                                 value={outOfScope}
@@ -527,16 +520,15 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                                 type="text"
                                 inputMode="decimal"
                                 onChange={(e) => {
+                                    if (!canEditContent) return;
                                     const value = e.target.value;
-
-                                    // allow: "", "1", "1.", "1.2", "0.25"
                                     if (!/^\d*\.?\d*$/.test(value)) return;
-
                                     setBudget(value);
                                     setError("");
                                 }}
-                                className='w-full border border-[#8F99AF] rounded-lg p-3 flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none'
+                                className='w-full border border-[#8F99AF] rounded-lg p-3 flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed'
                                 placeholder='Budget'
+                                disabled={!canEditContent}
                             />
                         </div>
                         <div className="flex flex-col gap-2">
@@ -545,14 +537,17 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                                 <select
                                     value={currency}
                                     onChange={(e) => {
-                                        setCurrency(e.target.value);
-                                        setDropdownMenuOpen(false);
+                                        if (canEditContent) {
+                                            setCurrency(e.target.value);
+                                            setDropdownMenuOpen(false);
+                                        }
                                     }}
-                                    className='w-full appearance-none rounded-lg cursor-pointer border border-[#8F99AF] bg-white p-3 text-normal font-regular text-black focus:outline-none focus:border-blue-500'
+                                    className='w-full appearance-none rounded-lg cursor-pointer border border-[#8F99AF] bg-white p-3 text-normal font-regular text-black focus:outline-none focus:border-blue-500 disabled:opacity-60 disabled:cursor-not-allowed'
                                     onClick={(event) => {
                                         event.stopPropagation();
-                                        setDropdownMenuOpen((prev: boolean) => !prev);
+                                        canEditContent && setDropdownMenuOpen((prev: boolean) => !prev);
                                     }}
+                                    disabled={!canEditContent}
                                 >
                                     <option value='' disabled>
                                         Select one ...
@@ -589,20 +584,22 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                                             type='text'
                                             readOnly
                                             value={formatDisplayDate(startDate)}
-                                            onClick={() => setIsStartDateCalendarOpen(true)}
-                                            className='flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none cursor-pointer'
+                                            onClick={() => canEditContent && setIsStartDateCalendarOpen(true)}
+                                            className='flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60'
                                             placeholder='Select start date'
                                             aria-haspopup="dialog"
                                             aria-expanded={isStartDateCalendarOpen}
                                             aria-controls="start-date-calendar"
+                                            disabled={!canEditContent}
                                         />
                                         <button
                                             type='button'
-                                            onClick={() => setIsStartDateCalendarOpen((prev) => !prev)}
-                                            className='text-black'
+                                            onClick={() => canEditContent && setIsStartDateCalendarOpen((prev) => !prev)}
+                                            className='text-black disabled:opacity-60 disabled:cursor-not-allowed'
                                             aria-label='Open start date calendar'
                                             aria-controls="start-date-calendar"
                                             aria-expanded={isStartDateCalendarOpen}
+                                            disabled={!canEditContent}
                                         >
                                             <div>
                                                 <Image 
@@ -634,20 +631,22 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                                             type='text'
                                             readOnly
                                             value={formatDisplayDate(endDate)}
-                                            onClick={() => setIsEndDateCalendarOpen(true)}
-                                            className='flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none cursor-pointer'
+                                            onClick={() => canEditContent && setIsEndDateCalendarOpen(true)}
+                                            className='flex-1 bg-transparent text-normal font-regular text-black text-left focus:outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60'
                                             placeholder='Select end date'
                                             aria-haspopup="dialog"
                                             aria-expanded={isEndDateCalendarOpen}
                                             aria-controls="end-date-calendar"
+                                            disabled={!canEditContent}
                                         />
                                         <button
                                             type='button'
-                                            onClick={() => setIsEndDateCalendarOpen((prev) => !prev)}
-                                            className='text-black'
+                                            onClick={() => canEditContent && setIsEndDateCalendarOpen((prev) => !prev)}
+                                            className='text-black disabled:opacity-60 disabled:cursor-not-allowed'
                                             aria-label='Open end date calendar'
                                             aria-controls="end-date-calendar"
                                             aria-expanded={isEndDateCalendarOpen}
+                                            disabled={!canEditContent}
                                         >
                                             <div>
                                                 <Image 

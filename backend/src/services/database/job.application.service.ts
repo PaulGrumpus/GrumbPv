@@ -100,9 +100,75 @@ export class JobApplicationService {
       if (!existingJobApplication) {
         throw new AppError('Job application not found', 404, 'JOB_APPLICATION_NOT_FOUND');
       }
+      if (existingJobApplication.job_milestone_id) {
+        throw new AppError(
+          'Agreement is locked; milestone already created. No further edits allowed.',
+          400,
+          'JOB_APPLICATION_LOCKED'
+        );
+      }
+
+      const existingRounds =
+        (existingJobApplication as job_applications_docs & { confirm_edit_rounds?: number })
+          .confirm_edit_rounds ?? 0;
+      const isClient = userId === existingJobApplication.client_id;
+
+      const contentFields = [
+        'deliverables',
+        'out_of_scope',
+        'budget',
+        'start_date',
+        'end_date',
+        'token_symbol',
+      ] as const;
+      const hasContentChange = contentFields.some((field) => {
+        const incoming = (jobApplication as Record<string, unknown>)[field];
+        if (incoming === undefined) return false;
+        const existingVal = existingJobApplication[field];
+        if (field === 'budget') {
+          const a = existingVal != null ? Number(existingVal) : null;
+          const b = incoming != null ? Number(incoming) : null;
+          return a !== b;
+        }
+        if (field === 'start_date' || field === 'end_date') {
+          const raw = existingJobApplication[field];
+          const a =
+            raw instanceof Date
+              ? raw.toISOString()
+              : raw
+                ? new Date(String(raw)).toISOString()
+                : null;
+          const b = incoming ? new Date(incoming as string).toISOString() : null;
+          return a !== b;
+        }
+        return String(existingVal ?? '') !== String(incoming ?? '');
+      });
+
+      if (existingRounds >= 2 && hasContentChange) {
+        throw new AppError(
+          'Maximum edit rounds (2) reached. You can only confirm without editing.',
+          400,
+          'JOB_APPLICATION_MAX_EDIT_ROUNDS'
+        );
+      }
+
+      const updateData = { ...jobApplication } as Record<string, unknown>;
+      const userConfirming = isClient
+        ? updateData.client_confirm === true
+        : updateData.freelancer_confirm === true;
+      const otherHadConfirm = isClient
+        ? existingJobApplication.freelancer_confirm
+        : existingJobApplication.client_confirm;
+
+      if (userConfirming && hasContentChange && otherHadConfirm) {
+        updateData.client_confirm = isClient ? true : false;
+        updateData.freelancer_confirm = isClient ? false : true;
+        updateData.confirm_edit_rounds = Math.min(2, existingRounds + 1);
+      }
+
       const updateResult = await this.prisma.job_applications_docs.update({
         where: { id },
-        data: jobApplication,
+        data: updateData as Prisma.job_applications_docsUncheckedUpdateInput,
       });
       let escrow;
       let milestone;

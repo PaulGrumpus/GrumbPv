@@ -28,6 +28,7 @@ const ReferencePageContent = () => {
     const [freelancerId, setFreelancerId] = useState("");
     const [freelancerConfirmed, setFreelancerConfirmed] = useState(false);
     const [clientConfirmed, setClientConfirmed] = useState(false);
+    const [confirmEditRounds, setConfirmEditRounds] = useState(0);
     const [budget, setBudget] = useState(0);
     const [currency, setCurrency] = useState("USD");
     const [deliverables, setDeliverables] = useState("");
@@ -64,6 +65,7 @@ const ReferencePageContent = () => {
                     setFreelancerFullName(jobApplicationInfo.data.freelancer_info.display_name ?? jobApplicationInfo.data.freelancer_info.email ?? "");
                     setFreelancerConfirmed(jobApplicationInfo.data.job_application_info.freelancer_confirm);
                     setClientConfirmed(jobApplicationInfo.data.job_application_info.client_confirm);
+                    setConfirmEditRounds(jobApplicationInfo.data.job_application_info.confirm_edit_rounds ?? 0);
                     setClientId(jobApplicationInfo.data.client_info.id);
                     setFreelancerId(jobApplicationInfo.data.freelancer_info.id);
                     setDeliverables(jobApplicationInfo.data.job_application_info.deliverables ?? "");
@@ -101,7 +103,8 @@ const ReferencePageContent = () => {
                         freelancerFullName={freelancerFullName} 
                         description={description} 
                         freelancerConfirmed={freelancerConfirmed} 
-                        clientConfirmed={clientConfirmed} 
+                        clientConfirmed={clientConfirmed}
+                        confirmEditRounds={confirmEditRounds}
                         initialBudget={budget} 
                         initialCurrency={currency}
                         initialDeliverables={deliverables}

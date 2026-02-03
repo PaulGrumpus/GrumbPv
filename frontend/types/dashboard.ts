@@ -75,6 +75,7 @@ export type DashboardJobApplicationDoc = {
     token_symbol: string | null;
     client_confirm: boolean;
     freelancer_confirm: boolean;
+    confirm_edit_rounds: number; // 0..2, max 2 edit rounds
     job_milestone_id: string | null;
     // client side
     freelancer_id?: string;

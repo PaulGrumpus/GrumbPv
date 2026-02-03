@@ -89,6 +89,7 @@ export function generateNotificationActionText(
       return 'View Application Docs';
     case notification_type.JOB_POSTED:
     case notification_type.JOB_UPDATED:
+    case 'JOB_EXPIRING_SOON' as notification_type:
       return 'View Job Details';
     case notification_type.GIG_POSTED:
     case notification_type.GIG_UPDATED:

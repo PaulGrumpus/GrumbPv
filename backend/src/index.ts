@@ -33,6 +33,10 @@ import http from 'http';
 import { Server } from 'socket.io';
 import { socket_router } from './routes/socket.routes.js';
 import { notification_socket_route } from './routes/notification.socket.route.js';
+import {
+  startJobExpiryScheduler,
+  stopJobExpiryScheduler,
+} from './services/database/job.expiry.scheduler.js';
 
 // Load environment variables
 config();
@@ -121,6 +125,8 @@ async function bootstrap() {
     notification_socket_route(socket, io);
   });
 
+  startJobExpiryScheduler();
+
   httpServer.listen(PORT, () => {
     logger.info(`🚀 HTTP Server running on port ${PORT}`);
     logger.info(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -132,6 +138,7 @@ async function bootstrap() {
   // Graceful shutdown
   const shutdown = async (signal: string) => {
     logger.info(`${signal} received, shutting down gracefully`);
+    stopJobExpiryScheduler();
     await db.disconnect();
     process.exit(0);
   };
