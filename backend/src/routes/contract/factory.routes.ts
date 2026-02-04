@@ -231,4 +231,14 @@ router.post(
   factoryController.setupEscrowRewards.bind(factoryController)
 );
 
+router.post(
+  '/factory/setup-rewards',
+  [
+    body('rewardTokenAddress').isEthereumAddress(),
+    body('rewardRatePer1e18').isString().notEmpty(),
+  ],
+  validate([body('rewardTokenAddress'), body('rewardRatePer1e18')]),
+  factoryController.setupFactoryRewards.bind(factoryController)
+);
+
 export default router;

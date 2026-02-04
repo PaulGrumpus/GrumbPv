@@ -276,9 +276,9 @@ export class EscrowController {
   async resolveDispute(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
-      const { favorBuyer } = req.body;
+      const { privateKey, favorBuyer } = req.body;
 
-      const txHash = await escrowService.resolveDispute(job_milestone_id, favorBuyer);
+      const txHash = await escrowService.resolveDispute(privateKey, job_milestone_id, favorBuyer);
 
       res.json({
         success: true,

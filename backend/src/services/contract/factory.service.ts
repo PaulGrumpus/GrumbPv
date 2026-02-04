@@ -205,8 +205,6 @@ export class FactoryService {
         escrow: escrowAddress,
       });
 
-      await this.setupEscrowRewards(escrowAddress, CONTRACT_ADDRESSES.grmpsToken, DEFAULT_CONFIG.rewardRatePer1E18);
-
       await chainTxsService.createChainTx(
         'create_escrow',
         97,
@@ -395,7 +393,16 @@ export class FactoryService {
   }
 
   /**
-   * Setup rewards for an escrow contract
+   * Setup rewards for an escrow contract (Manual Override)
+   * 
+   * NOTE: This function is now optional since reward configuration is done during
+   * escrow initialization via the factory contract's stored values (rewardToken,
+   * rewardRatePer1e18, rewardDistributor).
+   * 
+   * Use this function only when you need to:
+   * - Override the default reward configuration for a specific escrow
+   * - Update reward settings on existing escrows created before the factory was configured
+   * 
    * Configures reward token, rate, and distributor using arbiter's key from .env
    */
   async setupEscrowRewards(
@@ -474,6 +481,44 @@ export class FactoryService {
     } catch (error: any) {
       logger.error('Error setting up escrow rewards:', error);
       throw new AppError(`Failed to setup escrow rewards: ${error.message}`, 500);
+    }
+  }
+
+  async setupFactoryRewards(
+    rewardTokenAddress: string,
+    rewardRatePer1e18: string
+  ): Promise<{
+    setTokenTxHash: string;
+    setRateTxHash: string;
+  }> {
+    try {
+      const privateKey = CONTRACT_ADDRESSES.ArbiterPrivateKey;
+      const wallet = web3Provider.getWallet(privateKey);
+      const factory = this.getFactoryContract(wallet);
+
+      logger.info('Setting up factory rewards...');
+      logger.info('Factory rewards:', {
+        rewardToken: rewardTokenAddress,
+        rewardRatePer1e18: rewardRatePer1e18,
+      });
+
+      const tx = await factory.setRewardToken(rewardTokenAddress, { gasLimit: 200000 });
+      await tx.wait();
+      logger.info(`✅ Reward token set: ${tx.hash}`);
+
+      const tx2 = await factory.setRewardRatePer1e18(rewardRatePer1e18, { gasLimit: 200000 });
+      await tx2.wait();
+      logger.info(`✅ Reward rate set: ${tx2.hash}`);
+
+      logger.info('✅ Factory rewards setup complete');
+
+      return {
+        setTokenTxHash: tx.hash,
+        setRateTxHash: tx2.hash,
+      };
+    } catch (error: any) {
+      logger.error('Error setting up factory rewards:', error);
+      throw new AppError(`Failed to setup factory rewards: ${error.message}`, 500);
     }
   }
 }

@@ -7,9 +7,9 @@ export class RewardController {
    */
   async approveDistributor(req: Request, res: Response, next: NextFunction) {
     try {
-      const { privateKey, amount } = req.body;
+      const { amount } = req.body;
 
-      const txHash = await rewardService.approveDistributor(privateKey, amount);
+      const txHash = await rewardService.approveDistributor(amount);
 
       res.json({
         success: true,
@@ -56,11 +56,10 @@ export class RewardController {
   /**
    * Authorize factory
    */
-  async authorizeFactory(req: Request, res: Response, next: NextFunction) {
+  async authorizeFactory(_req: Request, res: Response, next: NextFunction) {
     try {
-      const { privateKey } = req.body;
 
-      const txHash = await rewardService.authorizeFactory(privateKey);
+      const txHash = await rewardService.authorizeFactory();
 
       res.json({
         success: true,

@@ -187,18 +187,23 @@ contract EscrowFactoryTest is Test {
         
         // Try to initialize again
         vm.expectRevert(Escrow.AlreadyInitialized.selector);
-        Escrow(payable(escrow)).initialize(
-            buyer,
-            seller,
-            arbiter,
-            feeRecipient,
-            FEE_BPS,
-            address(0),
-            PROJECT_AMOUNT,
-            uint64(block.timestamp + 30 days),
-            50, 50, 50, 25,
-            address(0)  // No reward distributor
-        );
+        Escrow(payable(escrow)).initialize(Escrow.InitParams({
+            buyer: buyer,
+            seller: seller,
+            arbiter: arbiter,
+            feeRecipient: feeRecipient,
+            feeBps: FEE_BPS,
+            paymentToken: address(0),
+            amountWei: PROJECT_AMOUNT,
+            deadline: uint64(block.timestamp + 30 days),
+            buyerFeeBps: 50,
+            vendorFeeBps: 50,
+            disputeFeeBps: 50,
+            rewardRateBps: 25,
+            rewardDistributor: address(0),  // No reward distributor
+            rewardToken: address(0),  // No reward token
+            rewardRatePer1e18: 0            // No reward rate
+        }));
     }
     
     /// @notice Test full lifecycle: fund -> deliver -> approve -> withdraw

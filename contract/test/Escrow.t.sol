@@ -18,21 +18,23 @@ contract EscrowTest is Test {
         deadline = uint64(block.timestamp + 30 days);
         // Deploy implementation and initialize with parameters
         escrow = new Escrow();
-        escrow.initialize(
-            buyer,
-            vendor,
-            arbiter,
-            feeRecipient,
-            100, // 1% total fee
-            address(0), // Native BNB
-            1 ether, // Amount
-            deadline, // Custom deadline
-            50, // 0.5% buyer fee
-            50, // 0.5% vendor fee
-            50, // 0.5% dispute fee
-            25,  // 0.25% reward rate
-            address(0)  // No reward distributor in tests
-        );
+        escrow.initialize(Escrow.InitParams({
+            buyer: buyer,
+            seller: vendor,
+            arbiter: arbiter,
+            feeRecipient: feeRecipient,
+            feeBps: 100, // 1% total fee
+            paymentToken: address(0), // Native BNB
+            amountWei: 1 ether, // Amount
+            deadline: deadline, // Custom deadline
+            buyerFeeBps: 50, // 0.5% buyer fee
+            vendorFeeBps: 50, // 0.5% vendor fee
+            disputeFeeBps: 50, // 0.5% dispute fee
+            rewardRateBps: 25,  // 0.25% reward rate
+            rewardDistributor: address(0),  // No reward distributor in tests
+            rewardToken: address(0),  // No reward token (set later in tests)
+            rewardRatePer1e18: 0            // No reward rate (set later in tests)
+        }));
     }
 
     function test_Deployment() public view {

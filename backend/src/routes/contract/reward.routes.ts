@@ -19,19 +19,13 @@ const router = Router();
  *           schema:
  *             type: object
  *             required:
- *               - privateKey
  *               - amount
  *             properties:
- *               privateKey:
- *                 type: string
- *                 description: Reward source's private key (who holds GRMPS tokens)
- *                 example: "0x1234567890abcdef..."
  *               amount:
  *                 type: string
  *                 description: Amount of GRMPS tokens to approve (in GRMPS, not wei)
  *                 example: "1000000"
  *           example:
- *             privateKey: "0x1234567890abcdef..."
  *             amount: "1000000"
  *     responses:
  *       200:
@@ -55,8 +49,8 @@ const router = Router();
  */
 router.post(
   '/approve',
-  [body('privateKey').isString().notEmpty(), body('amount').isString().notEmpty()],
-  validate([body('privateKey'), body('amount')]),
+  [body('amount').isString().notEmpty()],
+  validate([body('amount')]),
   rewardController.approveDistributor.bind(rewardController)
 );
 
@@ -131,21 +125,6 @@ router.get('/balance', rewardController.getSourceBalance.bind(rewardController))
  *     summary: Authorize factory
  *     description: Owner authorizes the escrow factory so all escrows created by it can distribute rewards
  *     tags: [Rewards]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - privateKey
- *             properties:
- *               privateKey:
- *                 type: string
- *                 description: Reward distributor owner's private key
- *                 example: "0x1234567890abcdef..."
- *           example:
- *             privateKey: "0x1234567890abcdef..."
  *     responses:
  *       200:
  *         description: Factory authorized successfully
@@ -168,8 +147,6 @@ router.get('/balance', rewardController.getSourceBalance.bind(rewardController))
  */
 router.post(
   '/authorize-factory',
-  [body('privateKey').isString().notEmpty()],
-  validate([body('privateKey')]),
   rewardController.authorizeFactory.bind(rewardController)
 );
 

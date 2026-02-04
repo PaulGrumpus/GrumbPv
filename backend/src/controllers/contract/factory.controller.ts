@@ -115,6 +115,25 @@ export class FactoryController {
       next(error);
     }
   }
+
+  /**
+   * Setup rewards for the factory
+   */
+  async setupFactoryRewards(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { rewardTokenAddress, rewardRatePer1e18 } = req.body;
+
+      const result = await factoryService.setupFactoryRewards(rewardTokenAddress, rewardRatePer1e18);
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Factory rewards configured successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const factoryController = new FactoryController();

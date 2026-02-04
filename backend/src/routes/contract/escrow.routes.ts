@@ -589,8 +589,8 @@ router.post(
  */
 router.post(
   '/:job_milestone_id/dispute/resolve',
-  [param('job_milestone_id').isString().notEmpty(), body('favorBuyer').isBoolean()],
-  validate([param('job_milestone_id'), body('favorBuyer')]),
+  [param('job_milestone_id').isString().notEmpty(), body('privateKey').isString().notEmpty(), body('favorBuyer').isBoolean()],
+  validate([param('job_milestone_id'), body('privateKey'), body('favorBuyer')]),
   escrowController.resolveDispute.bind(escrowController)
 );
 
