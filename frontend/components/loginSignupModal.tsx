@@ -673,15 +673,19 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                         </div>
                     ) 
                     : registerProcessing ? (
-                        <div className="flex flex-col gap-8">
-                            <h1 className="text-center text-[2.375rem] leading-[2.85rem] font-regular text-black font-inter">Join as a client or freelancer</h1>
-                            <div className="flex gap-6 px-3 py-15.25">
-                                <div className="relative">
+                        <div className="flex flex-col gap-8 px-10 lg:px-0">
+                            <h1 className="text-center text-[1.375rem] leading-7 sm:text-[2.375rem] sm:leading-[2.85rem] font-regular text-black font-inter pt-40 lg:pt-0">
+                                Join as a client or freelancer
+                            </h1>
+                            <div className="flex flex-col md:flex-row gap-5 md:gap-6 px-3 sm:px-0 py-10 sm:py-15.25">
+                                <div className="relative w-full sm:w-auto">
                                     <Button 
                                         variant="secondary"
                                         borderRadius="rounded-xl"
                                         borderInnerRadius="rounded-[0.6875rem]"
-                                        padding="px-21.5 py-12.5"
+                                        padding="px-6 py-8 md:px-21.5 md:py-12.5"
+                                        wrapperClassName="w-full"
+                                        className="w-full"
                                     >
                                         <p 
                                             className={`
@@ -715,19 +719,21 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                                         </div>
                                     }
                                 </div>
-                                <div className="relative">
+                                <div className="relative w-full sm:w-auto">
                                     <Button 
                                         variant="secondary"
                                         borderRadius="rounded-xl"
                                         borderInnerRadius="rounded-[0.6875rem]"
-                                        padding="px-21.5 py-12.5"
+                                        padding="px-6 py-8 md:px-21.5 md:py-12.5"
+                                        wrapperClassName="w-full"
+                                        className="w-full"
                                         onClick={() => {
                                             handleRegisterAsFreelancer();
                                         }}
                                     >
                                         <p 
                                             className={`
-                                                text-normal font-bold font-intertext-center
+                                                text-normal font-bold font-inter text-center
                                                 ${registeredUserRole === "freelancer" ? "text-[#7E3FF2]" : "text-black"}
                                             `}
                                         >
@@ -755,10 +761,11 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                                     }
                                 </div>
                             </div>
-                            <div className="flex items-center justify-center">
+                            <div className="flex items-center justify-center w-full">
                                 <Button
                                     variant="primary"
-                                    padding="px-45 py-2.5"
+                                    padding="px-10 py-2.5 sm:px-45"
+                                    className="w-full sm:w-auto"
                                     onClick={() => {
                                         handleCreateAccount();
                                     }}

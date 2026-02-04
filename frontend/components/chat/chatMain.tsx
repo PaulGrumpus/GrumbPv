@@ -106,7 +106,7 @@ function MessageBubbleContent({ bodyText, bubbleClass }: { bodyText: string | un
                 >
                     <img src={parsed.url} alt="Shared image" className="max-w-full max-h-64 rounded-lg object-contain" />
                 </button>
-                {parsed.caption && <p className="mt-2 whitespace-pre-wrap wrap-break-word">{parsed.caption}</p>}
+                {parsed.caption && <p className="mt-2 whitespace-pre-wrap wrap-break-word break-all">{parsed.caption}</p>}
                 {lightboxUrl && (
                     <div
                         className="fixed inset-0 z-9999 flex items-center justify-center bg-black/85 p-4"
@@ -152,11 +152,11 @@ function MessageBubbleContent({ bodyText, bubbleClass }: { bodyText: string | un
         const displayName = parsed.originalFilename || 'Download';
 
         return (
-            <div className={`${bubbleClass} flex items-center gap-3`}>
+            <div className={`${bubbleClass} flex items-center gap-3 min-w-0 max-w-full`}>
                 <DocumentIcon className="w-8 h-8 shrink-0 text-white/90" />
                 <div className="flex-1 min-w-0">
-                    {parsed.caption && <p className="whitespace-pre-wrap wrap-break-word text-sm">{parsed.caption}</p>}
-                    <div className="inline-flex items-center gap-1.5 mt-1">
+                    {parsed.caption && <p className="whitespace-pre-wrap wrap-break-word break-all text-sm">{parsed.caption}</p>}
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1 max-w-full">
                         <a
                             href={parsed.url}
                             download={parsed.originalFilename || undefined}
@@ -169,10 +169,10 @@ function MessageBubbleContent({ bodyText, bubbleClass }: { bodyText: string | un
                         <button
                             type="button"
                             onClick={() => setFileViewer({ url: parsed.url!, filename: displayName })}
-                            className="text-sm font-medium text-white underline hover:text-white/90 truncate max-w-full text-left"
+                            className="text-sm font-medium text-white underline hover:text-white/90 text-left break-all whitespace-normal max-w-full"
                             title={`View ${displayName}`}
                         >
-                            <span className="truncate">{displayName}</span>
+                            <span className="break-all">{displayName}</span>
                         </button>
                     </div>
                 </div>
@@ -321,7 +321,7 @@ function MessageBubbleContent({ bodyText, bubbleClass }: { bodyText: string | un
             </div>
         );
     }
-    return <span className="whitespace-pre-wrap wrap-break-word">{parsed.caption ?? bodyText}</span>;
+    return <span className="whitespace-pre-wrap wrap-break-word break-all max-w-full">{parsed.caption ?? bodyText}</span>;
 }
 import { toast } from "react-toastify";
 
@@ -782,7 +782,7 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                                                             )}
                                                         </div>
                                                         <div
-                                                            className={`py-4 px-5 rounded-[1.125rem] wrap-break-word text-white text-sm ${
+                                                            className={`py-4 px-5 rounded-[1.125rem] wrap-break-word break-all whitespace-pre-wrap max-w-full overflow-hidden text-white text-sm ${
                                                             message.sender_id === sender.id
                                                                 ? "bg-[#2F3DF6]"
                                                                 : "bg-[#7E3FF2]"
@@ -828,7 +828,7 @@ const ChatMain = ({isMobile, sender, receiver, messages, conversation_id, isWrit
                                                             {formatHourMinute(message.created_at.toString())}
                                                         </span>
                                                         <div
-                                                            className={`py-4 px-5 rounded-[1.125rem] wrap-break-word text-white text-sm ${
+                                                            className={`py-4 px-5 rounded-[1.125rem] wrap-break-word break-all whitespace-pre-wrap max-w-full overflow-hidden text-white text-sm ${
                                                             message.sender_id === sender.id
                                                                 ? "bg-[#2F3DF6]"
                                                                 : "bg-[#7E3FF2]"

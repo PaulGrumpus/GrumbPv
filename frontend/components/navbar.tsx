@@ -80,15 +80,28 @@ const Navbar = () => {
         { label: "Post Job", href: "/dashboard?view=create-job" },
     ];
 
+    // Handle responsive mobile/desktop switching on window resize
     useEffect(() => {
-        setIsMobile(window.innerWidth < 768);
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 850);
+        };
+        
+        // Set initial value
+        handleResize();
+        
+        // Listen for resize events
+        window.addEventListener('resize', handleResize);
+        
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
+    useEffect(() => {
         if(userInfo.id) {
             setUserRole(userInfo.role);
             if(userInfo.display_name) {
-                setUsername(userInfo.display_name);
+                setUsername(userInfo.display_name.length > 8 ? userInfo.display_name.slice(0, 4) + "..." + userInfo.display_name.slice(-4) : userInfo.display_name);
             } else if(userInfo.email) {
-                setUsername(userInfo.email);
+                setUsername(userInfo.email.slice(0, 4) + "..." + userInfo.email.slice(-4));
             } else if(userInfo.address) {
                 setUsername(userInfo.address.slice(0, 4) + "..." + userInfo.address.slice(-4));
             }
