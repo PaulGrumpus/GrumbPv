@@ -133,7 +133,7 @@ const GigsPage = () => {
                     <p className="lg:text-display text-title lg:text-left text-center font-bold text-black pb-6">Gigs</p>
                     <p className="text-normal font-regular text-black pb-20">Discover skilled talent, ready to deliver your next job.</p>
                    
-                    {filteredGigs.length > 0 && (
+                    {gigs.length > 0 && (
                         <div className="flex items-center gap-2 pb-20 justify-end">
                         <Input 
                             type="text" 

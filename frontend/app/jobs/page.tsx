@@ -92,7 +92,7 @@ const JobsPage = () => {
                 <div className="container mx-auto">
                     <p className="lg:text-display text-title lg:text-left text-center font-bold text-black pb-6">Jobs</p>
                     <p className="text-normal font-regular text-black pb-20">Discover high-quality projects waiting for the right expertise. Browse and Apply Now.</p>
-                    {filteredJobs.length > 0 && (
+                    {jobs.length > 0 && (
                         <div className="flex items-center gap-2 pb-20 justify-end">
                             <Input 
                                 type="text" 
