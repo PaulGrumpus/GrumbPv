@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { getAdminJobs, getAdminJobDetails } from '@/utils/adminFunctions';
+import { getAdminJobs, getAdminJobDetails, getAdminSystemSettings } from '@/utils/adminFunctions';
 import { AdminJob, AdminJobDetails, Pagination, JobStatusFilter } from '@/types/admin';
 import { EscrowBackendConfig } from '@/config/config';
 import SmallLoading from '@/components/smallLoading';
@@ -27,6 +27,7 @@ const AdminJobsSection = () => {
   const [selectedJob, setSelectedJob] = useState<AdminJobDetails | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [arbiterAddress, setArbiterAddress] = useState<string | null>(null);
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
@@ -39,6 +40,10 @@ const AdminJobsSection = () => {
     if (result.success) {
       setJobs(result.data || []);
       setPagination(result.pagination || null);
+    }
+    const resultSettings = await getAdminSystemSettings();
+    if(resultSettings.success && resultSettings.data) {
+      setArbiterAddress(resultSettings.data.arbiter_address);
     }
     setLoading(false);
   }, [page, search, statusFilter]);
@@ -144,13 +149,15 @@ const AdminJobsSection = () => {
       ) : (
         <>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="sm:hidden divide-y divide-gray-100">
+            <div className="sm:hidden space-y-3 p-3 bg-gray-50">
               {jobs.map((job) => (
                 <button
                   key={job.id}
                   onClick={() => handleJobClick(job.id)}
-                  className={`w-full text-left p-4 transition-colors ${
-                    job.hasDispute ? 'bg-red-50/50' : 'hover:bg-gray-50'
+                  className={`w-full text-left p-4 rounded-xl border border-gray-100 shadow-sm transition-all ${
+                    job.hasDispute
+                      ? 'bg-red-50/60 border-red-100'
+                      : 'bg-white hover:shadow-md hover:border-gray-200'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -295,6 +302,7 @@ const AdminJobsSection = () => {
         onClose={closeModal}
         job={selectedJob}
         loading={loadingDetails}
+        arbiterAddress={arbiterAddress}
       />
     </div>
   );

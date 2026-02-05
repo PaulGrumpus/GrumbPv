@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { AdminConversationDetails } from '@/types/admin';
 import { EscrowBackendConfig } from '@/config/config';
 import SmallLoading from '@/components/smallLoading';
+import AdminMessagePreview from '@/components/admin/AdminMessagePreview';
 import { XMarkIcon } from '@heroicons/react/20/solid';
 
 interface AdminConversationModalProps {
@@ -155,32 +156,7 @@ const AdminConversationModal = ({ isOpen, onClose, conversation, loading }: Admi
                                 {new Date(message.created_at).toLocaleString()}
                               </span>
                             </div>
-                            {message.kind === 'system' ? (
-                              <p className="text-small text-gray-500 italic whitespace-pre-wrap wrap-break-word">
-                                {message.body_text}
-                              </p>
-                            ) : message.kind === 'image' ? (
-                              <div className="mt-2">
-                                <p className="text-tiny text-gray-500 mb-1">[Image]</p>
-                                {message.attachment_id && (
-                                  <Image
-                                    src={`${EscrowBackendConfig.uploadedImagesURL}${message.attachment_id}`}
-                                    alt="Attachment"
-                                    width={200}
-                                    height={150}
-                                    className="rounded object-cover"
-                                  />
-                                )}
-                              </div>
-                            ) : message.kind === 'file' ? (
-                              <p className="text-small text-[#7E3FF2] whitespace-pre-wrap wrap-break-word">
-                                📎 {message.body_text || 'File attachment'}
-                              </p>
-                            ) : (
-                              <p className="text-small text-gray-700 whitespace-pre-wrap wrap-break-word">
-                                {message.body_text}
-                              </p>
-                            )}
+                            <AdminMessagePreview message={message} />
                           </div>
                         );
                       })

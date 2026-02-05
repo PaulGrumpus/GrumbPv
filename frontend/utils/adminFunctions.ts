@@ -262,3 +262,20 @@ export const updateAdminSystemSettings = async (payload: {
     };
   }
 };
+
+// Resolve dispute (arbiter)
+export const resolveDispute = async (job_milestone_id: string, favorBuyer: boolean, chainId: number) => {
+  try {
+    const response = await adminApi.post(`/contract/escrow/${job_milestone_id}/dispute/resolve`, { favorBuyer, chainId });
+    return {
+      success: true,
+      data: response.data.data,
+    };
+  }
+  catch (error: any) {
+    return {
+      success: false,
+      error: error.response?.data?.error?.message || error.message || 'Failed to resolve dispute',
+    };
+  }
+};

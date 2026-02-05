@@ -6,6 +6,7 @@ import { pinata } from '../../utils/pinata.js';
 import { AppError } from '../../middlewares/errorHandler.js';
 import { jobMilestoneService } from '../../services/database/job.milestone.service.js';
 import { CID } from 'multiformats/cid';
+import { logger } from '../../utils/logger.js';
 
 export class EscrowController {
   /**
@@ -270,25 +271,47 @@ export class EscrowController {
     }
   }
 
+  // /**
+  //  * Resolve dispute
+  //  */
+  // async resolveDispute(req: Request, res: Response, next: NextFunction) {
+  //   try {
+  //     const { job_milestone_id } = req.params;
+  //     const { privateKey, favorBuyer } = req.body;
+
+  //     const txHash = await escrowService.resolveDispute(privateKey, job_milestone_id, favorBuyer);
+
+  //     res.json({
+  //       success: true,
+  //       data: { transactionHash: txHash },
+  //       message: `Dispute resolved in favor of ${favorBuyer ? 'buyer' : 'vendor'}`,
+  //     });
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // }
+
   /**
-   * Resolve dispute
+   * Resolve dispute (arbiter)
    */
   async resolveDispute(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
-      const { privateKey, favorBuyer } = req.body;
+      const { favorBuyer, chainId } = req.body;
 
-      const txHash = await escrowService.resolveDispute(privateKey, job_milestone_id, favorBuyer);
+      logger.info(`Resolving dispute for job milestone ${job_milestone_id}, favor buyer: ${favorBuyer}, chainId: ${chainId}`);
+
+      const txData = await escrowService.buildResolveDisputeTx(job_milestone_id, favorBuyer, chainId);
 
       res.json({
         success: true,
-        data: { transactionHash: txHash },
+        data: txData,
         message: `Dispute resolved in favor of ${favorBuyer ? 'buyer' : 'vendor'}`,
       });
     } catch (error) {
-      next(error);
-    }
+    next(error);
   }
+}
 }
 
 export const escrowController = new EscrowController();

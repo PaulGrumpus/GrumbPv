@@ -86,12 +86,12 @@ const AdminConversationsSection = () => {
       ) : (
         <>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="sm:hidden divide-y divide-gray-100">
+            <div className="sm:hidden space-y-3 p-3 bg-gray-50">
               {conversations.map((conversation) => (
                 <button
                   key={conversation.id}
                   onClick={() => handleConversationClick(conversation.id)}
-                  className="w-full text-left p-4 hover:bg-gray-50 transition-colors"
+                  className="w-full text-left p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all"
                 >
                   <div className="flex items-center gap-2">
                     <div className="flex -space-x-2">

@@ -1,26 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { AdminJobDetails } from '@/types/admin';
 import { EscrowBackendConfig, CONFIG } from '@/config/config';
 import SmallLoading from '@/components/smallLoading';
 import { XMarkIcon } from '@heroicons/react/20/solid';
+import Button from '@/components/button';
+import { getAdminSystemSettings, resolveDispute } from '@/utils/adminFunctions';
+import { toast } from 'react-toastify';
+import { useWallet } from '@/context/walletContext';
+import AdminMessagePreview from '@/components/admin/AdminMessagePreview';
+import { updateJobMilestone } from '@/utils/functions';
+import { JobMilestoneStatus } from '@/types/jobMilestone';
 
 interface AdminJobModalProps {
   isOpen: boolean;
   onClose: () => void;
   job: AdminJobDetails | null;
   loading: boolean;
+  arbiterAddress: string | null;
 }
 
 type TabType = 'details' | 'bids' | 'milestones' | 'dispute';
 
-const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) => {
+const AdminJobModal = ({ isOpen, onClose, job, loading, arbiterAddress }: AdminJobModalProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('details');
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [expandedBids, setExpandedBids] = useState<Record<string, boolean>>({});
-
+  const [expandedDocs, setExpandedDocs] = useState<Record<string, boolean>>({});
+  const [localJob, setLocalJob] = useState<AdminJobDetails | null>(job);
+  const { sendTransaction, address } = useWallet();
   if (!isOpen) return null;
 
   const formatBudget = (min: number | null, max: number | null, symbol: string | null) => {
@@ -63,11 +73,40 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
   };
 
   const isDisputeStatus = (status: string) => {
-    return status.toLowerCase().includes('disputed') || status.toLowerCase().includes('resolved');
+    return status.toLowerCase().includes('disputed');
   };
+  // useEffect(() => {
+  //   setLocalJob(job);
+  // }, [job]);
+
+  const jobData = localJob ?? job;
+
+
+  const updateDisputeStatus = (milestoneId: string, status: string) => {
+    setLocalJob((prev) => {
+      const base = prev ?? job;
+      if (!base) return prev;
+
+      const updatedMilestones = base.milestones.map((milestone) =>
+        milestone.id === milestoneId ? { ...milestone, status } : milestone
+      );
+      const disputedMilestones = updatedMilestones.filter((milestone) =>
+        milestone.status.toLowerCase().includes('disputed')
+      );
+
+      return {
+        ...base,
+        milestones: updatedMilestones,
+        disputedMilestones,
+        hasDispute: disputedMilestones.length > 0,
+      };
+    });
+  };
+
 
   const DESCRIPTION_PREVIEW_LIMIT = 320;
   const BID_PREVIEW_LIMIT = 220;
+  const DOC_PREVIEW_LIMIT = 180;
 
   const getPreviewText = (text: string, limit: number) => {
     if (text.length <= limit) return text;
@@ -76,10 +115,116 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
 
   const tabs: { id: TabType; label: string; show: boolean }[] = [
     { id: 'details', label: 'Details', show: true },
-    { id: 'bids', label: `Bids (${job?.bids?.length || 0})`, show: true },
-    { id: 'milestones', label: `Milestones (${job?.milestones?.length || 0})`, show: true },
-    { id: 'dispute', label: 'Dispute Info', show: job?.hasDispute || false },
+    { id: 'bids', label: `Bids (${jobData?.bids?.length || 0})`, show: true },
+    { id: 'milestones', label: `Milestones (${jobData?.milestones?.length || 0})`, show: true },
+    { id: 'dispute', label: 'Dispute Info', show: jobData?.hasDispute || false },
   ];
+
+  const handleResolveToClient = async (job_milestone_id: string) => {
+    if(address?.toLowerCase() !== arbiterAddress?.toLowerCase()) {
+      toast.error('You are not authorized to resolve disputes. Please connect to the correct wallet.', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
+      return;
+    }
+    const result = await resolveDispute(job_milestone_id, true, Number(CONFIG.chainId));
+    if (!result.success || !result.data) {
+      toast.error(result.error || 'Failed to resolve dispute', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
+      return;
+    }
+
+    try {
+      const txHash = await sendTransaction({
+        to: result.data.to,
+        data: result.data.data,
+        value: result.data.value,
+        chainId: Number(result.data.chainId),
+      });
+      if (!txHash) {
+        throw new Error('Transaction failed');
+      }
+      updateDisputeStatus(job_milestone_id, 'resolvedToBuyer');
+      await updateJobMilestone(job_milestone_id, { status: JobMilestoneStatus.RESOLVED_TO_BUYER });
+      toast.success('Dispute resolved to client', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
+    } catch (error) {
+      toast.error('Failed to resolve dispute', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
+    }
+  };
+
+  const handleResolveToFreelancer = async (job_milestone_id: string) => {
+    if(address?.toLowerCase() !== arbiterAddress?.toLowerCase()) {
+      toast.error('You are not authorized to resolve disputes. Please connect to the correct wallet.', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
+      return;
+    }
+    const result = await resolveDispute(job_milestone_id, false, Number(CONFIG.chainId));
+    if (!result.success || !result.data) {
+      toast.error(result.error || 'Failed to resolve dispute', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
+      return;
+    }
+
+    try {
+      const txHash = await sendTransaction({
+        to: result.data.to,
+        data: result.data.data,
+        value: result.data.value,
+        chainId: Number(result.data.chainId),
+      });
+      if (!txHash) {
+        throw new Error('Transaction failed');
+      }
+      updateDisputeStatus(job_milestone_id, 'resolvedToVendor');
+      await updateJobMilestone(job_milestone_id, { status: JobMilestoneStatus.RESOLVED_TO_VENDOR });
+      toast.success('Dispute resolved to freelancer', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
+    } catch (error) {
+      toast.error('Failed to resolve dispute', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
+    }
+  };
 
   return (
     <div
@@ -96,7 +241,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h2 className="text-subtitle font-bold text-black">Job Details</h2>
-                {job?.hasDispute && (
+                {jobData?.hasDispute && (
                   <span className="text-tiny px-2 py-1 rounded-full bg-red-100 text-red-700 mt-2 inline-block">
                     ⚠ This job has disputes
                   </span>
@@ -114,31 +259,31 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
               <div className="flex items-center justify-center py-20">
                 <SmallLoading />
               </div>
-            ) : job ? (
+            ) : jobData ? (
               <div className="space-y-6">
                 {/* Job Header */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                  {job.image_id && (
+                  {jobData.image_id && (
                     <Image
-                      src={`${EscrowBackendConfig.uploadedImagesURL}${job.image_id}`}
-                      alt={job.title}
+                      src={`${EscrowBackendConfig.uploadedImagesURL}${jobData.image_id}`}
+                      alt={jobData.title}
                       width={100}
                       height={100}
                       className="rounded-xl object-cover"
                     />
                   )}
                   <div className="flex-1">
-                    <h3 className="text-large font-bold text-black">{job.title}</h3>
+                    <h3 className="text-large font-bold text-black">{jobData.title}</h3>
                     <p className="text-normal text-[#7E3FF2] font-medium mt-1">
-                      {formatBudget(job.budget_min, job.budget_max, job.token_symbol)}
+                      {formatBudget(jobData.budget_min, jobData.budget_max, jobData.token_symbol)}
                     </p>
                     <div className="flex flex-wrap items-center gap-2 mt-2">
-                      <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(job.status)}`}>
-                        {job.status.replace('_', ' ')}
+                      <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(jobData.status)}`}>
+                        {jobData.status.replace('_', ' ')}
                       </span>
-                      {job.deadline_at && (
+                      {jobData.deadline_at && (
                         <span className="text-tiny text-gray-500">
-                          Deadline: {new Date(job.deadline_at).toLocaleDateString()}
+                          Deadline: {new Date(jobData.deadline_at).toLocaleDateString()}
                         </span>
                       )}
                     </div>
@@ -150,19 +295,19 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                   <p className="text-small text-gray-500 mb-3">Client</p>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Image
-                      src={`${EscrowBackendConfig.uploadedImagesURL}${job.client?.image_id || 'default.jpg'}`}
-                      alt={job.client?.display_name || 'Client'}
+                      src={`${EscrowBackendConfig.uploadedImagesURL}${jobData.client?.image_id || 'default.jpg'}`}
+                      alt={jobData.client?.display_name || 'Client'}
                       width={48}
                       height={48}
                       className="rounded-full object-cover"
                     />
                     <div>
                       <p className="text-normal font-medium text-black">
-                        {job.client?.display_name || 'No name'}
+                        {jobData.client?.display_name || 'No name'}
                       </p>
-                      <p className="text-small text-gray-500">{job.client?.email || 'No email'}</p>
+                      <p className="text-small text-gray-500">{jobData.client?.email || 'No email'}</p>
                     </div>
-                    {job.client?.is_verified && (
+                    {jobData.client?.is_verified && (
                       <span className="text-tiny px-2 py-1 rounded-full bg-green-100 text-green-700 sm:ml-auto">
                         Verified
                       </span>
@@ -195,19 +340,19 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                   {activeTab === 'details' && (
                     <div className="space-y-4">
                       {/* Description */}
-                      {job.description_md && (
+                      {jobData.description_md && (
                         <div className="p-4 bg-gray-50 rounded-lg">
                           <p className="text-small text-gray-500 mb-2">Description</p>
                           <div className="text-normal text-black whitespace-pre-wrap prose prose-sm max-w-none">
                             {isDescriptionExpanded
-                              ? job.description_md
-                              : getPreviewText(job.description_md, DESCRIPTION_PREVIEW_LIMIT)}
+                              ? jobData.description_md
+                              : getPreviewText(jobData.description_md, DESCRIPTION_PREVIEW_LIMIT)}
                           </div>
-                          {job.description_md.length > DESCRIPTION_PREVIEW_LIMIT && (
+                          {jobData.description_md.length > DESCRIPTION_PREVIEW_LIMIT && (
                             <button
                               type="button"
                               onClick={() => setIsDescriptionExpanded((prev) => !prev)}
-                              className="mt-2 text-small font-medium text-[#7E3FF2] hover:underline"
+                              className="mt-2 text-small font-medium text-gray-500 hover:underline"
                             >
                               {isDescriptionExpanded ? 'Show less' : 'Show more'}
                             </button>
@@ -216,11 +361,11 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                       )}
 
                       {/* Tags */}
-                      {job.tags && job.tags.length > 0 && (
+                      {jobData.tags && jobData.tags.length > 0 && (
                         <div className="p-4 bg-gray-50 rounded-lg">
                           <p className="text-small text-gray-500 mb-2">Tags</p>
                           <div className="flex flex-wrap gap-2">
-                            {job.tags.map((tag, index) => (
+                            {jobData.tags.map((tag, index) => (
                               <span
                                 key={index}
                                 className="text-tiny px-2 py-1 bg-white border border-gray-200 text-gray-600 rounded"
@@ -233,11 +378,11 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                       )}
 
                       {/* Application Documents */}
-                      {job.jobApplicationsDocs && job.jobApplicationsDocs.length > 0 && (
+                      {jobData.jobApplicationsDocs && jobData.jobApplicationsDocs.length > 0 && (
                         <div className="p-4 bg-gray-50 rounded-lg">
                           <p className="text-small text-gray-500 mb-3">Job Requirements Documents</p>
                           <div className="space-y-3">
-                            {job.jobApplicationsDocs.map((doc) => (
+                            {jobData.jobApplicationsDocs.map((doc) => (
                               <div
                                 key={doc.id}
                                 className="p-3 bg-white rounded border border-gray-200"
@@ -258,14 +403,50 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                                 </div>
                                 {doc.deliverables && (
                                   <div className="mb-2">
-                                    <p className="text-tiny text-gray-500">Deliverables:</p>
-                                    <p className="text-small text-black">{doc.deliverables}</p>
+                                    <p className="text-tiny text-gray-500 mb-1">Deliverables:</p>
+                                    <p className="text-small text-black whitespace-pre-wrap">
+                                      {expandedDocs[`${doc.id}-deliverables`]
+                                        ? doc.deliverables
+                                        : getPreviewText(doc.deliverables, DOC_PREVIEW_LIMIT)}
+                                    </p>
+                                    {doc.deliverables.length > DOC_PREVIEW_LIMIT && (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setExpandedDocs((prev) => ({
+                                            ...prev,
+                                            [`${doc.id}-deliverables`]: !prev[`${doc.id}-deliverables`],
+                                          }))
+                                        }
+                                        className="mt-1 text-tiny font-medium text-gray-500 hover:underline"
+                                      >
+                                        {expandedDocs[`${doc.id}-deliverables`] ? 'Show less' : 'Show more'}
+                                      </button>
+                                    )}
                                   </div>
                                 )}
                                 {doc.out_of_scope && (
                                   <div className="mb-2">
-                                    <p className="text-tiny text-gray-500">Out of Scope:</p>
-                                    <p className="text-small text-black">{doc.out_of_scope}</p>
+                                    <p className="text-tiny text-gray-500 mb-1">Out of Scope:</p>
+                                    <p className="text-small text-black whitespace-pre-wrap">
+                                      {expandedDocs[`${doc.id}-out_of_scope`]
+                                        ? doc.out_of_scope
+                                        : getPreviewText(doc.out_of_scope, DOC_PREVIEW_LIMIT)}
+                                    </p>
+                                    {doc.out_of_scope.length > DOC_PREVIEW_LIMIT && (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setExpandedDocs((prev) => ({
+                                            ...prev,
+                                            [`${doc.id}-out_of_scope`]: !prev[`${doc.id}-out_of_scope`],
+                                          }))
+                                        }
+                                        className="mt-1 text-tiny font-medium text-gray-500 hover:underline"
+                                      >
+                                        {expandedDocs[`${doc.id}-out_of_scope`] ? 'Show less' : 'Show more'}
+                                      </button>
+                                    )}
                                   </div>
                                 )}
                                 {(doc.start_date || doc.end_date) && (
@@ -285,11 +466,11 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="p-4 bg-gray-50 rounded-lg">
                           <p className="text-small text-gray-500 mb-1">Location</p>
-                          <p className="text-normal text-black capitalize">{job.location || 'Remote'}</p>
+                          <p className="text-normal text-black capitalize">{jobData.location || 'Remote'}</p>
                         </div>
                         <div className="p-4 bg-gray-50 rounded-lg">
                           <p className="text-small text-gray-500 mb-1">Token</p>
-                          <p className="text-normal text-black">{job.token_symbol || 'BNB'}</p>
+                          <p className="text-normal text-black">{jobData.token_symbol || 'BNB'}</p>
                         </div>
                       </div>
                     </div>
@@ -298,8 +479,8 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                   {/* Bids Tab */}
                   {activeTab === 'bids' && (
                     <div className="space-y-3">
-                      {job.bids && job.bids.length > 0 ? (
-                        job.bids.map((bid) => (
+                      {jobData.bids && jobData.bids.length > 0 ? (
+                        jobData.bids.map((bid) => (
                           <div
                             key={bid.id}
                             className="p-4 bg-gray-50 rounded-lg"
@@ -347,7 +528,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                                         [bid.id]: !prev[bid.id],
                                       }))
                                     }
-                                    className="mt-2 text-small font-medium text-[#7E3FF2] hover:underline"
+                                    className="mt-2 text-small font-medium text-gray-500 hover:underline"
                                   >
                                     {expandedBids[bid.id] ? 'Show less' : 'Show more'}
                                   </button>
@@ -370,8 +551,8 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                   {/* Milestones Tab */}
                   {activeTab === 'milestones' && (
                     <div className="space-y-3">
-                      {job.milestones && job.milestones.length > 0 ? (
-                        job.milestones.map((milestone, index) => (
+                      {jobData.milestones && jobData.milestones.length > 0 ? (
+                        jobData.milestones.map((milestone, index) => (
                           <div
                             key={milestone.id}
                             className={`p-4 rounded-lg ${
@@ -397,7 +578,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                               </div>
                               <div className="text-left sm:text-right">
                                 <p className="text-normal font-bold text-[#7E3FF2]">
-                                  {milestone.amount} {job.token_symbol || 'BNB'}
+                                  {milestone.amount} {jobData.token_symbol || 'BNB'}
                                 </p>
                                 <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(milestone.status)}`}>
                                   {milestone.status.replace(/([A-Z])/g, ' $1').trim()}
@@ -433,26 +614,26 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                   )}
 
                   {/* Dispute Tab */}
-                  {activeTab === 'dispute' && job.hasDispute && (
+                  {activeTab === 'dispute' && jobData.hasDispute && (
                     <div className="space-y-6">
                       {/* Disputed Milestones */}
                       <div>
                         <h4 className="text-normal font-bold text-red-600 mb-3">Disputed Milestones</h4>
                         <div className="space-y-3">
-                          {job.disputedMilestones.map((milestone) => (
+                          {jobData.disputedMilestones.map((milestone) => (
                             <div
                               key={milestone.id}
                               className="p-4 bg-red-50 border-2 border-red-200 rounded-lg"
                             >
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                              <div>
+                              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div>
                                   <h5 className="text-normal font-medium text-black">{milestone.title}</h5>
                                   <p className="text-small text-gray-600 mt-1">
                                     Status: <span className="text-red-600 font-medium">{milestone.status}</span>
                                   </p>
                                 </div>
-                              <p className="text-normal font-bold text-red-600">
-                                  {milestone.amount} {job.token_symbol || 'BNB'}
+                                <p className="text-normal font-bold text-red-600">
+                                  {milestone.amount} {jobData.token_symbol || 'BNB'}
                                 </p>
                               </div>
                               {milestone.ipfs && (
@@ -462,8 +643,24 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                                   rel="noopener noreferrer"
                                   className="mt-3 inline-block text-small text-[#7E3FF2] hover:underline"
                                 >
-                                  📎 Reference Document (IPFS)
+                                  📎 Deliverd Work (IPFS)
                                 </a>
+                              )}
+                              {milestone.status == "disputedWithCounterSide" && (
+                                <div className='flex sm:flex-row flex-col sm:items-start gap-2 mt-4'>
+                                  <Button
+                                    padding='px-4 py-1.5'
+                                    onClick={() => handleResolveToClient(milestone.id)}
+                                  >
+                                    Resolve to client
+                                  </Button>
+                                  <Button
+                                    padding='px-4 py-1.5'
+                                    onClick={() => handleResolveToFreelancer(milestone.id)}
+                                  >
+                                    Resolve to freelancer
+                                  </Button>
+                                </div>
                               )}
                             </div>
                           ))}
@@ -471,13 +668,13 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                       </div>
 
                       {/* Chat History */}
-                      {job.disputeChatHistory && job.disputeChatHistory.length > 0 && (
+                      {jobData.disputeChatHistory && jobData.disputeChatHistory.length > 0 && (
                         <div>
                           <h4 className="text-normal font-bold text-black mb-3">
-                            Chat History ({job.disputeChatHistory.length} messages)
+                            Chat History ({jobData.disputeChatHistory.length} messages)
                           </h4>
                           <div className="bg-gray-50 rounded-lg p-4 max-h-[400px] overflow-y-auto space-y-3">
-                            {job.disputeChatHistory.map((message) => (
+                            {jobData.disputeChatHistory.map((message) => (
                               <div
                                 key={message.id}
                                 className={`p-3 rounded-lg ${
@@ -508,7 +705,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                                     {new Date(message.created_at).toLocaleString()}
                                   </span>
                                 </div>
-                                <p className="text-small text-gray-700">{message.body_text}</p>
+                                <AdminMessagePreview message={message} />
                               </div>
                             ))}
                           </div>
@@ -520,8 +717,8 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
 
                 {/* Dates */}
                 <div className="flex flex-col gap-2 sm:flex-row sm:justify-between text-small text-gray-500 pt-4 border-t border-gray-200">
-                  <span>Created: {new Date(job.created_at).toLocaleString()}</span>
-                  <span>Updated: {new Date(job.updated_at).toLocaleString()}</span>
+                  <span>Created: {new Date(jobData.created_at).toLocaleString()}</span>
+                  <span>Updated: {new Date(jobData.updated_at).toLocaleString()}</span>
                 </div>
               </div>
             ) : (
@@ -532,6 +729,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
       </div>
     </div>
   );
+
 };
 
 export default AdminJobModal;

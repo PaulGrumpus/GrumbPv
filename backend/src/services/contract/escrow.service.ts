@@ -818,7 +818,7 @@ export class EscrowService {
       throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
     }
     const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
-    const data = iface.encodeFunctionData('resolveDispute', [favorBuyer]);
+    const data = favorBuyer ? iface.encodeFunctionData('resolveToBuyer', []) : iface.encodeFunctionData('resolveToVendor', []);
     return {
       to: escrowAddress,
       data,

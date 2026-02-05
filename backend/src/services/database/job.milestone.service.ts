@@ -3,14 +3,17 @@ import { AppError } from '../../middlewares/errorHandler.js';
 import {
   Prisma,
   job_milestones,
+  job_status,
   milestone_status,
   notification_entity,
   notification_type,
+  user_role,
 } from '@prisma/client';
 import { userService } from './user.service.js';
 import { jobService } from './job.service.js';
 import { prisma } from '../../prisma.js';
 import { notificationService } from './notification.service.js';
+import { emailService } from '../email/email.service.js';
 
 export class JobMilestoneService {
   private prisma = prisma;
@@ -183,6 +186,13 @@ export class JobMilestoneService {
       if(jobMilestone.status === milestone_status.funded) {
         const fundCycle = (now.getTime() - existingJobMilestone.created_at.getTime()) / 1000;
         await userService.updateClientFundTime(existingJob.client_id, fundCycle);
+      }
+      if(jobMilestone.status === milestone_status.disputedByClient || jobMilestone.status === milestone_status.disputedByFreelancer || jobMilestone.status === milestone_status.disputedWithCounterSide) {
+        await jobService.updateJobStatusById(existingJobMilestone.job_id, job_status.in_review);
+        await this.notifyAdminsOfDispute(existingJobMilestone.job_id, existingJobMilestone.id, jobMilestone.status);
+      }
+      if(jobMilestone.status === milestone_status.resolvedToBuyer || jobMilestone.status === milestone_status.resolvedToVendor) {
+        await jobService.updateJobStatusById(existingJobMilestone.job_id, job_status.completed);
       }
       const updatedJobMilestone = await this.prisma.job_milestones.update({
         where: { id },
@@ -485,6 +495,46 @@ export class JobMilestoneService {
         500,
         'DB_JOB_MILESTONES_GET_BY_USER_ID_FAILED'
       );
+    }
+  }
+
+  private async notifyAdminsOfDispute(jobId: string, milestoneId: string, status: milestone_status): Promise<void> {
+    try {
+      const admins = await this.prisma.users.findMany({
+        where: {
+          role: user_role.admin,
+          email: { not: null },
+        },
+        select: {
+          email: true,
+        },
+      });
+
+      if (admins.length === 0) {
+        return;
+      }
+
+      const baseUrl = process.env.FRONTEND_URL || 'https://grumbuild.com';
+      const adminUrl = `${baseUrl}/admin/dashboard`;
+
+      const title = 'Dispute requires admin review';
+      const body = `A dispute has been ${status === milestone_status.disputedByClient ? 'started by client' : status === milestone_status.disputedByFreelancer ? 'started by freelancer' : 'started with counter side'} for job ${jobId} (milestone ${milestoneId}).`;
+
+      await Promise.all(
+        admins
+          .filter((admin) => admin.email)
+          .map((admin) =>
+            emailService.sendNotificationEmail(
+              admin.email as string,
+              title,
+              body,
+              adminUrl,
+              'Open Admin Panel'
+            )
+          )
+      );
+    } catch (error) {
+      logger.error('Failed to send admin dispute email', { error, jobId, milestoneId });
     }
   }
 }
