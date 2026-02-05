@@ -18,6 +18,8 @@ type TabType = 'details' | 'bids' | 'milestones' | 'dispute';
 
 const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('details');
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [expandedBids, setExpandedBids] = useState<Record<string, boolean>>({});
 
   if (!isOpen) return null;
 
@@ -64,6 +66,14 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
     return status.toLowerCase().includes('disputed') || status.toLowerCase().includes('resolved');
   };
 
+  const DESCRIPTION_PREVIEW_LIMIT = 320;
+  const BID_PREVIEW_LIMIT = 220;
+
+  const getPreviewText = (text: string, limit: number) => {
+    if (text.length <= limit) return text;
+    return `${text.slice(0, limit).trimEnd()}...`;
+  };
+
   const tabs: { id: TabType; label: string; show: boolean }[] = [
     { id: 'details', label: 'Details', show: true },
     { id: 'bids', label: `Bids (${job?.bids?.length || 0})`, show: true },
@@ -76,12 +86,12 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
       className="fixed inset-0 z-50 overflow-y-auto bg-black/20 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
         <div
-          className="linear-border rounded-xl p-0.5 w-full max-w-4xl"
+          className="linear-border rounded-xl p-0.5 w-full max-w-[95vw] sm:max-w-4xl lg:max-w-5xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="linear-border__inner rounded-[0.6875rem] bg-white p-6 max-h-[90vh] overflow-y-auto">
+          <div className="linear-border__inner rounded-[0.6875rem] bg-white p-4 sm:p-6 md:p-8 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-start justify-between mb-6">
               <div>
@@ -107,7 +117,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
             ) : job ? (
               <div className="space-y-6">
                 {/* Job Header */}
-                <div className="flex items-start gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                   {job.image_id && (
                     <Image
                       src={`${EscrowBackendConfig.uploadedImagesURL}${job.image_id}`}
@@ -122,7 +132,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                     <p className="text-normal text-[#7E3FF2] font-medium mt-1">
                       {formatBudget(job.budget_min, job.budget_max, job.token_symbol)}
                     </p>
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
                       <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(job.status)}`}>
                         {job.status.replace('_', ' ')}
                       </span>
@@ -138,7 +148,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                 {/* Client Info */}
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="text-small text-gray-500 mb-3">Client</p>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Image
                       src={`${EscrowBackendConfig.uploadedImagesURL}${job.client?.image_id || 'default.jpg'}`}
                       alt={job.client?.display_name || 'Client'}
@@ -153,7 +163,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                       <p className="text-small text-gray-500">{job.client?.email || 'No email'}</p>
                     </div>
                     {job.client?.is_verified && (
-                      <span className="text-tiny px-2 py-1 rounded-full bg-green-100 text-green-700 ml-auto">
+                      <span className="text-tiny px-2 py-1 rounded-full bg-green-100 text-green-700 sm:ml-auto">
                         Verified
                       </span>
                     )}
@@ -162,12 +172,12 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
 
                 {/* Tabs */}
                 <div className="border-b border-gray-200">
-                  <nav className="flex gap-4">
+                  <nav className="flex flex-wrap gap-4">
                     {tabs.filter(t => t.show).map((tab) => (
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`pb-3 px-1 text-normal font-medium transition-colors border-b-2 ${
+                          className={`pb-3 px-1 text-normal font-medium transition-colors border-b-2 ${
                           activeTab === tab.id
                             ? 'border-[#7E3FF2] text-[#7E3FF2]'
                             : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -189,8 +199,19 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                         <div className="p-4 bg-gray-50 rounded-lg">
                           <p className="text-small text-gray-500 mb-2">Description</p>
                           <div className="text-normal text-black whitespace-pre-wrap prose prose-sm max-w-none">
-                            {job.description_md}
+                            {isDescriptionExpanded
+                              ? job.description_md
+                              : getPreviewText(job.description_md, DESCRIPTION_PREVIEW_LIMIT)}
                           </div>
+                          {job.description_md.length > DESCRIPTION_PREVIEW_LIMIT && (
+                            <button
+                              type="button"
+                              onClick={() => setIsDescriptionExpanded((prev) => !prev)}
+                              className="mt-2 text-small font-medium text-[#7E3FF2] hover:underline"
+                            >
+                              {isDescriptionExpanded ? 'Show less' : 'Show more'}
+                            </button>
+                          )}
                         </div>
                       )}
 
@@ -261,7 +282,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                       )}
 
                       {/* Info Grid */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="p-4 bg-gray-50 rounded-lg">
                           <p className="text-small text-gray-500 mb-1">Location</p>
                           <p className="text-normal text-black capitalize">{job.location || 'Remote'}</p>
@@ -283,7 +304,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                             key={bid.id}
                             className="p-4 bg-gray-50 rounded-lg"
                           >
-                            <div className="flex items-start justify-between">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                               <div className="flex items-center gap-3">
                                 <Image
                                   src={`${EscrowBackendConfig.uploadedImagesURL}${bid.freelancer?.image_id || 'default.jpg'}`}
@@ -301,7 +322,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                                   </p>
                                 </div>
                               </div>
-                              <div className="text-right">
+                              <div className="text-left sm:text-right">
                                 <p className="text-normal font-bold text-[#7E3FF2]">
                                   {bid.bid_amount} {bid.token_symbol || 'BNB'}
                                 </p>
@@ -312,7 +333,25 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                             </div>
                             {bid.cover_letter_md && (
                               <div className="mt-3 p-3 bg-white rounded text-small text-gray-600">
-                                {bid.cover_letter_md}
+                                <p className="whitespace-pre-wrap">
+                                  {expandedBids[bid.id]
+                                    ? bid.cover_letter_md
+                                    : getPreviewText(bid.cover_letter_md, BID_PREVIEW_LIMIT)}
+                                </p>
+                                {bid.cover_letter_md.length > BID_PREVIEW_LIMIT && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setExpandedBids((prev) => ({
+                                        ...prev,
+                                        [bid.id]: !prev[bid.id],
+                                      }))
+                                    }
+                                    className="mt-2 text-small font-medium text-[#7E3FF2] hover:underline"
+                                  >
+                                    {expandedBids[bid.id] ? 'Show less' : 'Show more'}
+                                  </button>
+                                )}
                               </div>
                             )}
                             {bid.period && (
@@ -341,7 +380,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                                 : 'bg-gray-50'
                             }`}
                           >
-                            <div className="flex items-start justify-between">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                               <div>
                                 <div className="flex items-center gap-2">
                                   <span className="text-tiny font-medium text-gray-500">#{index + 1}</span>
@@ -356,7 +395,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                                   </p>
                                 )}
                               </div>
-                              <div className="text-right">
+                              <div className="text-left sm:text-right">
                                 <p className="text-normal font-bold text-[#7E3FF2]">
                                   {milestone.amount} {job.token_symbol || 'BNB'}
                                 </p>
@@ -372,12 +411,12 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                             )}
                             {milestone.escrow && (
                               <p className="mt-1 text-tiny text-gray-400 font-mono">
-                                Escrow: {milestone.escrow.slice(0, 10)}...
+                                Escrow: {milestone.escrow}
                               </p>
                             )}
                             {milestone.ipfs && (
                               <a
-                                href={`${CONFIG.ipfsGateWay}${milestone.ipfs}`}
+                                href={`${CONFIG.ipfsGateWay}/${milestone.ipfs}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-2 inline-block text-tiny text-[#7E3FF2] hover:underline"
@@ -405,20 +444,20 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                               key={milestone.id}
                               className="p-4 bg-red-50 border-2 border-red-200 rounded-lg"
                             >
-                              <div className="flex items-start justify-between">
-                                <div>
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                              <div>
                                   <h5 className="text-normal font-medium text-black">{milestone.title}</h5>
                                   <p className="text-small text-gray-600 mt-1">
                                     Status: <span className="text-red-600 font-medium">{milestone.status}</span>
                                   </p>
                                 </div>
-                                <p className="text-normal font-bold text-red-600">
+                              <p className="text-normal font-bold text-red-600">
                                   {milestone.amount} {job.token_symbol || 'BNB'}
                                 </p>
                               </div>
                               {milestone.ipfs && (
                                 <a
-                                  href={`${CONFIG.ipfsGateWay}${milestone.ipfs}`}
+                                  href={`${CONFIG.ipfsGateWay}/${milestone.ipfs}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="mt-3 inline-block text-small text-[#7E3FF2] hover:underline"
@@ -480,7 +519,7 @@ const AdminJobModal = ({ isOpen, onClose, job, loading }: AdminJobModalProps) =>
                 </div>
 
                 {/* Dates */}
-                <div className="flex justify-between text-small text-gray-500 pt-4 border-t border-gray-200">
+                <div className="flex flex-col gap-2 sm:flex-row sm:justify-between text-small text-gray-500 pt-4 border-t border-gray-200">
                   <span>Created: {new Date(job.created_at).toLocaleString()}</span>
                   <span>Updated: {new Date(job.updated_at).toLocaleString()}</span>
                 </div>

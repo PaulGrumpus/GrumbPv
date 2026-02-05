@@ -21,12 +21,12 @@ const AdminUserModal = ({ isOpen, onClose, user, loading }: AdminUserModalProps)
       className="fixed inset-0 z-50 overflow-y-auto bg-black/20 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
         <div
-          className="linear-border rounded-xl p-0.5 w-full max-w-2xl"
+          className="linear-border rounded-xl p-0.5 w-full max-w-[95vw] sm:max-w-2xl lg:max-w-4xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="linear-border__inner rounded-[0.6875rem] bg-white p-6 max-h-[90vh] overflow-y-auto">
+          <div className="linear-border__inner rounded-[0.6875rem] bg-white p-4 sm:p-6 md:p-8 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-start justify-between mb-6">
               <h2 className="text-subtitle font-bold text-black">User Details</h2>
@@ -45,7 +45,7 @@ const AdminUserModal = ({ isOpen, onClose, user, loading }: AdminUserModalProps)
             ) : user ? (
               <div className="space-y-6">
                 {/* Profile Header */}
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                   <Image
                     src={`${EscrowBackendConfig.uploadedImagesURL}${user.image_id || 'default.jpg'}`}
                     alt={user.display_name || 'User'}
@@ -78,7 +78,7 @@ const AdminUserModal = ({ isOpen, onClose, user, loading }: AdminUserModalProps)
                 </div>
 
                 {/* Info Grid */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-small text-gray-500 mb-1">User ID</p>
                     <p className="text-small text-black font-mono truncate">{user.id}</p>
@@ -106,7 +106,7 @@ const AdminUserModal = ({ isOpen, onClose, user, loading }: AdminUserModalProps)
                 )}
 
                 {/* Stats */}
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div className="text-center p-4 bg-linear-to-r from-[#2F3DF6]/5 to-[#7E3FF2]/5 rounded-lg">
                     <p className="text-subtitle font-bold text-[#7E3FF2]">{user._count.jobs}</p>
                     <p className="text-small text-gray-500">Jobs</p>
@@ -126,7 +126,7 @@ const AdminUserModal = ({ isOpen, onClose, user, loading }: AdminUserModalProps)
                 </div>
 
                 {/* Financial Info */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-small text-gray-500 mb-1">Finished Jobs</p>
                     <p className="text-large font-bold text-black">{user.finished_job_num || 0}</p>
@@ -138,7 +138,7 @@ const AdminUserModal = ({ isOpen, onClose, user, loading }: AdminUserModalProps)
                 </div>
 
                 {/* Dates */}
-                <div className="flex justify-between text-small text-gray-500 pt-4 border-t border-gray-200">
+                <div className="flex flex-col gap-2 sm:flex-row sm:justify-between text-small text-gray-500 pt-4 border-t border-gray-200">
                   <span>Joined: {new Date(user.created_at).toLocaleString()}</span>
                   <span>Updated: {new Date(user.updated_at).toLocaleString()}</span>
                 </div>

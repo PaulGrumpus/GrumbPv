@@ -59,7 +59,7 @@ export class UserService {
           'EMAIL_ROLE_PASSWORD_REQUIRED'
         );
       }
-      if (user.role !== user_role.client && user.role !== user_role.freelancer) {
+      if (user.role !== user_role.client && user.role !== user_role.freelancer && user.role !== user_role.admin) {
         throw new AppError('Invalid role', 400, 'INVALID_ROLE');
       }
       const existingUser = await this.prisma.users.findFirst({

@@ -11,7 +11,7 @@ export const CONFIG = {
     },
     rpcUrls: process.env.NEXT_PUBLIC_RPC_URLS || ["https://bsc-testnet-rpc.publicnode.com", "https://data-seed-prebsc-1-s1.bnbchain.org:8545"],
     blockExplorerUrls: process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URLS || "https://testnet.bscscan.com",   
-    ipfsGateWay: process.env.NEXT_PUBLIC_IPFS_GATEWATY_URL || "https://brown-decisive-tyrannosaurus-507.mypinata.cloud/ipfs/",
+    ipfsGateWay: process.env.NEXT_PUBLIC_IPFS_GATEWATY_URL || "https://brown-decisive-tyrannosaurus-507.mypinata.cloud/ipfs",
 }
 
 export const EscrowBackendConfig = {

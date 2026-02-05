@@ -108,7 +108,7 @@ const AdminJobsSection = () => {
           <button
             key={filter.value}
             onClick={() => handleStatusFilterChange(filter.value)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            className={`px-3 py-2 sm:px-4 rounded-lg font-medium transition-all ${
               statusFilter === filter.value
                 ? 'bg-linear-to-r from-[#2F3DF6] to-[#7E3FF2] text-white'
                 : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
@@ -120,17 +120,17 @@ const AdminJobsSection = () => {
       </div>
 
       {/* Search */}
-      <form onSubmit={handleSearch} className="flex gap-4">
+      <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row sm:gap-4">
         <input
           type="text"
           placeholder="Search jobs by title or description..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7E3FF2]/20 focus:border-[#7E3FF2]"
+          className="flex-1 px-4 py-3 border border-gray-200 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7E3FF2]/20 focus:border-[#7E3FF2]"
         />
         <button
           type="submit"
-          className="px-6 py-3 bg-linear-to-r from-[#2F3DF6] to-[#7E3FF2] text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+          className="w-full sm:w-auto px-6 py-3 bg-linear-to-r from-[#2F3DF6] to-[#7E3FF2] text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
         >
           Search
         </button>
@@ -144,7 +144,48 @@ const AdminJobsSection = () => {
       ) : (
         <>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <table className="w-full">
+            <div className="sm:hidden divide-y divide-gray-100">
+              {jobs.map((job) => (
+                <button
+                  key={job.id}
+                  onClick={() => handleJobClick(job.id)}
+                  className={`w-full text-left p-4 transition-colors ${
+                    job.hasDispute ? 'bg-red-50/50' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {job.image_id && (
+                      <Image
+                        src={`${EscrowBackendConfig.uploadedImagesURL}${job.image_id}`}
+                        alt={job.title}
+                        width={48}
+                        height={48}
+                        className="rounded-lg object-cover"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-normal font-medium text-black truncate">{job.title}</p>
+                      {job.hasDispute && (
+                        <p className="text-tiny text-red-600 font-medium">⚠ Has Dispute</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-small text-gray-500">
+                    <span>{job.client.display_name || 'No name'}</span>
+                    <span>{new Date(job.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-small text-gray-600">
+                    <span>{formatBudget(job.budget_min, job.budget_max, job.token_symbol)}</span>
+                    <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(job.status, job.hasDispute)}`}>
+                      {job.hasDispute ? 'Disputed' : job.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-tiny text-gray-500">Bids: {job._count.bids}</div>
+                </button>
+              ))}
+            </div>
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full min-w-[860px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-left px-6 py-4 text-small font-medium text-gray-500">Job</th>
@@ -214,30 +255,31 @@ const AdminJobsSection = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
 
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-small text-gray-500">
                 Showing {jobs.length} of {pagination.total} jobs
               </p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-4 py-2 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-900 text-black rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >
                   Previous
                 </button>
-                <span className="px-4 py-2 text-normal">
+                <span className="px-4 py-2 text-normal text-black">
                   Page {page} of {pagination.totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
                   disabled={page === pagination.totalPages}
-                  className="px-4 py-2 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-900 text-black rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >
                   Next
                 </button>

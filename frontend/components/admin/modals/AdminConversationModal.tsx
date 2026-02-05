@@ -21,12 +21,12 @@ const AdminConversationModal = ({ isOpen, onClose, conversation, loading }: Admi
       className="fixed inset-0 z-50 overflow-y-auto bg-black/20 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
         <div
-          className="linear-border rounded-xl p-0.5 w-full max-w-3xl"
+          className="linear-border rounded-xl p-0.5 w-full max-w-[95vw] sm:max-w-3xl lg:max-w-5xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="linear-border__inner rounded-[0.6875rem] bg-white p-6 max-h-[90vh] overflow-y-auto">
+          <div className="linear-border__inner rounded-[0.6875rem] bg-white p-4 sm:p-6 md:p-8 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-start justify-between mb-6">
               <h2 className="text-subtitle font-bold text-black">Conversation Details</h2>
@@ -106,7 +106,7 @@ const AdminConversationModal = ({ isOpen, onClose, conversation, loading }: Admi
                 )}
 
                 {/* Info */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-small text-gray-500 mb-1">Conversation ID</p>
                     <p className="text-small text-black font-mono truncate">{conversation.id}</p>
@@ -129,8 +129,8 @@ const AdminConversationModal = ({ isOpen, onClose, conversation, loading }: Admi
                         return (
                           <div
                             key={message.id}
-                            className={`p-3 rounded-lg ${
-                              isClient ? 'bg-blue-50 ml-8' : 'bg-green-50 mr-8'
+                            className={`p-3 rounded-lg wrap-break-word ${
+                              isClient ? 'bg-blue-50 ml-0 sm:ml-8' : 'bg-green-50 mr-0 sm:mr-8'
                             }`}
                           >
                             <div className="flex items-center gap-2 mb-2">
@@ -156,7 +156,9 @@ const AdminConversationModal = ({ isOpen, onClose, conversation, loading }: Admi
                               </span>
                             </div>
                             {message.kind === 'system' ? (
-                              <p className="text-small text-gray-500 italic">{message.body_text}</p>
+                              <p className="text-small text-gray-500 italic whitespace-pre-wrap wrap-break-word">
+                                {message.body_text}
+                              </p>
                             ) : message.kind === 'image' ? (
                               <div className="mt-2">
                                 <p className="text-tiny text-gray-500 mb-1">[Image]</p>
@@ -171,11 +173,13 @@ const AdminConversationModal = ({ isOpen, onClose, conversation, loading }: Admi
                                 )}
                               </div>
                             ) : message.kind === 'file' ? (
-                              <p className="text-small text-[#7E3FF2]">
+                              <p className="text-small text-[#7E3FF2] whitespace-pre-wrap wrap-break-word">
                                 📎 {message.body_text || 'File attachment'}
                               </p>
                             ) : (
-                              <p className="text-small text-gray-700">{message.body_text}</p>
+                              <p className="text-small text-gray-700 whitespace-pre-wrap wrap-break-word">
+                                {message.body_text}
+                              </p>
                             )}
                           </div>
                         );

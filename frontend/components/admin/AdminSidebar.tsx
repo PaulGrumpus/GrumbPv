@@ -2,7 +2,14 @@
 
 import Image from 'next/image';
 
-type SectionSlug = 'overview' | 'users' | 'jobs' | 'gigs' | 'conversations' | 'settings';
+type SectionSlug =
+  | 'overview'
+  | 'users'
+  | 'jobs'
+  | 'gigs'
+  | 'conversations'
+  | 'system-settings'
+  | 'admin-settings';
 
 interface AdminSidebarProps {
   activeSection: SectionSlug;
@@ -15,7 +22,8 @@ const sidebarItems: { slug: SectionSlug; label: string; icon: string }[] = [
   { slug: 'jobs', label: 'Jobs', icon: '/Grmps/layer.svg' },
   { slug: 'gigs', label: 'Gigs', icon: '/Grmps/star.svg' },
   { slug: 'conversations', label: 'Conversations', icon: '/Grmps/chat.svg' },
-  { slug: 'settings', label: 'Settings', icon: '/Grmps/setting.svg' },
+  { slug: 'system-settings', label: 'System Settings', icon: '/Grmps/setting.svg' },
+  { slug: 'admin-settings', label: 'Admin Settings', icon: '/Grmps/setting.svg' },
 ];
 
 const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => {
@@ -28,7 +36,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
           <li key={item.slug}>
             <button
               onClick={() => onSectionChange(item.slug)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+              className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                 isActive
                   ? 'bg-linear-to-r from-[#2F3DF6]/10 to-[#7E3FF2]/10 text-[#7E3FF2] font-medium'
                   : 'text-gray-600 hover:bg-gray-100'

@@ -255,6 +255,21 @@ export interface AdminDashboardStats {
   }[];
 }
 
+export interface AdminSystemSettings {
+  id: string;
+  key: string;
+  fee_bps: number;
+  buyer_fee_bps: number;
+  vendor_fee_bps: number;
+  dispute_fee_bps: number;
+  reward_rate_bps: number;
+  reward_rate_per_1_e_18: string;
+  arbiter_address: string;
+  fee_recipient_address: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Pagination {
   page: number;
   limit: number;

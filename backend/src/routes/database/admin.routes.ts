@@ -314,4 +314,75 @@ router.get(
   adminController.getConversationDetails.bind(adminController)
 );
 
+/**
+ * @openapi
+ * /api/v1/admin/settings:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get system settings
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: System settings retrieved successfully
+ */
+router.get('/settings', adminHandler, adminController.getSystemSettings.bind(adminController));
+
+/**
+ * @openapi
+ * /api/v1/admin/settings:
+ *   put:
+ *     tags: [Admin]
+ *     summary: Update system settings
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               buyer_fee_bps:
+ *                 type: integer
+ *               vendor_fee_bps:
+ *                 type: integer
+ *               dispute_fee_bps:
+ *                 type: integer
+ *               reward_rate_bps:
+ *                 type: integer
+ *               reward_rate_per_1_e_18:
+ *                 type: string
+ *               arbiter_address:
+ *                 type: string
+ *               fee_recipient_address:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: System settings updated successfully
+ */
+router.put(
+  '/settings',
+  adminHandler,
+  [
+    body('buyer_fee_bps').optional().isInt({ min: 0 }),
+    body('vendor_fee_bps').optional().isInt({ min: 0 }),
+    body('dispute_fee_bps').optional().isInt({ min: 0 }),
+    body('reward_rate_bps').optional().isInt({ min: 0 }),
+    body('reward_rate_per_1_e_18').optional().matches(/^\d+$/),
+    body('arbiter_address').optional().isString(),
+    body('fee_recipient_address').optional().isString(),
+  ],
+  validate([
+    body('buyer_fee_bps'),
+    body('vendor_fee_bps'),
+    body('dispute_fee_bps'),
+    body('reward_rate_bps'),
+    body('reward_rate_per_1_e_18'),
+    body('arbiter_address'),
+    body('fee_recipient_address'),
+  ]),
+  adminController.updateSystemSettings.bind(adminController)
+);
+
 export default router;

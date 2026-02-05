@@ -279,6 +279,23 @@ model audit_log {
   @@map("audit_log")
 }
 
+model system_settings {
+  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key                     String   @unique @default("default")
+  fee_bps                 Int      @default(100)
+  buyer_fee_bps           Int      @default(50)
+  vendor_fee_bps          Int      @default(50)
+  dispute_fee_bps         Int      @default(50)
+  reward_rate_bps         Int      @default(25)
+  reward_rate_per_1_e_18  String   @default("30000000000000000000000")
+  arbiter_address         String   @default("")
+  fee_recipient_address   String   @default("")
+  created_at              DateTime @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("system_settings")
+}
+
 /// ---------- Enums ----------
 enum user_role {
   client

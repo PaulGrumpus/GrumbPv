@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { adminService } from '../../services/database/admin.service.js';
+import { systemSettingsService } from '../../services/database/systemSettings.service.js';
 
 export class AdminController {
   /**
@@ -205,6 +206,48 @@ export class AdminController {
         success: true,
         data: conversation,
         message: 'Conversation details retrieved successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get system settings
+   */
+  async getSystemSettings(_req: Request, res: Response, next: NextFunction) {
+    try {
+      const settings = await systemSettingsService.getSettings();
+
+      res.json({
+        success: true,
+        data: settings,
+        message: 'System settings retrieved successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Update system settings
+   */
+  async updateSystemSettings(req: Request, res: Response, next: NextFunction) {
+    try {
+      const updated = await systemSettingsService.updateSettings({
+        buyerFeeBps: req.body.buyer_fee_bps,
+        vendorFeeBps: req.body.vendor_fee_bps,
+        disputeFeeBps: req.body.dispute_fee_bps,
+        rewardRateBps: req.body.reward_rate_bps,
+        rewardRatePer1E18: req.body.reward_rate_per_1_e_18,
+        arbiterAddress: req.body.arbiter_address,
+        feeRecipientAddress: req.body.fee_recipient_address,
+      });
+
+      res.json({
+        success: true,
+        data: updated,
+        message: 'System settings updated successfully',
       });
     } catch (error) {
       next(error);

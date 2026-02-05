@@ -55,7 +55,7 @@ const AdminOverview = () => {
   return (
     <div className="space-y-8">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {statCards.map((card) => (
           <div
             key={card.label}
@@ -72,7 +72,7 @@ const AdminOverview = () => {
       {/* Jobs by Status */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
         <h2 className="text-large font-bold text-black mb-4">Jobs by Status</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {Object.entries(stats.jobsByStatus).map(([status, count]) => (
             <div key={status} className="text-center p-4 bg-gray-50 rounded-lg">
               <p className="text-small text-gray-500 capitalize mb-1">
@@ -93,7 +93,7 @@ const AdminOverview = () => {
             {stats.recentUsers.map((user) => (
               <div
                 key={user.id}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                className="flex flex-col gap-3 p-3 bg-gray-50 rounded-lg sm:flex-row sm:items-center"
               >
                 <div className="w-10 h-10 rounded-full bg-linear-to-r from-[#2F3DF6] to-[#7E3FF2] flex items-center justify-center text-white font-bold text-small">
                   {user.display_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
@@ -104,7 +104,7 @@ const AdminOverview = () => {
                   </p>
                   <p className="text-tiny text-gray-500 truncate">{user.email || 'No email'}</p>
                 </div>
-                <span className={`text-tiny px-2 py-1 rounded-full ${
+                <span className={`text-tiny px-2 py-1 rounded-full self-end ${
                   user.role === 'admin'
                     ? 'bg-purple-100 text-purple-700'
                     : user.role === 'client'
@@ -125,7 +125,7 @@ const AdminOverview = () => {
             {stats.recentJobs.map((job) => (
               <div
                 key={job.id}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                className="flex flex-col gap-3 p-3 bg-gray-50 rounded-lg sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-normal font-medium text-black truncate">{job.title}</p>
@@ -133,7 +133,7 @@ const AdminOverview = () => {
                     {new Date(job.created_at).toLocaleDateString()}
                   </p>
                 </div>
-                <span className={`text-tiny px-2 py-1 rounded-full ${
+                <span className={`text-tiny px-2 py-1 rounded-full self-end ${
                   job.status === 'completed'
                     ? 'bg-green-100 text-green-700'
                     : job.status === 'in_progress'

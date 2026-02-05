@@ -29,12 +29,12 @@ const AdminGigModal = ({ isOpen, onClose, gig, loading }: AdminGigModalProps) =>
       className="fixed inset-0 z-50 overflow-y-auto bg-black/20 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
         <div
-          className="linear-border rounded-xl p-0.5 w-full max-w-2xl"
+          className="linear-border rounded-xl p-0.5 w-full max-w-[95vw] sm:max-w-2xl lg:max-w-4xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="linear-border__inner rounded-[0.6875rem] bg-white p-6 max-h-[90vh] overflow-y-auto">
+          <div className="linear-border__inner rounded-[0.6875rem] bg-white p-4 sm:p-6 md:p-8 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-start justify-between mb-6">
               <h2 className="text-subtitle font-bold text-black">Gig Details</h2>
@@ -53,7 +53,7 @@ const AdminGigModal = ({ isOpen, onClose, gig, loading }: AdminGigModalProps) =>
             ) : gig ? (
               <div className="space-y-6">
                 {/* Gig Header */}
-                <div className="flex items-start gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                   {gig.image_id && (
                     <Image
                       src={`${EscrowBackendConfig.uploadedImagesURL}${gig.image_id}`}
@@ -86,7 +86,7 @@ const AdminGigModal = ({ isOpen, onClose, gig, loading }: AdminGigModalProps) =>
                 {/* Freelancer Info */}
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="text-small text-gray-500 mb-3">Freelancer</p>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Image
                       src={`${EscrowBackendConfig.uploadedImagesURL}${gig.freelancer?.image_id || 'default.jpg'}`}
                       alt={gig.freelancer?.display_name || 'Freelancer'}
@@ -101,7 +101,7 @@ const AdminGigModal = ({ isOpen, onClose, gig, loading }: AdminGigModalProps) =>
                       <p className="text-small text-gray-500">{gig.freelancer?.email || 'No email'}</p>
                     </div>
                     {gig.freelancer?.is_verified && (
-                      <span className="text-tiny px-2 py-1 rounded-full bg-green-100 text-green-700 ml-auto">
+                      <span className="text-tiny px-2 py-1 rounded-full bg-green-100 text-green-700 sm:ml-auto">
                         Verified
                       </span>
                     )}
@@ -155,7 +155,7 @@ const AdminGigModal = ({ isOpen, onClose, gig, loading }: AdminGigModalProps) =>
                 )}
 
                 {/* Info Grid */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-small text-gray-500 mb-1">Gig ID</p>
                     <p className="text-small text-black font-mono truncate">{gig.id}</p>
@@ -167,7 +167,7 @@ const AdminGigModal = ({ isOpen, onClose, gig, loading }: AdminGigModalProps) =>
                 </div>
 
                 {/* Dates */}
-                <div className="flex justify-between text-small text-gray-500 pt-4 border-t border-gray-200">
+                <div className="flex flex-col gap-2 sm:flex-row sm:justify-between text-small text-gray-500 pt-4 border-t border-gray-200">
                   <span>Created: {new Date(gig.created_at).toLocaleString()}</span>
                   <span>Updated: {new Date(gig.updated_at).toLocaleString()}</span>
                 </div>

@@ -9,6 +9,7 @@ import {
   AdminConversation,
   AdminConversationDetails,
   AdminDashboardStats,
+  AdminSystemSettings,
   Pagination,
 } from '@/types/admin';
 import { decodeToken } from './jwt';
@@ -212,6 +213,52 @@ export const getAdminConversationDetails = async (conversationId: string) => {
         error.response?.data?.error?.message ||
         error.message ||
         'Failed to get conversation details',
+    };
+  }
+};
+
+// Get System Settings
+export const getAdminSystemSettings = async () => {
+  try {
+    const response = await adminApi.get('/admin/settings');
+    return {
+      success: true,
+      data: response.data.data as AdminSystemSettings,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error:
+        error.response?.data?.error?.message ||
+        error.message ||
+        'Failed to get system settings',
+    };
+  }
+};
+
+// Update System Settings
+export const updateAdminSystemSettings = async (payload: {
+  buyer_fee_bps?: number;
+  vendor_fee_bps?: number;
+  dispute_fee_bps?: number;
+  reward_rate_bps?: number;
+  reward_rate_per_1_e_18?: string;
+  arbiter_address?: string;
+  fee_recipient_address?: string;
+}) => {
+  try {
+    const response = await adminApi.put('/admin/settings', payload);
+    return {
+      success: true,
+      data: response.data.data as AdminSystemSettings,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error:
+        error.response?.data?.error?.message ||
+        error.message ||
+        'Failed to update system settings',
     };
   }
 };

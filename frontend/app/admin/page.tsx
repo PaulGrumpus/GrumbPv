@@ -55,44 +55,50 @@ const AdminLoginPage = () => {
           <div className="linear-border__inner rounded-[0.6875rem] bg-white p-8">
             <div className="flex flex-col items-center mb-8">
               <Image
-                src="/Grmps/logo1.svg"
+                src="/Grmps/grmps.jpg"
                 alt="Logo"
                 width={60}
                 height={60}
-                className="mb-4"
+                className="mb-4 rounded-full object-cover"
               />
               <h1 className="text-title font-bold text-black">Admin Panel</h1>
               <p className="text-normal text-gray-500 mt-2">Sign in to access the admin dashboard</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-small font-medium text-black mb-2">
-                  Email Address
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@example.com"
-                  required
-                />
-              </div>
+              {loading ? <SmallLoading /> : (
+                <>
+                  <div>
+                    <label htmlFor="email" className="block text-small font-medium text-black mb-2">
+                      Email Address
+                    </label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="admin@example.com"
+                      wrapperClassName="text-black"
+                      required
+                    />
+                  </div>
 
-              <div>
-                <label htmlFor="password" className="block text-small font-medium text-black mb-2">
-                  Password
-                </label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                />
-              </div>
+                  <div>
+                    <label htmlFor="password" className="block text-small font-medium text-black mb-2">
+                      Password
+                    </label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      wrapperClassName="text-black"
+                      required
+                    />
+                  </div>
+                </>
+              )}
 
               {error && (
                 <div className="text-red-500 text-small text-center bg-red-50 p-3 rounded-lg">
@@ -105,7 +111,7 @@ const AdminLoginPage = () => {
                 padding="px-6 py-3 w-full"
                 variant={loading ? 'disable' : 'primary'}
               >
-                {loading ? <SmallLoading /> : 'Sign In'}
+                {loading ? `Processing...`: 'Sign In'}
               </Button>
             </form>
           </div>
