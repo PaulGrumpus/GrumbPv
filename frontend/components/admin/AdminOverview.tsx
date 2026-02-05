@@ -63,20 +63,27 @@ const AdminOverview = () => {
           >
             <p className="text-small text-gray-500 mb-2">{card.label}</p>
             <p className={`text-display font-bold bg-linear-to-r ${card.color} bg-clip-text text-transparent`}>
-              {card.value.toLocaleString()}
+              {(card.value ?? 0).toLocaleString()}
             </p>
           </div>
         ))}
       </div>
 
-      {/* Jobs by Status */}
+      {/* Jobs by Status: open = deadline ahead of now (or null), expired = deadline before now */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
         <h2 className="text-large font-bold text-black mb-4">Jobs by Status</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {Object.entries(stats.jobsByStatus).map(([status, count]) => (
-            <div key={status} className="text-center p-4 bg-gray-50 rounded-lg">
+          {[
+            ...Object.entries(stats.jobsByStatus).map(([status, count]) =>
+              status === 'open'
+                ? ['open', stats.counts?.openJobs ?? count]
+                : ([status, count] as [string, number])
+            ),
+            ['expired', stats.counts?.expiredJobs ?? 0],
+          ].map(([status, count]) => (
+            <div key={String(status)} className="text-center p-4 bg-gray-50 rounded-lg">
               <p className="text-small text-gray-500 capitalize mb-1">
-                {status.replace('_', ' ')}
+                {String(status).replace('_', ' ')}
               </p>
               <p className="text-subtitle font-bold text-black">{count}</p>
             </div>

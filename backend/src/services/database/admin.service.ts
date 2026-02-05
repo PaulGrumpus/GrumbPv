@@ -12,7 +12,7 @@ export interface PaginationParams {
 }
 
 export interface JobFilterParams extends PaginationParams {
-  status?: job_status | 'disputed';
+  status?: job_status | 'disputed' | 'expired';
 }
 
 export class AdminService {
@@ -283,6 +283,7 @@ export class AdminService {
     try {
       const { page = 1, limit = 20, search, status } = params;
       const skip = (page - 1) * limit;
+      const now = new Date();
 
       // Disputed status is determined by milestone status, not job status
       const disputeStatuses = [
@@ -307,8 +308,17 @@ export class AdminService {
             status: { in: disputeStatuses },
           },
         };
+      } else if (status === 'expired') {
+        where.status = job_status.open;
+        where.deadline_at = { lt: now };
       } else if (status) {
         where.status = status;
+        if (status === job_status.open) {
+          where.OR = [
+            { deadline_at: null },
+            { deadline_at: { gte: now } },
+          ];
+        }
       }
 
       const [jobs, total] = await Promise.all([
@@ -667,6 +677,7 @@ export class AdminService {
    */
   public async getDashboardStats() {
     try {
+      const now = new Date();
       const disputeStatuses = [
         milestone_status.disputedByClient,
         milestone_status.disputedByFreelancer,
@@ -680,6 +691,8 @@ export class AdminService {
         totalConversations,
         jobsByStatus,
         disputedJobsCount,
+        openJobsCount,
+        expiredJobsCount,
         recentUsers,
         recentJobs,
       ] = await Promise.all([
@@ -698,6 +711,18 @@ export class AdminService {
                 status: { in: disputeStatuses },
               },
             },
+          },
+        }),
+        this.prisma.jobs.count({
+          where: {
+            status: job_status.open,
+            OR: [{ deadline_at: null }, { deadline_at: { gte: now } }],
+          },
+        }),
+        this.prisma.jobs.count({
+          where: {
+            status: job_status.open,
+            deadline_at: { lt: now },
           },
         }),
         this.prisma.users.findMany({
@@ -730,6 +755,8 @@ export class AdminService {
           gigs: totalGigs,
           conversations: totalConversations,
           disputedJobs: disputedJobsCount,
+          openJobs: openJobsCount,
+          expiredJobs: expiredJobsCount,
         },
         jobsByStatus: jobsByStatus.reduce(
           (acc, item) => {

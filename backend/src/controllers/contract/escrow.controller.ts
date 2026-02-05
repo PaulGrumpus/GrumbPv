@@ -297,6 +297,23 @@ export class EscrowController {
   async resolveDispute(req: Request, res: Response, next: NextFunction) {
     try {
       const { job_milestone_id } = req.params;
+      const { privateKey, favorBuyer } = req.body;
+
+      const txData = await escrowService.resolveDispute(privateKey, job_milestone_id, favorBuyer);
+
+      res.json({
+        success: true,
+        data: txData,  
+        message: `Dispute resolved in favor of ${favorBuyer ? 'buyer' : 'vendor'}`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async buildResolveDisputeTx(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { job_milestone_id } = req.params;
       const { favorBuyer, chainId } = req.body;
 
       logger.info(`Resolving dispute for job milestone ${job_milestone_id}, favor buyer: ${favorBuyer}, chainId: ${chainId}`);
@@ -309,9 +326,9 @@ export class EscrowController {
         message: `Dispute resolved in favor of ${favorBuyer ? 'buyer' : 'vendor'}`,
       });
     } catch (error) {
-    next(error);
+      next(error);
+    }
   }
-}
 }
 
 export const escrowController = new EscrowController();

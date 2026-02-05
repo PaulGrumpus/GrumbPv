@@ -266,7 +266,7 @@ export const updateAdminSystemSettings = async (payload: {
 // Resolve dispute (arbiter)
 export const resolveDispute = async (job_milestone_id: string, favorBuyer: boolean, chainId: number) => {
   try {
-    const response = await adminApi.post(`/contract/escrow/${job_milestone_id}/dispute/resolve`, { favorBuyer, chainId });
+    const response = await adminApi.post(`/contract/escrow/${job_milestone_id}/dispute/resolve_tx`, { favorBuyer, chainId });
     return {
       success: true,
       data: response.data.data,

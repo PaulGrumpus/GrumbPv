@@ -207,7 +207,7 @@ router.get(
  *         name: status
  *         schema:
  *           type: string
- *           enum: [draft, open, in_review, in_progress, completed, cancelled, disputed]
+ *           enum: [draft, open, in_review, in_progress, completed, cancelled, disputed, expired]
  *     responses:
  *       200:
  *         description: Jobs retrieved successfully

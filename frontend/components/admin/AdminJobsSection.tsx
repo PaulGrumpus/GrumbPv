@@ -11,6 +11,7 @@ import AdminJobModal from '@/components/admin/modals/AdminJobModal';
 const STATUS_FILTERS: { value: JobStatusFilter; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'open', label: 'Open' },
+  { value: 'expired', label: 'Expired' },
   { value: 'in_progress', label: 'In Progress' },
   { value: 'completed', label: 'Completed' },
   { value: 'cancelled', label: 'Cancelled' },
@@ -87,8 +88,20 @@ const AdminJobsSection = () => {
     return 'N/A';
   };
 
-  const getStatusBadgeClass = (status: string, hasDispute: boolean) => {
+  const isExpired = (deadline: string | null, status: string) => {
+    if (status !== 'open' || !deadline) return false;
+    return new Date(deadline).getTime() < Date.now();
+  };
+
+  // When "Open" filter is active, show only open jobs whose deadline is still ahead (not expired)
+  const displayedJobs =
+    statusFilter === 'open'
+      ? jobs.filter((job) => job.status === 'open' && !isExpired(job.deadline_at, job.status))
+      : jobs;
+
+  const getStatusBadgeClass = (status: string, hasDispute: boolean, expired: boolean) => {
     if (hasDispute) return 'bg-red-100 text-red-700';
+    if (expired) return 'bg-amber-100 text-amber-700';
     switch (status) {
       case 'completed':
         return 'bg-green-100 text-green-700';
@@ -150,7 +163,7 @@ const AdminJobsSection = () => {
         <>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="sm:hidden space-y-3 p-3 bg-gray-50">
-              {jobs.map((job) => (
+              {displayedJobs.map((job) => (
                 <button
                   key={job.id}
                   onClick={() => handleJobClick(job.id)}
@@ -183,8 +196,12 @@ const AdminJobsSection = () => {
                   </div>
                   <div className="mt-2 flex items-center justify-between text-small text-gray-600">
                     <span>{formatBudget(job.budget_min, job.budget_max, job.token_symbol)}</span>
-                    <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(job.status, job.hasDispute)}`}>
-                      {job.hasDispute ? 'Disputed' : job.status.replace('_', ' ')}
+                    <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(job.status, job.hasDispute, isExpired(job.deadline_at, job.status))}`}>
+                      {job.hasDispute
+                        ? 'Disputed'
+                        : isExpired(job.deadline_at, job.status)
+                        ? 'Expired'
+                        : job.status.replace('_', ' ')}
                     </span>
                   </div>
                   <div className="mt-2 text-tiny text-gray-500">Bids: {job._count.bids}</div>
@@ -204,7 +221,7 @@ const AdminJobsSection = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {jobs.map((job) => (
+                {displayedJobs.map((job) => (
                   <tr
                     key={job.id}
                     onClick={() => handleJobClick(job.id)}
@@ -251,8 +268,12 @@ const AdminJobsSection = () => {
                       {formatBudget(job.budget_min, job.budget_max, job.token_symbol)}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(job.status, job.hasDispute)}`}>
-                        {job.hasDispute ? 'Disputed' : job.status.replace('_', ' ')}
+                      <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(job.status, job.hasDispute, isExpired(job.deadline_at, job.status))}`}>
+                        {job.hasDispute
+                          ? 'Disputed'
+                          : isExpired(job.deadline_at, job.status)
+                          ? 'Expired'
+                          : job.status.replace('_', ' ')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-normal text-gray-600">{job._count.bids}</td>
@@ -270,7 +291,7 @@ const AdminJobsSection = () => {
           {pagination && pagination.totalPages > 1 && (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-small text-gray-500">
-                Showing {jobs.length} of {pagination.total} jobs
+                Showing {displayedJobs.length} of {pagination.total} jobs
               </p>
               <div className="flex flex-wrap gap-2">
                 <button

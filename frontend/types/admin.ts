@@ -238,6 +238,8 @@ export interface AdminDashboardStats {
     gigs: number;
     conversations: number;
     disputedJobs: number;
+    openJobs: number;
+    expiredJobs: number;
   };
   jobsByStatus: Record<string, number>;
   recentUsers: {
@@ -277,4 +279,4 @@ export interface Pagination {
   totalPages: number;
 }
 
-export type JobStatusFilter = 'all' | 'open' | 'in_progress' | 'completed' | 'cancelled' | 'disputed';
+export type JobStatusFilter = 'all' | 'open' | 'expired' | 'in_progress' | 'completed' | 'cancelled' | 'disputed';
