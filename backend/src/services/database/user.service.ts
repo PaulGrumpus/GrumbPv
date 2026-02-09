@@ -361,14 +361,22 @@ export class UserService {
     }
   }
 
-  public async updateUserFunds(id: string, total_fund: number, finished_job_num: number): Promise<boolean> {
+  public async updateUserFunds(id: string, fund: number, num: number): Promise<boolean> {
     try {
-      if (!id || !total_fund || !finished_job_num) {
-        throw new AppError('User ID, total fund and finished job number are required', 400, 'USER_ID_TOTAL_FUND_FINISHED_JOB_NUM_REQUIRED');
+      if (!id || !fund || !num) {
+        throw new AppError('User ID, fund and num are required', 400, 'USER_ID_FUND_NUM_REQUIRED');
       }
+      const user = await this.prisma.users.findUnique({
+        where: { id },
+      });
+      if (!user) {
+        throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+      }
+      const newFund = user.total_fund ? Number(user.total_fund) + fund : fund;
+      const newNum = user.finished_job_num ? Number(user.finished_job_num) + num : num;
       await this.prisma.users.update({
         where: { id },
-        data: { total_fund, finished_job_num },
+        data: { total_fund: newFund, finished_job_num: newNum },
       });
       return true;
     }

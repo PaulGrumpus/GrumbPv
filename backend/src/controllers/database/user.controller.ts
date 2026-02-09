@@ -133,8 +133,8 @@ export class UserController {
 
     try {
       const { id } = req.params;
-      const { total_fund, finished_job_num } = req.body;
-      const result = await userService.updateUserFunds(id, total_fund, finished_job_num);
+      const { fund, num } = req.body;
+      const result = await userService.updateUserFunds(id, fund, num);
       res.json({
         success: true,
         data: result,

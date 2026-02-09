@@ -392,8 +392,8 @@ router.put(
 
 router.post(
   '/by-id/:id/funds',
-  [param('id').isString().notEmpty(), body('total_fund').isNumeric().notEmpty(), body('finished_job_num').isNumeric().notEmpty()],
-  validate([param('id'), body('total_fund'), body('finished_job_num')]),
+  [param('id').isString().notEmpty(), body('fund').isNumeric().notEmpty(), body('num').isNumeric().notEmpty()],
+  validate([param('id'), body('fund'), body('num')]),
   userController.updateUserFunds.bind(userController)
 );
 

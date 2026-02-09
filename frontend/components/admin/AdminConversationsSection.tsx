@@ -112,7 +112,7 @@ const AdminConversationsSection = () => {
                     </span>
                   </div>
                   <div className="mt-3 text-normal text-gray-700 truncate">
-                    {conversation.job?.title || conversation.gig?.title || 'Direct Message'}
+                    {conversation.job?.id || conversation.gig?.id || 'Direct Message'}
                   </div>
                   <div className="mt-2 flex items-center justify-between text-small text-gray-500">
                     <span className={`text-tiny px-2 py-1 rounded-full ${
@@ -171,7 +171,7 @@ const AdminConversationsSection = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-normal text-gray-600 max-w-[200px] truncate">
-                      {conversation.job?.title || conversation.gig?.title || 'Direct Message'}
+                      {conversation.job?.id || conversation.gig?.id || 'Direct Message'}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`text-tiny px-2 py-1 rounded-full ${

@@ -50,12 +50,14 @@ const AdminOverview = () => {
     { label: 'Total Gigs', value: stats.counts.gigs, color: 'from-green-500 to-green-600' },
     { label: 'Conversations', value: stats.counts.conversations, color: 'from-orange-500 to-orange-600' },
     { label: 'Disputed Jobs', value: stats.counts.disputedJobs, color: 'from-red-500 to-red-600' },
+    { label: 'Total Fund (BNB)', value: stats.counts.totalFund, color: 'from-teal-500 to-teal-600' },
+    { label: 'Total Withdraw (BNB)', value: stats.counts.totalWithdraw, color: 'from-indigo-500 to-indigo-600' },
   ];
 
   return (
     <div className="space-y-8">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
         {statCards.map((card) => (
           <div
             key={card.label}

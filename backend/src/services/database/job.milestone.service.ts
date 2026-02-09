@@ -14,6 +14,8 @@ import { jobService } from './job.service.js';
 import { prisma } from '../../prisma.js';
 import { notificationService } from './notification.service.js';
 import { emailService } from '../email/email.service.js';
+import { systemStateService } from './systemState.service.js';
+import { Decimal } from '@prisma/client/runtime/client.js';
 
 export class JobMilestoneService {
   private prisma = prisma;
@@ -193,6 +195,13 @@ export class JobMilestoneService {
       }
       if(jobMilestone.status === milestone_status.resolvedToBuyer || jobMilestone.status === milestone_status.resolvedToVendor) {
         await jobService.updateJobStatusById(existingJobMilestone.job_id, job_status.completed);
+        await systemStateService.increaseWithdraw(new Decimal(existingJobMilestone.amount));
+        if(jobMilestone.status === milestone_status.resolvedToBuyer) {
+          await userService.updateUserFunds(existingJob.client_id, -Number(existingJobMilestone.amount), 0);
+        }
+        if(jobMilestone.status === milestone_status.resolvedToVendor) {
+          await userService.updateUserFunds(existingJobMilestone.freelancer_id, Number(existingJobMilestone.amount), 0);
+        }
       }
       const updatedJobMilestone = await this.prisma.job_milestones.update({
         where: { id },

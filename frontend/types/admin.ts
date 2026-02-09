@@ -240,6 +240,8 @@ export interface AdminDashboardStats {
     disputedJobs: number;
     openJobs: number;
     expiredJobs: number;
+    totalFund: number;
+    totalWithdraw: number;
   };
   jobsByStatus: Record<string, number>;
   recentUsers: {

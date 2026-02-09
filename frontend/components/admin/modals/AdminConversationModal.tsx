@@ -88,7 +88,7 @@ const AdminConversationModal = ({ isOpen, onClose, conversation, loading }: Admi
                       <div className="p-3 bg-white rounded border border-gray-200">
                         <div className="flex items-center gap-2">
                           <span className="text-tiny px-2 py-0.5 bg-blue-100 text-blue-700 rounded">Job</span>
-                          <p className="text-normal font-medium text-black">{conversation.job.title}</p>
+                          <p className="text-normal font-medium text-black">{conversation.job.id}</p>
                         </div>
                         <p className="text-tiny text-gray-500 mt-1">
                           Status: {conversation.job.status?.replace('_', ' ')}
@@ -99,7 +99,7 @@ const AdminConversationModal = ({ isOpen, onClose, conversation, loading }: Admi
                       <div className="p-3 bg-white rounded border border-gray-200">
                         <div className="flex items-center gap-2">
                           <span className="text-tiny px-2 py-0.5 bg-green-100 text-green-700 rounded">Gig</span>
-                          <p className="text-normal font-medium text-black">{conversation.gig.title}</p>
+                          <p className="text-normal font-medium text-black">{conversation.gig.id}</p>
                         </div>
                       </div>
                     )}

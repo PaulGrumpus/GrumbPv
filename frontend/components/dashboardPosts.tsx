@@ -7,7 +7,7 @@ import { CONFIG } from "@/config/config";
 import ModalTemplate from "./modalTemplate";
 import { useContext, useEffect, useRef, useState } from "react";
 import { JobMilestoneStatus } from "@/types/jobMilestone";
-import { approveWork, buyerJoinDispute, createChainTx, deliverWork, fundEscrow, initiateDispute, updateJobMilestone, venderPayDisputeFee, withdrawFunds } from "@/utils/functions";
+import { approveWork, buyerJoinDispute, createChainTx, deliverWork, fundEscrow, getJobApplicationById, increaseFund, increaseWithdraw, initiateDispute, updateJobMilestone, updateUserFunds, venderPayDisputeFee, withdrawFunds } from "@/utils/functions";
 import { User } from "@/types/user";
 import { useWallet } from "@/context/walletContext";
 import { useProjectInfo } from "@/context/projectInfoContext";
@@ -115,6 +115,9 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
             });
             return;
         }
+        const jobApplicationDocInfo = await getJobApplicationById(applicationDocId);
+        await updateUserFunds(jobApplicationDocInfo.data.client_info.id, Number(jobApplicationDocInfo.data.job_application_info.budget), 0);
+        await increaseFund(Number(jobApplicationDocInfo.data.job_application_info.budget));
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.FUNDED });
         if (updatedJobMilestone.success) {
             if (updatedJobMilestone.data) {
@@ -294,6 +297,10 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
             });
             return;
         }
+        const jobApplicationDocInfo = await getJobApplicationById(applicationDocId);
+        await updateUserFunds(jobApplicationDocInfo.data.freelancer_info.id, Number(jobApplicationDocInfo.data.job_application_info.budget), 1);
+        await updateUserFunds(jobApplicationDocInfo.data.client_info.id, 0, 1);
+        await increaseWithdraw(Number(jobApplicationDocInfo.data.job_application_info.budget));
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.RELEASED });
         if (updatedJobMilestone.success) {
             if (updatedJobMilestone.data) {

@@ -69,9 +69,9 @@ export const createUserWithEmail = async (email: string, password: string, role:
     }
 }
 
-export const updateUserFunds = async (user_id: string, total_fund: number, finished_job_num: number) => {
+export const updateUserFunds = async (user_id: string, fund: number, num: number) => {
     try {
-        const response = await EscrowBackend.post(`/database/users/by-id/${user_id}/funds`, { total_fund, finished_job_num });
+        const response = await EscrowBackend.post(`/database/users/by-id/${user_id}/funds`, { fund, num });
         return {
             success: true,
             data: response.data.data,
@@ -1257,6 +1257,39 @@ export const createChainTx = async (purpose: string, chain_id: number, job_miles
             status,
             user_id,
         });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+// System States
+export const increaseFund = async (amount: number) => {
+    try {
+        const response = await EscrowBackend.post(`/database/system-states/increase-fund`, { amount });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }   
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const increaseWithdraw = async (amount: number) => {
+    try {
+        const response = await EscrowBackend.post(`/database/system-states/increase-withdraw`, { amount });
         return {
             success: true,
             data: response.data.data,

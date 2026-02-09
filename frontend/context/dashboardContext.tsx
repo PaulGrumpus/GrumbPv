@@ -235,7 +235,7 @@ export const DashboardProvider = ({ children }: Props) => {
                         }
                     }
                 }
-                if(notification.type === NotificationType.milestoneFundsReleased) {
+                if(notification.type === NotificationType.milestoneFundsReleased || notification.type === NotificationType.disputeResolved) {
                     if(userInfo.role === "client") {
                         const updatedFreelancerInfo = await getUserById(updatedMilestoneInfo.data.freelancer_id);
                         if (updatedFreelancerInfo.success && updatedFreelancerInfo.data) {

@@ -693,6 +693,8 @@ export class AdminService {
         disputedJobsCount,
         openJobsCount,
         expiredJobsCount,
+        totalFundClients,
+        totalWithdrawFreelancers,
         recentUsers,
         recentJobs,
       ] = await Promise.all([
@@ -725,6 +727,24 @@ export class AdminService {
             deadline_at: { lt: now },
           },
         }),
+        (async () => {
+          const res = await this.prisma.system_states.findUnique({
+            where: { key: 'default' },
+          });
+          if (res) return res;
+          return this.prisma.system_states.create({
+            data: { key: 'default', fund: 0, withdraw: 0 },
+          });
+        })(),
+        (async () => {
+          const res = await this.prisma.system_states.findUnique({
+            where: { key: 'default' },
+          });
+          if (res) return res;
+          return this.prisma.system_states.create({
+            data: { key: 'default', fund: 0, withdraw: 0 },
+          });
+        })(),
         this.prisma.users.findMany({
           take: 5,
           orderBy: { created_at: 'desc' },
@@ -748,6 +768,9 @@ export class AdminService {
         }),
       ]);
 
+      const totalFund = totalFundClients?.fund != null ? Number(totalFundClients.fund) : 0;
+      const totalWithdraw = totalWithdrawFreelancers?.withdraw != null ? Number(totalWithdrawFreelancers.withdraw) : 0;
+
       return {
         counts: {
           users: totalUsers,
@@ -757,6 +780,8 @@ export class AdminService {
           disputedJobs: disputedJobsCount,
           openJobs: openJobsCount,
           expiredJobs: expiredJobsCount,
+          totalFund,
+          totalWithdraw,
         },
         jobsByStatus: jobsByStatus.reduce(
           (acc, item) => {
