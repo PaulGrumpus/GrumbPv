@@ -25,7 +25,11 @@ const defaultProvider: UserContextType = {
         is_verified: false,
         image_id: '',
         created_at: '',
-        updated_at: ''
+        updated_at: '',
+        finished_job_num: 0,
+        total_fund: 0,
+        fund_cycle: 0,
+        fund_num: 0,
     },
     setUserInfo: () => {},
     userInfoError: '',

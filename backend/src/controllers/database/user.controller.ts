@@ -129,6 +129,52 @@ export class UserController {
     }
   }
 
+  async updateUserFunds(req: Request, res: Response, next: NextFunction) {
+
+    try {
+      const { id } = req.params;
+      const { fund, num } = req.body;
+      const result = await userService.updateUserFunds(id, fund, num);
+      res.json({
+        success: true,
+        data: result,
+        message: 'User funds updated successfully',
+      });
+    }
+    catch (error) {
+      next(error);
+    }
+  }
+
+  async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = req.body;
+      const result = await userService.resetPassword(email);
+      res.json({
+        success: true,
+        data: result,
+        message: 'Email sent successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateUserPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const { password } = req.body;
+      const result = await userService.updateUserPassword(id, password);
+      res.json({
+        success: true,
+        data: result,
+        message: 'User password updated successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getUserById(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;

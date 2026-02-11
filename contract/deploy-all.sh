@@ -152,6 +152,8 @@ fi
 
 export REWARD_DISTRIBUTOR_ADDRESS
 echo "REWARD_DISTRIBUTOR_ADDRESS=$REWARD_DISTRIBUTOR_ADDRESS" >> .env.deployed
+echo "GRMPS_TOKEN_ADDRESS=$GRMPS_TOKEN_ADDRESS" >> .env.deployed
+echo "REWARD_RATE_PER_1E18=$REWARD_RATE_PER_1E18" >> .env.deployed
 echo "✅ RewardDistributor deployed: $REWARD_DISTRIBUTOR_ADDRESS"
 echo ""
 
@@ -161,7 +163,24 @@ echo ""
 echo "⚙️  Step 4: Configuring System..."
 echo "----------------------------------------------"
 
-echo "Linking Factory to RewardDistributor..."
+# Get reward rate from .env or prompt
+if [ -z "$REWARD_RATE_PER_1E18" ]; then
+    echo "⚠️  REWARD_RATE_PER_1E18 not set in .env"
+    read -p "Enter REWARD_RATE_PER_1E18 (e.g., 10000000000000000000000 for 10000 GRMPS per 1 BNB): " REWARD_RATE_PER_1E18
+    if [ -z "$REWARD_RATE_PER_1E18" ]; then
+        REWARD_RATE_PER_1E18="10000000000000000000000"
+        echo "Using default: $REWARD_RATE_PER_1E18"
+    fi
+fi
+
+echo ""
+echo "Setting up Factory reward configuration..."
+echo "  RewardDistributor: $REWARD_DISTRIBUTOR_ADDRESS"
+echo "  RewardToken: $GRMPS_TOKEN_ADDRESS"
+echo "  RewardRatePer1e18: $REWARD_RATE_PER_1E18"
+echo ""
+
+echo "1/4: Setting RewardDistributor on Factory..."
 cast send $FACTORY_ADDRESS "setRewardDistributor(address)" \
   $REWARD_DISTRIBUTOR_ADDRESS \
   --private-key $PRIVATE_KEY \
@@ -173,7 +192,31 @@ cast send $FACTORY_ADDRESS "setRewardDistributor(address)" \
 echo "✅ Factory linked to RewardDistributor"
 echo ""
 
-echo "Authorizing Factory in RewardDistributor..."
+echo "2/4: Setting RewardToken on Factory..."
+cast send $FACTORY_ADDRESS "setRewardToken(address)" \
+  $GRMPS_TOKEN_ADDRESS \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $BSC_TESTNET_RPC_URL \
+  --gas-price $GAS_PRICE \
+  --gas-limit 500000 \
+  --legacy
+
+echo "✅ Factory RewardToken set to $GRMPS_TOKEN_ADDRESS"
+echo ""
+
+echo "3/4: Setting RewardRatePer1e18 on Factory..."
+cast send $FACTORY_ADDRESS "setRewardRatePer1e18(uint256)" \
+  $REWARD_RATE_PER_1E18 \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $BSC_TESTNET_RPC_URL \
+  --gas-price $GAS_PRICE \
+  --gas-limit 500000 \
+  --legacy
+
+echo "✅ Factory RewardRatePer1e18 set to $REWARD_RATE_PER_1E18"
+echo ""
+
+echo "4/4: Authorizing Factory in RewardDistributor..."
 cast send $REWARD_DISTRIBUTOR_ADDRESS "setAuthorizedFactory(address,bool)" \
   $FACTORY_ADDRESS true \
   --private-key $PRIVATE_KEY \
@@ -182,7 +225,7 @@ cast send $REWARD_DISTRIBUTOR_ADDRESS "setAuthorizedFactory(address,bool)" \
   --gas-limit 500000 \
   --legacy
 
-echo "✅ Factory authorized"
+echo "✅ Factory authorized in RewardDistributor"
 echo ""
 
 # ============================================
@@ -192,9 +235,14 @@ echo "🎉 Deployment Complete!"
 echo "======================="
 echo ""
 echo "📋 Deployed Addresses:"
-echo "  Implementation: $ESCROW_IMPLEMENTATION_ADDRESS"
-echo "  Factory:        $FACTORY_ADDRESS"
-echo "  RewardDistrib:  $REWARD_DISTRIBUTOR_ADDRESS"
+echo "  Implementation:   $ESCROW_IMPLEMENTATION_ADDRESS"
+echo "  Factory:          $FACTORY_ADDRESS"
+echo "  RewardDistributor: $REWARD_DISTRIBUTOR_ADDRESS"
+echo ""
+echo "📋 Factory Reward Configuration:"
+echo "  RewardDistributor: $REWARD_DISTRIBUTOR_ADDRESS"
+echo "  RewardToken:       $GRMPS_TOKEN_ADDRESS"
+echo "  RewardRatePer1e18: $REWARD_RATE_PER_1E18"
 echo ""
 if [ ! -z "$BSCSCAN_API_KEY" ]; then
     echo "✅ Contracts verified on BscScan:"
@@ -206,13 +254,13 @@ fi
 echo "Addresses saved to: contract/.env.deployed"
 echo ""
 echo "⚠️  Next Steps:"
-echo "1. Copy addresses to web3/.env:"
-echo "   cd ../web3"
-echo "   echo 'FACTORY_ADDRESS=$FACTORY_ADDRESS' >> .env"
-echo "   echo 'REWARD_DISTRIBUTOR_ADDRESS=$REWARD_DISTRIBUTOR_ADDRESS' >> .env"
+echo "1. Copy addresses to backend/.env:"
+echo "   FACTORY_ADDRESS=$FACTORY_ADDRESS"
+echo "   REWARD_DISTRIBUTOR_ADDRESS=$REWARD_DISTRIBUTOR_ADDRESS"
+echo "   GRMPS_TOKEN_ADDRESS=$GRMPS_TOKEN_ADDRESS"
 echo ""
 echo "2. Approve GRMPS for RewardDistributor:"
-echo "   npm run approve:distributor"
+echo "   cd ../web3 && npm run approve:distributor"
 echo ""
 echo "3. Exclude reward source from GRMPS fees (GRMPS owner must do this):"
 echo "   GRMPS.excludeFromFees(rewardSourceAddress, true)"
@@ -221,4 +269,7 @@ echo "4. Test by creating an escrow:"
 echo "   npm run create:escrow"
 echo ""
 echo "🚀 System is ready to use!"
+echo ""
+echo "ℹ️  Note: All escrows created through the factory will automatically"
+echo "   inherit the reward configuration (token, rate, distributor)."
 

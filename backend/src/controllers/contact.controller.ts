@@ -19,11 +19,11 @@ export class ContactController {
         throw new AppError('Invalid email format', 400, 'INVALID_EMAIL');
       }
 
-      // Get recipient email from environment variable or use SMTP_USER as fallback
+      // Contact form submissions go to CONTACT_EMAIL (contact@grumbuild.com). Emails are sent via SMTP_USER (notifications@).
       const recipientEmail = process.env.CONTACT_EMAIL || process.env.SMTP_USER;
-      
+
       if (!recipientEmail) {
-        logger.error('Contact email recipient not configured. Set CONTACT_EMAIL or SMTP_USER environment variable.');
+        logger.error('Contact email recipient not configured. Set CONTACT_EMAIL (e.g. contact@grumbuild.com) or SMTP_USER.');
         throw new AppError('Contact email recipient not configured', 500, 'EMAIL_NOT_CONFIGURED');
       }
 

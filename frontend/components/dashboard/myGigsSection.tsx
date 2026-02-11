@@ -85,8 +85,8 @@ const MyGigsSection = () => {
                                     gig_id={gig.id}
                                     title={gig.title}
                                     description={gig.description_md}
-                                    minBudget={Number(gig.budget_min_usd)}
-                                    maxBudget={Number(gig.budget_max_usd)}
+                                    minBudget={Number(gig.budget_min)}
+                                    maxBudget={Number(gig.budget_max)}
                                     currency={gig.token_symbol ?? "USD"}
                                     link={gig.link}
                                     tags={gig.tags ?? []}

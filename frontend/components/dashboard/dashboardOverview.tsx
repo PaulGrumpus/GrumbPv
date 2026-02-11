@@ -226,7 +226,7 @@ const DashboardOverview = () => {
                                 </div>
                                 {completedJobs && (
                                     <div>
-                                        <div className="grid lg:grid-cols-2 grid-cols-1 gap-8">
+                                        <div className="grid grid-cols-1 gap-8">
                                             {visibleFinishedJobs.map((finishedJob) => (
                                                 <DashboardPosts 
                                                     key={`finished-milestone-${finishedJob.milestone.id}`} 

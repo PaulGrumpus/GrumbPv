@@ -28,14 +28,26 @@ import messageRoutes from './routes/chat/message.routes.js';
 import messageReceiptRoutes from './routes/chat/message.receipt.routes.js';
 import notificationRoutes from './routes/database/notification.routes.js';
 import dashboardRoutes from './routes/database/dashboard.routes.js';
+import adminRoutes from './routes/database/admin.routes.js';
+import systemStateRoutes from './routes/database/system.state.routes.js';
 import contactRoutes from './routes/contact.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
 import http from 'http';
 import { Server } from 'socket.io';
 import { socket_router } from './routes/socket.routes.js';
 import { notification_socket_route } from './routes/notification.socket.route.js';
+import {
+  startJobExpiryScheduler,
+  stopJobExpiryScheduler,
+} from './services/database/job.expiry.scheduler.js';
 
 // Load environment variables
 config();
+
+// Keep server running on unhandled promise rejections (log instead of crash)
+process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
+  logger.error('Unhandled Rejection at:', { promise, reason });
+});
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -91,7 +103,10 @@ app.use(`${API_PREFIX}/database/messages`, messageRoutes);
 app.use(`${API_PREFIX}/database/message-receipts`, messageReceiptRoutes);
 app.use(`${API_PREFIX}/database/notifications`, notificationRoutes);
 app.use(`${API_PREFIX}/database/dashboard`, dashboardRoutes);
+app.use(`${API_PREFIX}/database/system-states`, systemStateRoutes);
+app.use(`${API_PREFIX}/admin`, adminRoutes);
 app.use(`${API_PREFIX}/contact`, contactRoutes);
+app.use(`${API_PREFIX}/upload`, uploadRoutes);
 
 // Error handlers (must be last)
 app.use(notFoundHandler);
@@ -116,6 +131,8 @@ async function bootstrap() {
     notification_socket_route(socket, io);
   });
 
+  startJobExpiryScheduler();
+
   httpServer.listen(PORT, () => {
     logger.info(`🚀 HTTP Server running on port ${PORT}`);
     logger.info(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -127,6 +144,7 @@ async function bootstrap() {
   // Graceful shutdown
   const shutdown = async (signal: string) => {
     logger.info(`${signal} received, shutting down gracefully`);
+    stopJobExpiryScheduler();
     await db.disconnect();
     process.exit(0);
   };

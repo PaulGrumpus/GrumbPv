@@ -21,6 +21,10 @@ model users {
   address                 String?                     @unique
   chain                   chain_type                  @default(evm)
   image_id                String                      @default("default.jpg")
+  finished_job_num        Decimal                     @default(0)
+  total_fund              Decimal                     @default(0)
+  fund_cycle              Decimal?
+  fund_num                Decimal?
   audits                  audit_log[]                 @relation("ActorAudits")
   chain_txs               chain_txs[]
   conversations           conversation_participants[]
@@ -42,8 +46,8 @@ model jobs {
   client_id           String                  @db.Uuid
   title               String
   description_md      String
-  budget_min_usd      Decimal?                @db.Decimal(18, 8)
-  budget_max_usd      Decimal?                @db.Decimal(18, 8)
+  budget_min          Decimal?                @db.Decimal(18, 8)
+  budget_max          Decimal?                @db.Decimal(18, 8)
   token_symbol        String?
   deadline_at         DateTime?               @db.Timestamptz(6)
   status              job_status              @default(open)
@@ -68,8 +72,8 @@ model gigs {
   freelancer_id  String          @db.Uuid
   title          String
   description_md String
-  budget_min_usd Decimal?        @db.Decimal(18, 8)
-  budget_max_usd Decimal?        @db.Decimal(18, 8)
+  budget_min     Decimal?        @db.Decimal(18, 8)
+  budget_max     Decimal?        @db.Decimal(18, 8)
   token_symbol   String?
   tags           String[]
   image_id       String?
@@ -125,26 +129,27 @@ model job_milestones {
 }
 
 model job_applications_docs {
-  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  job_id             String          @db.Uuid
-  job_milestone_id   String?         @db.Uuid
-  client_id          String          @db.Uuid
-  freelancer_id      String          @db.Uuid
-  client_confirm     Boolean         @default(false)
-  freelancer_confirm Boolean         @default(false)
-  deliverables       String?
-  out_of_scope       String?
-  budget             Decimal?
-  token_symbol       String?
-  start_date         DateTime?       @db.Timestamptz(6)
-  end_date           DateTime?       @db.Timestamptz(6)
-  created_at         DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime        @default(now()) @db.Timestamptz(6)
-  job                jobs            @relation(fields: [job_id], references: [id], onDelete: Cascade)
-  job_milestone      job_milestones? @relation(fields: [job_milestone_id], references: [id], onDelete: Cascade)
-  client             users           @relation("ClientApplications", fields: [client_id], references: [id], onDelete: Cascade)
-  freelancer         users           @relation("FreelancerApplications", fields: [freelancer_id], references: [id], onDelete: Cascade)
-  chats              conversations[]
+  id                  String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id              String          @db.Uuid
+  job_milestone_id    String?         @db.Uuid
+  client_id           String          @db.Uuid
+  freelancer_id       String          @db.Uuid
+  client_confirm      Boolean         @default(false)
+  freelancer_confirm  Boolean         @default(false)
+  confirm_edit_rounds Int             @default(0) // 0..2: max 2 rounds of edit-then-confirm (other must re-confirm)
+  deliverables        String?
+  out_of_scope        String?
+  budget              Decimal?
+  token_symbol        String?
+  start_date          DateTime?       @db.Timestamptz(6)
+  end_date            DateTime?       @db.Timestamptz(6)
+  created_at          DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime        @default(now()) @db.Timestamptz(6)
+  job                 jobs            @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  job_milestone       job_milestones? @relation(fields: [job_milestone_id], references: [id], onDelete: Cascade)
+  client              users           @relation("ClientApplications", fields: [client_id], references: [id], onDelete: Cascade)
+  freelancer          users           @relation("FreelancerApplications", fields: [freelancer_id], references: [id], onDelete: Cascade)
+  chats               conversations[]
 
   @@map("job_applications_docs")
 }
@@ -274,6 +279,34 @@ model audit_log {
   @@map("audit_log")
 }
 
+model system_settings {
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key                    String   @unique @default("default")
+  fee_bps                Int      @default(100)
+  buyer_fee_bps          Int      @default(50)
+  vendor_fee_bps         Int      @default(50)
+  dispute_fee_bps        Int      @default(50)
+  reward_rate_bps        Int      @default(25)
+  reward_rate_per_1_e_18 String   @default("30000000000000000000000")
+  arbiter_address        String   @default("")
+  fee_recipient_address  String   @default("")
+  created_at             DateTime @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("system_settings")
+}
+
+model system_states {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key        String   @unique @default("default")
+  fund       Decimal  @default(0)
+  withdraw   Decimal  @default(0)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("system_states")
+}
+
 /// ---------- Enums ----------
 enum user_role {
   client
@@ -366,6 +399,7 @@ enum read_state {
 enum notification_type {
   JOB_POSTED
   JOB_UPDATED
+  JOB_EXPIRING_SOON
   GIG_POSTED
   GIG_UPDATED
   BID_SENT

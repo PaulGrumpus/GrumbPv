@@ -22,6 +22,8 @@ type freelancer = {
     email: string;
     address: string;
     image_id: string;
+    finished_job_num: number;
+    total_fund: number;
 }
 
 interface ApplicationItem {
@@ -244,10 +246,12 @@ const ApplicationPost = ({ item, job_id }: ApplicationPostProps) => {
                                     <h1 className="text-normal font-bold text-black truncate">Name: {freelancer?.display_name}</h1>
                                     <p className="text-light-large font-regular text-black truncate">Email: {freelancer?.email}</p>
                                     <p className="text-light-large font-regular text-black truncate">Address: {freelancer?.address}</p>
+                                    <p className="text-light-large font-regular text-black truncate">Finished Jobs: {freelancer?.finished_job_num}</p>
+                                    <p className="text-light-large font-regular text-black truncate">Total Earned: {Number(freelancer?.total_fund).toFixed(2) + " BNB"}</p>
                                 </div>
             
                                 <div
-                                    className={`overflow-hidden transition-[max-height] duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}
+                                    className={`overflow-hidden transition-[max-height] min-h-42 duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}
                                 >
                                     <p
                                         className="text-normal font-regular text-black"
@@ -270,7 +274,13 @@ const ApplicationPost = ({ item, job_id }: ApplicationPostProps) => {
                                         {expanded ? "show less" : "show more"}
                                     </button>
                                 )}
-            
+
+                                {!canToggle && (
+                                    <div className="h-8.25"></div>
+                                )}
+
+                                <div className="pb-6"></div>
+
                                 <div className="flex flex-col pb-6">
                                     <p className="text-normal font-bold text-black">Bid Amount: {bid_amount} {token_symbol}</p>
                                     <p className="text-normal font-regular text-black">Period: {period ? period : "N/A"} days</p>

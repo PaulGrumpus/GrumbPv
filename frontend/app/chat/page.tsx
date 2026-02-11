@@ -71,8 +71,8 @@ const ChatPageContent = () => {
             setJobTitle(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.title ?? "");
             setJobTokenSymbol(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.token_symbol ?? "");
             setJobDescription(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.description_md ?? "");
-            setJobMaxBudget(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.budget_max_usd ?? "");
-            setJobMinBudget(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.budget_min_usd ?? "");
+            setJobMaxBudget(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.budget_max ?? "");
+            setJobMinBudget(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.budget_min ?? "");
             setJobDeadlineAt(jobsInfo.find(job => job.id === conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id)?.deadline_at ?? "");        
         } else {
             const Id = conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_id ?? "": "";
@@ -80,8 +80,8 @@ const ChatPageContent = () => {
             setJobTitle(bidsInfo.find(bid => bid.job.id === Id)?.job.title ?? "");
             setJobTokenSymbol(bidsInfo.find(bid => bid.job.id === Id)?.job.token_symbol ?? "");
             setJobDescription(bidsInfo.find(bid => bid.job.id === Id)?.job.description_md ?? "");
-            setJobMaxBudget(bidsInfo.find(bid => bid.job.id === Id)?.job.budget_max_usd ?? "");
-            setJobMinBudget(bidsInfo.find(bid => bid.job.id === Id)?.job.budget_min_usd ?? "");
+            setJobMaxBudget(bidsInfo.find(bid => bid.job.id === Id)?.job.budget_max ?? "");
+            setJobMinBudget(bidsInfo.find(bid => bid.job.id === Id)?.job.budget_min ?? "");
             setJobDeadlineAt(bidsInfo.find(bid => bid.job.id === Id)?.job.deadline_at ?? "");
         }
 
@@ -138,6 +138,25 @@ const ChatPageContent = () => {
     };
 
     const [mobileView, setMobileView] = useState<"list" | "chat">("list");
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 1024); // match Tailwind lg breakpoint
+        };
+
+        handleResize();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    useEffect(() => {
+        if (!isMobile) {
+            setMobileView("list");
+        } else if (!selectedConversationId) {
+            setMobileView("list");
+        }
+    }, [isMobile, selectedConversationId]);
 
     const handleChatClick = (conversation_id: string) => {
         setSelectedConversationId(conversation_id);
@@ -351,68 +370,72 @@ const ChatPageContent = () => {
         return (
             <div className="max-h-screen overflow-hidden">
                 <ChatNavbar onBack={() => setMobileView("list")} />
-                <div className="hidden lg:flex">
-                    <div className="w-[25%]">
-                        <ChatSidebar
+                {!isMobile && (
+                    <div className="flex">
+                        <div className="w-[25%]">
+                            <ChatSidebar
+                                chats={chatSidebarItems}
+                            />
+                        </div>
+                        <div className="w-[75%]">
+                            <ChatComb
+                                sender={userInfo} 
+                                conversation_id={selectedConversationId as string}
+                                job_application_doc_id={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_application_doc_id as string ?? "" : ""}
+                                receiver={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.receiver as User ?? null : null} 
+                                job_id={jobId}
+                                job_title={jobTitle}
+                                job_token_symbol={jobTokenSymbol}
+                                job_description={jobDescription}
+                                job_max_budget={jobMaxBudget}
+                                job_min_budget={jobMinBudget}
+                                job_deadline_at={jobDeadlineAt}
+                                clientName={clientName}
+                                messages={conversationsInfo.find(conversation => conversation.id === selectedConversationId)?.messages || []} 
+                                isWriting={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.status === "typing" ? true : false : false}
+                                onSendMessage={handleSendMessage} 
+                                onWritingMessage={handleWritingMessage}
+                                onStopWritingMessage={handleStopWritingMessage}
+                                acceptHandler={handleAcceptHandler}
+                                isMobile={false}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {isMobile && (
+                    <div className="flex h-[calc(100vh-4rem)] w-full">
+                        {mobileView === "list" && (
+                            <ChatSidebar
                             chats={chatSidebarItems}
-                        />
-                    </div>
-                    <div className="w-[75%]">
-                        <ChatComb
-                            sender={userInfo} 
-                            conversation_id={selectedConversationId as string}
-                            job_application_doc_id={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_application_doc_id as string ?? "" : ""}
-                            receiver={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.receiver as User ?? null : null} 
-                            job_id={jobId}
-                            job_title={jobTitle}
-                            job_token_symbol={jobTokenSymbol}
-                            job_description={jobDescription}
-                            job_max_budget={jobMaxBudget}
-                            job_min_budget={jobMinBudget}
-                            job_deadline_at={jobDeadlineAt}
-                            clientName={clientName}
-                            messages={conversationsInfo.find(conversation => conversation.id === selectedConversationId)?.messages || []} 
-                            isWriting={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.status === "typing" ? true : false : false}
-                            onSendMessage={handleSendMessage} 
-                            onWritingMessage={handleWritingMessage}
-                            onStopWritingMessage={handleStopWritingMessage}
-                            acceptHandler={handleAcceptHandler}
-                            isMobile={false}
-                        />
-                    </div>
-                </div>
+                            />
+                        )}
 
-                <div className="flex lg:hidden h-[calc(100vh-4rem)] w-full lg:w-auto">
-                    {mobileView === "list" && (
-                        <ChatSidebar
-                        chats={chatSidebarItems}
-                        />
-                    )}
-
-                    {mobileView === "chat" && selectedConversationId && (
-                        <ChatComb
-                            sender={userInfo}
-                            conversation_id={selectedConversationId as string}
-                            job_application_doc_id={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_application_doc_id as string ?? "" : ""}
-                            receiver={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.receiver as User ?? null : null} 
-                            job_id={jobId}
-                            job_title={jobTitle}
-                            job_token_symbol={jobTokenSymbol}
-                            job_description={jobDescription}
-                            job_max_budget={jobMaxBudget}
-                            job_min_budget={jobMinBudget}
-                            job_deadline_at={jobDeadlineAt}
-                            clientName={clientName}
-                            messages={conversationsInfo.find(conversation => conversation.id === selectedConversationId)?.messages || []} 
-                            isWriting={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.status === "typing" ? true : false : false}
-                            onSendMessage={handleSendMessage} 
-                            onWritingMessage={handleWritingMessage}
-                            onStopWritingMessage={handleStopWritingMessage}
-                            acceptHandler={handleAcceptHandler}
-                            isMobile={true}
-                        />
-                    )}
-                </div>
+                        {mobileView === "chat" && selectedConversationId && (
+                            <ChatComb
+                                sender={userInfo}
+                                conversation_id={selectedConversationId as string}
+                                job_application_doc_id={conversationsInfo.length > 0 ? conversationsInfo.find((conversation) => conversation.id === selectedConversationId)?.job_application_doc_id as string ?? "" : ""}
+                                receiver={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.receiver as User ?? null : null} 
+                                job_id={jobId}
+                                job_title={jobTitle}
+                                job_token_symbol={jobTokenSymbol}
+                                job_description={jobDescription}
+                                job_max_budget={jobMaxBudget}
+                                job_min_budget={jobMinBudget}
+                                job_deadline_at={jobDeadlineAt}
+                                clientName={clientName}
+                                messages={conversationsInfo.find(conversation => conversation.id === selectedConversationId)?.messages || []} 
+                                isWriting={chatSidebarItems.length > 0 ? chatSidebarItems.find((conversation) => conversation.conversation_id === selectedConversationId)?.status === "typing" ? true : false : false}
+                                onSendMessage={handleSendMessage} 
+                                onWritingMessage={handleWritingMessage}
+                                onStopWritingMessage={handleStopWritingMessage}
+                                acceptHandler={handleAcceptHandler}
+                                isMobile={true}
+                            />
+                        )}
+                    </div>
+                )}
             </div>
         )
     } else {

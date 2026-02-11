@@ -2,8 +2,6 @@ import { ethers } from 'ethers';
 import {
   CONTRACT_ABIS,
   CONTRACT_ADDRESSES,
-  DEFAULT_CONFIG,
-  MEDIATOR_ID,
 } from '../../config/contracts.js';
 import { web3Provider } from '../../utils/web3Provider.js';
 import { logger } from '../../utils/logger.js';
@@ -18,6 +16,7 @@ import { jobMilestoneService } from '../database/job.milestone.service.js';
 import { jobService } from '../database/job.service.js';
 import { userService } from '../database/user.service.js';
 import { chainTxsService } from '../database/chainTxs.service.js';
+import { systemSettingsService } from '../database/systemSettings.service.js';
 
 export interface CreateEscrowParams {
   job_milestone_id: string;
@@ -63,16 +62,18 @@ export class FactoryService {
         );
       }
 
+      const settings = await systemSettingsService.getSettings();
+
       // Validate FEE_RECIPIENT is configured
-      if (!DEFAULT_CONFIG.feeRecipient || DEFAULT_CONFIG.feeRecipient === '') {
+      if (!settings.fee_recipient_address || settings.fee_recipient_address === '') {
         throw new AppError(
-          'FEE_RECIPIENT_ADDRESS not configured in .env',
+          'FEE_RECIPIENT_ADDRESS not configured',
           500,
           'FEE_RECIPIENT_NOT_SET'
         );
       }
-      if (!DEFAULT_CONFIG.arbiter || DEFAULT_CONFIG.arbiter === '') {
-        throw new AppError('ARBITER_ADDRESS not configured in .env', 500, 'ARBITER_NOT_SET');
+      if (!settings.arbiter_address || settings.arbiter_address === '') {
+        throw new AppError('ARBITER_ADDRESS not configured', 500, 'ARBITER_NOT_SET');
       }
 
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(
@@ -116,16 +117,16 @@ export class FactoryService {
       // Validate addresses
       validateAddress(client.address, 'buyer');
       validateAddress(freelancer.address, 'seller');
-      validateAddress(DEFAULT_CONFIG.arbiter, 'arbiter');
-      validateAddress(DEFAULT_CONFIG.feeRecipient, 'feeRecipient');
+      validateAddress(settings.arbiter_address, 'arbiter');
+      validateAddress(settings.fee_recipient_address, 'feeRecipient');
 
       // Validate deadline
       validateDeadline(deadlineTimestamp);
 
       // Validate fees
-      const buyerFeeBps = DEFAULT_CONFIG.buyerFeeBps;
-      const vendorFeeBps = DEFAULT_CONFIG.vendorFeeBps;
-      const feeBps = buyerFeeBps + vendorFeeBps;
+      const buyerFeeBps = settings.buyer_fee_bps;
+      const vendorFeeBps = settings.vendor_fee_bps;
+      const feeBps = settings.fee_bps;
       validateFeeBps(buyerFeeBps, vendorFeeBps, feeBps);
 
       const wallet = web3Provider.getWallet(privateKey);
@@ -147,16 +148,16 @@ export class FactoryService {
         jobIdBytes,
         buyer: client.address,
         seller: freelancer.address,
-        arbiter: DEFAULT_CONFIG.arbiter,
-        feeRecipient: DEFAULT_CONFIG.feeRecipient,
+        arbiter: settings.arbiter_address,
+        feeRecipient: settings.fee_recipient_address,
         feeBps,
         paymentToken: ethers.ZeroAddress,
         amountWei: ethers.parseEther(amountString).toString(),
         deadline: deadlineTimestamp,
         buyerFeeBps: buyerFeeBps,
         vendorFeeBps: vendorFeeBps,
-        disputeFeeBps: DEFAULT_CONFIG.disputeFeeBps,
-        rewardRateBps: DEFAULT_CONFIG.rewardRateBps,
+        disputeFeeBps: settings.dispute_fee_bps,
+        rewardRateBps: settings.reward_rate_bps,
         walletAddress: wallet.address,
         walletBalance: ethers.formatEther(await web3Provider.getBalance(wallet.address)) + ' BNB',
       });
@@ -165,16 +166,16 @@ export class FactoryService {
         jobIdBytes,
         client.address, // buyer
         freelancer.address, // seller
-        DEFAULT_CONFIG.arbiter,
-        DEFAULT_CONFIG.feeRecipient,
+        settings.arbiter_address,
+        settings.fee_recipient_address,
         feeBps,
         ethers.ZeroAddress, // Native BNB
         ethers.parseEther(amountString),
         deadlineTimestamp,
         buyerFeeBps,
         vendorFeeBps,
-        DEFAULT_CONFIG.disputeFeeBps,
-        DEFAULT_CONFIG.rewardRateBps,
+        settings.dispute_fee_bps,
+        settings.reward_rate_bps,
         {
           gasLimit: 3000000,
           gasPrice: ethers.parseUnits('10', 'gwei'), // BSC testnet gas price
@@ -206,8 +207,6 @@ export class FactoryService {
         escrow: escrowAddress,
       });
 
-      await this.setupEscrowRewards(escrowAddress, CONTRACT_ADDRESSES.grmpsToken, DEFAULT_CONFIG.rewardRatePer1E18);
-
       await chainTxsService.createChainTx(
         'create_escrow',
         97,
@@ -216,7 +215,6 @@ export class FactoryService {
         escrowAddress,
         tx.hash,
         'success',
-        MEDIATOR_ID
       );
 
       return {
@@ -243,6 +241,14 @@ export class FactoryService {
       const privateKey = CONTRACT_ADDRESSES.privateKey;
       const wallet = web3Provider.getWallet(privateKey);
       const factory = this.getFactoryContract(wallet);
+      const settings = await systemSettingsService.getSettings();
+
+      if (!settings.fee_recipient_address || settings.fee_recipient_address === '') {
+        throw new AppError('FEE_RECIPIENT_ADDRESS not configured', 500, 'FEE_RECIPIENT_NOT_SET');
+      }
+      if (!settings.arbiter_address || settings.arbiter_address === '') {
+        throw new AppError('ARBITER_ADDRESS not configured', 500, 'ARBITER_NOT_SET');
+      }
 
       // Fetch job milestone and related data
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(
@@ -284,7 +290,13 @@ export class FactoryService {
       const deadlineTimestamp = Math.floor(deadline.getTime() / 1000);
 
       const jobIdBytes = ethers.id(exsitingJobMilestone.id);
-      const feeBps = DEFAULT_CONFIG.buyerFeeBps + DEFAULT_CONFIG.vendorFeeBps;
+      validateAddress(settings.arbiter_address, 'arbiter');
+      validateAddress(settings.fee_recipient_address, 'feeRecipient');
+
+      const buyerFeeBps = settings.buyer_fee_bps;
+      const vendorFeeBps = settings.vendor_fee_bps;
+      const feeBps = settings.fee_bps;
+      validateFeeBps(buyerFeeBps, vendorFeeBps, feeBps);
       const saltBytes = ethers.id(salt);
 
       // Convert amount from Decimal to string
@@ -298,16 +310,16 @@ export class FactoryService {
         jobIdBytes,
         client.address, // buyer
         freelancer.address, // seller
-        DEFAULT_CONFIG.arbiter,
-        DEFAULT_CONFIG.feeRecipient,
+        settings.arbiter_address,
+        settings.fee_recipient_address,
         feeBps,
         ethers.ZeroAddress,
         ethers.parseEther(amountString),
         deadlineTimestamp,
-        DEFAULT_CONFIG.buyerFeeBps,
-        DEFAULT_CONFIG.vendorFeeBps,
-        DEFAULT_CONFIG.disputeFeeBps,
-        DEFAULT_CONFIG.rewardRateBps,
+        buyerFeeBps,
+        vendorFeeBps,
+        settings.dispute_fee_bps,
+        settings.reward_rate_bps,
         saltBytes,
         {
           gasLimit: 3000000,
@@ -397,7 +409,16 @@ export class FactoryService {
   }
 
   /**
-   * Setup rewards for an escrow contract
+   * Setup rewards for an escrow contract (Manual Override)
+   * 
+   * NOTE: This function is now optional since reward configuration is done during
+   * escrow initialization via the factory contract's stored values (rewardToken,
+   * rewardRatePer1e18, rewardDistributor).
+   * 
+   * Use this function only when you need to:
+   * - Override the default reward configuration for a specific escrow
+   * - Update reward settings on existing escrows created before the factory was configured
+   * 
    * Configures reward token, rate, and distributor using arbiter's key from .env
    */
   async setupEscrowRewards(
@@ -476,6 +497,44 @@ export class FactoryService {
     } catch (error: any) {
       logger.error('Error setting up escrow rewards:', error);
       throw new AppError(`Failed to setup escrow rewards: ${error.message}`, 500);
+    }
+  }
+
+  async setupFactoryRewards(
+    rewardTokenAddress: string,
+    rewardRatePer1e18: string
+  ): Promise<{
+    setTokenTxHash: string;
+    setRateTxHash: string;
+  }> {
+    try {
+      const privateKey = CONTRACT_ADDRESSES.ArbiterPrivateKey;
+      const wallet = web3Provider.getWallet(privateKey);
+      const factory = this.getFactoryContract(wallet);
+
+      logger.info('Setting up factory rewards...');
+      logger.info('Factory rewards:', {
+        rewardToken: rewardTokenAddress,
+        rewardRatePer1e18: rewardRatePer1e18,
+      });
+
+      const tx = await factory.setRewardToken(rewardTokenAddress, { gasLimit: 200000 });
+      await tx.wait();
+      logger.info(`✅ Reward token set: ${tx.hash}`);
+
+      const tx2 = await factory.setRewardRatePer1e18(rewardRatePer1e18, { gasLimit: 200000 });
+      await tx2.wait();
+      logger.info(`✅ Reward rate set: ${tx2.hash}`);
+
+      logger.info('✅ Factory rewards setup complete');
+
+      return {
+        setTokenTxHash: tx.hash,
+        setRateTxHash: tx2.hash,
+      };
+    } catch (error: any) {
+      logger.error('Error setting up factory rewards:', error);
+      throw new AppError(`Failed to setup factory rewards: ${error.message}`, 500);
     }
   }
 }

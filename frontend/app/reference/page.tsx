@@ -28,6 +28,7 @@ const ReferencePageContent = () => {
     const [freelancerId, setFreelancerId] = useState("");
     const [freelancerConfirmed, setFreelancerConfirmed] = useState(false);
     const [clientConfirmed, setClientConfirmed] = useState(false);
+    const [confirmEditRounds, setConfirmEditRounds] = useState(0);
     const [budget, setBudget] = useState(0);
     const [currency, setCurrency] = useState("USD");
     const [deliverables, setDeliverables] = useState("");
@@ -59,11 +60,12 @@ const ReferencePageContent = () => {
                     setJobTitle(jobApplicationInfo.data.job_info.title);
                     setDescription(jobApplicationInfo.data.job_info.description_md);
                     setClientFullName(jobApplicationInfo.data.client_info.display_name ?? jobApplicationInfo.data.client_info.email ?? "");
-                    setBudget(jobApplicationInfo.data.job_application_info.budget ?? (Number(jobApplicationInfo.data.job_info.budget_min_usd) + Number(jobApplicationInfo.data.job_info.budget_max_usd)) / 2);
+                    setBudget(jobApplicationInfo.data.job_application_info.budget ?? (Number(jobApplicationInfo.data.job_info.budget_min) + Number(jobApplicationInfo.data.job_info.budget_max)) / 2);
                     setCurrency(jobApplicationInfo.data.job_application_info.token_symbol ?? jobApplicationInfo.data.job_info.token_symbol ?? "USD");
                     setFreelancerFullName(jobApplicationInfo.data.freelancer_info.display_name ?? jobApplicationInfo.data.freelancer_info.email ?? "");
                     setFreelancerConfirmed(jobApplicationInfo.data.job_application_info.freelancer_confirm);
                     setClientConfirmed(jobApplicationInfo.data.job_application_info.client_confirm);
+                    setConfirmEditRounds(jobApplicationInfo.data.job_application_info.confirm_edit_rounds ?? 0);
                     setClientId(jobApplicationInfo.data.client_info.id);
                     setFreelancerId(jobApplicationInfo.data.freelancer_info.id);
                     setDeliverables(jobApplicationInfo.data.job_application_info.deliverables ?? "");
@@ -101,7 +103,8 @@ const ReferencePageContent = () => {
                         freelancerFullName={freelancerFullName} 
                         description={description} 
                         freelancerConfirmed={freelancerConfirmed} 
-                        clientConfirmed={clientConfirmed} 
+                        clientConfirmed={clientConfirmed}
+                        confirmEditRounds={confirmEditRounds}
                         initialBudget={budget} 
                         initialCurrency={currency}
                         initialDeliverables={deliverables}

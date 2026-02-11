@@ -10,6 +10,7 @@ interface ButtonProps {
   padding?: string;
   borderRadius?: string;
   borderInnerRadius?: string;
+  wrapperClassName?: string;
   className?: string;
 }
 
@@ -20,6 +21,7 @@ const Button = ({
   padding = 'px-4 py-2',
   borderRadius = 'rounded-lg',
   borderInnerRadius = 'rounded-[0.4375rem]',
+  wrapperClassName = '',
   className = '',
 }: ButtonProps) => {
   const [isPressed, setIsPressed] = useState(false);
@@ -53,6 +55,7 @@ const Button = ({
           p-0.25
           ${ isPressed ? 'scale-95' : ''}
           ${borderRadius}
+          ${wrapperClassName}
         `}
       >
         <button

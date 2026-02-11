@@ -3,7 +3,7 @@
 import Button from '@/components/button'
 import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react';
-import { ChevronDownIcon, ChevronUpIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { XMarkIcon } from "@heroicons/react/20/solid";
 import { UserLoadingCtx } from '@/context/userLoadingContext';
 import { useContext } from 'react';
 import Loading from '@/components/loading';
@@ -24,13 +24,11 @@ type FormState = {
     userEmail: string;
     userBio: string;
     userPhoto: string;
-    selectedLanguage: string;
 };
 
 const ProfilePage = () => {
     const [userBio, setUserBio] = useState("");
     const [newPassword, setNewPassword] = useState("");
-    const [selectedLanguage, setSelectedLanguage] = useState("");
     const [userName, setUserName] = useState("Alisa Wilson");
     const [userPhoto, setUserPhoto] = useState("/Grmps/profile-image.jpg");
     const [userWaletAddress, setUserWaletAddress] = useState<string | null>(null);
@@ -39,14 +37,11 @@ const ProfilePage = () => {
     const [userRole, setUserRole] = useState("client");
     const charCount = 300;
     const showEyeIcon = "/Grmps/show.svg";
-    const languages = ["English", "Spanish", "French", "German", "Italian", "Portuguese", "Russian", "Turkish"];
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState("");
     const [errorNewPassword, setErrorNewPassword] = useState(false);
-    const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement | null>(null);
     const [checkError, setCheckError] = useState(false);
     const [uploadedFileName, setUploadedFileName] = useState("");
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -60,7 +55,6 @@ const ProfilePage = () => {
         userEmail: "",
         userBio: "",
         userPhoto: "",
-        selectedLanguage: "",
     });  
     const { userInfo, setUserInfo } = useContext(UserInfoCtx);
     const { userLoadingState, setuserLoadingState } = useContext(UserLoadingCtx);
@@ -130,7 +124,6 @@ const ProfilePage = () => {
             userEmail,
             userBio,
             userPhoto,
-            selectedLanguage,
         };
 
         setNewPassword("");
@@ -152,6 +145,10 @@ const ProfilePage = () => {
             is_verified: userInfo?.is_verified || false,
             created_at: userInfo?.created_at || "",
             updated_at: userInfo?.updated_at || "",
+            finished_job_num: userInfo?.finished_job_num || 0,
+            total_fund: userInfo?.total_fund || 0,
+            fund_cycle: userInfo?.fund_cycle || 0,
+            fund_num: userInfo?.fund_num || 0,
         };
 
         const response = await updateUser(user, selectedFile);
@@ -236,17 +233,15 @@ const ProfilePage = () => {
     }
 
     const resetForm = () => {
-        const { userName: initialUserName, userEmail: initialUserEmail, userBio: initialBio, selectedLanguage: initialLanguage } = initialFormState.current;
+        const { userName: initialUserName, userEmail: initialUserEmail, userBio: initialBio } = initialFormState.current;
 
         setUserName(initialUserName);
         setUserBio(initialBio);
         setUserEmail(initialUserEmail);
         setNewPassword("");
         setConfirmPassword("");
-        setSelectedLanguage(initialLanguage);
         setShowNewPassword(false);
         setShowConfirmPassword(false);
-        setDropdownMenuOpen(false);
         setError("");
         setErrorNewPassword(false);
         setCheckError(false);
@@ -263,23 +258,6 @@ const ProfilePage = () => {
     }, [newPassword, confirmPassword]);    
 
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                dropdownMenuOpen &&
-                dropdownRef.current &&
-                !dropdownRef.current.contains(event.target as Node)
-            ) {
-                setDropdownMenuOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [dropdownMenuOpen]);
-
-    useEffect(() => {
         if(userLoadingState === "success") {
             if(userInfo.id === "") {
                 router.push("/");
@@ -292,10 +270,8 @@ const ProfilePage = () => {
                         userEmail: userInfo.email || "",
                         userBio: userInfo.bio || "",
                         userPhoto: userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "",
-                        selectedLanguage,
                     };
                     setUserBio(userInfo.bio || "")
-                    setSelectedLanguage("")
                     setUserName(userInfo.display_name || "")
                     setUserPhoto(userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "")
                     setUserRole(userInfo.role || "")
@@ -566,37 +542,6 @@ const ProfilePage = () => {
                                             </div>
                                         )}
                                     </button>
-                                </div>
-                            </div>
-                            <div className='flex flex-col gap-2'>
-                                <p className='text-normal font-regular text-black text-left'>Language</p>
-                                <div ref={dropdownRef} className={`relative max-w-140 ${dropdownMenuOpen ? 'border-blue-500' : ''}`}>
-                                    <select
-                                        value={selectedLanguage}
-                                        onChange={(e) => {
-                                            setSelectedLanguage(e.target.value);
-                                            setDropdownMenuOpen(false);
-                                        }}
-                                        className='w-full appearance-none rounded-lg border border-[#8F99AF] bg-white p-3 text-normal font-regular text-black focus:outline-none focus:border-blue-500'
-                                        onClick={(event) => {
-                                            event.stopPropagation();
-                                            setDropdownMenuOpen((prev: boolean) => !prev);
-                                        }}
-                                    >
-                                        <option value='' disabled>
-                                            Select one ...
-                                        </option>
-                                        {languages.map((language) => (
-                                            <option key={language} value={language} className='text-normal font-regular text-black bg-white py-2 px-3'>
-                                                {language}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {dropdownMenuOpen ? (
-                                        <ChevronUpIcon className="w-5 h-5 text-black absolute right-3 top-1/2 -translate-y-1/2" />
-                                    ) : (
-                                        <ChevronDownIcon className="w-5 h-5 text-black absolute right-3 top-1/2 -translate-y-1/2" />
-                                    )}
                                 </div>
                             </div>
                             {error && checkError && <p className='text-normal font-regular text-red-500 text-left'>{error}</p>}

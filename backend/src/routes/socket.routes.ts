@@ -58,8 +58,6 @@ export const socket_router = (socket: Socket, io: any) => {
         throw new Error('Invalid parameters');
       }
 
-      logger.info('Sending message receipt', { message_id, user_id, state });
-
       if(state === 'delivered') {
         const updatedMessageReceipt = await messageReceiptService.markMessageAsDelivered(message_id, user_id);
         if (updatedMessageReceipt) {

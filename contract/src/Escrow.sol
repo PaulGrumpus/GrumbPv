@@ -64,6 +64,25 @@ contract Escrow is Ownable, ReentrancyGuard {
     /// @notice Optional RewardDistributor contract for centralized reward distribution
     /// @dev If set, rewards are distributed through this contract instead of direct transfer
     address public rewardDistributor;
+    
+    /// @notice Initialization parameters struct to avoid stack too deep
+    struct InitParams {
+        address buyer;
+        address seller;
+        address arbiter;
+        address feeRecipient;
+        uint256 feeBps;
+        address paymentToken;
+        uint256 amountWei;
+        uint64 deadline;
+        uint256 buyerFeeBps;
+        uint256 vendorFeeBps;
+        uint256 disputeFeeBps;
+        uint256 rewardRateBps;
+        address rewardDistributor;
+        address rewardToken;
+        uint256 rewardRatePer1e18;
+    }
 
     event Initialized(
         address indexed buyer,
@@ -72,6 +91,8 @@ contract Escrow is Ownable, ReentrancyGuard {
         address feeRecipient,
         uint256 feeBps,
         address paymentToken,
+        address rewardToken,
+        uint256 rewardRatePer1e18,
         uint256 amountWei,
         uint64 deadline
     );
@@ -127,71 +148,49 @@ contract Escrow is Ownable, ReentrancyGuard {
 
     /// @notice Initialize the escrow clone with job-specific parameters
     /// @dev Can only be called once. Sets up buyer, seller (vendor), arbiter, fees, and deadline.
-    /// @param _buyer Address of the buyer
-    /// @param _seller Address of the seller (vendor)
-    /// @param _arbiter Address of the arbiter (set to address(0) to disable arbitration)
-    /// @param _feeRecipient Address that receives platform fees
-    /// @param _feeBps Total fee in basis points (100 = 1%, split between buyer and vendor)
-    /// @param _paymentToken Address of payment token (address(0) for native BNB, otherwise ERC20)
-    /// @param _amountWei Amount in wei (for BNB) or token decimals (for ERC20)
-    /// @param _deadline Project deadline timestamp
-    /// @param _buyerFeeBps Buyer fee in basis points (e.g., 50 = 0.5%)
-    /// @param _vendorFeeBps Vendor fee in basis points (e.g., 50 = 0.5%)
-    /// @param _disputeFeeBps Dispute fee in basis points (e.g., 50 = 0.5%)
-    /// @param _rewardRateBps Reward rate in basis points (e.g., 25 = 0.25%)
-    /// @param _rewardDistributor Address of RewardDistributor contract (or address(0) if not using)
-    function initialize(
-        address _buyer,
-        address _seller,
-        address _arbiter,
-        address _feeRecipient,
-        uint256 _feeBps,
-        address _paymentToken,
-        uint256 _amountWei,
-        uint64 _deadline,
-        uint256 _buyerFeeBps,
-        uint256 _vendorFeeBps,
-        uint256 _disputeFeeBps,
-        uint256 _rewardRateBps,
-        address _rewardDistributor
-    ) external {
+    /// @param params InitParams struct containing all initialization parameters
+    function initialize(InitParams calldata params) external {
         if (_initialized) revert AlreadyInitialized();
         _initialized = true;
 
-        require(_buyer != address(0) && _seller != address(0), "zero addr");
-        require(_feeRecipient != address(0), "zero fee recipient");
-        require(_deadline > block.timestamp, "bad deadline");
-        require(_buyerFeeBps + _vendorFeeBps == _feeBps, "fee mismatch");
-        require(_buyerFeeBps <= 1000 && _vendorFeeBps <= 1000, "fee too high"); // Max 10%
-        require(_disputeFeeBps <= 1000, "dispute fee too high"); // Max 10%
-        require(_rewardRateBps <= 1000, "reward rate too high"); // Max 10%
+        require(params.buyer != address(0) && params.seller != address(0), "zero addr");
+        require(params.feeRecipient != address(0), "zero fee recipient");
+        require(params.deadline > block.timestamp, "bad deadline");
+        require(params.buyerFeeBps + params.vendorFeeBps == params.feeBps, "fee mismatch");
+        require(params.buyerFeeBps <= 1000 && params.vendorFeeBps <= 1000, "fee too high"); // Max 10%
+        require(params.disputeFeeBps <= 1000, "dispute fee too high"); // Max 10%
+        require(params.rewardRateBps <= 1000, "reward rate too high"); // Max 10%
 
         // Set owner to arbiter (or deployer if no arbiter)
-        _transferOwnership(_arbiter != address(0) ? _arbiter : msg.sender);
+        _transferOwnership(params.arbiter != address(0) ? params.arbiter : msg.sender);
 
-        escrowInfo.buyer = _buyer;
-        escrowInfo.vendor = _seller;
-        escrowInfo.arbiter = _arbiter;
-        escrowInfo.feeRecipient = _feeRecipient;
-        escrowInfo.buyerFeeBps = _buyerFeeBps;
-        escrowInfo.vendorFeeBps = _vendorFeeBps;
-        escrowInfo.disputeFeeBps = _disputeFeeBps;
-        escrowInfo.rewardRateBps = _rewardRateBps;
+        escrowInfo.buyer = params.buyer;
+        escrowInfo.vendor = params.seller;
+        escrowInfo.arbiter = params.arbiter;
+        escrowInfo.feeRecipient = params.feeRecipient;
+        escrowInfo.buyerFeeBps = params.buyerFeeBps;
+        escrowInfo.vendorFeeBps = params.vendorFeeBps;
+        escrowInfo.disputeFeeBps = params.disputeFeeBps;
+        escrowInfo.rewardRateBps = params.rewardRateBps;
         escrowInfo.createdAt = uint64(block.timestamp);
-        escrowInfo.deadline = _deadline;
+        escrowInfo.deadline = params.deadline;
         escrowInfo.state = State.Unfunded;
         
-        // Set reward distributor during initialization (before ownership transfer)
-        rewardDistributor = _rewardDistributor;
+        // Set reward configuration during initialization
+        rewardDistributor = params.rewardDistributor;
+        escrowInfo.rewardToken = params.rewardToken;
+        escrowInfo.rewardRatePer1e18 = params.rewardRatePer1e18;
 
         emit Initialized(
-            _buyer,
-            _seller,
-            _arbiter,
-            _feeRecipient,
-            _feeBps,
-            _paymentToken,
-            _amountWei,
+            params.buyer,
+            params.seller,
+            params.arbiter,
+            params.feeRecipient,
+            params.feeBps,
+            params.paymentToken,
+            params.rewardToken,
+            params.rewardRatePer1e18,
+            params.amountWei,
             escrowInfo.deadline
         );
     }

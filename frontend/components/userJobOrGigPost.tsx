@@ -43,6 +43,8 @@ type freelancer = {
     email: string;
     address: string;
     image_id: string;
+    finished_job_num: number;
+    total_fund: number;
 }
 
 interface ApplicationItem {
@@ -52,6 +54,7 @@ interface ApplicationItem {
     cover_letter_md: string;
     period: number;
     status: string;
+    created_at: string;
     freelancer: freelancer;
 }
 
@@ -82,24 +85,13 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
 
     const handleApplications = async () => {
         setLoading("pending");
-        // const result = await getBidsByJobId(job_id ?? "");
-        // if (result.success) {
-        //     if (result.data) {
-        //         setApplications(result.data); // freelancer already included
-        //     } else {
-        //         setApplications([]);
-        //         toast.error(result.error || "No applications found");
-        //     }
-        // } else {
-        //     toast.error(result.error as string, {
-        //         position: "top-right",
-        //         autoClose: 5000,
-        //         hideProgressBar: false,
-        //         closeOnClick: true,
-        //         pauseOnHover: true,
-        //     });
-        // }
-        setApplications(jobsInfo.find(job => job.id === job_id)?.bids as ApplicationItem[] ?? [])
+        const job = jobsInfo.find(job => job.id === job_id);
+        if (job && Array.isArray(job.bids)) {
+            const sortedBids = [...job.bids].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+            setApplications(sortedBids as ApplicationItem[]);
+        } else {
+            setApplications([]);
+        }
         setLoading("success");
         setIsOpen(true);
     }
@@ -118,11 +110,9 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
                                     {location && (
                                         <p className="text-normal font-regular text-black">Location: {location === LocationType.REMOTE ? "Remote" : location === LocationType.ON_SITE ? "On Site" : "Hybrid"}</p>
                                     )}
-                                    {minBudget && maxBudget && (
-                                        <p className="text-normal font-regular text-black">
-                                            Budget: {minBudget} - {maxBudget} {currency}
-                                        </p>
-                                    )}                      
+                                    <p className="text-normal font-regular text-black">
+                                        Budget: {minBudget} - {maxBudget} {currency}
+                                    </p>
                                 </div>
                                 <div 
                                     onClick={() => {
@@ -164,10 +154,21 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
                                         Link: {link}
                                     </p>
                                 )}
+                                {!link && (
+                                    <div className="h-6"></div>
+                                )}
                             </div>
-
+                                <div className="w-full h-100 rounded-lg overflow-hidden mt-6">
+                                    <Image 
+                                        src={image || "/Grmps/default.png"}
+                                        alt="post image" 
+                                        width={1000}
+                                        height={500}
+                                        className="w-full h-full object-cover rounded-lg"
+                                    />
+                                </div>
                             <div
-                                className={`overflow-hidden transition-[max-height] duration-200 ${expanded ? "max-h-none" : "max-h-42"} pt-6`}
+                                className={`overflow-hidden transition-[max-height] min-h-42 duration-200 ${expanded ? "max-h-none" : "max-h-42"} pt-6`}
                             >
                                 <p
                                     className="text-normal font-regular text-black"
@@ -190,19 +191,13 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
                                     {expanded ? "show less" : "show more"}
                                 </button>
                             )}
+
+                            {!canToggle && (
+                                <div className="h-8.25"></div>
+                            )}
                             
                             <div className="pb-6"></div>
-                            {image && (
-                                <div className="w-full h-100 rounded-lg overflow-hidden">
-                                    <Image 
-                                        src={image || ""}
-                                        alt="post image" 
-                                        width={1000}
-                                        height={500}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                            )}
+                            
                             {tags.length > 0 && (
                                 <div className="flex justify-end pt-6">
                                     <div className="flex gap-2">
@@ -247,7 +242,7 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
                     {/* <div className="linear-border rounded-lg p-0.25 linear-border--dark-hover">
                         <div className="linear-border__inner rounded-[0.4375rem] p-6 bg-white"> */}
                             <p className="lg:text-title text-subtitle lg:text-left text-center font-bold text-[#2F3DF6] py-6">Applicants</p>
-                            <div className="grid lg:grid-cols-3 grid-cols-1 gap-6">
+                            <div className="grid lg:grid-cols-3 grid-cols-1 gap-6 items-start">
                                 {applications.length > 0 ? (
                                     applications.map((application) => (
                                         <ApplicationPost

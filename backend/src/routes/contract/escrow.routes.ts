@@ -536,7 +536,8 @@ router.post(
  *           schema:
  *             type: object
  *             required:
- *               - privateKey
+  *               - userId
+ *               - chainId
  *               - favorBuyer
  *             properties:
  *               privateKey:
@@ -589,9 +590,16 @@ router.post(
  */
 router.post(
   '/:job_milestone_id/dispute/resolve',
-  [param('job_milestone_id').isString().notEmpty(), body('favorBuyer').isBoolean()],
-  validate([param('job_milestone_id'), body('favorBuyer')]),
+  [param('job_milestone_id').isString().notEmpty(), body('privateKey').isString().notEmpty(), body('favorBuyer').isBoolean()],
+  validate([param('job_milestone_id'), body('privateKey'), body('favorBuyer')]),
   escrowController.resolveDispute.bind(escrowController)
+);
+
+router.post(
+  '/:job_milestone_id/dispute/resolve_tx',
+  [param('job_milestone_id').isString().notEmpty(), body('chainId').isInt().notEmpty(), body('favorBuyer').isBoolean()],
+  validate([param('job_milestone_id'), body('chainId'), body('favorBuyer')]),
+  escrowController.buildResolveDisputeTx.bind(escrowController)
 );
 
 export default router;

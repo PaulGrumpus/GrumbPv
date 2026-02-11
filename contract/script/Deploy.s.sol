@@ -27,21 +27,23 @@ contract DeployScript is Script {
         
         // Deploy and initialize
         Escrow escrow = new Escrow();
-        escrow.initialize(
-            buyer,
-            vendor,
-            arbiter,
-            feeRecipient,
-            feeBps,
-            address(0), // Native BNB
-            amount,
-            uint64(block.timestamp + 30 days), // 30 day deadline
-            50, // 0.5% buyer fee
-            50, // 0.5% vendor fee
-            50, // 0.5% dispute fee
-            25,  // 0.25% reward rate
-            address(0)  // No reward distributor (deprecated script)
-        );
+        escrow.initialize(Escrow.InitParams({
+            buyer: buyer,
+            seller: vendor,
+            arbiter: arbiter,
+            feeRecipient: feeRecipient,
+            feeBps: feeBps,
+            paymentToken: address(0), // Native BNB
+            amountWei: amount,
+            deadline: uint64(block.timestamp + 30 days), // 30 day deadline
+            buyerFeeBps: 50, // 0.5% buyer fee
+            vendorFeeBps: 50, // 0.5% vendor fee
+            disputeFeeBps: 50, // 0.5% dispute fee
+            rewardRateBps: 25,  // 0.25% reward rate
+            rewardDistributor: address(0),  // No reward distributor (deprecated script)
+            rewardToken: address(0),  // No reward token (deprecated script)
+            rewardRatePer1e18: 0            // No reward rate (deprecated script)
+        }));
         
         console.log("Escrow deployed at:", address(escrow));
         

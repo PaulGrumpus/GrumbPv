@@ -86,8 +86,8 @@ const CreateJobSection = () => {
         setTitle(editingJob.title ?? "");
         setSelectedLocation(editingJob.location ?? "");
         setDescription(editingJob.description_md ?? "");
-        setMaxBudget(editingJob.budget_max_usd ?? "");
-        setMinBudget(editingJob.budget_min_usd ?? "");
+        setMaxBudget(editingJob.budget_max ?? "");
+        setMinBudget(editingJob.budget_min ?? "");
         setDueDate(
             editingJob.deadline_at
                 ? formatISODate(new Date(editingJob.deadline_at))
@@ -186,8 +186,9 @@ const CreateJobSection = () => {
             title,
             location: selectedLocation as LocationType,
             description_md: description,
-            budget_max_usd: Number(maxBudget),
-            budget_min_usd: Number(minBudget),
+            budget_max: Number(maxBudget),
+            budget_min: Number(minBudget),
+            token_symbol: "BNB",
             deadline_at: new Date(dueDate).toISOString() ?? "",
             client_id: userInfo.id,
             status: JobStatus.OPEN,
@@ -220,8 +221,8 @@ const CreateJobSection = () => {
                                   tags: updatedJob.tags ?? job.tags,
                                   image_id: updatedJob.image_id,
                                   deadline_at: updatedJob.deadline_at,
-                                  budget_max_usd: updatedJob.budget_max_usd,
-                                  budget_min_usd: updatedJob.budget_min_usd,
+                                  budget_max: updatedJob.budget_max,
+                                  budget_min: updatedJob.budget_min,
                                   token_symbol: updatedJob.token_symbol,
                                   status: updatedJob.status ?? job.status,
                               }
@@ -335,7 +336,7 @@ const CreateJobSection = () => {
                             </div>
                             <div className="flex lg:flex-row flex-col gap-6">
                                 <div>
-                                    <p className='text-normal font-regular text-black text-left pb-2'>Max Budget (USD)</p>
+                                    <p className='text-normal font-regular text-black text-left pb-2'>Max Budget (BNB)</p>
                                     <input
                                         value={maxBudget}
                                         type="text"
@@ -354,7 +355,7 @@ const CreateJobSection = () => {
                                     />
                                 </div>
                                 <div>
-                                    <p className='text-normal font-regular text-black text-left pb-2'>Min Budget (USD)</p>
+                                    <p className='text-normal font-regular text-black text-left pb-2'>Min Budget (BNB)</p>
                                     <input
                                         value={minBudget}
                                         type="text"

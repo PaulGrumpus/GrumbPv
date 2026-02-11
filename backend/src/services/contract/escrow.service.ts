@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { CONTRACT_ABIS, CONTRACT_ADDRESSES } from '../../config/contracts.js';
+import { CONTRACT_ABIS } from '../../config/contracts.js';
 import { web3Provider } from '../../utils/web3Provider.js';
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
@@ -769,7 +769,7 @@ export class EscrowService {
   /**
    * Resolve dispute (arbiter)
    */
-  async resolveDispute(job_milestone_id: string, favorBuyer: boolean): Promise<string> {
+  async resolveDispute(privateKey: string, job_milestone_id: string, favorBuyer: boolean): Promise<string> {
     try {
       const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
       if (!exsitingJobMilestone) {
@@ -781,7 +781,6 @@ export class EscrowService {
         throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
       }
 
-      const privateKey = CONTRACT_ADDRESSES.ArbiterPrivateKey;
       const wallet = web3Provider.getWallet(privateKey);
       const contract = this.getEscrowContract(escrowAddress, wallet);
 
@@ -803,6 +802,29 @@ export class EscrowService {
       logger.error('Error resolving dispute:', error);
       throw new AppError(`Failed to resolve dispute: ${error.message}`, 500);
     }
+  }
+
+  async buildResolveDisputeTx(
+    job_milestone_id: string,
+    favorBuyer: boolean,
+    chainId: number
+  ): Promise<EscrowTxData> {
+    const exsitingJobMilestone = await jobMilestoneService.getJobMilestoneById(job_milestone_id);
+    if (!exsitingJobMilestone) {
+      throw new AppError('Job milestone not found', 404, 'JOB_MILESTONE_NOT_FOUND');
+  }
+    const escrowAddress = exsitingJobMilestone.escrow;
+    if (!escrowAddress) {
+      throw new AppError('Escrow not found', 404, 'ESCROW_NOT_FOUND');
+    }
+    const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
+    const data = favorBuyer ? iface.encodeFunctionData('resolveToBuyer', []) : iface.encodeFunctionData('resolveToVendor', []);
+    return {
+      to: escrowAddress,
+      data,
+      value: '0',
+      chainId,
+    };
   }
 }
 

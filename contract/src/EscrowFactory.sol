@@ -6,22 +6,27 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 /// @title EscrowFactory
 /// @notice Factory contract that deploys minimal proxy clones of the Escrow implementation
 /// @dev Uses OpenZeppelin Clones (EIP-1167) for gas-efficient escrow deployment
+    /// @notice Initialization parameters struct (must match Escrow.InitParams)
+    struct InitParams {
+        address buyer;
+        address seller;
+        address arbiter;
+        address feeRecipient;
+        uint256 feeBps;
+        address paymentToken;
+        uint256 amountWei;
+        uint64 deadline;
+        uint256 buyerFeeBps;
+        uint256 vendorFeeBps;
+        uint256 disputeFeeBps;
+        uint256 rewardRateBps;
+        address rewardDistributor;
+        address rewardToken;
+        uint256 rewardRatePer1e18;
+    }
+
     interface IEscrow {
-        function initialize(
-            address buyer,
-            address seller,
-            address arbiter,
-            address feeRecipient,
-            uint256 feeBps,
-            address paymentToken,
-            uint256 amountWei,
-            uint64 deadline,
-            uint256 buyerFeeBps,
-            uint256 vendorFeeBps,
-            uint256 disputeFeeBps,
-            uint256 rewardRateBps,
-            address rewardDistributor
-        ) external;
+        function initialize(InitParams calldata params) external;
     }
 
 contract EscrowFactory {
@@ -34,6 +39,14 @@ contract EscrowFactory {
     /// @notice Optional RewardDistributor contract address
     /// @dev If set, all new escrows will be configured to use this distributor
     address public rewardDistributor;
+    
+    /// @notice Reward token (GRMPS) address
+    /// @dev If set, all new escrows will be configured with this reward token
+    address public rewardToken;
+    
+    /// @notice Reward rate per 1e18 wei of project amount
+    /// @dev GRMPS paid per 1e18 wei of project amount
+    uint256 public rewardRatePer1e18;
     
     /// @notice Mapping to track all escrows created by this factory
     mapping(address => bool) public isEscrowCreated;
@@ -103,12 +116,34 @@ contract EscrowFactory {
         rewardDistributor = _rewardDistributor;
         emit RewardDistributorSet(_rewardDistributor);
     }
+    
+    /// @notice Set the reward token (GRMPS) address
+    /// @dev If set, all new escrows will be configured with this reward token
+    /// @param _rewardToken Address of the reward token (or address(0) to disable rewards)
+    function setRewardToken(address _rewardToken) external onlyOwner {
+        rewardToken = _rewardToken;
+        emit RewardTokenSet(_rewardToken);
+    }
+    
+    /// @notice Set the reward rate per 1e18 wei
+    /// @dev GRMPS paid per 1e18 wei of project amount
+    /// @param _rewardRatePer1e18 Reward rate (e.g., 30000000000000000000000 for 30000 GRMPS per 1 BNB)
+    function setRewardRatePer1e18(uint256 _rewardRatePer1e18) external onlyOwner {
+        rewardRatePer1e18 = _rewardRatePer1e18;
+        emit RewardRateSet(_rewardRatePer1e18);
+    }
 
     /// @notice Emitted when ownership is transferred
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     
     /// @notice Emitted when reward distributor is set
     event RewardDistributorSet(address indexed rewardDistributor);
+    
+    /// @notice Emitted when reward token is set
+    event RewardTokenSet(address indexed rewardToken);
+    
+    /// @notice Emitted when reward rate is set
+    event RewardRateSet(uint256 rewardRatePer1e18);
 
     /// @notice Create a new non-deterministic escrow clone
     /// @dev Uses Clones.clone() which is cheaper than deploying the full contract
@@ -144,22 +179,24 @@ contract EscrowFactory {
         // Clone the implementation
         escrow = Clones.clone(implementation);
         
-        // Initialize the clone with job-specific parameters
-        IEscrow(escrow).initialize(
-            buyer,
-            seller,
-            arbiter,
-            feeRecipient,
-            feeBps,
-            paymentToken,
-            amountWei,
-            deadline,
-            buyerFeeBps,
-            vendorFeeBps,
-            disputeFeeBps,
-            rewardRateBps,
-            rewardDistributor  // Pass distributor during initialization
-        );
+        // Initialize the clone with job-specific parameters using struct
+        IEscrow(escrow).initialize(InitParams({
+            buyer: buyer,
+            seller: seller,
+            arbiter: arbiter,
+            feeRecipient: feeRecipient,
+            feeBps: feeBps,
+            paymentToken: paymentToken,
+            amountWei: amountWei,
+            deadline: deadline,
+            buyerFeeBps: buyerFeeBps,
+            vendorFeeBps: vendorFeeBps,
+            disputeFeeBps: disputeFeeBps,
+            rewardRateBps: rewardRateBps,
+            rewardDistributor: rewardDistributor,
+            rewardToken: rewardToken,
+            rewardRatePer1e18: rewardRatePer1e18
+        }));
         
         // Track that this escrow was created by this factory
         isEscrowCreated[escrow] = true;
@@ -219,22 +256,24 @@ contract EscrowFactory {
         // Clone the implementation using CREATE2
         escrow = Clones.cloneDeterministic(implementation, salt);
         
-        // Initialize the clone with job-specific parameters
-        IEscrow(escrow).initialize(
-            buyer,
-            seller,
-            arbiter,
-            feeRecipient,
-            feeBps,
-            paymentToken,
-            amountWei,
-            deadline,
-            buyerFeeBps,
-            vendorFeeBps,
-            disputeFeeBps,
-            rewardRateBps,
-            rewardDistributor  // Pass distributor during initialization
-        );
+        // Initialize the clone with job-specific parameters using struct
+        IEscrow(escrow).initialize(InitParams({
+            buyer: buyer,
+            seller: seller,
+            arbiter: arbiter,
+            feeRecipient: feeRecipient,
+            feeBps: feeBps,
+            paymentToken: paymentToken,
+            amountWei: amountWei,
+            deadline: deadline,
+            buyerFeeBps: buyerFeeBps,
+            vendorFeeBps: vendorFeeBps,
+            disputeFeeBps: disputeFeeBps,
+            rewardRateBps: rewardRateBps,
+            rewardDistributor: rewardDistributor,
+            rewardToken: rewardToken,
+            rewardRatePer1e18: rewardRatePer1e18
+        }));
         
         // Track that this escrow was created by this factory
         isEscrowCreated[escrow] = true;

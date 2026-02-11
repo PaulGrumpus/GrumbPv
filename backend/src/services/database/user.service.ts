@@ -9,6 +9,7 @@ import {
   type UploadedImage,
 } from '../../utils/imageStorage.js';
 import { prisma } from '../../prisma.js';
+import { emailService } from '../email/email.service.js';
 
 const PASSWORD_SALT_ROUNDS = Number(process.env.PASSWORD_SALT_ROUNDS || 10);
 
@@ -58,7 +59,7 @@ export class UserService {
           'EMAIL_ROLE_PASSWORD_REQUIRED'
         );
       }
-      if (user.role !== user_role.client && user.role !== user_role.freelancer) {
+      if (user.role !== user_role.client && user.role !== user_role.freelancer && user.role !== user_role.admin) {
         throw new AppError('Invalid role', 400, 'INVALID_ROLE');
       }
       const existingUser = await this.prisma.users.findFirst({
@@ -96,6 +97,7 @@ export class UserService {
     uploadedImage?: UploadedImage
   ): Promise<string> {
     try {
+      logger.info('update user id', id);
       if (!id) {
         throw new AppError('User ID is required', 400, 'USER_ID_REQUIRED');
       }
@@ -265,6 +267,66 @@ export class UserService {
     }
   }
 
+  public async resetPassword(email: string): Promise<boolean> {
+    try {
+      if (!email) {
+        throw new AppError('Email is required', 400, 'EMAIL_REQUIRED');
+      }
+      const user = await this.prisma.users.findFirst({
+        where: { email },
+      });
+      if (!user) {
+        throw new AppError('Invalid email', 400, 'INVALID_EMAIL');
+      }
+      await emailService.sendEmail({
+        to: user.email as string,
+        subject: 'Password Reset Request',
+        template: 'notification',
+        data: {
+          name: user.display_name as string,
+          body: 'A password reset request has been sent to your email address. Please click the link to reset your password.',
+          actionUrl: `${process.env.FRONTEND_URL}/resetPassword?id=${user.id}`,
+          actionText: 'Reset Password',
+        },
+      });
+      return true;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      logger.error('Error resetting password', { error });
+      throw new AppError('Error resetting password', 500, 'DB_USER_RESET_PASSWORD_FAILED');
+    }
+  }
+
+  public async updateUserPassword(id: string, password: string): Promise<boolean> {
+    logger.info('update user password id', id);
+    try {
+      if (!id || !password) {
+        throw new AppError('User ID and password are required', 400, 'USER_ID_PASSWORD_REQUIRED');
+      }
+      const user = await this.prisma.users.findUnique({
+        where: { id },
+      });
+      if (!user) {
+        throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+      }
+      const hashedPassword = await this.hashPasswordIfPresent(password);
+      await this.prisma.users.update({
+        where: { id },
+        data: { password: hashedPassword },
+      });
+      return true;
+    }
+    catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      logger.error('Error updating user password', { error });
+      throw new AppError('Error updating user password', 500, 'DB_USER_PASSWORD_UPDATE_FAILED');
+    }
+  }
+
   public async getUserById(id: string): Promise<users> {
     try {
       if (!id) {
@@ -296,6 +358,61 @@ export class UserService {
       }
       logger.error('Error getting users', { error });
       throw new AppError('Error getting users', 500, 'DB_USERS_GET_FAILED');
+    }
+  }
+
+  public async updateUserFunds(id: string, fund: number, num: number): Promise<boolean> {
+    try {
+      if (!id || !fund || !num) {
+        throw new AppError('User ID, fund and num are required', 400, 'USER_ID_FUND_NUM_REQUIRED');
+      }
+      const user = await this.prisma.users.findUnique({
+        where: { id },
+      });
+      if (!user) {
+        throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+      }
+      const newFund = user.total_fund ? Number(user.total_fund) + fund : fund;
+      const newNum = user.finished_job_num ? Number(user.finished_job_num) + num : num;
+      await this.prisma.users.update({
+        where: { id },
+        data: { total_fund: newFund, finished_job_num: newNum },
+      });
+      return true;
+    }
+    catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      logger.error('Error updating user funds', { error });
+      throw new AppError('Error updating user funds', 500, 'DB_USER_FUNDS_UPDATE_FAILED');
+    }
+  }
+
+  public async updateClientFundTime(id: string, fund_cycle: number): Promise<boolean> {
+    try {
+      if (!id || !fund_cycle) {
+        throw new AppError('User ID and fund cycle are required', 400, 'USER_ID_FUND_CYCLE_REQUIRED');
+      }
+      const user = await this.prisma.users.findFirst({
+        where: { id },
+      });
+      if (!user) {
+        throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+      }
+      const newFundCycle = user.fund_cycle ? Number(user.fund_cycle) + fund_cycle : fund_cycle;
+      await this.prisma.users.update({
+        where: { id },
+        data: { fund_cycle: newFundCycle, fund_num: user.fund_num ? Number(user.fund_num) + 1 : 1 },
+      });
+      return true;
+    }
+    catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      logger.error('Error updating client fund time', { error });
+      throw new AppError('Error updating client fund time', 500, 'DB_CLIENT_FUND_TIME_UPDATE_FAILED');
     }
   }
 

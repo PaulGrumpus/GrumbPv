@@ -14,6 +14,21 @@ const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
+/** Format total seconds (decimal) as "X days, Y hours, Z mins" */
+const formatSecondsToDuration = (totalSeconds: number): string => {
+    if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return "N/A";
+    const sec = Math.floor(totalSeconds);
+    if (sec < 60) return `${sec} sec${sec !== 1 ? "s" : ""}`;
+    const days = Math.floor(sec / 86400);
+    const hours = Math.floor((sec % 86400) / 3600);
+    const mins = Math.floor((sec % 3600) / 60);
+    const parts: string[] = [];
+    if (days > 0) parts.push(`${days} day${days !== 1 ? "s" : ""}`);
+    if (hours > 0) parts.push(`${hours} hr${hours !== 1 ? "s" : ""}`);
+    parts.push(`${mins} min${mins !== 1 ? "s" : ""}`);
+    return parts.join(", ");
+}
+
 const ChatUserInfo = ({ user }: { user: User | null }) => {
     return (
         <div className="bg-[#7E3FF2] rounded-xl py-3 px-3.75">
@@ -46,6 +61,19 @@ const ChatUserInfo = ({ user }: { user: User | null }) => {
                         {user?.address && (
                             <div className="flex items-center justify-center py-2 px-2.5">
                                 <p className="text-normal font-medium text-[#DEE4F2]">Address: {user? shortenAddress(user.address) : "No address"}</p>
+                            </div>
+                        )}
+                        {user?.role === "freelancer" && (
+                            <div className="flex py-2 px-2.5 flex-col gap-2">
+                                <p className="text-normal font-medium text-[#DEE4F2]">Finished Jobs: {user? user.finished_job_num : "No Finished Jobs"}</p>
+                                <p className="text-normal font-medium text-[#DEE4F2]">Total Earned: {user? Number(user.total_fund).toFixed(2) + " BNB" : "No total fund"}</p>
+                            </div>
+                        )}
+                        {user?.role === "client" && (
+                            <div className="flex py-2 px-2.5 flex-col gap-2">
+                                <p className="text-normal font-medium text-[#DEE4F2]">Finished Jobs: {user? user.finished_job_num : "No Finished Jobs"}</p>
+                                <p className="text-normal font-medium text-[#DEE4F2]">Total Spent: {user? Number(user.total_fund).toFixed(2) + " BNB" : "No total fund"}</p>
+                                <p className="text-normal font-medium text-[#DEE4F2]">Avg Fund Time: {user.fund_num && user.fund_cycle ? formatSecondsToDuration(Number(user.fund_cycle) / Number(user.fund_num)) : "N/A"}</p>
                             </div>
                         )}
                     </div>

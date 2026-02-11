@@ -87,8 +87,8 @@ const MyJobsSection = () => {
                                     location={job.location as LocationType ?? LocationType.REMOTE}
                                     tags={job.tags ?? []}
                                     image={job.image_id?EscrowBackendConfig.uploadedImagesURL + job.image_id: ""}
-                                    minBudget={Number(job.budget_min_usd)}
-                                    maxBudget={Number(job.budget_max_usd)}
+                                    minBudget={Number(job.budget_min)}
+                                    maxBudget={Number(job.budget_max)}
                                     currency={job.token_symbol ?? "USD"}
                                     deadline={job.deadline_at ? new Date(job.deadline_at).getTime() / 1000 : undefined}
                                     status={job.status}

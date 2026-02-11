@@ -36,8 +36,9 @@ export class RewardService {
   /**
    * Approve reward distributor to spend tokens
    */
-  async approveDistributor(privateKey: string, amount: string): Promise<string> {
+  async approveDistributor(amount: string): Promise<string> {
     try {
+      const privateKey = CONTRACT_ADDRESSES.privateKey;
       const wallet = web3Provider.getWallet(privateKey);
       const token = this.getTokenContract(CONTRACT_ADDRESSES.grmpsToken, wallet);
 
@@ -92,8 +93,9 @@ export class RewardService {
   /**
    * Authorize factory
    */
-  async authorizeFactory(privateKey: string): Promise<string> {
+  async authorizeFactory(): Promise<string> {
     try {
+      const privateKey = CONTRACT_ADDRESSES.ArbiterPrivateKey;
       const wallet = web3Provider.getWallet(privateKey);
       const contract = this.getRewardContract(wallet);
 

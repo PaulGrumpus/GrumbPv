@@ -7,10 +7,11 @@ import Image from "next/image";
 import { useContext, useEffect, useState } from "react";
 import { CONFIG } from "@/config/config";
 import { toast } from "react-toastify";
-import { createUserWithAddress, createUserWithEmail, loginWithAddress, loginWithEmail } from "@/utils/functions";
+import { createUserWithAddress, createUserWithEmail, loginWithAddress, loginWithEmail, resetPassword } from "@/utils/functions";
 import { UserInfoCtx } from "@/context/userContext";
 import { useRouter } from "next/navigation";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
+import Input from "./Input";
 
 interface LoginSignupModalProps {
     isOpen: boolean;
@@ -149,6 +150,10 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     const { setUserInfo } = useContext(UserInfoCtx);
     const { setuserLoadingState } = useContext(UserLoadingCtx);
     const [error, setError] = useState("");
+    const [isForgotPassword, setIsForgotPassword] = useState(false);
+    const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+    const [forgotPasswordAlert, setForgotPasswordAlert] = useState("");
+    const [forgotPasswordError, setForgotPasswordError] = useState("");
 
     useEffect(() => {
         if (typeof window === "undefined") {
@@ -272,8 +277,32 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
         };
     }, []);
 
+    const handleForgotPassword = () => {
+        
+        setIsForgotPassword(true);
+    }
+
+    const handleResetPassword = async () => {
+        setForgotPasswordError("");
+        setForgotPasswordAlert("");
+        if(!forgotPasswordEmail){
+            setForgotPasswordError("Email is required");
+            return;
+        }
+        const response = await resetPassword(forgotPasswordEmail);
+        if(!response.success) {
+            setForgotPasswordError("Invalid email");
+            return;
+        }
+        setForgotPasswordAlert("A password reset email has been sent to your email address.");
+    }
+
     const handleClose = () => {
         setError("");
+        setIsForgotPassword(false);
+        setForgotPasswordEmail("");
+        setForgotPasswordAlert("");
+        setForgotPasswordError("");
         setIsOpen(false);
         setEmail("");
         setPassword("");
@@ -404,6 +433,10 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                 image_id: response.data?.image_id || '',
                 created_at: response.data?.created_at || '',
                 updated_at: response.data?.updated_at || '',
+                finished_job_num: response.data?.finished_job_num || 0,
+                total_fund: response.data?.total_fund || 0,
+                fund_cycle: response.data?.fund_cycle || 0,
+                fund_num: response.data?.fund_num || 0,
             });
         }
         setIsOpen(false);
@@ -536,6 +569,10 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                     image_id: response.data?.image_id || '',
                     created_at: response.data?.created_at || '',
                     updated_at: response.data?.updated_at || '',
+                    finished_job_num: response.data?.finished_job_num || 0,
+                    total_fund: response.data?.total_fund || 0,
+                    fund_cycle: response.data?.fund_cycle || 0,
+                    fund_num: response.data?.fund_num || 0,
                 });
             }
         }
@@ -571,6 +608,10 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                     image_id: response.data?.image_id || '',
                     created_at: response.data?.created_at || '',
                     updated_at: response.data?.updated_at || '',
+                    finished_job_num: response.data?.finished_job_num || 0,
+                    total_fund: response.data?.total_fund || 0,
+                    fund_cycle: response.data?.fund_cycle || 0,
+                    fund_num: response.data?.fund_num || 0,
                 });
             }
         }
@@ -606,16 +647,45 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
             loginModal={true}
             children={
                 <div>
-                    {registerProcessing ? (
-                        <div className="flex flex-col gap-8">
-                            <h1 className="text-center text-[2.375rem] leading-[2.85rem] font-regular text-black font-inter">Join as a client or freelancer</h1>
-                            <div className="flex gap-6 px-3 py-15.25">
-                                <div className="relative">
+                    {isForgotPassword ? (
+                        <div className="flex flex-col gap-5 mt-15">
+                            <p className="text-normal font-regular font-inter text-black">Forgot password?</p>
+                            <Input 
+                                type="email" 
+                                placeholder="Enter your email" 
+                                value={forgotPasswordEmail} 
+                                onChange={(e) => setForgotPasswordEmail(e.target.value)} 
+                                wrapperClassName="w-full"
+                            />
+                            {forgotPasswordError && (
+                                <div className="text-small font-regular text-red-500 text-left">
+                                    {forgotPasswordError}
+                                </div>
+                            )}
+                            {forgotPasswordAlert && (
+                                <div className="text-small font-regular text-green-500 text-left">
+                                    {forgotPasswordAlert}
+                                </div>
+                            )}
+                            <div className="flex justify-end">
+                                <Button variant="primary" padding="px-4 py-2" onClick={handleResetPassword}>Reset password</Button>
+                            </div>
+                        </div>
+                    ) 
+                    : registerProcessing ? (
+                        <div className="flex flex-col gap-8 px-10 lg:px-0">
+                            <h1 className="text-center text-[1.375rem] leading-7 sm:text-[2.375rem] sm:leading-[2.85rem] font-regular text-black font-inter pt-40 lg:pt-0">
+                                Join as a client or freelancer
+                            </h1>
+                            <div className="flex flex-col md:flex-row gap-5 md:gap-6 px-3 sm:px-0 py-10 sm:py-15.25">
+                                <div className="relative w-full sm:w-auto">
                                     <Button 
                                         variant="secondary"
                                         borderRadius="rounded-xl"
                                         borderInnerRadius="rounded-[0.6875rem]"
-                                        padding="px-21.5 py-12.5"
+                                        padding="px-6 py-8 md:px-21.5 md:py-12.5"
+                                        wrapperClassName="w-full"
+                                        className="w-full"
                                     >
                                         <p 
                                             className={`
@@ -649,19 +719,21 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                                         </div>
                                     }
                                 </div>
-                                <div className="relative">
+                                <div className="relative w-full sm:w-auto">
                                     <Button 
                                         variant="secondary"
                                         borderRadius="rounded-xl"
                                         borderInnerRadius="rounded-[0.6875rem]"
-                                        padding="px-21.5 py-12.5"
+                                        padding="px-6 py-8 md:px-21.5 md:py-12.5"
+                                        wrapperClassName="w-full"
+                                        className="w-full"
                                         onClick={() => {
                                             handleRegisterAsFreelancer();
                                         }}
                                     >
                                         <p 
                                             className={`
-                                                text-normal font-bold font-intertext-center
+                                                text-normal font-bold font-inter text-center
                                                 ${registeredUserRole === "freelancer" ? "text-[#7E3FF2]" : "text-black"}
                                             `}
                                         >
@@ -689,10 +761,11 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                                     }
                                 </div>
                             </div>
-                            <div className="flex items-center justify-center">
+                            <div className="flex items-center justify-center w-full">
                                 <Button
                                     variant="primary"
-                                    padding="px-45 py-2.5"
+                                    padding="px-10 py-2.5 sm:px-45"
+                                    className="w-full sm:w-auto"
                                     onClick={() => {
                                         handleCreateAccount();
                                     }}
@@ -837,8 +910,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
                             {isRegistered && (
                                 <p 
                                     className="text-normal font-regular font-inter text-[#7E3FF2] text-center cursor-pointer"
-                                    onClick={() => {
-                                    }}
+                                    onClick={handleForgotPassword}
                                 >Forgot the password?</p>
                             )}
                             {error && (

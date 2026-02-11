@@ -35,8 +35,8 @@ export class JobService {
         );
       }
 
-      const budgetMin = this.toNumber(job.budget_min_usd);
-      const budgetMax = this.toNumber(job.budget_max_usd);
+      const budgetMin = this.toNumber(job.budget_min);
+      const budgetMax = this.toNumber(job.budget_max);
 
       if (budgetMin !== null && budgetMin <= 0) {
         throw new AppError(
@@ -177,8 +177,8 @@ export class JobService {
           'STATUS_NOT_VALID'
         );
       }
-      const budgetMin = this.toNumber(job.budget_min_usd);
-      const budgetMax = this.toNumber(job.budget_max_usd);
+      const budgetMin = this.toNumber(job.budget_min);
+      const budgetMax = this.toNumber(job.budget_max);
 
       if (budgetMin !== null && budgetMin <= 0) {
         throw new AppError(
@@ -420,13 +420,15 @@ export class JobService {
     const allowedKeys: Array<keyof Prisma.jobsUncheckedUpdateInput> = [
       'title',
       'description_md',
-      'budget_min_usd',
-      'budget_max_usd',
+      'budget_min',
+      'budget_max',
+      'token_symbol',
       'location',
       'deadline_at',
-      'client_id',
+      'client_id', 
       'status',
       'image_id',
+      'tags',
     ];
 
     for (const key of allowedKeys) {
@@ -438,6 +440,12 @@ export class JobService {
 
       if (value === null) {
         normalized[key as string] = null;
+        continue;
+      }
+
+      // Prisma expects tags as String[], not a JSON string
+      if (key === 'tags') {
+        normalized[key as string] = this.normalizeTags(value);
         continue;
       }
 

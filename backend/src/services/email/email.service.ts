@@ -1,6 +1,8 @@
 import nodemailer, { Transporter } from 'nodemailer';
 import { logger } from '../../utils/logger.js';
 import { getEmailTemplate } from './email.templates.js';
+import dotenv from "dotenv";
+dotenv.config();
 
 export interface EmailOptions {
   to: string;
@@ -160,6 +162,7 @@ export class EmailService {
     });
   }
 
+  /** Send contact form submission to contact@ (recipient). Uses same SMTP as other emails (notifications@). */
   public async sendContactEmail(
     to: string,
     name: string,

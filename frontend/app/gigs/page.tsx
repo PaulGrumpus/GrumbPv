@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { DashboardLoadingCtx } from "@/context/dashboardLoadingContext";
 import { useDashboard } from "@/context/dashboardContext";
 import { useRouter } from "next/navigation";
+import Input from "@/components/Input";
 
 const GigsPage = () => {
 
@@ -22,6 +23,8 @@ const GigsPage = () => {
     const { userInfo } = useContext(UserInfoCtx);
     const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
     const { setConversationsInfo } = useDashboard();
+
+    const [search, setSearch] = useState("");
 
     const router = useRouter();
     
@@ -107,25 +110,54 @@ const GigsPage = () => {
         }
     }
 
+    const normalizedSearch = search.trim().toLowerCase();
+    const filteredGigs = normalizedSearch
+        ? gigs.filter((gig) => {
+            const haystack = [
+                gig.title,
+                gig.description_md,
+                ...(gig.tags ?? []),
+            ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+            return haystack.includes(normalizedSearch);
+        })
+        : gigs;
+
     return (
         <div>
             <div className="lg:px-16 px-4 bg-white lg:pt-46 pt-22">
                 <div className="container mx-auto">
                     <p className="lg:text-display text-title lg:text-left text-center font-bold text-black pb-6">Gigs</p>
                     <p className="text-normal font-regular text-black pb-20">Discover skilled talent, ready to deliver your next job.</p>
-                    <div className="grid lg:grid-cols-2 grid-cols-1 gap-8 pb-28">  
-                        {gigs.map((gig) => (
+                   
+                    {gigs.length > 0 && (
+                        <div className="flex items-center gap-2 pb-20 justify-end">
+                        <Input 
+                            type="text" 
+                            placeholder="Search" 
+                            wrapperClassName="text-black" 
+                            value={search} 
+                                onChange={(e) => setSearch(e.target.value)} 
+                        />
+                        </div>
+                    )}
+                    <div className="grid lg:grid-cols-2 grid-cols-1 gap-8 pb-28 items-start">  
+                        {filteredGigs.map((gig) => (
                             <PubJobOrGigPost 
                                 key={gig.id} 
                                 description={gig.description_md} 
                                 title={gig.title} 
                                 tags={gig.tags ?? []} 
-                                minBudget={gig.budget_min_usd ?? 0} 
-                                maxBudget={gig.budget_max_usd ?? 0} 
+                                minBudget={gig.budget_min ?? 0} 
+                                maxBudget={gig.budget_max ?? 0} 
                                 image={gig.image_id ? EscrowBackendConfig.uploadedImagesURL + gig.image_id : undefined}
                                 currency={gig.token_symbol ?? "USD"} 
                                 createdAt={gig.created_at ? new Date(gig.created_at).getTime() / 1000 : 0}
                                 label="Contact"
+                                link={gig.link}
                                 clickHandler={() => {contactHandler(gig.id ?? "", gig.freelancer_id)}}
                             />
                         ))}

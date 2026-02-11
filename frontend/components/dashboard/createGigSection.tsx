@@ -25,8 +25,8 @@ const CreateGigSection = () => {
     const categories = ["Software Development", "Design", "Marketing", "Writing", "Translation", "Video Editing", "Audio Editing", "Data Entry", "Customer Support", "Other"];
     const [description, setDescription] = useState("");
     const [link, setLink] = useState("");
-    const [budgetMaxUsd, setBudgetMaxUsd] = useState<string>("");
-    const [budgetMinUsd, setBudgetMinUsd] = useState<string>("");
+    const [budgetMax, setBudgetMax] = useState<string>("");
+    const [budgetMin, setBudgetMin] = useState<string>("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploadedFileName, setUploadedFileName] = useState<string>("");
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -68,25 +68,25 @@ const CreateGigSection = () => {
     }
 
     const handlePostGig = async () => {
-        if (title === "" || selectedCategory === "" || description === "" || Number(budgetMaxUsd) === 0 || Number(budgetMinUsd) === 0) {
+        if (title === "" || selectedCategory === "" || description === "" || Number(budgetMax) === 0 || Number(budgetMin) === 0) {
             setError("Please fill in all fields");
             setCheckError(true);
             return;
         }
 
-        if (Number(budgetMaxUsd) <= 0) {
+        if (Number(budgetMax) <= 0) {
             setError("Max budget must be greater than 0");
             setCheckError(true);
             return;
         }
 
-        if (Number(budgetMinUsd) <= 0) {
+        if (Number(budgetMin) <= 0) {
             setError("Min budget must be greater than 0");
             setCheckError(true);
             return;
         }
 
-        if (Number(budgetMaxUsd) < Number(budgetMinUsd)) {
+        if (Number(budgetMax) < Number(budgetMin)) {
             setError("Max budget must be greater than min budget");
             setCheckError(true);
             return;
@@ -100,8 +100,9 @@ const CreateGigSection = () => {
         const gigPayload = {
             title,
             description_md: description,
-            budget_max_usd: Number(budgetMaxUsd),
-            budget_min_usd: Number(budgetMinUsd),
+            token_symbol: "BNB",
+            budget_max: Number(budgetMax),
+            budget_min: Number(budgetMin),
             tags: [selectedCategory ?? ""],
             freelancer_id: userInfo.id,
             link,
@@ -130,8 +131,8 @@ const CreateGigSection = () => {
                                   ...gig,
                                   title: updatedGig.title,
                                   description_md: updatedGig.description_md,
-                                  budget_max_usd: updatedGig.budget_max_usd,
-                                  budget_min_usd: updatedGig.budget_min_usd,
+                                  budget_max: updatedGig.budget_max,
+                                  budget_min: updatedGig.budget_min,
                                   token_symbol: updatedGig.token_symbol,
                                   link: updatedGig.link,
                                   image_id: updatedGig.image_id,
@@ -144,8 +145,8 @@ const CreateGigSection = () => {
                 setTitle("");
                 setSelectedCategory("");
                 setDescription("");
-                setBudgetMaxUsd("");
-                setBudgetMinUsd("");
+                setBudgetMax("");
+                setBudgetMin("");
                 setLink("");
                 setSelectedFile(null);
                 setUploadedFileName("");
@@ -199,8 +200,8 @@ const CreateGigSection = () => {
 
         setTitle(editingGig.title ?? "");
         setDescription(editingGig.description_md ?? "");
-        setBudgetMaxUsd(editingGig.budget_max_usd ?? "");
-        setBudgetMinUsd(editingGig.budget_min_usd ?? "");
+        setBudgetMax(editingGig.budget_max ?? "");
+        setBudgetMin(editingGig.budget_min ?? "");
         setLink(editingGig.link ?? "");
         setSelectedCategory(editingGig.tags?.[0] ?? "");
     }, [editingGig]);
@@ -287,9 +288,9 @@ const CreateGigSection = () => {
                             </div>
                             <div className="flex lg:flex-row flex-col gap-6">
                                 <div>
-                                    <p className='text-normal font-regular text-black text-left pb-2'>Max Budget (USD)</p>
+                                    <p className='text-normal font-regular text-black text-left pb-2'>Max Budget (BNB)</p>
                                     <input
-                                        value={budgetMaxUsd}
+                                        value={budgetMax}
                                         type="text"
                                         inputMode="decimal"
                                         onChange={(e) => {
@@ -298,7 +299,7 @@ const CreateGigSection = () => {
                                             // allow: "", "1", "1.", "1.2", "0.25"
                                             if (!/^\d*\.?\d*$/.test(value)) return;
 
-                                            setBudgetMaxUsd(value);
+                                            setBudgetMax(value);
                                             setError("");
                                         }}
                                         className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
@@ -306,9 +307,9 @@ const CreateGigSection = () => {
                                     />
                                 </div>
                                 <div>
-                                    <p className='text-normal font-regular text-black text-left pb-2'>Min Budget (USD)</p>
+                                    <p className='text-normal font-regular text-black text-left pb-2'>Min Budget (BNB)</p>
                                     <input
-                                        value={budgetMinUsd}
+                                        value={budgetMin}
                                         type="text"
                                         inputMode="decimal"
                                         onChange={(e) => {
@@ -317,7 +318,7 @@ const CreateGigSection = () => {
                                             // allow: "", "1", "1.", "1.2", "0.25"
                                             if (!/^\d*\.?\d*$/.test(value)) return;
 
-                                            setBudgetMinUsd(value);
+                                            setBudgetMin(value);
                                             setError("");
                                         }}
                                         className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'

@@ -12,6 +12,17 @@ const nextConfig: NextConfig = {
         hostname: 'dev.grumbuild.com',
         pathname: '/backend/uploads/images/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'grumbuild.com',
+        pathname: '/backend/uploads/images/**',
+      },
+      // Allow local backend in development
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        pathname: '/**',
+      },
     ],
     // Avoid optimizer TLS/cert issues in local dev for remote assets.
     unoptimized:

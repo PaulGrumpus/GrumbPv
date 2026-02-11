@@ -12,6 +12,10 @@ export interface User {
     image_id?: string;    
     created_at: string;
     updated_at: string;
+    finished_job_num: number;
+    total_fund: number;
+    fund_cycle?: number;
+    fund_num?: number;
 }
 
 export interface UserContextType {

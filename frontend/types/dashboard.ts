@@ -19,8 +19,8 @@ export type DashboardJob = {
     tags: string[];
     image_id: string | null;
     deadline_at: string | null;
-    budget_min_usd: string | null;
-    budget_max_usd: string | null;
+    budget_min: string | null;
+    budget_max: string | null;
     token_symbol: string | null;
     is_remote: boolean;
     // client only
@@ -38,6 +38,7 @@ export type DashboardJobBid = {
     cover_letter_md: string | null;
     period: number | null;
     status: string;
+    created_at: string;
     job_id: string,
     freelancer: DashboardFreelancer;
 };
@@ -54,8 +55,8 @@ export type DashboardBid = {
         id: string;
         title: string;
         location: string;
-        budget_min_usd: string | null;
-        budget_max_usd: string | null;
+        budget_min: string | null;
+        budget_max: string | null;
         deadline_at: string | null;
         description_md: string;
         tags: string[];
@@ -75,6 +76,7 @@ export type DashboardJobApplicationDoc = {
     token_symbol: string | null;
     client_confirm: boolean;
     freelancer_confirm: boolean;
+    confirm_edit_rounds: number; // 0..2, max 2 edit rounds
     job_milestone_id: string | null;
     // client side
     freelancer_id?: string;
@@ -101,6 +103,8 @@ export type DashboardFreelancer = {
     email?: string;
     address?: string;
     image_id?: string;
+    finished_job_num: number;
+    total_fund: number;
 };
   
 export type DashboardClient = {
@@ -108,14 +112,18 @@ export type DashboardClient = {
     display_name: string | null;
     email?: string;
     image_id?: string;
+    finished_job_num: number;
+    total_fund: number;
+    fund_cycle?: number;
+    fund_num?: number;
 };
 
 export type DashboardGig = {
     id: string;
     title: string;
     description_md: string;
-    budget_min_usd: string | null;
-    budget_max_usd: string | null;
+    budget_min: string | null;
+    budget_max: string | null;
     token_symbol: string | null;
     tags: string[];
     image_id: string | null;

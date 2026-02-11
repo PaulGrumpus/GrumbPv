@@ -69,6 +69,22 @@ export const createUserWithEmail = async (email: string, password: string, role:
     }
 }
 
+export const updateUserFunds = async (user_id: string, fund: number, num: number) => {
+    try {
+        const response = await EscrowBackend.post(`/database/users/by-id/${user_id}/funds`, { fund, num });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 export const updateUser = async (user: User, imageFile?: File | null) => {
     try {
         const formData = new FormData();
@@ -97,7 +113,7 @@ export const updateUser = async (user: User, imageFile?: File | null) => {
                 return;
             }
 
-            formData.append(field, value);
+            formData.append(field, value.toString());
         });
 
         if (imageFile) {
@@ -240,6 +256,37 @@ export const getUserById = async (user_id: string) => {
     }
 }
 
+export const resetPassword = async (email: string) => {
+    try {
+        const response = await EscrowBackend.post(`/database/users/reset-password`, { email });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const updateUserPassword = async (user_id: string, password: string) => {
+    try {
+        const response = await EscrowBackend.post(`/database/users/by-id/${user_id}/password`, { password });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 // Jobs
 export const createJob = async (job: Job, imageFile?: File | null) => {
     try {
@@ -247,12 +294,14 @@ export const createJob = async (job: Job, imageFile?: File | null) => {
         const fieldsToSend: Array<keyof Job> = [
             'title',
             'description_md',
-            'budget_min_usd',
-            'budget_max_usd',
+            'budget_min',
+            'budget_max',
+            'token_symbol',
+            'tags',
             'location',
             'deadline_at',
-            'client_id',
             'status',
+            'client_id',
         ];
 
         fieldsToSend.forEach((field) => {
@@ -296,12 +345,15 @@ export const updateJob = async (job_id: string, job: Job, imageFile?: File | nul
         const fieldsToSend: Array<keyof Job> = [
             'title',
             'description_md',
-            'budget_min_usd',
-            'budget_max_usd',
+            'budget_min',
+            'budget_max',
+            'token_symbol',
             'location',
             'deadline_at',
-            'client_id',
             'status',
+            'client_id',
+            'image_id',
+            'tags',
         ];
 
         fieldsToSend.forEach((field) => {
@@ -491,8 +543,9 @@ export const createGig = async (gig: Gig, imageFile?: File | null) => {
         const fieldsToSend: Array<keyof Gig> = [
             'title',
             'description_md',
-            'budget_min_usd',
-            'budget_max_usd',
+            'budget_min',
+            'budget_max',
+            'token_symbol',
             'tags',
             'link',
             'freelancer_id',
@@ -540,8 +593,9 @@ export const updateGig = async (gig_id: string, gig: Gig, imageFile?: File | nul
         const fieldsToSend: Array<keyof Gig> = [
             'title',
             'description_md',
-            'budget_min_usd',
-            'budget_max_usd',
+            'budget_min',
+            'budget_max',
+            'token_symbol',
             'tags',
             'link',
             'freelancer_id',
@@ -1167,6 +1221,29 @@ export const getDashboardDataByUserId = async (user_id: string, role: string) =>
     }
 }
 
+// Upload
+export const uploadFile = async (file: File) => {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await EscrowBackend.post('/upload', formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
 // Chain Txs
 export const createChainTx = async (purpose: string, chain_id: number, job_milestone_id: string, from_address: string, to_address: string, tx_hash: string, status: string, user_id: string) => {
     try {
@@ -1180,6 +1257,39 @@ export const createChainTx = async (purpose: string, chain_id: number, job_miles
             status,
             user_id,
         });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+// System States
+export const increaseFund = async (amount: number) => {
+    try {
+        const response = await EscrowBackend.post(`/database/system-states/increase-fund`, { amount });
+        return {
+            success: true,
+            data: response.data.data,
+        };
+    }   
+    catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.message || "Unknown error"
+        };
+    }
+}
+
+export const increaseWithdraw = async (amount: number) => {
+    try {
+        const response = await EscrowBackend.post(`/database/system-states/increase-withdraw`, { amount });
         return {
             success: true,
             data: response.data.data,

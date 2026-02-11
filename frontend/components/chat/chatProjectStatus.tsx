@@ -5,7 +5,7 @@ import Link from "next/link";
 import { User } from "@/types/user";
 import Image from "next/image";
 import { toast } from "react-toastify";
-import { fundEscrow, deliverWork, approveWork, updateJobMilestone, withdrawFunds, initiateDispute, buyerJoinDispute, venderPayDisputeFee, createChainTx, updateJobStatusById } from "@/utils/functions";
+import { fundEscrow, deliverWork, approveWork, updateJobMilestone, withdrawFunds, initiateDispute, buyerJoinDispute, venderPayDisputeFee, createChainTx, updateJobStatusById, getJobApplicationById, updateUser, updateUserFunds, increaseFund, increaseWithdraw } from "@/utils/functions";
 import { useWallet } from "@/context/walletContext";
 import { CONFIG } from "@/config/config";
 import ModalTemplate from "../modalTemplate";
@@ -117,6 +117,9 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
             });
             return;
         }
+        const jobApplicationDocInfo = await getJobApplicationById(jobApplicationDocId);
+        await updateUserFunds(jobApplicationDocInfo.data.client_info.id, Number(jobApplicationDocInfo.data.job_application_info.budget), 0);
+        await increaseFund(Number(jobApplicationDocInfo.data.job_application_info.budget));
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.FUNDED });
         if (updatedJobMilestone.success) {
             if (updatedJobMilestone.data) {
@@ -473,6 +476,10 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
             });
             return;
         }
+        const jobApplicationDocInfo = await getJobApplicationById(jobApplicationDocId);
+        await updateUserFunds(jobApplicationDocInfo.data.freelancer_info.id, Number(jobApplicationDocInfo.data.job_application_info.budget), 1);
+        await updateUserFunds(jobApplicationDocInfo.data.client_info.id, 0, 1);
+        await increaseWithdraw(Number(jobApplicationDocInfo.data.job_application_info.budget));
         const updatedJobMilestone = await updateJobMilestone(jobMilestoneId, { status: JobMilestoneStatus.RELEASED });
         if (updatedJobMilestone.success) {
             if (updatedJobMilestone.data) {
@@ -721,7 +728,7 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
                                         <div className="flex flex-col gap-2.5 justify-center w-full">
                                             <Button padding="px-6 py-1.5" onClick={handleFundEscrow}>
                                                 <p className="text-normal font-regular text-[#FFFFFF]">
-                                                    Escrow Fund
+                                                    Fund Escrow
                                                 </p>
                                             </Button>
                                             <Button padding="px-6 py-1.5" onClick={handleCancelProject}>
@@ -761,7 +768,7 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
                                         <div className="flex flex-col items-center justify-center pb-7">
                                             <div className="flex items-center justify-center gap-3 pb-3">
                                                 <Link href={`${CONFIG.ipfsGateWay}/${ipfs}`} className="max-w-[15%] truncate">
-                                                    <p className="text-normal font-regular text-[#2F3DF6] text-left truncate">{CONFIG.ipfsGateWay}/{ipfs}</p>
+                                                    <p className="text-normal font-regular text-white text-left truncate">{CONFIG.ipfsGateWay}/{ipfs}</p>
                                                 </Link>
                                                 <Button
                                                     onClick={() => handleDownload(`${CONFIG.ipfsGateWay}/${ipfs}`)}
