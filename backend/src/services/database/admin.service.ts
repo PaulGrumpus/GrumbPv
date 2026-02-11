@@ -764,6 +764,7 @@ export class AdminService {
             title: true,
             status: true,
             created_at: true,
+            deadline_at: true,
           },
         }),
       ]);

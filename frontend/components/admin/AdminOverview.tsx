@@ -131,32 +131,41 @@ const AdminOverview = () => {
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h2 className="text-large font-bold text-black mb-4">Recent Jobs</h2>
           <div className="space-y-3">
-            {stats.recentJobs.map((job) => (
-              <div
-                key={job.id}
-                className="flex flex-col gap-3 p-3 bg-gray-50 rounded-lg sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-normal font-medium text-black truncate">{job.title}</p>
-                  <p className="text-tiny text-gray-500">
-                    {new Date(job.created_at).toLocaleDateString()}
-                  </p>
+            {stats.recentJobs.map((job) => {
+              const isExpired =
+                job.status === 'open' &&
+                job.deadline_at != null &&
+                new Date(job.deadline_at) < new Date();
+              const displayStatus = isExpired ? 'expired' : job.status;
+              return (
+                <div
+                  key={job.id}
+                  className="flex flex-col gap-3 p-3 bg-gray-50 rounded-lg sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-normal font-medium text-black truncate">{job.title}</p>
+                    <p className="text-tiny text-gray-500">
+                      {new Date(job.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <span className={`text-tiny px-2 py-1 rounded-full self-end ${
+                    displayStatus === 'completed'
+                      ? 'bg-green-100 text-green-700'
+                      : displayStatus === 'in_progress'
+                      ? 'bg-blue-100 text-blue-700'
+                      : displayStatus === 'open'
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : displayStatus === 'expired'
+                      ? 'bg-orange-100 text-orange-700'
+                      : displayStatus === 'cancelled'
+                      ? 'bg-red-100 text-red-700'
+                      : 'bg-gray-100 text-gray-700'
+                  }`}>
+                    {displayStatus.replace('_', ' ')}
+                  </span>
                 </div>
-                <span className={`text-tiny px-2 py-1 rounded-full self-end ${
-                  job.status === 'completed'
-                    ? 'bg-green-100 text-green-700'
-                    : job.status === 'in_progress'
-                    ? 'bg-blue-100 text-blue-700'
-                    : job.status === 'open'
-                    ? 'bg-yellow-100 text-yellow-700'
-                    : job.status === 'cancelled'
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-gray-100 text-gray-700'
-                }`}>
-                  {job.status.replace('_', ' ')}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

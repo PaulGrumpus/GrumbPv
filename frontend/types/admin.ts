@@ -256,6 +256,7 @@ export interface AdminDashboardStats {
     title: string;
     status: string;
     created_at: string;
+    deadline_at: string | null;
   }[];
 }
 
