@@ -99,8 +99,17 @@ const AdminJobsSection = () => {
       ? jobs.filter((job) => job.status === 'open' && !isExpired(job.deadline_at, job.status))
       : jobs;
 
-  const getStatusBadgeClass = (status: string, hasDispute: boolean, expired: boolean) => {
+  const isCancelled = (job: AdminJob) =>
+    job.status === 'cancelled' || job.hasCancelledMilestone === true;
+
+  const getStatusBadgeClass = (
+    status: string,
+    hasDispute: boolean,
+    expired: boolean,
+    cancelled: boolean
+  ) => {
     if (hasDispute) return 'bg-red-100 text-red-700';
+    if (cancelled) return 'bg-red-100 text-red-700';
     if (expired) return 'bg-amber-100 text-amber-700';
     switch (status) {
       case 'completed':
@@ -196,9 +205,11 @@ const AdminJobsSection = () => {
                   </div>
                   <div className="mt-2 flex items-center justify-between text-small text-gray-600">
                     <span>{formatBudget(job.budget_min, job.budget_max, job.token_symbol)}</span>
-                    <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(job.status, job.hasDispute, isExpired(job.deadline_at, job.status))}`}>
+                    <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(job.status, job.hasDispute, isExpired(job.deadline_at, job.status), isCancelled(job))}`}>
                       {job.hasDispute
                         ? 'Disputed'
+                        : isCancelled(job)
+                        ? 'Cancelled'
                         : isExpired(job.deadline_at, job.status)
                         ? 'Expired'
                         : job.status.replace('_', ' ')}
@@ -268,9 +279,11 @@ const AdminJobsSection = () => {
                       {formatBudget(job.budget_min, job.budget_max, job.token_symbol)}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(job.status, job.hasDispute, isExpired(job.deadline_at, job.status))}`}>
+                      <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(job.status, job.hasDispute, isExpired(job.deadline_at, job.status), isCancelled(job))}`}>
                         {job.hasDispute
                           ? 'Disputed'
+                          : isCancelled(job)
+                          ? 'Cancelled'
                           : isExpired(job.deadline_at, job.status)
                           ? 'Expired'
                           : job.status.replace('_', ' ')}

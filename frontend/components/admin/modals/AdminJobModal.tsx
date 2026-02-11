@@ -278,8 +278,8 @@ const AdminJobModal = ({ isOpen, onClose, job, loading, arbiterAddress }: AdminJ
                       {formatBudget(jobData.budget_min, jobData.budget_max, jobData.token_symbol)}
                     </p>
                     <div className="flex flex-wrap items-center gap-2 mt-2">
-                      <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass(jobData.status)}`}>
-                        {jobData.status.replace('_', ' ')}
+                      <span className={`text-tiny px-2 py-1 rounded-full ${getStatusBadgeClass((jobData.hasCancelledMilestone ? 'cancelled' : jobData.status) ?? '')}`}>
+                        {(jobData.hasCancelledMilestone ? 'cancelled' : jobData.status)?.replace('_', ' ') ?? ''}
                       </span>
                       {jobData.deadline_at && (
                         <span className="text-tiny text-gray-500">

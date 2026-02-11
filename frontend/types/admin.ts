@@ -74,6 +74,7 @@ export interface AdminJob {
     milestones: number;
   };
   hasDispute: boolean;
+  hasCancelledMilestone?: boolean;
 }
 
 export interface AdminBid {
@@ -238,6 +239,7 @@ export interface AdminDashboardStats {
     gigs: number;
     conversations: number;
     disputedJobs: number;
+    cancelledJobs?: number;
     openJobs: number;
     expiredJobs: number;
     totalFund: number;
@@ -257,6 +259,7 @@ export interface AdminDashboardStats {
     status: string;
     created_at: string;
     deadline_at: string | null;
+    isCancelledByMilestone?: boolean;
   }[];
 }
 
