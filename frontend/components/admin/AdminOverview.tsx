@@ -132,11 +132,13 @@ const AdminOverview = () => {
           <h2 className="text-large font-bold text-black mb-4">Recent Jobs</h2>
           <div className="space-y-3">
             {stats.recentJobs.map((job) => {
+              const cancelled = job.status === 'cancelled' || job.isCancelledByMilestone === true;
               const isExpired =
+                !cancelled &&
                 job.status === 'open' &&
                 job.deadline_at != null &&
                 new Date(job.deadline_at) < new Date();
-              const displayStatus = isExpired ? 'expired' : job.status;
+              const displayStatus = cancelled ? 'cancelled' : isExpired ? 'expired' : job.status;
               return (
                 <div
                   key={job.id}

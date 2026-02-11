@@ -308,6 +308,19 @@ export class AdminService {
             status: { in: disputeStatuses },
           },
         };
+      } else if (status === 'cancelled') {
+        // Job is cancelled if job.status is cancelled OR any milestone has status cancelled
+        const cancelledCondition = {
+          OR: [
+            { status: job_status.cancelled },
+            { milestones: { some: { status: milestone_status.cancelled } } },
+          ],
+        };
+        if (search && where.OR) {
+          where = { AND: [where, cancelledCondition] };
+        } else {
+          where = cancelledCondition;
+        }
       } else if (status === 'expired') {
         where.status = job_status.open;
         where.deadline_at = { lt: now };
@@ -352,12 +365,13 @@ export class AdminService {
         this.prisma.jobs.count({ where }),
       ]);
 
-      // Add hasDispute flag to each job
+      // Add hasDispute and hasCancelledMilestone flags to each job
       const jobsWithDisputeFlag = jobs.map((job) => ({
         ...job,
-        hasDispute: job.milestones.some((m) => 
+        hasDispute: job.milestones.some((m) =>
           (disputeStatuses as milestone_status[]).includes(m.status)
         ),
+        hasCancelledMilestone: job.milestones.some((m) => m.status === milestone_status.cancelled),
       }));
 
       return {
@@ -472,11 +486,12 @@ export class AdminService {
         throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
       }
 
-      // Check if job has disputed milestones
+      // Check if job has disputed or cancelled milestones
       const disputedMilestones = job.milestones.filter((m) =>
         (disputeStatuses as milestone_status[]).includes(m.status)
       );
       const hasDispute = disputedMilestones.length > 0;
+      const hasCancelledMilestone = job.milestones.some((m) => m.status === milestone_status.cancelled);
 
       // If there's a dispute, get the chat history for the related conversation
       let disputeChatHistory: any[] = [];
@@ -505,6 +520,7 @@ export class AdminService {
       return {
         ...job,
         hasDispute,
+        hasCancelledMilestone,
         disputedMilestones,
         disputeChatHistory,
       };
@@ -691,6 +707,7 @@ export class AdminService {
         totalConversations,
         jobsByStatus,
         disputedJobsCount,
+        cancelledJobsCount,
         openJobsCount,
         expiredJobsCount,
         totalFundClients,
@@ -713,6 +730,14 @@ export class AdminService {
                 status: { in: disputeStatuses },
               },
             },
+          },
+        }),
+        this.prisma.jobs.count({
+          where: {
+            OR: [
+              { status: job_status.cancelled },
+              { milestones: { some: { status: milestone_status.cancelled } } },
+            ],
           },
         }),
         this.prisma.jobs.count({
@@ -765,12 +790,27 @@ export class AdminService {
             status: true,
             created_at: true,
             deadline_at: true,
+            milestones: { select: { status: true } },
           },
         }),
       ]);
 
       const totalFund = totalFundClients?.fund != null ? Number(totalFundClients.fund) : 0;
       const totalWithdraw = totalWithdrawFreelancers?.withdraw != null ? Number(totalWithdrawFreelancers.withdraw) : 0;
+
+      const jobsByStatusMap = jobsByStatus.reduce(
+        (acc, item) => {
+          acc[item.status] = item._count;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
+      jobsByStatusMap.cancelled = cancelledJobsCount;
+
+      const recentJobsWithCancelled = recentJobs.map(({ milestones, ...job }) => ({
+        ...job,
+        isCancelledByMilestone: milestones.some((m) => m.status === milestone_status.cancelled),
+      }));
 
       return {
         counts: {
@@ -779,20 +819,15 @@ export class AdminService {
           gigs: totalGigs,
           conversations: totalConversations,
           disputedJobs: disputedJobsCount,
+          cancelledJobs: cancelledJobsCount,
           openJobs: openJobsCount,
           expiredJobs: expiredJobsCount,
           totalFund,
           totalWithdraw,
         },
-        jobsByStatus: jobsByStatus.reduce(
-          (acc, item) => {
-            acc[item.status] = item._count;
-            return acc;
-          },
-          {} as Record<string, number>
-        ),
+        jobsByStatus: jobsByStatusMap,
         recentUsers,
-        recentJobs,
+        recentJobs: recentJobsWithCancelled,
       };
     } catch (error) {
       if (error instanceof AppError) {
