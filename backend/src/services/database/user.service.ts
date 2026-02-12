@@ -363,8 +363,8 @@ export class UserService {
 
   public async updateUserFunds(id: string, fund: number, num: number): Promise<boolean> {
     try {
-      if (!id || !fund || !num) {
-        throw new AppError('User ID, fund and num are required', 400, 'USER_ID_FUND_NUM_REQUIRED');
+      if (!id) {
+        throw new AppError('User ID required', 400, 'USER_ID_REQUIRED');
       }
       const user = await this.prisma.users.findUnique({
         where: { id },

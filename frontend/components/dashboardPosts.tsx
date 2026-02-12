@@ -42,7 +42,7 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
     const totalSteps = STATUSES.length;
     const [isOpen, setIsOpen] = useState(false);
     const [status, setStatus] = useState(0);
-    const { sendTransaction } = useWallet();
+    const { sendTransaction, address } = useWallet();
     const { setJobMilestonesInfo } = useProjectInfo();
     const router = useRouter();
     const { jobsInfo, setJobsInfo } = useDashboard();
@@ -98,15 +98,25 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
     }, [milestoneStatus, setStatus]);
 
     const handleFund = async () => {
+        if(address?.toLowerCase() !== userInfo?.address?.toLowerCase()) {
+            toast.error("You are not authorized to fund escrow, please connect to the correct wallet.", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
         const result = await fundEscrow(user.id, jobMilestoneId, Number(CONFIG.chainId));
-        const txHash = await sendTransaction({
+        const { hash: txHash, error: txError } = await sendTransaction({
             to: result.data.to,
             data: result.data.data,
             value: result.data.value,
             chainId: Number(result.data.chainId),
         });
         if (!txHash) {
-            toast.error("Failed to fund escrow", {
+            toast.error(txError || "Failed to fund escrow", {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -216,15 +226,25 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
     }
 
     const handleApprove = async () => {
+        if(address?.toLowerCase() !== userInfo?.address?.toLowerCase()) {
+            toast.error("You are not authorized to fund escrow, please connect to the correct wallet.", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
         const result = await approveWork(user.id, jobMilestoneId, Number(CONFIG.chainId), ipfs ?? "");
-        const txHash = await sendTransaction({
+        const { hash: txHash, error: txError } = await sendTransaction({
             to: result.data.to,
             data: result.data.data,
             value: result.data.value,
             chainId: Number(result.data.chainId),
         });
         if (!txHash) {
-            toast.error("Failed to approve work", {
+            toast.error(txError || "Failed to approve work", {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -280,15 +300,25 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
     }
 
     const handleWithdraw = async () => {
+        if(address?.toLowerCase() !== userInfo?.address?.toLowerCase()) {
+            toast.error("You are not authorized to fund escrow, please connect to the correct wallet.", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
         const result = await withdrawFunds(user.id, jobMilestoneId, Number(CONFIG.chainId));
-        const txHash = await sendTransaction({
+        const { hash: txHash, error: txError } = await sendTransaction({
             to: result.data.to,
             data: result.data.data,
             value: result.data.value,
             chainId: Number(result.data.chainId),
         });
         if (!txHash) {
-            toast.error("Failed to withdraw funds", {
+            toast.error(txError || "Failed to withdraw funds", {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -349,15 +379,25 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
     }
 
     const handleDispute = async () => {
+        if(address?.toLowerCase() !== userInfo?.address?.toLowerCase()) {
+            toast.error("You are not authorized to fund escrow, please connect to the correct wallet.", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
         const result = await initiateDispute(user.id, jobMilestoneId, Number(CONFIG.chainId));
-        const txHash = await sendTransaction({
+        const { hash: txHash, error: txError } = await sendTransaction({
             to: result.data.to,
             data: result.data.data,
             value: result.data.value,
             chainId: Number(result.data.chainId),
         });
         if (!txHash) {
-            toast.error("Failed to initiate dispute", {
+            toast.error(txError || "Failed to initiate dispute", {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -414,6 +454,16 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
     }
 
     const handleTakePartInDispute = async () => {
+        if(address?.toLowerCase() !== userInfo?.address?.toLowerCase()) {
+            toast.error("You are not authorized to fund escrow, please connect to the correct wallet.", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
         let result = null;
         if(userInfo.role === "client") {
             result = await buyerJoinDispute(user.id, jobMilestoneId, Number(CONFIG.chainId));
@@ -421,14 +471,14 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
         else {
             result = await venderPayDisputeFee(user.id, jobMilestoneId, Number(CONFIG.chainId));
         }
-        const txHash = await sendTransaction({
+        const { hash: txHash, error: txError } = await sendTransaction({
             to: result.data.to,
             data: result.data.data,
             value: result.data.value,
             chainId: Number(result.data.chainId),
         });
         if (!txHash) {
-            toast.error("Failed to initiate dispute", {
+            toast.error(txError || "Failed to initiate dispute", {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -575,6 +625,16 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
     const [projectDescription, setProjectDescription] = useState<string>("");
 
     const handleDeliverUploadedFile = async () => {
+        if(address?.toLowerCase() !== userInfo?.address?.toLowerCase()) {
+            toast.error("You are not authorized to fund escrow, please connect to the correct wallet.", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
         // Check if already delivered
         if (isMilestoneDelivered(jobMilestoneId)) {
             toast.error("Work has already been delivered for this milestone", {
