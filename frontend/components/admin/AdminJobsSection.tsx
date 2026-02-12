@@ -93,14 +93,37 @@ const AdminJobsSection = () => {
     return new Date(deadline).getTime() < Date.now();
   };
 
-  // When "Open" filter is active, show only open jobs whose deadline is still ahead (not expired)
-  const displayedJobs =
-    statusFilter === 'open'
-      ? jobs.filter((job) => job.status === 'open' && !isExpired(job.deadline_at, job.status))
-      : jobs;
-
   const isCancelled = (job: AdminJob) =>
     job.status === 'cancelled' || job.hasCancelledMilestone === true;
+
+  // Apply status-based filters
+  const displayedJobs = jobs.filter((job) => {
+    const expired = isExpired(job.deadline_at, job.status);
+    const cancelled = isCancelled(job);
+
+    switch (statusFilter) {
+      case 'open':
+        // Open jobs that are not expired and not cancelled
+        return job.status === 'open' && !expired && !cancelled;
+      case 'expired':
+        // Expired open jobs
+        return job.status === 'open' && expired && !cancelled;
+      case 'in_progress':
+        // Actively in progress and not effectively cancelled
+        return job.status === 'in_progress' && !cancelled;
+      case 'completed':
+        return job.status === 'completed';
+      case 'cancelled':
+        // Jobs that are cancelled either by status or milestone flag
+        return cancelled;
+      case 'disputed':
+        // Jobs with active disputes
+        return job.hasDispute === true;
+      case 'all':
+      default:
+        return true;
+    }
+  });
 
   const getStatusBadgeClass = (
     status: string,

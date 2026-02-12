@@ -144,14 +144,14 @@ const AdminJobModal = ({ isOpen, onClose, job, loading, arbiterAddress }: AdminJ
     }
 
     try {
-      const txHash = await sendTransaction({
+      const { hash: txHash, error: txError } = await sendTransaction({
         to: result.data.to,
         data: result.data.data,
         value: result.data.value,
         chainId: Number(result.data.chainId),
       });
       if (!txHash) {
-        throw new Error('Transaction failed');
+        throw new Error(txError || 'Transaction failed');
       }
       updateDisputeStatus(job_milestone_id, 'resolvedToBuyer');
       await updateJobMilestone(job_milestone_id, { status: JobMilestoneStatus.RESOLVED_TO_BUYER });
@@ -163,7 +163,8 @@ const AdminJobModal = ({ isOpen, onClose, job, loading, arbiterAddress }: AdminJ
         pauseOnHover: true,
       });
     } catch (error) {
-      toast.error('Failed to resolve dispute', {
+      const message = error instanceof Error ? error.message : 'Failed to resolve dispute';
+      toast.error(message, {
         position: 'top-right',
         autoClose: 5000,
         hideProgressBar: false,
@@ -197,14 +198,14 @@ const AdminJobModal = ({ isOpen, onClose, job, loading, arbiterAddress }: AdminJ
     }
 
     try {
-      const txHash = await sendTransaction({
+      const { hash: txHash, error: txError } = await sendTransaction({
         to: result.data.to,
         data: result.data.data,
         value: result.data.value,
         chainId: Number(result.data.chainId),
       });
       if (!txHash) {
-        throw new Error('Transaction failed');
+        throw new Error(txError || 'Transaction failed');
       }
       updateDisputeStatus(job_milestone_id, 'resolvedToVendor');
       await updateJobMilestone(job_milestone_id, { status: JobMilestoneStatus.RESOLVED_TO_VENDOR });
@@ -216,7 +217,8 @@ const AdminJobModal = ({ isOpen, onClose, job, loading, arbiterAddress }: AdminJ
         pauseOnHover: true,
       });
     } catch (error) {
-      toast.error('Failed to resolve dispute', {
+      const message = error instanceof Error ? error.message : 'Failed to resolve dispute';
+      toast.error(message, {
         position: 'top-right',
         autoClose: 5000,
         hideProgressBar: false,

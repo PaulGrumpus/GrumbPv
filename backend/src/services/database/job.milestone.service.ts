@@ -189,8 +189,11 @@ export class JobMilestoneService {
         const fundCycle = (now.getTime() - existingJobMilestone.created_at.getTime()) / 1000;
         await userService.updateClientFundTime(existingJob.client_id, fundCycle);
       }
-      if(jobMilestone.status === milestone_status.disputedByClient || jobMilestone.status === milestone_status.disputedByFreelancer || jobMilestone.status === milestone_status.disputedWithCounterSide) {
+      if(jobMilestone.status === milestone_status.disputedByClient || jobMilestone.status === milestone_status.disputedByFreelancer ) {
         await jobService.updateJobStatusById(existingJobMilestone.job_id, job_status.in_review);
+        await this.notifyAdminsOfDispute(existingJobMilestone.job_id, existingJobMilestone.id, jobMilestone.status);
+      }
+      if(jobMilestone.status === milestone_status.disputedWithCounterSide) {
         await this.notifyAdminsOfDispute(existingJobMilestone.job_id, existingJobMilestone.id, jobMilestone.status);
       }
       if(jobMilestone.status === milestone_status.resolvedToBuyer || jobMilestone.status === milestone_status.resolvedToVendor) {

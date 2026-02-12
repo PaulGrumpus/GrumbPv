@@ -56,8 +56,8 @@ const ChatComb = ({ sender, receiver, job_id, job_token_symbol, job_title, job_d
             try {
                 const jobApplicationDoc =
                 jobsInfo
-                    .flatMap(job => job.jobApplicationsDocs)
-                    .find(doc => doc.id === job_application_doc_id) ?? null;
+                    .flatMap(job => job.jobApplicationsDocs ?? [])
+                    .find(doc => doc?.id === job_application_doc_id) ?? null;
 
                 if(!isMounted) return;
 
@@ -65,8 +65,8 @@ const ChatComb = ({ sender, receiver, job_id, job_token_symbol, job_title, job_d
                     setJobMilestoneId(jobApplicationDoc.job_milestone_id);
                    
                     const jobMilestoneInfo = jobsInfo
-                    .flatMap(job => job.milestones)
-                    .find(milestone => milestone.id === jobApplicationDoc.job_milestone_id) ?? null;
+                    .flatMap(job => job.milestones ?? [])
+                    .find(milestone => milestone?.id === jobApplicationDoc.job_milestone_id) ?? null;
                     if(!isMounted) return;
 
                     let nextStatus = 0;

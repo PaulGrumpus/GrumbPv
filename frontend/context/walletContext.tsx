@@ -24,6 +24,11 @@ type WalletTransaction = {
   chainId?: number | string; // optional override
 };
 
+type WalletTransactionResult = {
+  hash: string | null;
+  error: string | null;
+};
+
 type WalletContextValue = {
   address: string | null;
   chainId: string | null;
@@ -33,7 +38,7 @@ type WalletContextValue = {
   error: string | null;
   connect: (email?: string) => Promise<{ address: string; chainId: string } | null>;
   disconnect: () => void;
-  sendTransaction: (tx: WalletTransaction) => Promise<string>;
+  sendTransaction: (tx: WalletTransaction) => Promise<WalletTransactionResult>;
 };
 
 const defaultContext: WalletContextValue = {
@@ -45,9 +50,10 @@ const defaultContext: WalletContextValue = {
   error: null,
   connect: async () => null,
   disconnect: () => {},
-  sendTransaction: async () => {
-    throw new Error("Wallet not connected");
-  },
+  sendTransaction: async () => ({
+    hash: null,
+    error: "Wallet not connected",
+  }),
 };
 
 export const WalletCtx = createContext<WalletContextValue>(defaultContext);
@@ -145,7 +151,7 @@ export const WalletProvider = ({ children }: Props) => {
   }, []);
 
   const sendTransaction = useCallback(
-    async (tx: WalletTransaction) => {
+    async (tx: WalletTransaction): Promise<WalletTransactionResult> => {
       const normalizeHex = (raw?: string) => {
         if (!raw) return undefined;
         if (raw.startsWith("0x") || raw.startsWith("0X")) return raw;
@@ -182,12 +188,75 @@ export const WalletProvider = ({ children }: Props) => {
         chainId: normalizedChainId,
       };
 
-      const hash = await eth.request({
-        method: "eth_sendTransaction",
-        params: [txParams],
-      });
+      let hash: string | undefined;
+      try {
+        hash = (await eth.request({
+          method: "eth_sendTransaction",
+          params: [txParams],
+        })) as string | undefined;
+      } catch (err) {
+        // User rejected the transaction or there was an RPC error.
+        console.warn("Failed to send transaction", err);
+        const message =
+          (err as any)?.code === 4001
+            ? "User rejected the transaction in MetaMask."
+            : err instanceof Error
+            ? err.message
+            : "Failed to send transaction.";
+        return { hash: null, error: message };
+      }
 
-      return hash as string;
+      if (!hash) {
+        return { hash: null, error: "Failed to obtain transaction hash." };
+      }
+
+      // Wait for the transaction receipt and ensure it was successful.
+      const maxAttempts = 30;
+      const delayMs = 2000;
+      const sleep = (ms: number) =>
+        new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+      let receipt: any = null;
+      for (let i = 0; i < maxAttempts; i++) {
+        try {
+          receipt = await eth.request({
+            method: "eth_getTransactionReceipt",
+            params: [hash],
+          });
+        } catch (err) {
+          console.warn("Failed to fetch transaction receipt", err);
+          const message =
+            err instanceof Error
+              ? err.message
+              : "Failed to fetch transaction receipt.";
+          return { hash: null, error: message };
+        }
+
+        if (receipt) break;
+        await sleep(delayMs);
+      }
+
+      if (!receipt) {
+        console.warn("Transaction receipt not found within timeout", hash);
+        return {
+          hash: null,
+          error: "Transaction not mined within the expected time.",
+        };
+      }
+
+      const status = (receipt as any).status;
+      const isSuccess =
+        status === "0x1" || status === 1 || status === true;
+
+      if (!isSuccess) {
+        console.warn("Transaction failed on-chain", { hash, receipt });
+        return {
+          hash: null,
+          error: "Transaction failed on-chain.",
+        };
+      }
+
+      return { hash, error: null };
     },
     [address, chainId, provider]
   );
