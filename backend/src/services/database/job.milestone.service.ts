@@ -527,7 +527,7 @@ export class JobMilestoneService {
       }
 
       const baseUrl = process.env.FRONTEND_URL || 'https://grumbuild.com';
-      const adminUrl = `${baseUrl}/admin/dashboard`;
+      const adminUrl = `${baseUrl}/admin/dashboard?view=jobs`;
 
       const title = 'Dispute requires admin review';
       const body = `A dispute has been ${status === milestone_status.disputedByClient ? 'started by client' : status === milestone_status.disputedByFreelancer ? 'started by freelancer' : 'started with counter side'} for job ${jobId} (milestone ${milestoneId}).`;
