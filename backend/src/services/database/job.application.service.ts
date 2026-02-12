@@ -213,14 +213,17 @@ export class JobApplicationService {
           throw new AppError('Failed to create escrow', 500, 'FAILED_TO_CREATE_ESCROW');
         }
       }
+      const actionLabel = hasContentChange ? 'Updated' : 'Confirmed';
+      const actionVerb = hasContentChange ? 'updated' : 'confirmed';
+
       await notificationService.createNotification({
         user_id: updateResult.client_id,
         actor_user_id: userId,
         type: notification_type.REQUIREMENT_DOCS_CONFIRMED,
         entity_type: notification_entity.job_application_doc,
         entity_id: updateResult.id,
-        title: 'Job Requirement Docs Confirmed',
-        body: `Your job requirement docs have been confirmed ${userId === updateResult.client_id ? 'by the client' : 'by the freelancer'}`,
+        title: `Job Requirement Docs ${actionLabel}`,
+        body: `Your job requirement docs have been ${actionVerb} ${userId === updateResult.client_id ? 'by the client' : 'by the freelancer'}`,
         payload: Prisma.JsonNull,
         read_at: null,
         created_at: new Date(),
@@ -231,8 +234,8 @@ export class JobApplicationService {
         type: notification_type.REQUIREMENT_DOCS_CONFIRMED,
         entity_type: notification_entity.job_application_doc,
         entity_id: updateResult.id,
-        title: 'Job Requirement Docs Confirmed',
-        body: `Your job requirement docs have been confirmed ${userId === updateResult.client_id ? 'by the client' : 'by the freelancer'}`,
+        title: `Job Requirement Docs ${actionLabel}`,
+        body: `Your job requirement docs have been ${actionVerb} ${userId === updateResult.client_id ? 'by the client' : 'by the freelancer'}`,
         payload: Prisma.JsonNull,
         read_at: null,
         created_at: new Date(),
