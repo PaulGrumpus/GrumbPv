@@ -23,9 +23,9 @@ const Footer = () => {
             href: "/terms-of-service"
         },
         {
-            title: "Cookie Settings",
-            href: "/cookie-settings"
-        }
+            title: "Help Center & FAQ",
+            href: "/faq"
+        },
     ]
 
     const footerSocialIcons = [

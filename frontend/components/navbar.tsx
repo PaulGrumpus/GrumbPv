@@ -73,11 +73,11 @@ const Navbar = () => {
     userRole === "freelancer" ? [
         { label: "Featured Jobs", href: "/jobs" },
         { label: "Gigs", href: "/gigs" },
-        { label: "Post Gig", href: "/dashboard?view=create-gig" },
+        ...(loggedIn ? [{ label: "Post Gig", href: "/dashboard?view=create-gig" }] : []),
     ] : [
         { label: "Featured Gigs", href: "/gigs" },
         { label: "Jobs", href: "/jobs" },
-        { label: "Post Job", href: "/dashboard?view=create-job" },
+        ...(loggedIn ? [{ label: "Post Job", href: "/dashboard?view=create-job" }] : []),
     ];
 
     // Handle responsive mobile/desktop switching on window resize
@@ -269,13 +269,13 @@ const Navbar = () => {
                                         <div className="flex gap-8 text-normal font-regular text-black">    
                                             <Link className="hover:text-purple uppercase" href="/jobs">Featured Jobs</Link>
                                             <Link className="hover:text-purple uppercase" href="/gigs">Gigs</Link>
-                                            <Link className="hover:text-purple uppercase" href="/dashboard?view=create-gig">Post Gig</Link>
+                                            {loggedIn && <Link className="hover:text-purple uppercase" href="/dashboard?view=create-gig">Post Gig</Link>}
                                         </div>
                                     ) : (
                                         <div className="flex gap-8 text-normal font-regular text-black">    
                                             <Link className="hover:text-purple uppercase" href="/jobs">Featured Jobs</Link>
                                             <Link className="hover:text-purple uppercase" href="/gigs">Gigs</Link>
-                                            <Link className="hover:text-purple uppercase" href="/dashboard?view=create-job">Post Job</Link>
+                                            {loggedIn && <Link className="hover:text-purple uppercase" href="/dashboard?view=create-job">Post Job</Link>}
                                         </div>
                                     )}
                                     {loggedIn ? ( 
