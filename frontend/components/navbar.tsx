@@ -35,11 +35,11 @@ const menuItems = [
         label: "Dashboard",
         href: "/dashboard"
     },
-    {
-        icon: "/Grmps/setting.svg",
-        label: "Settings",
-        href: "/settings"
-    },
+    // {
+    //     icon: "/Grmps/setting.svg",
+    //     label: "Settings",
+    //     href: "/settings"
+    // },
 ]
 
 const Navbar = () => {
@@ -206,9 +206,10 @@ const Navbar = () => {
         ? ["Jobs", "Gigs", "Post Gig"]
         : ["Jobs", "Gigs", "Post Job"];
 
-    // const showPlaceholder = loggedIn && notificationLoadingState !== "success";
+    const PUBLIC_PATHS = ['/faq', '/privacy', '/terms', '/invite'];
+    const isPublicPage = PUBLIC_PATHS.includes(pathname ?? '');
 
-    const showPlaceholder = loggedIn && dashboardLoadingState !== "success";
+    const showPlaceholder = !isPublicPage && loggedIn && dashboardLoadingState !== "success";
 
     const handleLogOut = () => {
         setuserLoadingState("pending");
