@@ -249,7 +249,7 @@ const Home = () => {
         {/* ═══════ CATEGORIES ═══════ */}
         <section className="py-20">
           <div className="container mx-auto px-4 lg:px-16">
-            <h2 className="text-title font-bold text-black mb-2">Find freelancers for every type of work</h2>
+            <h2 className="md:text-title font-bold text-black mb-2 leading-8 text-[2rem]">Find freelancers for every type of work</h2>
             <p className="text-normal font-regular text-gray-500 mb-10">Whatever your project needs, there&apos;s a skilled professional ready to help.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {categories.map((cat) => (
@@ -270,13 +270,13 @@ const Home = () => {
         <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-4 lg:px-16">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-12 gap-4">
-              <h2 className="text-title font-bold text-black">How it works</h2>
-              <div className="flex rounded-lg border border-gray-200 overflow-hidden self-start">
+              <h2 className="text-title font-bold text-black md:text-left text-center">How it works</h2>
+              <div className="flex rounded-lg border border-gray-200 overflow-hidden md:self-start justify-center">
                 <button
                   onClick={() => setHowItWorksTab("client")}
                   className={`px-5 py-2.5 text-small font-medium transition-colors cursor-pointer ${
                     howItWorksTab === "client"
-                      ? "bg-gradient-to-r from-[#2F3DF6] to-[#7E3FF2] text-white"
+                      ? "bg-linear-to-r from-[#2F3DF6] to-[#7E3FF2] text-white"
                       : "bg-white text-gray-600 hover:text-[#7E3FF2]"
                   }`}
                 >
@@ -319,7 +319,7 @@ const Home = () => {
               <div className="inline-block mb-4 px-4 py-1.5 rounded-full bg-[#7E3FF2]/10 text-[#7E3FF2] text-small font-medium">
                 Verified On-Chain
               </div>
-              <h2 className="text-title font-bold text-black mb-3">Real transactions. Real transparency.</h2>
+              <h2 className="md:text-title font-bold text-black mb-3 leading-8 text-[2rem]">Real transactions. Real transparency.</h2>
               <p className="text-normal font-regular text-gray-500 max-w-2xl mx-auto">
                 Every escrow fund, delivery, approval, and withdrawal on Grumbuild is a real transaction on BNB Smart Chain - publicly verifiable by anyone, anytime.
               </p>
@@ -455,7 +455,7 @@ const Home = () => {
         {/* ═══════ TESTIMONIALS ═══════ */}
         <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-4 lg:px-16">
-            <h2 className="text-title font-bold text-black mb-12">What people are saying</h2>
+            <h2 className="text-title font-bold text-black mb-12 md:text-left text-center">What people are saying</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {testimonials.map((t) => (
                 <div
