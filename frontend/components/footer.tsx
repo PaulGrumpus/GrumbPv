@@ -5,6 +5,7 @@ import Button from "./button";
 import Input from "./Input";
 import { useState } from "react";
 import Textarea from "./textarea";
+import Link from "next/link";
 import { EscrowBackend } from "../service/axios";
 
 const Footer = () => {
@@ -14,18 +15,18 @@ const Footer = () => {
     const [inquiry, setInquiry] = useState("");
 
     const footerUnderlinedLinks = [
+        // {
+        //     title: "Privacy Policy",
+        //     href: "/privacy-policy"
+        // },
+        // {
+        //     title: "Terms of Service",
+        //     href: "/terms-of-service"
+        // },
         {
-            title: "Privacy Policy",
-            href: "/privacy-policy"
+            title: "Help Center & FAQ",
+            href: "/faq"
         },
-        {
-            title: "Terms of Service",
-            href: "/terms-of-service"
-        },
-        {
-            title: "Cookie Settings",
-            href: "/cookie-settings"
-        }
     ]
 
     const footerSocialIcons = [
@@ -216,7 +217,7 @@ const Footer = () => {
                         <p className="text-small font-roboto font-regular order-2 lg:order-1 text-left">© 2025 Grumpus. All rights reserved.</p>
                         <div className="flex flex-col flex-wrap gap-4 lg:gap-6 lg:flex-row order-1 lg:order-2 text-left">
                             {footerUnderlinedLinks.map((link) => (
-                                <a href={link.href} className="text-small font-roboto font-regular underline self-start" key={link.title}>{link.title}</a>
+                                <Link href={link.href} className="text-small font-roboto font-regular underline self-start" key={link.title}>{link.title}</Link>
                             ))}
                         </div>
                     </div>
