@@ -329,7 +329,7 @@ const Home = () => {
               {/* Screenshot 1 - Escrow funding */}
               <div className="linear-border rounded-2xl p-0.25">
                 <div className="linear-border__inner bg-white rounded-[0.9375rem] p-5">
-                  <div className="rounded-xl overflow-hidden border border-gray-100 bg-gray-50 aspect-video flex items-center justify-center">
+                  <a href="https://testnet.bscscan.com/tx/0x69e4fea1552de884b1dd7abf61b76c84902005c2f4819274f50fcb99e07e1da4" target="_blank" className="rounded-xl overflow-hidden border border-gray-100 bg-gray-50 aspect-video flex items-center justify-center">
                     {/* Replace src with your actual screenshot */}
                     <Image
                       src="/Grmps/fund.png"
@@ -338,7 +338,7 @@ const Home = () => {
                       height={450}
                       className="w-full h-full object-cover"
                     />
-                  </div>
+                  </a>
                   <div className="mt-4">
                     <p className="text-normal font-medium text-black">Escrow Funding Transaction</p>
                     <p className="text-small font-regular text-gray-500 mt-1">
@@ -351,7 +351,7 @@ const Home = () => {
               {/* Screenshot 2 - Withdrawal / payout */}
               <div className="linear-border rounded-2xl p-0.25">
                 <div className="linear-border__inner bg-white rounded-[0.9375rem] p-5">
-                  <div className="rounded-xl overflow-hidden border border-gray-100 bg-gray-50 aspect-video flex items-center justify-center">
+                  <a href="https://testnet.bscscan.com/tx/0xb0bb378bce9528b2e71260c95094627f912cff45522c6bd094751d15e1193af8" target="_blank" className="rounded-xl overflow-hidden border border-gray-100 bg-gray-50 aspect-video flex items-center justify-center">
                     {/* Replace src with your actual screenshot */}
                     <Image
                       src="/Grmps/withdraw.png"
@@ -360,7 +360,7 @@ const Home = () => {
                       height={450}
                       className="w-full h-full object-cover"
                     />
-                  </div>
+                  </a>
                   <div className="mt-4">
                     <p className="text-normal font-medium text-black">Freelancer Withdrawal Transaction</p>
                     <p className="text-small font-regular text-gray-500 mt-1">
@@ -374,7 +374,7 @@ const Home = () => {
             {/* Optional: third screenshot full-width */}
             <div className="linear-border rounded-2xl p-0.25">
               <div className="linear-border__inner bg-white rounded-[0.9375rem] p-5">
-                <div className="rounded-xl overflow-hidden border border-gray-100 bg-gray-50 aspect-[21/9] flex items-center justify-center">
+                <a href="https://testnet.bscscan.com/address/0x0121ea8ab3c62d614B425d66aC5D628246BEef1D" target="_blank" className="rounded-xl overflow-hidden border border-gray-100 bg-gray-50 aspect-[21/9] flex items-center justify-center">
                   {/* Replace src with your actual screenshot */}
                   <Image
                     src="/Grmps/transaction.png"
@@ -383,7 +383,7 @@ const Home = () => {
                     height={500}
                     className="w-full h-full object-cover"
                   />
-                </div>
+                </a>
                 <div className="mt-4">
                   <p className="text-normal font-medium text-black">Escrow Smart Contract on BscScan</p>
                   <p className="text-small font-regular text-gray-500 mt-1">
@@ -497,12 +497,21 @@ const Home = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   {loggedIn ? (
-                    <button
-                      onClick={() => router.push("/dashboard")}
-                      className="bg-white text-[#7E3FF2] text-normal font-medium rounded-lg px-8 py-3.5 transition-transform duration-150 hover:scale-105 shadow-lg cursor-pointer"
-                    >
-                      Go to Dashboard
-                    </button>
+                    <>
+                      <button
+                        onClick={() => router.push("/dashboard")}
+                        className="bg-white text-[#7E3FF2] text-normal font-medium rounded-lg px-8 py-3.5 transition-transform duration-150 hover:scale-105 shadow-lg cursor-pointer"
+                      >
+                        Go to Dashboard
+                      </button>
+                      <button
+                        onClick={() => router.push("/faq")}
+                        className="border border-white/40 text-white text-normal font-medium rounded-lg px-8 py-3.5 transition-all duration-150 hover:bg-white/10 hover:scale-105 cursor-pointer"
+                      >
+                        Learn More
+                      </button>
+                    </>
+                    
                   ) : (
                     <>
                       <button
@@ -511,12 +520,12 @@ const Home = () => {
                       >
                         Sign Up Free
                       </button>
-                      <Link
-                        href="/faq"
-                        className="border border-white/40 text-white text-normal font-medium rounded-lg px-8 py-3.5 transition-all duration-150 hover:bg-white/10 hover:scale-105"
+                      <button
+                        onClick={() => router.push("/faq")}
+                        className="border border-white/40 text-white text-normal font-medium rounded-lg px-8 py-3.5 transition-all duration-150 hover:bg-white/10 hover:scale-105 cursor-pointer"
                       >
                         Learn More
-                      </Link>
+                      </button>
                     </>
                   )}
                 </div>
