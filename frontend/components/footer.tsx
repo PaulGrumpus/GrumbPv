@@ -57,6 +57,13 @@ const Footer = () => {
         }
     ]
 
+    const pageLinkItems = [
+        {
+            words: "Help Center & FAQ",
+            href: "/faq"
+        },
+    ]
+
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -120,12 +127,21 @@ const Footer = () => {
                             <p className="text-logo font-poppins font-bold">GrumBuild</p>
                         </a>
                         <div className="flex flex-col gap-4 md:gap-6">
+                            <p className="text-normal font-roboto font-regular text-gray-700">Follow us</p>
                             {footerSocialIcons.map((icon) => (
                                 <a href={icon.href} target="_blank" rel="noopener noreferrer" className="text-small font-roboto font-regular" key={icon.alt}>
                                     <div className="flex items-center gap-3">
                                         <Image src={icon.src} alt={icon.alt} width={24} height={24} />
                                         <p className="text-small font-roboto font-regular">{icon.alt}</p>
                                     </div>
+                                </a>
+                            ))}
+                        </div>
+                        <div className="flex flex-col gap-4 md:gap-6">
+                            <p className="text-normal font-roboto font-regular text-gray-700">Resources</p>
+                            {pageLinkItems.map((item) => (
+                                <a href={item.href} rel="noopener noreferrer" className="text-small font-roboto font-regular" key={item.words}>
+                                    <p className="text-small font-roboto font-regular">{item.words}</p>
                                 </a>
                             ))}
                         </div>
@@ -215,11 +231,11 @@ const Footer = () => {
                     </div> */}
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6 order-2 lg:order-1">
                         <p className="text-small font-roboto font-regular order-2 lg:order-1 text-left">© 2025 Grumpus. All rights reserved.</p>
-                        <div className="flex flex-col flex-wrap gap-4 lg:gap-6 lg:flex-row order-1 lg:order-2 text-left">
+                        {/* <div className="flex flex-col flex-wrap gap-4 lg:gap-6 lg:flex-row order-1 lg:order-2 text-left">
                             {footerUnderlinedLinks.map((link) => (
                                 <Link href={link.href} className="text-small font-roboto font-regular underline self-start" key={link.title}>{link.title}</Link>
                             ))}
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
