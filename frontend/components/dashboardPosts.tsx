@@ -1028,7 +1028,24 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                         variant === "completed" && (
                             <div className="text-black flex flex-col justify-between gap-6">
                                 <div className="flex flex-col gap-6">
-                                    <p className="lg:text-subtitle text-large font-bold text-black">{title}</p>
+                                    <div className="flex flex-col md:flex-row md:justify-between">
+                                        <p className="lg:text-subtitle text-large font-bold text-black mb-2 md:mb-0">{title}</p>
+                                        {milestoneStatus === JobMilestoneStatus.RELEASED && (
+                                            <span className="self-end text-tiny px-2 py-1 rounded-full bg-green-100 text-green-700">
+                                                Completed Successfully
+                                            </span>
+                                        )}
+                                        {milestoneStatus === JobMilestoneStatus.RESOLVED_TO_BUYER && (
+                                            <span className="self-end text-tiny px-2 py-1 rounded-full bg-green-100 text-green-700">
+                                                Dispute Resolved To Buyer
+                                            </span>
+                                        )}
+                                        {milestoneStatus === JobMilestoneStatus.RESOLVED_TO_VENDOR && (
+                                            <span className="self-end text-tiny px-2 py-1 rounded-full bg-green-100 text-green-700">
+                                                Dispute Resolved To Vender
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className={`overflow-hidden transition-[max-height] duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}>
                                         <p className="text-normal font-regular text-black" ref={descriptionRef}>
                                             {description}
@@ -1044,7 +1061,7 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                                         </button>
                                     )}
                                 </div>
-                                {ipfs && user.role === "client" && (
+                                {ipfs && (
                                     <div className='flex items-center border justify-between border-[#8F99AF] rounded-lg p-3 gap-3'>
                                         <p className='flex-1 bg-transparent text-normal font-regular text-[#2F3DF6] text-left focus:outline-none max-w-[80%] truncate'>
                                             {CONFIG.ipfsGateWay}/{ipfs}

@@ -247,7 +247,7 @@ const DashboardOverview = () => {
                                                 className="text-center text-small font-semibold text-[#5a6bff] cursor-pointer mt-8"
                                                 onClick={() => setShowAllCompletedJobs((prev) => !prev)}
                                             >
-                                                {showAllOpenJobs ? "Show less" : "Show more"}
+                                                {showAllCompletedJobs ? "Show less" : "Show more"}
                                             </p>
                                         )}
                                     </div>

@@ -9,7 +9,7 @@ import { formatDueDate } from "@/utils/functions";
 
 const COLLAPSED_MAX_HEIGHT = 120;
 
-const BidPost = ({ bid_id, job_description, job_title, job_location, job_tags, job_max_budget, job_min_budget, job_deadline, bid_cover_letter, bid_amount, currency, bid_status }: BidPostProps) => {
+const BidPost = ({ bid_id, job_description, job_title, job_location, job_tags, job_max_budget, job_min_budget, job_deadline, bid_cover_letter, bid_amount, currency, bid_status, job_status }: BidPostProps) => {
     const [expanded, setExpanded] = useState(false);
     const [canToggle, setCanToggle] = useState(false);
     const [canToggleBidCoverLetter, setCanToggleBidCoverLetter] = useState(false);
@@ -73,25 +73,31 @@ const BidPost = ({ bid_id, job_description, job_title, job_location, job_tags, j
                             </div>
                         </div>
                         {bid_status === BidStatus.PENDING && (
-                            <div className="bg-[#8F99AF1A] border border-[#8F99AF] rounded-lg px-6.75 py-1.75 h-fit">
-                                <p className="text-normal font-regular italic text-[#8F99AF]">Pending...</p>
-                            </div>
+                            <p className={`self-start text-tiny px-2 py-1 rounded-full text-gray-700 bg-gray-100`}>
+                                Pending...
+                            </p>
                         )}
-                        {bid_status === BidStatus.ACCEPTED && (
-                            <div className="bg-[#34C7591A] border border-[#34C759] rounded-lg px-6.75 py-1.75 h-fit">
-                                <p className="text-normal font-regular italic text-[#34C759]">Accepted</p>
-                            </div>
+                        {bid_status === BidStatus.ACCEPTED && job_status !== "completed" && (
+                            <p className={`self-start text-tiny px-2 py-1 rounded-full text-green-700 bg-green-100`}>
+                                Accepted
+                            </p>
                         )}
                         {bid_status === BidStatus.DECLINED && (
-                            <div className="bg-[#FF383C33] border border-[#FF383C] rounded-lg px-6.75 py-1.75 h-fit">
-                                <p className="text-normal font-regular italic text-[#FF383C]">Declined</p>
-                            </div>
+                            <p className={`self-start text-tiny px-2 py-1 rounded-full bg-red-100 text-red-700`}>
+                                Declined
+                            </p>
                         )}
                         {bid_status === BidStatus.WITHDRAWN && (
-                            <div className="bg-[#FF383C33] border border-[#2F3DF6] rounded-lg px-6.75 py-1.75 h-fit">
-                                <p className="text-normal font-regular italic text-[#2F3DF6]">Withdrawn</p>
-                            </div>
+                            <p className={`self-start text-tiny px-2 py-1 rounded-full bg-amber-100 text-amber-700`}>
+                                withdrawn
+                            </p>
                         )}
+                        {bid_status === BidStatus.ACCEPTED && job_status === "completed" && (
+                            <p className={`self-start text-tiny px-2 py-1 rounded-full bg-purple-100 text-purple-700`}>
+                                Completed
+                            </p>
+                        )}
+                        
                     </div>
                     <div
                         className={`overflow-hidden transition-[max-height] min-h-42 duration-200 ${expanded ? "max-h-none" : "max-h-42"}`}

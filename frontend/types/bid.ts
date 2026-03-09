@@ -30,5 +30,6 @@ export interface BidPostProps {
     bid_cover_letter: string;
     bid_amount: number;
     currency: string;
-    bid_status: BidStatus; 
+    bid_status: BidStatus;
+    job_status: string; 
 }
