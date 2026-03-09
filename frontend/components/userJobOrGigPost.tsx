@@ -73,7 +73,12 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
 
     const { jobsInfo } = useDashboard();
     const router = useRouter();
-
+    const [isExpired, setIsExpired] = useState(false);
+    
+    useEffect(() => {
+        const now = new Date();
+        if(status == "open" && deadline && new Date(deadline) < now) setIsExpired(true);
+    }, [])
     useEffect(() => {
         const el = descriptionRef.current;
         if (!el) {
@@ -145,9 +150,12 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
                                     </p>
                                 )}
                                 {status && (
-                                    <p className="text-normal font-regular text-black">
-                                        Status: {status}
-                                    </p>
+                                    <div className="flex gap-2">
+                                        <p>Status : </p>
+                                        <p className={`self-start text-tiny px-2 py-1 rounded-full ${status == "cancelled"? `bg-red-100 text-red-700` : status == "in_progress" ? `bg-purple-100 text-purple-700` : isExpired ? `bg-amber-100 text-amber-700` : `text-green-700 bg-green-100`}`}>
+                                            {isExpired ? "Expired" : status}
+                                        </p>
+                                    </div>
                                 )}
                                 {link && (
                                     <p className="text-normal font-regular text-black">

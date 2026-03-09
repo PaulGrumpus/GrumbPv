@@ -127,6 +127,7 @@ const MyBidsSection = () => {
                                 bid_amount={Number(bid.bid_amount)}
                                 currency={bid.token_symbol ?? ""}
                                 bid_status={bid.status as BidStatus} 
+                                job_status={bid.job.status}
                             />
                         ))}
                     </div>
