@@ -69,11 +69,11 @@ const UserInfoProvider = ({ children }: Props) => {
     const isTermsPage = typeof window !== 'undefined' && 
         window.location.pathname === '/terms';
 
-    const isFAQPage = typeof window !== 'undefined' && 
-        window.location.pathname === '/faq';
+    // const isFAQPage = typeof window !== 'undefined' && 
+    //     window.location.pathname === '/faq';
 
     useEffect(() => {
-        if(!['/invite', '/privacy', '/terms', '/faq'].includes(pathname)) {
+        if(!['/invite', '/privacy', '/terms'].includes(pathname)) {
             init();
         }
     }, [pathname]);
