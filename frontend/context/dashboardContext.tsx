@@ -104,10 +104,6 @@ export const DashboardProvider = ({ children }: Props) => {
     }, [userLoadingState]);
 
     useEffect(() => {
-        console.log("conversationsInfo", conversationsInfo);
-    }, [conversationsInfo]);
-
-    useEffect(() => {
         if (!userInfo.id || !notificationSocket.socket || !notificationSocket.isConnected) {
             return;
         }
@@ -343,7 +339,6 @@ export const DashboardProvider = ({ children }: Props) => {
             if (
                 notification.entity_type === NotificationEntity.job
             ) {
-                console.log("JOB NOTIFICATION ********************************", notification);
                 const jobRes = await getJobById(notification.entity_id);
                 if (!jobRes.success || !jobRes.data) return;
               
@@ -426,8 +421,6 @@ export const DashboardProvider = ({ children }: Props) => {
         };
 
         const handleMessageReceiptUpdated = (message: Message) => {
-            console.log("handleMessageReceiptUpdated", message.receipts?.[0]?.user_id === userInfo.id ? message.receipts?.[0]?.state : message.receipts?.[1]?.state, message.receipts?.[1]?.user_id === userInfo.id ? message.receipts?.[0]?.state : message.receipts?.[1]?.state);
-            
             // Remove from pending read receipts if it was marked as read
             const userReceipt = message.receipts?.find(r => r.user_id === userInfo.id);
             if (userReceipt && userReceipt.state === 'read') {
