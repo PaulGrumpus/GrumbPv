@@ -130,7 +130,6 @@ const ChatPageContent = () => {
                     if(message.receipts && message.receipts.some((receipt) => receipt.user_id === userInfo.id && receipt.state === 'read')) {
                         return;
                     }
-                    console.log("marking message as read", message);
                     emitMessageReceipt(message);
                 }
             });
