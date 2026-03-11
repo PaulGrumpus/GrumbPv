@@ -76,8 +76,8 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
     const [isExpired, setIsExpired] = useState(false);
     
     useEffect(() => {
-        const now = new Date();
-        if(status == "open" && deadline && new Date(deadline) < now) setIsExpired(true);
+        const now = new Date().getTime() / 1000;
+        if(status == "open" && deadline && deadline < now) setIsExpired(true);
     }, [])
     useEffect(() => {
         const el = descriptionRef.current;
