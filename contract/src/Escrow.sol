@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title FreelanceEscrow
@@ -26,6 +27,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * - Dispute (counterparty doesn't pay): Initiator wins by default, gets full fee refund
  */
 contract Escrow is Ownable, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+
     enum State { Unfunded, Funded, Delivered, Disputed, Releasable, Paid, Refunded }
 
     struct EscrowInfo {
@@ -33,6 +36,7 @@ contract Escrow is Ownable, ReentrancyGuard {
         address vendor;
         address arbiter;
         address feeRecipient;
+        address paymentToken;           // address(0) = native BNB, else BEP-20 token (e.g. USDT, USDC)
         address rewardToken;            // GRMPS token (ERC20/BEP20)
         uint256 rewardRatePer1e18;      // GRMPS paid per 1e18 wei of project amount
         uint256 amount;
@@ -168,6 +172,7 @@ contract Escrow is Ownable, ReentrancyGuard {
         escrowInfo.vendor = params.seller;
         escrowInfo.arbiter = params.arbiter;
         escrowInfo.feeRecipient = params.feeRecipient;
+        escrowInfo.paymentToken = params.paymentToken;
         escrowInfo.buyerFeeBps = params.buyerFeeBps;
         escrowInfo.vendorFeeBps = params.vendorFeeBps;
         escrowInfo.disputeFeeBps = params.disputeFeeBps;
@@ -175,7 +180,12 @@ contract Escrow is Ownable, ReentrancyGuard {
         escrowInfo.createdAt = uint64(block.timestamp);
         escrowInfo.deadline = params.deadline;
         escrowInfo.state = State.Unfunded;
-        
+
+        // For BEP-20, project amount is fixed at creation; for BNB it is derived in fund()
+        if (params.paymentToken != address(0)) {
+            escrowInfo.amount = params.amountWei;
+        }
+
         // Set reward configuration during initialization
         rewardDistributor = params.rewardDistributor;
         escrowInfo.rewardToken = params.rewardToken;
@@ -214,24 +224,34 @@ contract Escrow is Ownable, ReentrancyGuard {
         rewardDistributor = _distributor;
     }
 
-    /// @notice Buyer funds the escrow with native BNB.
-    /// @dev Buyer must include their fee as extra (reserved for potential dispute).
-    ///      If buyer sends X, project amount = X * 10000 / (10000 + buyerFeeBps), buyer fee = X - projectAmount
+    /// @notice Buyer funds the escrow with native BNB or BEP-20 (e.g. USDT, USDC).
+    /// @dev BNB: send msg.value; project amount = value * 10000 / (10000 + buyerFeeBps).
+    ///      BEP-20: call approve(escrow, total) then fund(); contract pulls project + buyer fee via transferFrom.
     function fund() external payable onlyBuyer {
         if (escrowInfo.state != State.Unfunded) revert BadState();
-        if (msg.value == 0) revert BadValue();
-        
-        uint256 buyerFeeBps = escrowInfo.buyerFeeBps;
-        // Calculate actual project amount: X * 10000 / (10000 + buyerFeeBps)
-        uint256 projectAmount = (msg.value * 10000) / (10000 + buyerFeeBps);
-        uint256 buyerFee = msg.value - projectAmount; // Remainder is the fee
-        
-        escrowInfo.amount = projectAmount;
-        escrowInfo.buyerFeeReserve = buyerFee;
-        
-        // Set dispute fee amount (disputeFeeBps% of project amount for each party)
+
+        uint256 projectAmount;
+        uint256 buyerFee;
+
+        if (escrowInfo.paymentToken == address(0)) {
+            // Native BNB path
+            if (msg.value == 0) revert BadValue();
+            uint256 buyerFeeBps = escrowInfo.buyerFeeBps;
+            projectAmount = (msg.value * 10000) / (10000 + buyerFeeBps);
+            buyerFee = msg.value - projectAmount;
+            escrowInfo.amount = projectAmount;
+            escrowInfo.buyerFeeReserve = buyerFee;
+        } else {
+            // BEP-20 path: pull tokens from buyer (must have approved this contract)
+            if (msg.value != 0) revert BadValue();
+            projectAmount = escrowInfo.amount; // set at init
+            uint256 totalToPull = (projectAmount * (10000 + escrowInfo.buyerFeeBps)) / 10000;
+            buyerFee = totalToPull - projectAmount;
+            IERC20(escrowInfo.paymentToken).safeTransferFrom(escrowInfo.buyer, address(this), totalToPull);
+            escrowInfo.buyerFeeReserve = buyerFee;
+        }
+
         escrowInfo.disputeFeeAmount = (projectAmount * escrowInfo.disputeFeeBps) / 10000;
-        
         escrowInfo.fundedAt = uint64(block.timestamp);
         escrowInfo.state = State.Funded;
         emit Funded(escrowInfo.buyer, projectAmount, buyerFee);
@@ -296,12 +316,16 @@ contract Escrow is Ownable, ReentrancyGuard {
         
         // Handle initiator's payment
         if (msg.sender == escrowInfo.buyer) {
-            // Buyer uses their reserved fee
             if (escrowInfo.buyerFeeReserve < escrowInfo.disputeFeeAmount) revert InsufficientDisputeFee();
             escrowInfo.buyerPaidDisputeFee = true;
         } else {
-            // Vendor must pay now
-            if (msg.value < escrowInfo.disputeFeeAmount) revert InsufficientDisputeFee();
+            // Vendor must pay: BNB via msg.value or BEP-20 via transferFrom
+            if (escrowInfo.paymentToken == address(0)) {
+                if (msg.value < escrowInfo.disputeFeeAmount) revert InsufficientDisputeFee();
+            } else {
+                if (msg.value != 0) revert BadValue();
+                IERC20(escrowInfo.paymentToken).safeTransferFrom(escrowInfo.vendor, address(this), escrowInfo.disputeFeeAmount);
+            }
             escrowInfo.vendorPaidDisputeFee = true;
         }
         
@@ -324,103 +348,109 @@ contract Escrow is Ownable, ReentrancyGuard {
             escrowInfo.buyerPaidDisputeFee = true;
         } else {
             if (escrowInfo.vendorPaidDisputeFee) revert DisputeFeeAlreadyPaid();
-            if (msg.value < escrowInfo.disputeFeeAmount) revert InsufficientDisputeFee();
+            if (escrowInfo.paymentToken == address(0)) {
+                if (msg.value < escrowInfo.disputeFeeAmount) revert InsufficientDisputeFee();
+            } else {
+                if (msg.value != 0) revert BadValue();
+                IERC20(escrowInfo.paymentToken).safeTransferFrom(escrowInfo.vendor, address(this), escrowInfo.disputeFeeAmount);
+            }
             escrowInfo.vendorPaidDisputeFee = true;
         }
-        
+
         emit DisputeFeePaid(msg.sender, escrowInfo.disputeFeeAmount);
     }
 
     /// @notice If counterparty doesn't pay by deadline, initiator wins by default.
-    /// @dev Initiator gets full fee refund, no arbiter involvement needed.
+    /// @dev Initiator gets full fee refund; payouts in BNB or BEP-20 per paymentToken.
     function resolveDisputeByDefault() external nonReentrant {
         if (escrowInfo.state != State.Disputed) revert BadState();
         if (block.timestamp < escrowInfo.disputeFeeDeadline) revert DisputeFeeDeadlineNotPassed();
         if (escrowInfo.buyerPaidDisputeFee && escrowInfo.vendorPaidDisputeFee) revert BothPartiesNotPaid();
-        
+
         address initiator = escrowInfo.disputeInitiator;
         uint256 projectAmount = escrowInfo.amount;
         uint256 disputeFee = escrowInfo.disputeFeeAmount;
-        
+
         escrowInfo.amount = 0;
-        
+
         if (initiator == escrowInfo.buyer) {
-            // Buyer initiated, wins by default - gets project amount + full fee refund
             uint256 buyerTotal = projectAmount + escrowInfo.buyerFeeReserve;
             escrowInfo.buyerFeeReserve = 0;
             escrowInfo.state = State.Refunded;
-            
-            (bool ok, ) = payable(escrowInfo.buyer).call{value: buyerTotal}("");
-            require(ok, "refund failed");
-            
+
+            if (escrowInfo.paymentToken == address(0)) {
+                (bool ok, ) = payable(escrowInfo.buyer).call{value: buyerTotal}("");
+                require(ok, "refund failed");
+            } else {
+                IERC20(escrowInfo.paymentToken).safeTransfer(escrowInfo.buyer, buyerTotal);
+            }
+
             emit DisputeResolvedByDefault(escrowInfo.buyer, "counterparty_didnt_pay");
             emit Refunded(escrowInfo.buyer, buyerTotal);
         } else {
-            // Vendor initiated, wins by default - gets project amount + full fee refund
             uint256 vendorTotal = projectAmount + disputeFee;
             escrowInfo.state = State.Paid;
-            
-            (bool ok, ) = payable(escrowInfo.vendor).call{value: vendorTotal}("");
-            require(ok, "payout failed");
-            
+
+            if (escrowInfo.paymentToken == address(0)) {
+                (bool ok, ) = payable(escrowInfo.vendor).call{value: vendorTotal}("");
+                require(ok, "payout failed");
+            } else {
+                IERC20(escrowInfo.paymentToken).safeTransfer(escrowInfo.vendor, vendorTotal);
+            }
+
             emit DisputeResolvedByDefault(escrowInfo.vendor, "counterparty_didnt_pay");
             emit Withdrawn(escrowInfo.vendor, vendorTotal);
         }
     }
 
     /// @notice Arbiter resolves to vendor -> vendor wins, buyer loses.
-    /// @dev Vendor gets project amount + their dispute fee refunded. Buyer's fee split between arbiter & feeRecipient.
+    /// @dev Vendor gets project amount + their dispute fee refunded. Payouts in BNB or BEP-20.
     function resolveToVendor() external onlyOwner nonReentrant {
         if (escrowInfo.arbiter == address(0)) revert NoArbiter();
         if (escrowInfo.state != State.Disputed) revert BadState();
         if (!escrowInfo.buyerPaidDisputeFee || !escrowInfo.vendorPaidDisputeFee) revert BothPartiesNotPaid();
 
-        // if vendor had delivered a CID already, finalize it
         if (bytes(escrowInfo.proposedCID).length > 0) {
             emit ResultFinalized(escrowInfo.proposedCID, escrowInfo.proposedContentHash);
         }
 
         uint256 projectAmount = escrowInfo.amount;
         uint256 disputeFee = escrowInfo.disputeFeeAmount;
-        
-        // Winner (vendor) gets project + their dispute fee back
         uint256 vendorAmount = projectAmount + disputeFee;
-        
-        // Loser's (buyer's) fee split 50/50 between arbiter and fee recipient
         uint256 arbiterShare = disputeFee / 2;
-        uint256 feeRecipientShare = disputeFee - arbiterShare; // Handle rounding (give remainder to fee recipient)
-        
+        uint256 feeRecipientShare = disputeFee - arbiterShare;
+
         escrowInfo.amount = 0;
         escrowInfo.buyerFeeReserve = 0;
         escrowInfo.state = State.Paid;
-        
-        // Send any remaining wei to fee recipient to drain contract balance
-        uint256 contractBalance = address(this).balance;
-        uint256 expectedTotal = vendorAmount + arbiterShare + feeRecipientShare;
-        if (contractBalance > expectedTotal) {
-            feeRecipientShare += contractBalance - expectedTotal;
+
+        if (escrowInfo.paymentToken == address(0)) {
+            uint256 contractBalance = address(this).balance;
+            uint256 expectedTotal = vendorAmount + arbiterShare + feeRecipientShare;
+            if (contractBalance > expectedTotal) {
+                feeRecipientShare += contractBalance - expectedTotal;
+            }
+            (bool ok1, ) = payable(escrowInfo.arbiter).call{value: arbiterShare}("");
+            require(ok1, "arbiter payment failed");
+            (bool ok2, ) = payable(escrowInfo.feeRecipient).call{value: feeRecipientShare}("");
+            require(ok2, "fee recipient payment failed");
+            (bool ok3, ) = payable(escrowInfo.vendor).call{value: vendorAmount}("");
+            require(ok3, "payout failed");
+        } else {
+            IERC20 token = IERC20(escrowInfo.paymentToken);
+            token.safeTransfer(escrowInfo.arbiter, arbiterShare);
+            token.safeTransfer(escrowInfo.feeRecipient, feeRecipientShare);
+            token.safeTransfer(escrowInfo.vendor, vendorAmount);
         }
 
-        // Pay arbiter
-        (bool ok1, ) = payable(escrowInfo.arbiter).call{value: arbiterShare}("");
-        require(ok1, "arbiter payment failed");
         emit FeePaid(escrowInfo.arbiter, arbiterShare, "arbitration_fee");
-
-        // Pay fee recipient
-        (bool ok2, ) = payable(escrowInfo.feeRecipient).call{value: feeRecipientShare}("");
-        require(ok2, "fee recipient payment failed");
         emit FeePaid(escrowInfo.feeRecipient, feeRecipientShare, "loser_dispute_fee");
-
-        // Pay vendor (winner)
-        (bool ok3, ) = payable(escrowInfo.vendor).call{value: vendorAmount}("");
-        require(ok3, "payout failed");
-
         emit ResolvedToVendor(msg.sender, vendorAmount);
         emit Withdrawn(escrowInfo.vendor, vendorAmount);
     }
 
     /// @notice Arbiter resolves to buyer -> buyer wins, vendor loses.
-    /// @dev Buyer gets project amount + their dispute fee refunded. Vendor's fee split between arbiter & feeRecipient.
+    /// @dev Buyer gets project amount + their dispute fee refunded. Payouts in BNB or BEP-20.
     function resolveToBuyer() external onlyOwner nonReentrant {
         if (escrowInfo.arbiter == address(0)) revert NoArbiter();
         if (escrowInfo.state != State.Disputed) revert BadState();
@@ -428,47 +458,42 @@ contract Escrow is Ownable, ReentrancyGuard {
 
         uint256 projectAmount = escrowInfo.amount;
         uint256 disputeFee = escrowInfo.disputeFeeAmount;
-        
-        // Winner (buyer) gets project + their reserved fee back
         uint256 buyerAmount = projectAmount + escrowInfo.buyerFeeReserve;
-        
-        // Loser's (vendor's) fee split 50/50 between arbiter and fee recipient
         uint256 arbiterShare = disputeFee / 2;
-        uint256 feeRecipientShare = disputeFee - arbiterShare; // Handle rounding (give remainder to fee recipient)
-        
+        uint256 feeRecipientShare = disputeFee - arbiterShare;
+
         escrowInfo.amount = 0;
         escrowInfo.buyerFeeReserve = 0;
         escrowInfo.state = State.Refunded;
-        
-        // Send any remaining wei to fee recipient to drain contract balance
-        uint256 contractBalance = address(this).balance;
-        uint256 expectedTotal = buyerAmount + arbiterShare + feeRecipientShare;
-        if (contractBalance > expectedTotal) {
-            feeRecipientShare += contractBalance - expectedTotal;
+
+        if (escrowInfo.paymentToken == address(0)) {
+            uint256 contractBalance = address(this).balance;
+            uint256 expectedTotal = buyerAmount + arbiterShare + feeRecipientShare;
+            if (contractBalance > expectedTotal) {
+                feeRecipientShare += contractBalance - expectedTotal;
+            }
+            (bool ok1, ) = payable(escrowInfo.arbiter).call{value: arbiterShare}("");
+            require(ok1, "arbiter payment failed");
+            (bool ok2, ) = payable(escrowInfo.feeRecipient).call{value: feeRecipientShare}("");
+            require(ok2, "fee recipient payment failed");
+            (bool ok3, ) = payable(escrowInfo.buyer).call{value: buyerAmount}("");
+            require(ok3, "refund failed");
+        } else {
+            IERC20 token = IERC20(escrowInfo.paymentToken);
+            token.safeTransfer(escrowInfo.arbiter, arbiterShare);
+            token.safeTransfer(escrowInfo.feeRecipient, feeRecipientShare);
+            token.safeTransfer(escrowInfo.buyer, buyerAmount);
         }
 
-        // Pay arbiter
-        (bool ok1, ) = payable(escrowInfo.arbiter).call{value: arbiterShare}("");
-        require(ok1, "arbiter payment failed");
         emit FeePaid(escrowInfo.arbiter, arbiterShare, "arbitration_fee");
-
-        // Pay fee recipient
-        (bool ok2, ) = payable(escrowInfo.feeRecipient).call{value: feeRecipientShare}("");
-        require(ok2, "fee recipient payment failed");
         emit FeePaid(escrowInfo.feeRecipient, feeRecipientShare, "loser_dispute_fee");
-
-        // Refund buyer (winner)
-        (bool ok3, ) = payable(escrowInfo.buyer).call{value: buyerAmount}("");
-        require(ok3, "refund failed");
-
         emit ResolvedToBuyer(msg.sender, buyerAmount);
         emit Refunded(escrowInfo.buyer, buyerAmount);
     }
 
     /// @notice After both parties approved, vendor pulls the payment (safer than push).
     /// @dev Vendor gets project amount minus their fee. Buyer's fee + vendor's fee go to feeRecipient.
-    ///      Additionally, on non-dispute completion, both buyer and vendor receive GRMPS rewards
-    ///      worth rewardRateBps% of project amount per side, using a configured native->GRMPS rate.
+    ///      BNB or BEP-20 depending on paymentToken. On non-dispute completion, both receive GRMPS rewards.
     function withdraw() external onlyVendor nonReentrant {
         if (escrowInfo.state != State.Releasable) revert BadState();
 
@@ -477,20 +502,23 @@ contract Escrow is Ownable, ReentrancyGuard {
         uint256 vendorFee = (projectAmount * escrowInfo.vendorFeeBps) / 10000;
         uint256 totalFee = buyerFee + vendorFee;
         uint256 vendorAmount = projectAmount - vendorFee;
-        
+
         escrowInfo.amount = 0;
         escrowInfo.buyerFeeReserve = 0;
         escrowInfo.state = State.Paid;
 
-        // Pay fee recipient
-        (bool ok1, ) = payable(escrowInfo.feeRecipient).call{value: totalFee}("");
-        require(ok1, "fee payment failed");
+        if (escrowInfo.paymentToken == address(0)) {
+            (bool ok1, ) = payable(escrowInfo.feeRecipient).call{value: totalFee}("");
+            require(ok1, "fee payment failed");
+            (bool ok2, ) = payable(escrowInfo.vendor).call{value: vendorAmount}("");
+            require(ok2, "withdraw failed");
+        } else {
+            IERC20 token = IERC20(escrowInfo.paymentToken);
+            token.safeTransfer(escrowInfo.feeRecipient, totalFee);
+            token.safeTransfer(escrowInfo.vendor, vendorAmount);
+        }
+
         emit FeePaid(escrowInfo.feeRecipient, totalFee, "normal_completion_fee");
-
-        // Pay vendor
-        (bool ok2, ) = payable(escrowInfo.vendor).call{value: vendorAmount}("");
-        require(ok2, "withdraw failed");
-
         emit Withdrawn(escrowInfo.vendor, vendorAmount);
 
         // --- GRMPS reward (only in non-dispute normal completion) ---
@@ -562,15 +590,11 @@ contract Escrow is Ownable, ReentrancyGuard {
         uint256 allowance = IERC20(rewardToken).allowance(rewardSource, address(this));
         
         if (allowance >= totalReward) {
-            // Transfer from owner's wallet to buyer (using allowance)
-            bool ok3 = IERC20(rewardToken).transferFrom(rewardSource, escrowInfo.buyer, rewardPerSide);
-            if (ok3) emit RewardPaid(escrowInfo.buyer, rewardPerSide, "buyer_reward");
-            else emit RewardSkipped(escrowInfo.buyer, "transfer_failed");
-            
-            // Transfer from owner's wallet to vendor (using allowance)
-            bool ok4 = IERC20(rewardToken).transferFrom(rewardSource, escrowInfo.vendor, rewardPerSide);
-            if (ok4) emit RewardPaid(escrowInfo.vendor, rewardPerSide, "vendor_reward");
-            else emit RewardSkipped(escrowInfo.vendor, "transfer_failed");
+            IERC20 token = IERC20(rewardToken);
+            token.safeTransferFrom(rewardSource, escrowInfo.buyer, rewardPerSide);
+            emit RewardPaid(escrowInfo.buyer, rewardPerSide, "buyer_reward");
+            token.safeTransferFrom(rewardSource, escrowInfo.vendor, rewardPerSide);
+            emit RewardPaid(escrowInfo.vendor, rewardPerSide, "vendor_reward");
         } else {
             emit RewardSkipped(address(0), "insufficient_allowance");
         }

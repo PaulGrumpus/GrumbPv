@@ -24,7 +24,14 @@
     "transfer:ownership": "node scripts/transfer-ownership-to-gnosis.js",
     "check:ownership": "node scripts/transfer-ownership-to-gnosis.js check",
     "approve:rewards": "node scripts/gnosis-approve-rewards.js",
-    "approve:distributor": "node scripts/approveDistributor.js"
+    "approve:distributor": "node scripts/approveDistributor.js",
+    "usdt:create": "node scripts/usdt-usdc/createEscrowBep20.js",
+    "usdt:fund": "node scripts/usdt-usdc/approveAndFundBep20.js",
+    "usdt:withdraw": "node scripts/usdt-usdc/withdrawBep20.js",
+    "usdt:info": "node scripts/usdt-usdc/getInfoBep20.js",
+    "usdt:dispute-init": "node scripts/usdt-usdc/disputeInitBep20.js",
+    "usdt:dispute-pay": "node scripts/usdt-usdc/disputePayBep20.js",
+    "usdt:full-flow": "node scripts/usdt-usdc/fullFlowTest.js"
   },
   "dependencies": {
     "ethers": "^6.9.0",
