@@ -689,7 +689,7 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
         try {
             const result = await deliverWork(user.id, jobMilestoneId, Number(CONFIG.chainId), selectedFile);
             
-            const txHash = await sendTransaction({
+            const { hash: txHash, error: txError } = await sendTransaction({
                 to: result.data.to,
                 data: result.data.data,
                 value: result.data.value,
@@ -701,7 +701,7 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                 resetMilestoneDelivery(jobMilestoneId);
                 setLoading("success");
                 setIsOpen(false);
-                toast.error("Failed to deliver work", {
+                toast.error(txError || "Failed to deliver work", {
                     position: "top-right",
                     autoClose: 5000,
                     hideProgressBar: false,
