@@ -1,16 +1,22 @@
 import { toast } from "react-toastify";
 import { CONFIG } from "@/config/config";
 import { checkUserByAddress } from "./functions";
+import { EthereumProvider } from "@walletconnect/ethereum-provider";
+
+type WalletConnectProvider = InstanceType<typeof EthereumProvider>;
 
 const isSameChain = (current?: string | null, target?: string | null) =>
     current?.toLowerCase() === target?.toLowerCase();
 
+/** EIP-1193–like provider (injected or WalletConnect). */
 export type MetaMaskProvider = {
     isMetaMask?: boolean;
     request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
     on?: (event: string, handler: (...args: unknown[]) => void) => void;
     removeListener?: (event: string, handler: (...args: unknown[]) => void) => void;
 };
+
+let walletConnectProviderInstance: WalletConnectProvider | null = null;
 
 declare global {
     interface Window {
@@ -75,6 +81,25 @@ const NETWORK_PARAMS = {
 } as const;
 
 export const getEthereumProvider = () => (typeof window === "undefined" ? undefined : window.ethereum);
+
+/** Returns the WalletConnect provider instance if a session is active (for use after connectWalletConnect). */
+export const getWalletConnectProvider = (): WalletConnectProvider | null => walletConnectProviderInstance;
+
+/** Whether WalletConnect is configured (project ID set). */
+export const isWalletConnectAvailable = () =>
+    typeof CONFIG.walletConnectProjectId === "string" && CONFIG.walletConnectProjectId.length > 0;
+
+/** Disconnect WalletConnect session and clear stored provider. */
+export const disconnectWalletConnect = async (): Promise<void> => {
+    if (walletConnectProviderInstance) {
+        try {
+            await walletConnectProviderInstance.disconnect();
+        } catch (_err) {
+            // ignore
+        }
+        walletConnectProviderInstance = null;
+    }
+};
 
 const switchOrAddTargetChain = async (provider: MetaMaskProvider) => {
     try {
@@ -177,4 +202,97 @@ export const connectMetaMaskWallet = async (email?: string): Promise<{ address: 
         });
         return null;
     }
+};
+
+/** Chain ID as decimal number for WalletConnect optionalChains. */
+const getTargetChainIdNum = (): number => {
+    const hex = TARGET_CHAIN_ID;
+    if (!hex) return 97;
+    const n = parseInt(hex, 16);
+    return Number.isFinite(n) ? n : 97;
+};
+
+/** Connect via WalletConnect (QR / deep link). Use when no injected MetaMask (e.g. mobile browser). */
+export const connectWalletConnect = async (email?: string): Promise<{ address: string; chainId: string } | null> => {
+    const projectId = CONFIG.walletConnectProjectId?.trim();
+    if (!projectId) {
+        toast.error("WalletConnect is not configured. Add NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID to your environment.", {
+            position: "top-right",
+            autoClose: 5000,
+        });
+        return null;
+    }
+
+    try {
+        if (!walletConnectProviderInstance) {
+            walletConnectProviderInstance = await EthereumProvider.init({
+                projectId,
+                optionalChains: [getTargetChainIdNum()],
+                showQrModal: true,
+                metadata: {
+                    name: "GrumbPv",
+                    description: "Connect your wallet",
+                    url: typeof window !== "undefined" ? window.location.origin : "",
+                    icons: [],
+                },
+            });
+        }
+
+        await walletConnectProviderInstance.connect();
+        const provider = walletConnectProviderInstance as unknown as MetaMaskProvider;
+
+        const accounts = (await provider.request({ method: "eth_accounts" })) as string[] | undefined;
+        if (!accounts?.length) {
+            toast.error("No accounts returned from wallet.");
+            return null;
+        }
+
+        const invalidConnectingAccount = await existingWalletAccount(accounts[0], email);
+        if (invalidConnectingAccount) {
+            toast.error("Wallet address already exists! Connected to another wallet account!", {
+                position: "top-right",
+                autoClose: 5000,
+            });
+            await disconnectWalletConnect();
+            return null;
+        }
+
+        let chainId = (await provider.request({ method: "eth_chainId" })) as string;
+        if (!isSameChain(chainId, NETWORK_PARAMS.chainId)) {
+            await switchOrAddTargetChain(provider);
+            chainId = (await provider.request({ method: "eth_chainId" })) as string;
+        }
+
+        toast.success(`Connected ${shortenAddress(accounts[0])} on ${NETWORK_PARAMS.chainName}.`, {
+            position: "top-right",
+            autoClose: 5000,
+        });
+
+        return { address: accounts[0], chainId };
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        toast.error(message, { position: "top-right", autoClose: 5000 });
+        return null;
+    }
+};
+
+/**
+ * Connect wallet: uses MetaMask (injected) when available, otherwise WalletConnect (mobile).
+ * Returns { address, chainId } and the context should set provider to getEthereumProvider() or getWalletConnectProvider() accordingly.
+ */
+export const connectWallet = async (email?: string): Promise<{ address: string; chainId: string; via: "injected" | "walletconnect" } | null> => {
+    const injected = getEthereumProvider();
+    if (injected?.isMetaMask) {
+        const result = await connectMetaMaskWallet(email);
+        return result ? { ...result, via: "injected" as const } : null;
+    }
+    if (isWalletConnectAvailable()) {
+        const result = await connectWalletConnect(email);
+        return result ? { ...result, via: "walletconnect" as const } : null;
+    }
+    toast.error("No wallet available. Install MetaMask or use a WalletConnect-compatible browser.", {
+        position: "top-right",
+        autoClose: 5000,
+    });
+    return null;
 };

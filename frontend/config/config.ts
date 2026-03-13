@@ -3,6 +3,8 @@
 export const CONFIG = {
     userRole: process.env.NEXT_PUBLIC_USER_ROLE || "freelancer",
     chainId: process.env.NEXT_PUBLIC_CHAIN_ID || "0x61",
+    /** WalletConnect Cloud project ID (for mobile wallet connection). Set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID in .env */
+    walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "",
     chainName: process.env.NEXT_PUBLIC_CHAIN_NAME || "BNB Smart Chain Testnet",
     nativeCurrency: {
         name: process.env.NEXT_PUBLIC_NATIVE_CURRENCY_NAME || "Binance Coin",

@@ -10,8 +10,11 @@ import {
   type ReactNode,
 } from "react";
 import {
-  connectMetaMaskWallet,
+  connectWallet,
+  disconnectWalletConnect,
   getEthereumProvider,
+  getWalletConnectProvider,
+  isWalletConnectAvailable,
   type MetaMaskProvider,
 } from "@/utils/walletConnnect";
 
@@ -37,6 +40,8 @@ type WalletContextValue = {
   isConnected: boolean;
   error: string | null;
   connect: (email?: string) => Promise<{ address: string; chainId: string } | null>;
+  /** True when WalletConnect is configured (mobile path available). */
+  isWalletConnectAvailable: boolean;
   disconnect: () => void;
   sendTransaction: (tx: WalletTransaction) => Promise<WalletTransactionResult>;
 };
@@ -54,6 +59,7 @@ const defaultContext: WalletContextValue = {
     hash: null,
     error: "Wallet not connected",
   }),
+  isWalletConnectAvailable: false,
 };
 
 export const WalletCtx = createContext<WalletContextValue>(defaultContext);
@@ -72,11 +78,14 @@ export const WalletProvider = ({ children }: Props) => {
   const isConnected = useMemo(() => Boolean(address), [address]);
 
   const disconnect = useCallback(() => {
+    void disconnectWalletConnect();
+    setProvider(null);
     setAddress(null);
     setChainId(null);
     setError(null);
   }, []);
 
+  // Restore injected (MetaMask) session on mount
   useEffect(() => {
     const eth = getEthereumProvider();
     if (!eth) {
@@ -125,22 +134,27 @@ export const WalletProvider = ({ children }: Props) => {
 
   const connect = useCallback(async (email?: string) => {
     const eth = getEthereumProvider();
-    if (!eth?.isMetaMask) {
-      setError("MetaMask is required. Please install or unlock the extension.");
+    const useInjected = eth?.isMetaMask;
+    if (!useInjected && !isWalletConnectAvailable()) {
+      setError("No wallet available. Install MetaMask or set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID for mobile.");
       return null;
     }
-    setProvider(eth);
+
     setIsConnecting(true);
     setError(null);
 
     try {
-      const result = await connectMetaMaskWallet(email);
-      if (result) {
-        setAddress(result.address);
-        setChainId(result.chainId);
-        return result;
+      const result = await connectWallet(email);
+      if (!result) return null;
+
+      if (result.via === "injected") {
+        setProvider(getEthereumProvider() ?? null);
+      } else {
+        setProvider(getWalletConnectProvider() as unknown as MetaMaskProvider | null);
       }
-      return null;
+      setAddress(result.address);
+      setChainId(result.chainId);
+      return { address: result.address, chainId: result.chainId };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to connect wallet.";
       setError(message);
@@ -273,6 +287,7 @@ export const WalletProvider = ({ children }: Props) => {
         connect,
         disconnect,
         sendTransaction,
+        isWalletConnectAvailable: isWalletConnectAvailable(),
       }}
     >
       {children}

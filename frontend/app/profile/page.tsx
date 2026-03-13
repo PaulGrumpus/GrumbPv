@@ -13,7 +13,6 @@ import { toast } from 'react-toastify';
 import { User } from '@/types/user';
 import { updateUser } from '@/utils/functions';
 import { EscrowBackendConfig } from '@/config/config';
-import { connectMetaMaskWallet } from '@/utils/walletConnnect';
 import { useWallet } from '@/context/walletContext';
 import { NotificationLoadingCtx } from '@/context/notificationLoadingContext';
 import { DashboardCtx } from '@/context/dashboardContext';
