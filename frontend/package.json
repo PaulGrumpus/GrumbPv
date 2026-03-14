@@ -10,9 +10,8 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@metamask/sdk": "^0.34.0",
     "@supabase/supabase-js": "^2.45.0",
-    "@walletconnect/ethereum-provider": "^2.23.8",
-    "@walletconnect/modal": "^2.7.0",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",

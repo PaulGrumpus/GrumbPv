@@ -1,14 +1,11 @@
 import { toast } from "react-toastify";
 import { CONFIG } from "@/config/config";
 import { checkUserByAddress } from "./functions";
-import { EthereumProvider } from "@walletconnect/ethereum-provider";
-
-type WalletConnectProvider = InstanceType<typeof EthereumProvider>;
 
 const isSameChain = (current?: string | null, target?: string | null) =>
     current?.toLowerCase() === target?.toLowerCase();
 
-/** EIP-1193–like provider (injected or WalletConnect). */
+/** EIP-1193–like provider (injected or MetaMask SDK). */
 export type MetaMaskProvider = {
     isMetaMask?: boolean;
     request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
@@ -16,7 +13,9 @@ export type MetaMaskProvider = {
     removeListener?: (event: string, handler: (...args: unknown[]) => void) => void;
 };
 
-let walletConnectProviderInstance: WalletConnectProvider | null = null;
+/** MetaMask SDK instance (lazy-inited) and provider when connected via mobile. */
+let metamaskSdk: import("@metamask/sdk").MetaMaskSDK | null = null;
+let metamaskSdkProvider: MetaMaskProvider | null = null;
 
 declare global {
     interface Window {
@@ -82,23 +81,15 @@ const NETWORK_PARAMS = {
 
 export const getEthereumProvider = () => (typeof window === "undefined" ? undefined : window.ethereum);
 
-/** Returns the WalletConnect provider instance if a session is active (for use after connectWalletConnect). */
-export const getWalletConnectProvider = (): WalletConnectProvider | null => walletConnectProviderInstance;
+/** Returns the MetaMask SDK provider when connected via SDK (mobile path). */
+export const getMetaMaskSdkProvider = (): MetaMaskProvider | null => metamaskSdkProvider;
 
-/** Whether WalletConnect is configured (project ID set). */
-export const isWalletConnectAvailable = () =>
-    typeof CONFIG.walletConnectProjectId === "string" && CONFIG.walletConnectProjectId.length > 0;
+/** Whether mobile wallet path is available (MetaMask SDK in browser). */
+export const isMobileWalletAvailable = () => typeof window !== "undefined";
 
-/** Disconnect WalletConnect session and clear stored provider. */
-export const disconnectWalletConnect = async (): Promise<void> => {
-    if (walletConnectProviderInstance) {
-        try {
-            await walletConnectProviderInstance.disconnect();
-        } catch (_err) {
-            // ignore
-        }
-        walletConnectProviderInstance = null;
-    }
+/** Disconnect MetaMask SDK session and clear stored provider. */
+export const disconnectMetaMaskSdk = (): void => {
+    metamaskSdkProvider = null;
 };
 
 const switchOrAddTargetChain = async (provider: MetaMaskProvider) => {
@@ -204,48 +195,32 @@ export const connectMetaMaskWallet = async (email?: string): Promise<{ address: 
     }
 };
 
-/** Chain ID as decimal number for WalletConnect optionalChains. */
-const getTargetChainIdNum = (): number => {
-    const hex = TARGET_CHAIN_ID;
-    if (!hex) return 97;
-    const n = parseInt(hex, 16);
-    return Number.isFinite(n) ? n : 97;
-};
-
-/** Connect via WalletConnect (QR / deep link). Use when no injected MetaMask (e.g. mobile browser). */
-export const connectWalletConnect = async (email?: string): Promise<{ address: string; chainId: string } | null> => {
-    const projectId = CONFIG.walletConnectProjectId?.trim();
-    if (!projectId) {
-        toast.error("WalletConnect is not configured. Add NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID to your environment.", {
-            position: "top-right",
-            autoClose: 5000,
-        });
+/** Connect via MetaMask SDK (deep link). Use when no injected MetaMask (e.g. mobile browser). */
+export const connectMetaMaskSdk = async (email?: string): Promise<{ address: string; chainId: string } | null> => {
+    if (typeof window === "undefined") {
         return null;
     }
 
     try {
-        if (!walletConnectProviderInstance) {
-            walletConnectProviderInstance = await EthereumProvider.init({
-                projectId,
-                optionalChains: [getTargetChainIdNum()],
-                showQrModal: true,
-                metadata: {
+        if (!metamaskSdk) {
+            const { MetaMaskSDK } = await import("@metamask/sdk");
+            metamaskSdk = new MetaMaskSDK({
+                dappMetadata: {
                     name: "GrumbPv",
-                    description: "Connect your wallet",
-                    url: typeof window !== "undefined" ? window.location.origin : "",
-                    icons: [],
+                    url: window.location.origin,
                 },
             });
+            await metamaskSdk.init();
         }
 
-        await walletConnectProviderInstance.connect();
-        const provider = walletConnectProviderInstance as unknown as MetaMaskProvider;
-
-        const accounts = (await provider.request({ method: "eth_accounts" })) as string[] | undefined;
+        const accounts = (await metamaskSdk.connect()) as string[] | undefined;
         if (!accounts?.length) {
-            toast.error("No accounts returned from wallet.");
+            toast.error("No accounts returned from MetaMask.");
             return null;
         }
+
+        const provider = metamaskSdk.getProvider() as unknown as MetaMaskProvider;
+        metamaskSdkProvider = provider;
 
         const invalidConnectingAccount = await existingWalletAccount(accounts[0], email);
         if (invalidConnectingAccount) {
@@ -253,7 +228,7 @@ export const connectWalletConnect = async (email?: string): Promise<{ address: s
                 position: "top-right",
                 autoClose: 5000,
             });
-            await disconnectWalletConnect();
+            disconnectMetaMaskSdk();
             return null;
         }
 
@@ -272,25 +247,26 @@ export const connectWalletConnect = async (email?: string): Promise<{ address: s
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         toast.error(message, { position: "top-right", autoClose: 5000 });
+        disconnectMetaMaskSdk();
         return null;
     }
 };
 
 /**
- * Connect wallet: uses MetaMask (injected) when available, otherwise WalletConnect (mobile).
- * Returns { address, chainId } and the context should set provider to getEthereumProvider() or getWalletConnectProvider() accordingly.
+ * Connect wallet: uses MetaMask (injected) when available, otherwise MetaMask SDK (mobile).
+ * Returns { address, chainId, via } and the context should set provider to getEthereumProvider() or getMetaMaskSdkProvider() accordingly.
  */
-export const connectWallet = async (email?: string): Promise<{ address: string; chainId: string; via: "injected" | "walletconnect" } | null> => {
+export const connectWallet = async (email?: string): Promise<{ address: string; chainId: string; via: "injected" | "sdk" } | null> => {
     const injected = getEthereumProvider();
     if (injected?.isMetaMask) {
         const result = await connectMetaMaskWallet(email);
         return result ? { ...result, via: "injected" as const } : null;
     }
-    if (isWalletConnectAvailable()) {
-        const result = await connectWalletConnect(email);
-        return result ? { ...result, via: "walletconnect" as const } : null;
+    if (isMobileWalletAvailable()) {
+        const result = await connectMetaMaskSdk(email);
+        return result ? { ...result, via: "sdk" as const } : null;
     }
-    toast.error("No wallet available. Install MetaMask or use a WalletConnect-compatible browser.", {
+    toast.error("No wallet available. Install MetaMask to continue.", {
         position: "top-right",
         autoClose: 5000,
     });

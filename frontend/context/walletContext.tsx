@@ -11,10 +11,10 @@ import {
 } from "react";
 import {
   connectWallet,
-  disconnectWalletConnect,
+  disconnectMetaMaskSdk,
   getEthereumProvider,
-  getWalletConnectProvider,
-  isWalletConnectAvailable,
+  getMetaMaskSdkProvider,
+  isMobileWalletAvailable,
   type MetaMaskProvider,
 } from "@/utils/walletConnnect";
 
@@ -40,8 +40,8 @@ type WalletContextValue = {
   isConnected: boolean;
   error: string | null;
   connect: (email?: string) => Promise<{ address: string; chainId: string } | null>;
-  /** True when WalletConnect is configured (mobile path available). */
-  isWalletConnectAvailable: boolean;
+  /** True when MetaMask SDK mobile path is available. */
+  isMobileWalletAvailable: boolean;
   disconnect: () => void;
   sendTransaction: (tx: WalletTransaction) => Promise<WalletTransactionResult>;
 };
@@ -59,7 +59,7 @@ const defaultContext: WalletContextValue = {
     hash: null,
     error: "Wallet not connected",
   }),
-  isWalletConnectAvailable: false,
+  isMobileWalletAvailable: false,
 };
 
 export const WalletCtx = createContext<WalletContextValue>(defaultContext);
@@ -78,7 +78,7 @@ export const WalletProvider = ({ children }: Props) => {
   const isConnected = useMemo(() => Boolean(address), [address]);
 
   const disconnect = useCallback(() => {
-    void disconnectWalletConnect();
+    disconnectMetaMaskSdk();
     setProvider(null);
     setAddress(null);
     setChainId(null);
@@ -135,8 +135,8 @@ export const WalletProvider = ({ children }: Props) => {
   const connect = useCallback(async (email?: string) => {
     const eth = getEthereumProvider();
     const useInjected = eth?.isMetaMask;
-    if (!useInjected && !isWalletConnectAvailable()) {
-      setError("No wallet available. Install MetaMask or set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID for mobile.");
+    if (!useInjected && !isMobileWalletAvailable()) {
+      setError("No wallet available. Install MetaMask to continue.");
       return null;
     }
 
@@ -150,7 +150,7 @@ export const WalletProvider = ({ children }: Props) => {
       if (result.via === "injected") {
         setProvider(getEthereumProvider() ?? null);
       } else {
-        setProvider(getWalletConnectProvider() as unknown as MetaMaskProvider | null);
+        setProvider(getMetaMaskSdkProvider());
       }
       setAddress(result.address);
       setChainId(result.chainId);
@@ -287,7 +287,7 @@ export const WalletProvider = ({ children }: Props) => {
         connect,
         disconnect,
         sendTransaction,
-        isWalletConnectAvailable: isWalletConnectAvailable(),
+        isMobileWalletAvailable: isMobileWalletAvailable(),
       }}
     >
       {children}

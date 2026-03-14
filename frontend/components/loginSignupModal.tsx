@@ -134,7 +134,7 @@ const switchOrAddTargetChain = async (provider: MetaMaskProvider) => {
 
 const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupModalProps) => {
     const router = useRouter();
-    const { connect: connectWallet, isConnecting: isWalletConnectingFromContext, isWalletConnectAvailable } = useWallet();
+    const { connect: connectWallet, isConnecting: isWalletConnectingFromContext, isMobileWalletAvailable } = useWallet();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -163,21 +163,21 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
 
         const provider = window.ethereum;
         const hasInjected = !!provider;
-        const canConnectWallet = hasInjected || isWalletConnectAvailable;
+        const canConnectWallet = hasInjected || isMobileWalletAvailable;
 
         if (!canConnectWallet) {
             setIsMetaMaskAvailable(false);
             setWalletFeedback({
-                message: "Install MetaMask or set up WalletConnect to connect your wallet.",
+                message: "Install MetaMask to connect your wallet.",
                 tone: "error",
             });
             return;
         }
 
         setIsMetaMaskAvailable(true);
-        if (!hasInjected && isWalletConnectAvailable) {
+        if (!hasInjected && isMobileWalletAvailable) {
             setWalletFeedback({
-                message: "Connect with WalletConnect (e.g. MetaMask mobile).",
+                message: "Connect with MetaMask (e.g. open in MetaMask mobile or install the app).",
                 tone: "info",
             });
         }
@@ -287,7 +287,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
             provider.removeListener?.("accountsChanged", handleAccountsChanged);
             provider.removeListener?.("chainChanged", handleChainChanged);
         };
-    }, [isWalletConnectAvailable]);
+    }, [isMobileWalletAvailable]);
 
     const handleForgotPassword = () => {
         
@@ -386,13 +386,13 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
             return;
         }
 
-        const canConnect = getEthereumProvider() || isWalletConnectAvailable;
+        const canConnect = getEthereumProvider() || isMobileWalletAvailable;
         if (!canConnect) {
             setWalletFeedback({
-                message: "No wallet available. Install MetaMask or set up WalletConnect.",
+                message: "No wallet available. Install MetaMask to continue.",
                 tone: "error",
             });
-            toast.error("No wallet available. Install MetaMask or set up WalletConnect.", {
+            toast.error("No wallet available. Install MetaMask to continue.", {
                 position: "top-right",
                 autoClose: 5000,
             });
