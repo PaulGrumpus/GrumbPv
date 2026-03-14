@@ -270,21 +270,22 @@ const ChatProjectStatus = ({job_id, status, actionHandler, actionLabel, jobMiles
             return;
         }
 
+        if(address?.toLowerCase() !== userInfo?.address?.toLowerCase()) {
+            toast.error("You are not authorized to fund escrow, please connect to the correct wallet.", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            });
+            return;
+        }
+        
         // Set status to delivering (1) immediately when user clicks confirm
         setMilestoneDelivering(jobMilestoneId);
         setLoading("pending");        
         
         try {
-            if(address?.toLowerCase() !== userInfo?.address?.toLowerCase()) {
-                toast.error("You are not authorized to fund escrow, please connect to the correct wallet.", {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                });
-                return;
-            }
             const result = await deliverWork(user.id, jobMilestoneId, Number(CONFIG.chainId), selectedFile);
             
             const { hash: txHash, error: txError } = await sendTransaction({

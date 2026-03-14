@@ -7,7 +7,7 @@ import { CONFIG } from "@/config/config";
 import ModalTemplate from "./modalTemplate";
 import { useContext, useEffect, useRef, useState } from "react";
 import { JobMilestoneStatus } from "@/types/jobMilestone";
-import { approveWork, buyerJoinDispute, createChainTx, deliverWork, fundEscrow, getJobApplicationById, increaseFund, increaseWithdraw, initiateDispute, updateJobMilestone, updateUserFunds, venderPayDisputeFee, withdrawFunds } from "@/utils/functions";
+import { approveWork, buyerJoinDispute, createChainTx, deliverWork, fundEscrow, getJobApplicationById, increaseFund, increaseWithdraw, initiateDispute, updateJobMilestone, updateJobStatusById, updateUserFunds, venderPayDisputeFee, withdrawFunds } from "@/utils/functions";
 import { User } from "@/types/user";
 import { useWallet } from "@/context/walletContext";
 import { useProjectInfo } from "@/context/projectInfoContext";
@@ -16,6 +16,7 @@ import { UserInfoCtx } from "@/context/userContext";
 import { useDashboard } from "@/context/dashboardContext";
 import SmallLoading from "./smallLoading";
 import { useMilestoneDelivery } from "@/context/milestoneDeliveryContext";
+import { JobStatus } from "@/types/jobs";
 
 const STATUSES = [
     { key: "started", label: "Started the job" },
@@ -360,6 +361,7 @@ const DashboardPosts = ({ user, jobMilestoneId, title, description, milestoneSta
                 });
             }
             await createChainTx("withdraw_funds", Number(CONFIG.chainId), jobMilestoneId, user.address ?? "", result.data.to, txHash, "success", user.id);
+            await updateJobStatusById(updatedJobMilestone.data.job_id, JobStatus.COMPLETED);
             toast.success("Funds withdrawn successfully", {
                 position: "top-right",
                 autoClose: 5000,

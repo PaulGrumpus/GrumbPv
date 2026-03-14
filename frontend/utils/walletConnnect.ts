@@ -5,12 +5,17 @@ import { checkUserByAddress } from "./functions";
 const isSameChain = (current?: string | null, target?: string | null) =>
     current?.toLowerCase() === target?.toLowerCase();
 
+/** EIP-1193–like provider (injected or MetaMask SDK). */
 export type MetaMaskProvider = {
     isMetaMask?: boolean;
     request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
     on?: (event: string, handler: (...args: unknown[]) => void) => void;
     removeListener?: (event: string, handler: (...args: unknown[]) => void) => void;
 };
+
+/** MetaMask SDK instance (lazy-inited) and provider when connected via mobile. */
+let metamaskSdk: import("@metamask/sdk").MetaMaskSDK | null = null;
+let metamaskSdkProvider: MetaMaskProvider | null = null;
 
 declare global {
     interface Window {
@@ -75,6 +80,17 @@ const NETWORK_PARAMS = {
 } as const;
 
 export const getEthereumProvider = () => (typeof window === "undefined" ? undefined : window.ethereum);
+
+/** Returns the MetaMask SDK provider when connected via SDK (mobile path). */
+export const getMetaMaskSdkProvider = (): MetaMaskProvider | null => metamaskSdkProvider;
+
+/** Whether mobile wallet path is available (MetaMask SDK in browser). */
+export const isMobileWalletAvailable = () => typeof window !== "undefined";
+
+/** Disconnect MetaMask SDK session and clear stored provider. */
+export const disconnectMetaMaskSdk = (): void => {
+    metamaskSdkProvider = null;
+};
 
 const switchOrAddTargetChain = async (provider: MetaMaskProvider) => {
     try {
@@ -177,4 +193,82 @@ export const connectMetaMaskWallet = async (email?: string): Promise<{ address: 
         });
         return null;
     }
+};
+
+/** Connect via MetaMask SDK (deep link). Use when no injected MetaMask (e.g. mobile browser). */
+export const connectMetaMaskSdk = async (email?: string): Promise<{ address: string; chainId: string } | null> => {
+    if (typeof window === "undefined") {
+        return null;
+    }
+
+    try {
+        if (!metamaskSdk) {
+            const { MetaMaskSDK } = await import("@metamask/sdk");
+            metamaskSdk = new MetaMaskSDK({
+                dappMetadata: {
+                    name: "GrumbPv",
+                    url: window.location.origin,
+                },
+            });
+            await metamaskSdk.init();
+        }
+
+        const accounts = (await metamaskSdk.connect()) as string[] | undefined;
+        if (!accounts?.length) {
+            toast.error("No accounts returned from MetaMask.");
+            return null;
+        }
+
+        const provider = metamaskSdk.getProvider() as unknown as MetaMaskProvider;
+        metamaskSdkProvider = provider;
+
+        const invalidConnectingAccount = await existingWalletAccount(accounts[0], email);
+        if (invalidConnectingAccount) {
+            toast.error("Wallet address already exists! Connected to another wallet account!", {
+                position: "top-right",
+                autoClose: 5000,
+            });
+            disconnectMetaMaskSdk();
+            return null;
+        }
+
+        let chainId = (await provider.request({ method: "eth_chainId" })) as string;
+        if (!isSameChain(chainId, NETWORK_PARAMS.chainId)) {
+            await switchOrAddTargetChain(provider);
+            chainId = (await provider.request({ method: "eth_chainId" })) as string;
+        }
+
+        toast.success(`Connected ${shortenAddress(accounts[0])} on ${NETWORK_PARAMS.chainName}.`, {
+            position: "top-right",
+            autoClose: 5000,
+        });
+
+        return { address: accounts[0], chainId };
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        toast.error(message, { position: "top-right", autoClose: 5000 });
+        disconnectMetaMaskSdk();
+        return null;
+    }
+};
+
+/**
+ * Connect wallet: uses MetaMask (injected) when available, otherwise MetaMask SDK (mobile).
+ * Returns { address, chainId, via } and the context should set provider to getEthereumProvider() or getMetaMaskSdkProvider() accordingly.
+ */
+export const connectWallet = async (email?: string): Promise<{ address: string; chainId: string; via: "injected" | "sdk" } | null> => {
+    const injected = getEthereumProvider();
+    if (injected?.isMetaMask) {
+        const result = await connectMetaMaskWallet(email);
+        return result ? { ...result, via: "injected" as const } : null;
+    }
+    if (isMobileWalletAvailable()) {
+        const result = await connectMetaMaskSdk(email);
+        return result ? { ...result, via: "sdk" as const } : null;
+    }
+    toast.error("No wallet available. Install MetaMask to continue.", {
+        position: "top-right",
+        autoClose: 5000,
+    });
+    return null;
 };

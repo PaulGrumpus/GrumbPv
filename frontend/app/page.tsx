@@ -148,9 +148,6 @@ const Home = () => {
 
         {/* ═══════ HERO ═══════ */}
         <section className="relative overflow-hidden pt-32 pb-20 lg:pt-40 lg:pb-28">
-          {/* Background gradient blobs */}
-          <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#7E3FF2] opacity-[0.06] rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#2F3DF6] opacity-[0.06] rounded-full blur-[120px]" />
 
           <div className="container mx-auto px-4 lg:px-16">
             <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
@@ -455,7 +452,7 @@ const Home = () => {
         {/* ═══════ TESTIMONIALS ═══════ */}
         <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-4 lg:px-16">
-            <h2 className="text-title font-bold text-black mb-12 md:text-left text-center">What people are saying</h2>
+            <h2 className="md:text-title font-bold text-black mb-2 leading-8 text-[2rem] text-center">What people are saying</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {testimonials.map((t) => (
                 <div
@@ -489,7 +486,7 @@ const Home = () => {
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
 
               <div className="relative z-10">
-                <h2 className="text-title lg:text-display font-bold text-white mb-4">
+                <h2 className="md:text-title font-bold text-white mb-4 text-center leading-8 text-[2rem]">
                   Ready to get started?
                 </h2>
                 <p className="text-light-large font-regular text-white/80 mb-8 max-w-xl mx-auto">

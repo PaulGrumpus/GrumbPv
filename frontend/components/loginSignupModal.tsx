@@ -9,8 +9,9 @@ import { CONFIG } from "@/config/config";
 import { toast } from "react-toastify";
 import { createUserWithAddress, createUserWithEmail, loginWithAddress, loginWithEmail, resetPassword } from "@/utils/functions";
 import { UserInfoCtx } from "@/context/userContext";
-import { useRouter } from "next/navigation";
 import { UserLoadingCtx } from "@/context/userLoadingContext";
+import { useWallet } from "@/context/walletContext";
+import { useRouter } from "next/navigation";
 import Input from "./Input";
 
 interface LoginSignupModalProps {
@@ -133,6 +134,7 @@ const switchOrAddTargetChain = async (provider: MetaMaskProvider) => {
 
 const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupModalProps) => {
     const router = useRouter();
+    const { connect: connectWallet, isConnecting: isWalletConnectingFromContext, isMobileWalletAvailable } = useWallet();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -145,7 +147,6 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     const [walletAddress, setWalletAddress] = useState<string | null>(null);
     const [walletChainId, setWalletChainId] = useState<string | null>(null);
     const [walletFeedback, setWalletFeedback] = useState<WalletFeedback | null>(null);
-    const [isWalletConnecting, setIsWalletConnecting] = useState(false);
     const [isMetaMaskAvailable, setIsMetaMaskAvailable] = useState(true);
     const { setUserInfo } = useContext(UserInfoCtx);
     const { setuserLoadingState } = useContext(UserLoadingCtx);
@@ -161,17 +162,28 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
         }
 
         const provider = window.ethereum;
+        const hasInjected = !!provider;
+        const canConnectWallet = hasInjected || isMobileWalletAvailable;
 
-        if (!provider) {
+        if (!canConnectWallet) {
             setIsMetaMaskAvailable(false);
             setWalletFeedback({
-                message: "MetaMask is not detected. Install the extension to continue.",
+                message: "Install MetaMask to connect your wallet.",
                 tone: "error",
             });
             return;
         }
 
         setIsMetaMaskAvailable(true);
+        if (!hasInjected && isMobileWalletAvailable) {
+            setWalletFeedback({
+                message: "Connect with MetaMask (e.g. open in MetaMask mobile or install the app).",
+                tone: "info",
+            });
+        }
+        if (!provider) {
+            return;
+        }
         let isMounted = true;
 
         const syncInitialWalletState = async () => {
@@ -275,7 +287,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
             provider.removeListener?.("accountsChanged", handleAccountsChanged);
             provider.removeListener?.("chainChanged", handleChainChanged);
         };
-    }, []);
+    }, [isMobileWalletAvailable]);
 
     const handleForgotPassword = () => {
         
@@ -312,96 +324,12 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
         setTermsAndPolicy(false);
     };
 
-    const connectMetaMaskWallet = async (action: WalletAction) => {
-        const provider = getEthereumProvider();
-
-        if (!provider?.isMetaMask) {
-            setIsMetaMaskAvailable(false);
-            setWalletFeedback({
-                message: "MetaMask is required. Install the extension to continue.",
-                tone: "error",
-            });
-            toast.error("MetaMask is required. Install the extension to continue.",
-                {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                }
-            )
-            return null;
-        }
-
-        setIsMetaMaskAvailable(true);
-        setIsWalletConnecting(true);
-        setWalletFeedback({
-            message: `Confirm the ${action} request in MetaMask...`,
-            tone: "info",
-        });
-
-        try {
-            const currentChainId = (await provider.request({ method: "eth_chainId" })) as string;
-            if (!isSameChain(currentChainId, NETWORK_PARAMS.chainId)) {
-                switchOrAddTargetChain(provider);
-                // throw new Error("Chain not supported. Please switch to the supported chain.");
-            }
-
-            const accounts = (await provider.request({
-                method: "eth_requestAccounts",
-            })) as string[];
-                        
-
-            if (!accounts || accounts.length === 0) {
-                throw new Error("No wallet accounts returned by MetaMask.");
-            }
-
-            const latestChainId = (await provider.request({ method: "eth_chainId" })) as string;
-
-            setWalletAddress(accounts[0]);
-            setWalletChainId(latestChainId);
-            setWalletFeedback({
-                message: `Connected ${shortenAddress(accounts[0])} on ${NETWORK_PARAMS.chainName}.`,
-                tone: "success",
-            });
-
-            toast.success(`Connected ${shortenAddress(accounts[0])} on ${NETWORK_PARAMS.chainName}.`,
-                {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                }
-            )
-
-            return { address: accounts[0], chainId: latestChainId };
-        } catch (error) {
-            setWalletFeedback({
-                message: getWalletErrorMessage(error),
-                tone: "error",
-            });
-            toast.error(getWalletErrorMessage(error),
-                {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                }
-            )
-            return null;
-        } finally {
-            setIsWalletConnecting(false);
-        }
-    };
-
     const handleLoginWithMetamask = async () => {
-        const connection = await connectMetaMaskWallet("login");
-        if(!connection) {
-            return null
+        const connection = await connectWallet();
+        if (!connection) {
+            return null;
         }
-        const response = await loginWithAddress(connection?.address || '');
+        const response = await loginWithAddress(connection.address);
         if(!response.success) {
             toast.error(response.error, {
                 position: "top-right",
@@ -445,38 +373,36 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     };
 
     const handleRegisterWithMetamask = async () => {
-        const connection = await connectMetaMaskWallet("register");
+        const connection = await connectWallet();
         if (connection) {
+            setWalletAddress(connection.address);
+            setWalletChainId(connection.chainId);
             setRegisterProcessing(true);
         }
     };
 
     const handleMetaMaskAuthClick = () => {
-        if (isWalletConnecting) {
+        if (isWalletConnectingFromContext) {
             return;
-        }       
+        }
 
-        if (!isMetaMaskAvailable && !getEthereumProvider()) {
+        const canConnect = getEthereumProvider() || isMobileWalletAvailable;
+        if (!canConnect) {
             setWalletFeedback({
-                message: "MetaMask is not detected. Install the extension to continue.",
+                message: "No wallet available. Install MetaMask to continue.",
                 tone: "error",
             });
-            toast.error("MetaMask is not detected. Install the extension to continue.",
-                {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                }
-            )
+            toast.error("No wallet available. Install MetaMask to continue.", {
+                position: "top-right",
+                autoClose: 5000,
+            });
             return;
-        }        
+        }
 
         if (isRegistered) {
-            handleLoginWithMetamask();
+            void handleLoginWithMetamask();
         } else {
-            handleRegisterWithMetamask();
+            void handleRegisterWithMetamask();
         }
     };
 
@@ -627,7 +553,7 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
         setTermsAndPolicy(false);
     }
 
-    const metaMaskButtonLabel = isWalletConnecting
+    const metaMaskButtonLabel = isWalletConnectingFromContext
         ? "Connecting to MetaMask..."
         : isRegistered
             ? "Login with MetaMask"

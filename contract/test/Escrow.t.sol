@@ -43,8 +43,35 @@ contract EscrowTest is Test {
         assertEq(info.vendor, vendor);
         assertEq(info.arbiter, arbiter);
         assertEq(info.feeRecipient, feeRecipient);
+        assertEq(info.paymentToken, address(0));
         assertEq(info.deadline, deadline);
         assertEq(uint(info.state), uint(Escrow.State.Unfunded));
+    }
+
+    /// @notice BEP-20 escrow: paymentToken is stored in EscrowInfo
+    function test_Deployment_BEP20_StoresPaymentToken() public {
+        ERC20Mock usdt = new ERC20Mock();
+        Escrow escrowBep20 = new Escrow();
+        escrowBep20.initialize(Escrow.InitParams({
+            buyer: buyer,
+            seller: vendor,
+            arbiter: arbiter,
+            feeRecipient: feeRecipient,
+            feeBps: 100,
+            paymentToken: address(usdt),
+            amountWei: 1000e18,
+            deadline: deadline,
+            buyerFeeBps: 50,
+            vendorFeeBps: 50,
+            disputeFeeBps: 50,
+            rewardRateBps: 25,
+            rewardDistributor: address(0),
+            rewardToken: address(0),
+            rewardRatePer1e18: 0
+        }));
+        Escrow.EscrowInfo memory info = escrowBep20.getAllInfo();
+        assertEq(info.paymentToken, address(usdt));
+        assertEq(info.amount, 1000e18);
     }
 
     function test_Fund() public {
@@ -356,6 +383,253 @@ contract EscrowTest is Test {
         vm.prank(vendor);
         vm.expectRevert(Escrow.InsufficientDisputeFee.selector);
         escrow.initiateDispute{value: 0.001 ether}();
+    }
+
+    // ---------- BEP-20 (USDT/USDC-style) flow tests ----------
+
+    function test_Fund_BEP20() public {
+        ERC20Mock token = new ERC20Mock();
+        token.mint(buyer, 2000e18);
+
+        Escrow escrowBep20 = new Escrow();
+        escrowBep20.initialize(Escrow.InitParams({
+            buyer: buyer,
+            seller: vendor,
+            arbiter: arbiter,
+            feeRecipient: feeRecipient,
+            feeBps: 100,
+            paymentToken: address(token),
+            amountWei: 1000e18,
+            deadline: deadline,
+            buyerFeeBps: 50,
+            vendorFeeBps: 50,
+            disputeFeeBps: 50,
+            rewardRateBps: 25,
+            rewardDistributor: address(0),
+            rewardToken: address(0),
+            rewardRatePer1e18: 0
+        }));
+
+        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000; // 1005e18
+        vm.prank(buyer);
+        token.approve(address(escrowBep20), totalToPull);
+        vm.prank(buyer);
+        escrowBep20.fund();
+
+        Escrow.EscrowInfo memory info = escrowBep20.getAllInfo();
+        assertEq(info.amount, 1000e18);
+        assertEq(info.buyerFeeReserve, 5e18);
+        assertEq(uint(info.state), uint(Escrow.State.Funded));
+        assertEq(token.balanceOf(address(escrowBep20)), totalToPull);
+    }
+
+    function test_NormalCompletion_BEP20() public {
+        ERC20Mock token = new ERC20Mock();
+        token.mint(buyer, 2000e18);
+
+        Escrow escrowBep20 = new Escrow();
+        escrowBep20.initialize(Escrow.InitParams({
+            buyer: buyer,
+            seller: vendor,
+            arbiter: arbiter,
+            feeRecipient: feeRecipient,
+            feeBps: 100,
+            paymentToken: address(token),
+            amountWei: 1000e18,
+            deadline: deadline,
+            buyerFeeBps: 50,
+            vendorFeeBps: 50,
+            disputeFeeBps: 50,
+            rewardRateBps: 25,
+            rewardDistributor: address(0),
+            rewardToken: address(0),
+            rewardRatePer1e18: 0
+        }));
+
+        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000;
+        vm.prank(buyer);
+        token.approve(address(escrowBep20), totalToPull);
+        vm.prank(buyer);
+        escrowBep20.fund();
+
+        vm.prank(vendor);
+        escrowBep20.deliver("QmBEP20", bytes32(0));
+        vm.prank(buyer);
+        escrowBep20.approve("QmBEP20");
+
+        uint256 vendorBefore = token.balanceOf(vendor);
+        uint256 feeRecipientBefore = token.balanceOf(feeRecipient);
+        vm.prank(vendor);
+        escrowBep20.withdraw();
+
+        uint256 vendorFee = (1000e18 * 50) / 10000;
+        assertEq(token.balanceOf(vendor), vendorBefore + 1000e18 - vendorFee);
+        assertEq(token.balanceOf(feeRecipient), feeRecipientBefore + 5e18 + vendorFee);
+    }
+
+    function test_DisputeVendorInitiates_BEP20() public {
+        ERC20Mock token = new ERC20Mock();
+        token.mint(buyer, 2000e18);
+        token.mint(vendor, 100e18);
+
+        Escrow escrowBep20 = new Escrow();
+        escrowBep20.initialize(Escrow.InitParams({
+            buyer: buyer,
+            seller: vendor,
+            arbiter: arbiter,
+            feeRecipient: feeRecipient,
+            feeBps: 100,
+            paymentToken: address(token),
+            amountWei: 1000e18,
+            deadline: deadline,
+            buyerFeeBps: 50,
+            vendorFeeBps: 50,
+            disputeFeeBps: 50,
+            rewardRateBps: 25,
+            rewardDistributor: address(0),
+            rewardToken: address(0),
+            rewardRatePer1e18: 0
+        }));
+
+        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000;
+        vm.prank(buyer);
+        token.approve(address(escrowBep20), totalToPull);
+        vm.prank(buyer);
+        escrowBep20.fund();
+
+        vm.prank(vendor);
+        escrowBep20.deliver("QmBEP20", bytes32(0));
+
+        uint256 disputeFee = (1000e18 * 50) / 10000; // 5e18
+        vm.prank(vendor);
+        token.approve(address(escrowBep20), disputeFee);
+        vm.prank(vendor);
+        escrowBep20.initiateDispute();
+
+        Escrow.EscrowInfo memory info = escrowBep20.getAllInfo();
+        assertEq(uint(info.state), uint(Escrow.State.Disputed));
+        assertTrue(info.vendorPaidDisputeFee);
+        assertEq(info.disputeInitiator, vendor);
+    }
+
+    function test_DisputeResolveToVendor_BEP20() public {
+        ERC20Mock token = new ERC20Mock();
+        token.mint(buyer, 2000e18);
+        token.mint(vendor, 100e18);
+
+        Escrow escrowBep20 = new Escrow();
+        escrowBep20.initialize(Escrow.InitParams({
+            buyer: buyer,
+            seller: vendor,
+            arbiter: arbiter,
+            feeRecipient: feeRecipient,
+            feeBps: 100,
+            paymentToken: address(token),
+            amountWei: 1000e18,
+            deadline: deadline,
+            buyerFeeBps: 50,
+            vendorFeeBps: 50,
+            disputeFeeBps: 50,
+            rewardRateBps: 25,
+            rewardDistributor: address(0),
+            rewardToken: address(0),
+            rewardRatePer1e18: 0
+        }));
+
+        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000;
+        vm.prank(buyer);
+        token.approve(address(escrowBep20), totalToPull);
+        vm.prank(buyer);
+        escrowBep20.fund();
+
+        vm.prank(vendor);
+        escrowBep20.deliver("QmBEP20", bytes32(0));
+        vm.prank(buyer);
+        escrowBep20.initiateDispute();
+
+        uint256 disputeFee = (1000e18 * 50) / 10000;
+        vm.prank(vendor);
+        token.approve(address(escrowBep20), disputeFee);
+        vm.prank(vendor);
+        escrowBep20.payDisputeFee();
+
+        uint256 vendorBefore = token.balanceOf(vendor);
+        vm.prank(arbiter);
+        escrowBep20.resolveToVendor();
+
+        assertEq(token.balanceOf(vendor), vendorBefore + 1000e18 + disputeFee);
+    }
+
+    function test_DisputeResolveByDefault_BEP20() public {
+        ERC20Mock token = new ERC20Mock();
+        token.mint(buyer, 2000e18);
+        token.mint(vendor, 100e18);
+
+        Escrow escrowBep20 = new Escrow();
+        escrowBep20.initialize(Escrow.InitParams({
+            buyer: buyer,
+            seller: vendor,
+            arbiter: arbiter,
+            feeRecipient: feeRecipient,
+            feeBps: 100,
+            paymentToken: address(token),
+            amountWei: 1000e18,
+            deadline: deadline,
+            buyerFeeBps: 50,
+            vendorFeeBps: 50,
+            disputeFeeBps: 50,
+            rewardRateBps: 25,
+            rewardDistributor: address(0),
+            rewardToken: address(0),
+            rewardRatePer1e18: 0
+        }));
+
+        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000;
+        vm.prank(buyer);
+        token.approve(address(escrowBep20), totalToPull);
+        vm.prank(buyer);
+        escrowBep20.fund();
+
+        vm.prank(vendor);
+        escrowBep20.deliver("QmBEP20", bytes32(0));
+        vm.prank(vendor);
+        token.approve(address(escrowBep20), (1000e18 * 50) / 10000);
+        vm.prank(vendor);
+        escrowBep20.initiateDispute();
+
+        vm.warp(block.timestamp + 72 hours + 1);
+        uint256 vendorBefore = token.balanceOf(vendor);
+        escrowBep20.resolveDisputeByDefault();
+        assertEq(token.balanceOf(vendor), vendorBefore + 1000e18 + (1000e18 * 50) / 10000);
+    }
+
+    function test_Fund_BEP20_RevertsWhenSendingBNB() public {
+        ERC20Mock token = new ERC20Mock();
+        token.mint(buyer, 2000e18);
+        vm.deal(buyer, 1 ether); // give buyer BNB so the call can be made; escrow must reject BNB for BEP-20
+
+        Escrow escrowBep20 = new Escrow();
+        escrowBep20.initialize(Escrow.InitParams({
+            buyer: buyer,
+            seller: vendor,
+            arbiter: arbiter,
+            feeRecipient: feeRecipient,
+            feeBps: 100,
+            paymentToken: address(token),
+            amountWei: 1000e18,
+            deadline: deadline,
+            buyerFeeBps: 50,
+            vendorFeeBps: 50,
+            disputeFeeBps: 50,
+            rewardRateBps: 25,
+            rewardDistributor: address(0),
+            rewardToken: address(0),
+            rewardRatePer1e18: 0
+        }));
+
+        vm.prank(buyer);
+        vm.expectRevert(Escrow.BadValue.selector);
+        escrowBep20.fund{value: 1 ether}();
     }
 
 }
