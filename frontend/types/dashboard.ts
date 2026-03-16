@@ -184,13 +184,17 @@ export interface DashboardContextType {
       React.SetStateAction<DashboardConversation[]>
     >;
   
-    /* -------- Notifications -------- */
-    notificationsInfo: DashboardNotification[];
-    setNotificationsInfo: React.Dispatch<
-      React.SetStateAction<DashboardNotification[]>
-    >;
+  /* -------- Notifications -------- */
+  notificationsInfo: DashboardNotification[];
+  setNotificationsInfo: React.Dispatch<
+    React.SetStateAction<DashboardNotification[]>
+  >;
+  /** Job IDs that have at least one unread bid notification (for My Jobs highlight). */
+  jobIdsWithUnreadBidNotification: Set<string>;
+  /** Mark all unread bid notifications for a job as read (e.g. when user opens Applications modal). */
+  markBidNotificationsAsReadForJob: (jobId: string) => Promise<void>;
   
-    /* -------- Error handling -------- */
+  /* -------- Error handling -------- */
     dashboardError: string;
     setDashboardError: React.Dispatch<React.SetStateAction<string>>;
     

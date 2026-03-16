@@ -776,19 +776,22 @@ const NotificationDropdownMenu = forwardRef<HTMLDivElement, NotificationDropdown
         } 
         if (notification && notification.entity_type === NotificationEntity.jobApplicationDoc) {
             router.push(`/reference?jobApplicationId=${notification.entity_id}`);
-        }   
-        setNotificationsInfo(prev =>
-            prev.map(n =>
-                n.id === notificationId
-                    ? { ...n, read_at: new Date().toISOString() }
-                    : n
-            )
-        );
-    
-        try {
-            await updateNotification(notificationId, new Date());
-        } catch (err) {
-            console.error("Unable to mark notification as read", err);
+        }
+        /* For client + bid: do NOT mark as read on click. Highlight on My Jobs stays until user opens Application modal. */
+        const isClientBidNotification = notification?.entity_type === NotificationEntity.bid && userInfo.role !== "freelancer";
+        if (!isClientBidNotification) {
+            setNotificationsInfo(prev =>
+                prev.map(n =>
+                    n.id === notificationId
+                        ? { ...n, read_at: new Date().toISOString() }
+                        : n
+                )
+            );
+            try {
+                await updateNotification(notificationId, new Date());
+            } catch (err) {
+                console.error("Unable to mark notification as read", err);
+            }
         }
     };
 

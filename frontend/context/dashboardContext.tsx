@@ -5,6 +5,7 @@ import {
     ReactNode,
     useContext,
     useEffect,
+    useMemo,
     useState,
     useRef,
 } from "react";
@@ -20,7 +21,7 @@ import {
 
 import { UserLoadingCtx } from "./userLoadingContext";
 import { DashboardLoadingCtx } from "./dashboardLoadingContext";
-import { getBidById, getConversationById, getDashboardDataByUserId, getGigById, getJobApplicationById, getJobBidForClientById, getJobById, getJobMilestoneByEscrowAddress, getJobMilestoneById, getUserById } from "@/utils/functions";
+import { getBidById, getConversationById, getDashboardDataByUserId, getGigById, getJobApplicationById, getJobBidForClientById, getJobById, getJobMilestoneByEscrowAddress, getJobMilestoneById, getUserById, updateNotification } from "@/utils/functions";
 import { UserInfoCtx } from "./userContext";
 import useSocket from "@/service/socket";
 import { NotificationEntity, NotificationType } from "@/types/notification";
@@ -42,6 +43,8 @@ const defaultProvider: DashboardContextType = {
   
     notificationsInfo: [],
     setNotificationsInfo: () => {},
+    jobIdsWithUnreadBidNotification: new Set<string>(),
+    markBidNotificationsAsReadForJob: async () => {},
   
     dashboardError: '',
     setDashboardError: () => {},
@@ -71,6 +74,32 @@ export const DashboardProvider = ({ children }: Props) => {
     const pendingReadReceipts = useRef<Set<string>>(new Set());
     const conversationsInfoRef = useRef<DashboardConversation[]>(conversationsInfo);
     conversationsInfoRef.current = conversationsInfo;
+
+    const jobIdsWithUnreadBidNotification = useMemo(() => {
+        const set = new Set<string>();
+        for (const n of notificationsInfo) {
+            if (n.entity_type !== NotificationEntity.bid || n.read_at) continue;
+            const jobId = (n.payload as { job_id?: string } | null)?.job_id
+                ?? jobsInfo.find(j => j.bids?.some(b => b.id === n.entity_id))?.id;
+            if (jobId) set.add(jobId);
+        }
+        return set;
+    }, [notificationsInfo, jobsInfo]);
+
+    const markBidNotificationsAsReadForJob = async (jobId: string) => {
+        const toMark = notificationsInfo.filter(n => {
+            if (n.entity_type !== NotificationEntity.bid || n.read_at) return false;
+            const payloadJobId = (n.payload as { job_id?: string } | null)?.job_id;
+            if (payloadJobId === jobId) return true;
+            const job = jobsInfo.find(j => j.id === jobId);
+            return job?.bids?.some(b => b.id === n.entity_id) ?? false;
+        });
+        const now = new Date().toISOString();
+        setNotificationsInfo(prev =>
+            prev.map(n => toMark.some(m => m.id === n.id) ? { ...n, read_at: now } : n)
+        );
+        await Promise.all(toMark.map(n => updateNotification(n.id, new Date())));
+    };
   
     const init = async () => {
         if (userLoadingState === "success") {
@@ -513,6 +542,8 @@ export const DashboardProvider = ({ children }: Props) => {
         
                 notificationsInfo,
                 setNotificationsInfo,
+                jobIdsWithUnreadBidNotification,
+                markBidNotificationsAsReadForJob,
         
                 dashboardError,
                 setDashboardError,
