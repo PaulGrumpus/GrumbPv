@@ -30,7 +30,13 @@ interface userJobOrGigPostProps {
     deadline?: number;
     status?: string;
     link?: string;
-    variant?: "job" | "gig";    
+    variant?: "job" | "gig";
+    hasBids?: boolean;
+    bidsCount?: number;
+    /** True when this job has an unread bid notification (highlight + badge until user opens Applications). */
+    hasUnreadBidNotification?: boolean;
+    /** Called when user opens Applications modal; marks bid notifications as read so highlight does not reappear after refresh. */
+    onApplicationsOpen?: () => void;
 }
 
 interface ApplicationWithUser extends Bid {
@@ -62,7 +68,7 @@ const editIcon = "/Grmps/lucide_edit.svg";
 
 const COLLAPSED_MAX_HEIGHT = 120;
 
-const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, image, minBudget, maxBudget, currency, deadline, status, link, variant = "job" }: userJobOrGigPostProps) => {
+const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, image, minBudget, maxBudget, currency, deadline, status, link, variant = "job", hasBids = false, bidsCount = 0, hasUnreadBidNotification = false, onApplicationsOpen }: userJobOrGigPostProps) => {
     const [expanded, setExpanded] = useState(false);
     const [canToggle, setCanToggle] = useState(false);
     const descriptionRef = useRef<HTMLParagraphElement>(null);
@@ -99,7 +105,11 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
         }
         setLoading("success");
         setIsOpen(true);
+        onApplicationsOpen?.();
     }
+
+    const showBidHighlight = variant === "job" && hasUnreadBidNotification;
+    const showBidBadge = variant === "job" && hasBids;
 
     return (
         <div>
@@ -112,6 +122,23 @@ const UserJobOrGigPost = ({ job_id, gig_id, description, title, location, tags, 
                             <div className="flex justify-between gap-6">
                                 <div className="flex flex-col max-w-[75%]">
                                     <h1 className="text-subtitle font-bold text-black">{title}</h1>
+                                    {variant === "job" && (
+                                        <p className={`text-normal font-regular mt-1 inline-flex items-center gap-2 flex-wrap ${showBidHighlight ? "bids-count-unread" : "text-black"}`}>
+                                            <span>Bids:</span>
+                                            {showBidBadge ? (
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-tiny font-medium shrink-0 ${showBidHighlight ? "bids-count-badge" : "bg-[#2F3DF6] text-white"}`}>
+                                                    {bidsCount === 1 ? "1 bid" : `${bidsCount} bids`}
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-500">0 bids</span>
+                                            )}
+                                            {showBidHighlight && (
+                                                <span className="new-bid-arrived-badge inline-flex items-center px-2 py-0.5 rounded-full text-tiny font-semibold bg-amber-400 text-amber-900 shrink-0">
+                                                    New bid arrived
+                                                </span>
+                                            )}
+                                        </p>
+                                    )}
                                     {location && (
                                         <p className="text-normal font-regular text-black">Location: {location === LocationType.REMOTE ? "Remote" : location === LocationType.ON_SITE ? "On Site" : "Hybrid"}</p>
                                     )}

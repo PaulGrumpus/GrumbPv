@@ -24,7 +24,7 @@ const MyJobsSection = () => {
     const [jobs, setJobs] = useState<DashboardJob[]>([]);
     // const [jobs, setJobs] = useState<Job[]>([]);
     // const { jobsInfo } = useContext(ProjectInfoCtx);
-    const { jobsInfo } = useDashboard();
+    const { jobsInfo, jobIdsWithUnreadBidNotification, markBidNotificationsAsReadForJob } = useDashboard();
     const { notificationLoadingState } = useContext(NotificationLoadingCtx);
     const { dashboardLoadingState } = useContext(DashboardLoadingCtx);
 
@@ -92,6 +92,10 @@ const MyJobsSection = () => {
                                     currency={job.token_symbol ?? "USD"}
                                     deadline={job.deadline_at ? new Date(job.deadline_at).getTime() / 1000 : undefined}
                                     status={job.status}
+                                    hasBids={Boolean(job.bids?.length)}
+                                    bidsCount={job.bids?.length ?? 0}
+                                    hasUnreadBidNotification={jobIdsWithUnreadBidNotification.has(job.id)}
+                                    onApplicationsOpen={() => markBidNotificationsAsReadForJob(job.id)}
                                 />
                             ))}
                         </div>

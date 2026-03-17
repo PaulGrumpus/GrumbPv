@@ -310,3 +310,27 @@ body {
 .animate-slide-from-top {
   animation: slide-from-top 0.25s ease-out;
 }
+
+/* Bids count: highlighted when unread bid notification; back to normal when read/after opening Applications */
+.bids-count-unread {
+  color: #2563eb;
+}
+
+.bids-count-unread .bids-count-badge {
+  background: linear-gradient(to right, #dc2626, #2563eb) !important;
+  color: white;
+}
+
+/* "New bid arrived" badge: zoom in/out until user opens Application modal */
+@keyframes new-bid-badge-zoom {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.new-bid-arrived-badge {
+  animation: new-bid-badge-zoom 1.6s ease-in-out infinite;
+}

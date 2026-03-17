@@ -47,7 +47,7 @@ export class JobBidService {
         entity_id: newJobBid.id,
         title: 'New job bid received',
         body: 'You have received a new job bid',
-        payload: Prisma.JsonNull,
+        payload: { job_id: newJobBid.job_id } as unknown as Prisma.JsonObject,
         read_at: null,
         created_at: new Date(),
       });

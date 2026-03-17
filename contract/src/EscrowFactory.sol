@@ -44,10 +44,14 @@ contract EscrowFactory {
     /// @dev If set, all new escrows will be configured with this reward token
     address public rewardToken;
     
-    /// @notice Reward rate per 1e18 wei of project amount
+    /// @notice Reward rate per 1e18 wei of project amount (BNB escrows)
     /// @dev GRMPS paid per 1e18 wei of project amount
     uint256 public rewardRatePer1e18;
-    
+
+    /// @notice Reward rate per 1e18 wei for stablecoin/token escrows (e.g. USDT/USDC)
+    /// @dev Typically set to rewardRatePer1e18 / 1000 so 1 USDT ≈ 1/1000 of 1 BNB reward
+    uint256 public rewardRatePer1e18ForStablecoin;
+
     /// @notice Mapping to track all escrows created by this factory
     mapping(address => bool) public isEscrowCreated;
 
@@ -133,6 +137,15 @@ contract EscrowFactory {
         emit RewardRateSet(_rewardRatePer1e18);
     }
 
+    /// @notice Set stablecoin reward rate as BNB rate divided by a divisor (e.g. 1000 for 1 BNB = 1000 USDT)
+    /// @dev Call after setRewardRatePer1e18. Use divisor 1000 so 1 USDT gives 1/1000 of 1 BNB reward.
+    /// @param divisor Divisor (e.g. 1000); rewardRatePer1e18ForStablecoin = rewardRatePer1e18 / divisor
+    function setRewardRatePer1e18ForStablecoinWithDivisor(uint256 divisor) external onlyOwner {
+        require(divisor != 0, "zero divisor");
+        rewardRatePer1e18ForStablecoin = rewardRatePer1e18 / divisor;
+        emit RewardRateForStablecoinSet(rewardRatePer1e18ForStablecoin);
+    }
+
     /// @notice Emitted when ownership is transferred
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     
@@ -144,6 +157,9 @@ contract EscrowFactory {
     
     /// @notice Emitted when reward rate is set
     event RewardRateSet(uint256 rewardRatePer1e18);
+
+    /// @notice Emitted when stablecoin reward rate is set
+    event RewardRateForStablecoinSet(uint256 rewardRatePer1e18ForStablecoin);
 
     /// @notice Create a new non-deterministic escrow clone
     /// @dev Uses Clones.clone() which is cheaper than deploying the full contract
@@ -179,6 +195,8 @@ contract EscrowFactory {
         // Clone the implementation
         escrow = Clones.clone(implementation);
         
+        // Use stablecoin rate for token escrows (e.g. USDT/USDC), BNB rate for native
+        uint256 rate = paymentToken == address(0) ? rewardRatePer1e18 : rewardRatePer1e18ForStablecoin;
         // Initialize the clone with job-specific parameters using struct
         IEscrow(escrow).initialize(InitParams({
             buyer: buyer,
@@ -195,7 +213,7 @@ contract EscrowFactory {
             rewardRateBps: rewardRateBps,
             rewardDistributor: rewardDistributor,
             rewardToken: rewardToken,
-            rewardRatePer1e18: rewardRatePer1e18
+            rewardRatePer1e18: rate
         }));
         
         // Track that this escrow was created by this factory
@@ -255,7 +273,8 @@ contract EscrowFactory {
     ) external returns (address escrow) {
         // Clone the implementation using CREATE2
         escrow = Clones.cloneDeterministic(implementation, salt);
-        
+        // Use stablecoin rate for token escrows (e.g. USDT/USDC), BNB rate for native
+        uint256 rate = paymentToken == address(0) ? rewardRatePer1e18 : rewardRatePer1e18ForStablecoin;
         // Initialize the clone with job-specific parameters using struct
         IEscrow(escrow).initialize(InitParams({
             buyer: buyer,
@@ -272,7 +291,7 @@ contract EscrowFactory {
             rewardRateBps: rewardRateBps,
             rewardDistributor: rewardDistributor,
             rewardToken: rewardToken,
-            rewardRatePer1e18: rewardRatePer1e18
+            rewardRatePer1e18: rate
         }));
         
         // Track that this escrow was created by this factory

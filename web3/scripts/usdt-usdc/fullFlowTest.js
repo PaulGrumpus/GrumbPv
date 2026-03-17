@@ -39,7 +39,7 @@ async function main() {
   const amountWei = BigInt(Number(amountHuman) * 10 ** tokenConfig.decimals);
 
   const deployer = new ethers.Wallet(
-    process.env.DEPLOYER_PRIVATE_KEY || CONFIG.arbiterPrivateKey,
+    CONFIG.deployerPrivateKey || CONFIG.arbiterPrivateKey,
     provider
   );
   const buyerWallet = new ethers.Wallet(CONFIG.buyerPrivateKey, provider);

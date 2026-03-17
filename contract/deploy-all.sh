@@ -204,7 +204,7 @@ cast send $FACTORY_ADDRESS "setRewardToken(address)" \
 echo "✅ Factory RewardToken set to $GRMPS_TOKEN_ADDRESS"
 echo ""
 
-echo "3/4: Setting RewardRatePer1e18 on Factory..."
+echo "3/5: Setting RewardRatePer1e18 on Factory..."
 cast send $FACTORY_ADDRESS "setRewardRatePer1e18(uint256)" \
   $REWARD_RATE_PER_1E18 \
   --private-key $PRIVATE_KEY \
@@ -216,7 +216,19 @@ cast send $FACTORY_ADDRESS "setRewardRatePer1e18(uint256)" \
 echo "✅ Factory RewardRatePer1e18 set to $REWARD_RATE_PER_1E18"
 echo ""
 
-echo "4/4: Authorizing Factory in RewardDistributor..."
+echo "3b: Setting RewardRatePer1e18ForStablecoin (divisor 1000 for 1 BNB = 1000 USDT)..."
+cast send $FACTORY_ADDRESS "setRewardRatePer1e18ForStablecoinWithDivisor(uint256)" \
+  1000 \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $BSC_TESTNET_RPC_URL \
+  --gas-price $GAS_PRICE \
+  --gas-limit 500000 \
+  --legacy
+
+echo "✅ Factory RewardRatePer1e18ForStablecoin set (BNB rate / 1000)"
+echo ""
+
+echo "4/5: Authorizing Factory in RewardDistributor..."
 cast send $REWARD_DISTRIBUTOR_ADDRESS "setAuthorizedFactory(address,bool)" \
   $FACTORY_ADDRESS true \
   --private-key $PRIVATE_KEY \
