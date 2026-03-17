@@ -181,9 +181,9 @@ contract Escrow is Ownable, ReentrancyGuard {
         escrowInfo.deadline = params.deadline;
         escrowInfo.state = State.Unfunded;
 
-        // For BEP-20, project amount is fixed at creation; for BNB it is derived in fund()
+        // For BEP-20, store total amount buyer will send (like msg.value); project amount derived in fund()
         if (params.paymentToken != address(0)) {
-            escrowInfo.amount = params.amountWei;
+            escrowInfo.amount = params.amountWei; // total to pull in fund()
         }
 
         // Set reward configuration during initialization
@@ -226,7 +226,7 @@ contract Escrow is Ownable, ReentrancyGuard {
 
     /// @notice Buyer funds the escrow with native BNB or BEP-20 (e.g. USDT, USDC).
     /// @dev BNB: send msg.value; project amount = value * 10000 / (10000 + buyerFeeBps).
-    ///      BEP-20: call approve(escrow, total) then fund(); contract pulls project + buyer fee via transferFrom.
+    ///      BEP-20: amountWei at init = total to send (same semantics); approve(escrow, total) then fund(); contract pulls total and derives project amount the same way.
     function fund() external payable onlyBuyer {
         if (escrowInfo.state != State.Unfunded) revert BadState();
 
@@ -242,12 +242,13 @@ contract Escrow is Ownable, ReentrancyGuard {
             escrowInfo.amount = projectAmount;
             escrowInfo.buyerFeeReserve = buyerFee;
         } else {
-            // BEP-20 path: pull tokens from buyer (must have approved this contract)
+            // BEP-20 path: same style as BNB — total pulled is the input, project amount derived from it
             if (msg.value != 0) revert BadValue();
-            projectAmount = escrowInfo.amount; // set at init
-            uint256 totalToPull = (projectAmount * (10000 + escrowInfo.buyerFeeBps)) / 10000;
+            uint256 totalToPull = escrowInfo.amount; // at init for BEP-20 this is the total buyer sends (like msg.value)
+            projectAmount = (totalToPull * 10000) / (10000 + escrowInfo.buyerFeeBps);
             buyerFee = totalToPull - projectAmount;
             IERC20(escrowInfo.paymentToken).safeTransferFrom(escrowInfo.buyer, address(this), totalToPull);
+            escrowInfo.amount = projectAmount;
             escrowInfo.buyerFeeReserve = buyerFee;
         }
 

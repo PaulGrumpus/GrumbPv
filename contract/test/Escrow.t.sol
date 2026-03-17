@@ -48,10 +48,11 @@ contract EscrowTest is Test {
         assertEq(uint(info.state), uint(Escrow.State.Unfunded));
     }
 
-    /// @notice BEP-20 escrow: paymentToken is stored in EscrowInfo
+    /// @notice BEP-20 escrow: paymentToken and total (project + buyer fee) stored at init; project amount derived in fund() like BNB
     function test_Deployment_BEP20_StoresPaymentToken() public {
         ERC20Mock usdt = new ERC20Mock();
         Escrow escrowBep20 = new Escrow();
+        uint256 totalToSend = (1000e18 * (10000 + 50)) / 10000; // 1005e18 for 1000e18 project at 50 bps
         escrowBep20.initialize(Escrow.InitParams({
             buyer: buyer,
             seller: vendor,
@@ -59,7 +60,7 @@ contract EscrowTest is Test {
             feeRecipient: feeRecipient,
             feeBps: 100,
             paymentToken: address(usdt),
-            amountWei: 1000e18,
+            amountWei: totalToSend,
             deadline: deadline,
             buyerFeeBps: 50,
             vendorFeeBps: 50,
@@ -71,7 +72,7 @@ contract EscrowTest is Test {
         }));
         Escrow.EscrowInfo memory info = escrowBep20.getAllInfo();
         assertEq(info.paymentToken, address(usdt));
-        assertEq(info.amount, 1000e18);
+        assertEq(info.amount, totalToSend); // before fund(), amount = total buyer will send
     }
 
     function test_Fund() public {
@@ -392,6 +393,7 @@ contract EscrowTest is Test {
         token.mint(buyer, 2000e18);
 
         Escrow escrowBep20 = new Escrow();
+        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000; // 1005e18
         escrowBep20.initialize(Escrow.InitParams({
             buyer: buyer,
             seller: vendor,
@@ -399,7 +401,7 @@ contract EscrowTest is Test {
             feeRecipient: feeRecipient,
             feeBps: 100,
             paymentToken: address(token),
-            amountWei: 1000e18,
+            amountWei: totalToPull,
             deadline: deadline,
             buyerFeeBps: 50,
             vendorFeeBps: 50,
@@ -410,14 +412,13 @@ contract EscrowTest is Test {
             rewardRatePer1e18: 0
         }));
 
-        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000; // 1005e18
         vm.prank(buyer);
         token.approve(address(escrowBep20), totalToPull);
         vm.prank(buyer);
         escrowBep20.fund();
 
         Escrow.EscrowInfo memory info = escrowBep20.getAllInfo();
-        assertEq(info.amount, 1000e18);
+        assertEq(info.amount, 1000e18); // after fund(), amount = derived project amount
         assertEq(info.buyerFeeReserve, 5e18);
         assertEq(uint(info.state), uint(Escrow.State.Funded));
         assertEq(token.balanceOf(address(escrowBep20)), totalToPull);
@@ -427,6 +428,7 @@ contract EscrowTest is Test {
         ERC20Mock token = new ERC20Mock();
         token.mint(buyer, 2000e18);
 
+        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000;
         Escrow escrowBep20 = new Escrow();
         escrowBep20.initialize(Escrow.InitParams({
             buyer: buyer,
@@ -435,7 +437,7 @@ contract EscrowTest is Test {
             feeRecipient: feeRecipient,
             feeBps: 100,
             paymentToken: address(token),
-            amountWei: 1000e18,
+            amountWei: totalToPull,
             deadline: deadline,
             buyerFeeBps: 50,
             vendorFeeBps: 50,
@@ -445,8 +447,6 @@ contract EscrowTest is Test {
             rewardToken: address(0),
             rewardRatePer1e18: 0
         }));
-
-        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000;
         vm.prank(buyer);
         token.approve(address(escrowBep20), totalToPull);
         vm.prank(buyer);
@@ -472,6 +472,7 @@ contract EscrowTest is Test {
         token.mint(buyer, 2000e18);
         token.mint(vendor, 100e18);
 
+        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000;
         Escrow escrowBep20 = new Escrow();
         escrowBep20.initialize(Escrow.InitParams({
             buyer: buyer,
@@ -480,7 +481,7 @@ contract EscrowTest is Test {
             feeRecipient: feeRecipient,
             feeBps: 100,
             paymentToken: address(token),
-            amountWei: 1000e18,
+            amountWei: totalToPull,
             deadline: deadline,
             buyerFeeBps: 50,
             vendorFeeBps: 50,
@@ -490,8 +491,6 @@ contract EscrowTest is Test {
             rewardToken: address(0),
             rewardRatePer1e18: 0
         }));
-
-        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000;
         vm.prank(buyer);
         token.approve(address(escrowBep20), totalToPull);
         vm.prank(buyer);
@@ -517,6 +516,7 @@ contract EscrowTest is Test {
         token.mint(buyer, 2000e18);
         token.mint(vendor, 100e18);
 
+        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000;
         Escrow escrowBep20 = new Escrow();
         escrowBep20.initialize(Escrow.InitParams({
             buyer: buyer,
@@ -525,7 +525,7 @@ contract EscrowTest is Test {
             feeRecipient: feeRecipient,
             feeBps: 100,
             paymentToken: address(token),
-            amountWei: 1000e18,
+            amountWei: totalToPull,
             deadline: deadline,
             buyerFeeBps: 50,
             vendorFeeBps: 50,
@@ -535,8 +535,6 @@ contract EscrowTest is Test {
             rewardToken: address(0),
             rewardRatePer1e18: 0
         }));
-
-        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000;
         vm.prank(buyer);
         token.approve(address(escrowBep20), totalToPull);
         vm.prank(buyer);
@@ -565,6 +563,7 @@ contract EscrowTest is Test {
         token.mint(buyer, 2000e18);
         token.mint(vendor, 100e18);
 
+        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000;
         Escrow escrowBep20 = new Escrow();
         escrowBep20.initialize(Escrow.InitParams({
             buyer: buyer,
@@ -573,7 +572,7 @@ contract EscrowTest is Test {
             feeRecipient: feeRecipient,
             feeBps: 100,
             paymentToken: address(token),
-            amountWei: 1000e18,
+            amountWei: totalToPull,
             deadline: deadline,
             buyerFeeBps: 50,
             vendorFeeBps: 50,
@@ -583,8 +582,6 @@ contract EscrowTest is Test {
             rewardToken: address(0),
             rewardRatePer1e18: 0
         }));
-
-        uint256 totalToPull = (1000e18 * (10000 + 50)) / 10000;
         vm.prank(buyer);
         token.approve(address(escrowBep20), totalToPull);
         vm.prank(buyer);
@@ -608,6 +605,7 @@ contract EscrowTest is Test {
         token.mint(buyer, 2000e18);
         vm.deal(buyer, 1 ether); // give buyer BNB so the call can be made; escrow must reject BNB for BEP-20
 
+        uint256 totalToSend = (1000e18 * (10000 + 50)) / 10000;
         Escrow escrowBep20 = new Escrow();
         escrowBep20.initialize(Escrow.InitParams({
             buyer: buyer,
@@ -616,7 +614,7 @@ contract EscrowTest is Test {
             feeRecipient: feeRecipient,
             feeBps: 100,
             paymentToken: address(token),
-            amountWei: 1000e18,
+            amountWei: totalToSend,
             deadline: deadline,
             buyerFeeBps: 50,
             vendorFeeBps: 50,

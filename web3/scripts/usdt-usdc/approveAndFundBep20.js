@@ -13,8 +13,8 @@ import { getTokenConfigByAddress } from './tokenConfig.js';
 
 async function main() {
   const escrowAddress = process.env.ESCROW_ADDRESS || CONFIG.escrowAddress;
-  if (!escrowAddress) throw new Error('ESCROW_ADDRESS not set');
-  if (!CONFIG.buyerPrivateKey) throw new Error('BUYER_PRIVATE_KEY not set');
+  if (!escrowAddress)  { console.log('ESCROW_ADDRESS not set'); return; }
+  if (!CONFIG.buyerPrivateKey) { console.log('BUYER_PRIVATE_KEY not set'); return; }
 
   const provider = new ethers.JsonRpcProvider(CONFIG.rpcUrl);
   const wallet = new ethers.Wallet(CONFIG.buyerPrivateKey, provider);
@@ -23,21 +23,22 @@ async function main() {
   const info = await escrow.getAllInfo();
 
   if (info.paymentToken === ethers.ZeroAddress) {
-    throw new Error('This escrow uses BNB, not BEP-20. Use npm run fund instead.');
+    console.log('This escrow uses BNB, not BEP-20. Use npm run fund instead.');
+    return;
   }
 
   const tokenConfig = getTokenConfigByAddress(info.paymentToken, CONFIG.chainId);
 
   const projectAmount = info.amount;
-  const buyerFeeBps = info.buyerFeeBps;
-  const totalToApprove = (projectAmount * (10000n + buyerFeeBps)) / 10000n;
+  const totalToApprove = projectAmount;
 
   const token = new ethers.Contract(info.paymentToken, CONFIG.erc20ABI, wallet);
   const balance = await token.balanceOf(wallet.address);
   if (balance < totalToApprove) {
-    throw new Error(
+    console.log(
       `Insufficient ${tokenConfig.symbol}: have ${balance}, need ${totalToApprove}`
     );
+    return;
   }
 
   const decimals = tokenConfig.decimals;

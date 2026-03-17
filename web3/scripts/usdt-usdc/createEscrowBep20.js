@@ -21,7 +21,7 @@ async function main() {
   const tokenConfig = getTokenConfig(null, CONFIG.chainId);
   const provider = new ethers.JsonRpcProvider(CONFIG.rpcUrl);
   const wallet = new ethers.Wallet(
-    process.env.DEPLOYER_PRIVATE_KEY || CONFIG.arbiterPrivateKey,
+    CONFIG.deployerPrivateKey || CONFIG.arbiterPrivateKey,
     provider
   );
 
@@ -39,7 +39,7 @@ async function main() {
   if (process.env.AMOUNT_WEI) {
     amountWei = BigInt(process.env.AMOUNT_WEI);
   } else {
-    const amountHuman = process.env.AMOUNT || '100';
+    const amountHuman = process.env.AMOUNT || '3';
     amountWei = BigInt(Number(amountHuman) * 10 ** tokenConfig.decimals);
   }
 

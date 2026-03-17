@@ -1,32 +1,33 @@
 /**
  * BEP-20 token addresses and decimals for BSC Testnet and Mainnet.
+ * USDT/USDC on BNB (testnet and mainnet) use 18 decimals.
  * Use PAYMENT_TOKEN=USDT or PAYMENT_TOKEN=USDC in .env, or pass token address directly.
  */
 
 export const TOKENS = {
-  // BSC Testnet
+  // BSC Testnet (18 decimals)
   testnet: {
     USDT: {
       address: '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd',
-      decimals: 6,
+      decimals: 18,
       symbol: 'USDT',
     },
     USDC: {
       address: '0x64544969ed7EBf5f083679233325356EbE738930',
-      decimals: 6,
+      decimals: 18,
       symbol: 'USDC',
     },
   },
-  // BSC Mainnet
+  // BSC Mainnet (18 decimals)
   mainnet: {
     USDT: {
       address: '0x55d398326f99059fF775485246999027B3197955',
-      decimals: 6,
+      decimals: 18,
       symbol: 'USDT',
     },
     USDC: {
       address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
-      decimals: 6,
+      decimals: 18,
       symbol: 'USDC',
     },
   },
@@ -49,7 +50,7 @@ export function getTokenConfig(tokenNameOrAddress, chainId = 97) {
   if (upper === 'USDT') return tokens.USDT;
   if (upper === 'USDC') return tokens.USDC;
   if (s.startsWith('0x') && s.length === 42) {
-    return { address: s, decimals: 6, symbol: 'BEP20' };
+    return { address: s, decimals: 18, symbol: 'BEP20' };
   }
 
   return tokens.USDT;
@@ -68,7 +69,7 @@ export function getTokenConfigByAddress(address, chainId = 97) {
   for (const t of Object.values(tokens)) {
     if (t.address.toLowerCase() === addr) return t;
   }
-  return { address: address, decimals: 6, symbol: 'BEP20' };
+  return { address: address, decimals: 18, symbol: 'BEP20' };
 }
 
 export default { TOKENS, getTokenConfig, getTokenConfigByAddress };
