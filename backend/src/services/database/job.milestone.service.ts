@@ -1,14 +1,16 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import {
+import type {
   Prisma,
   job_milestones,
+} from '@prisma/client';
+import {
   job_status,
   milestone_status,
   notification_entity,
   notification_type,
   user_role,
-} from '@prisma/client';
+} from '../../constants/prisma-enums.js';
 import { userService } from './user.service.js';
 import { jobService } from './job.service.js';
 import { prisma } from '../../prisma.js';
@@ -105,7 +107,7 @@ export class JobMilestoneService {
         entity_id: newJobMilestone.id,
         title: 'Milestone started',
         body: 'Your milestone has been started',
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });
@@ -117,7 +119,7 @@ export class JobMilestoneService {
         entity_id: newJobMilestone.id,
         title: 'Milestone started',
         body: 'Your milestone has been started',
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });
@@ -284,7 +286,7 @@ export class JobMilestoneService {
                             : updatedJobMilestone.status === milestone_status.cancelled
                               ? 'Your milestone has been cancelled'
                               : 'Your milestone escrow has been deployed',
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });
@@ -359,7 +361,7 @@ export class JobMilestoneService {
                             : updatedJobMilestone.status === milestone_status.cancelled
                               ? 'Your milestone has been cancelled'
                               : 'Your milestone escrow has been deployed',
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });

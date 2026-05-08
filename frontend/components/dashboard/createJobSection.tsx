@@ -27,6 +27,7 @@ const CreateJobSection = () => {
     const [selectedLocation, setSelectedLocation] = useState("");
     const categories = ["remote", "onsite", "hybrid"];
     const [description, setDescription] = useState("");
+    const [tokenSymbol, setTokenSymbol] = useState("BNB");
     const [maxBudget, setMaxBudget] = useState<string>("");
     const [minBudget, setMinBudget] = useState<string>("");
     const dueDatePickerRef = useRef<HTMLDivElement | null>(null);
@@ -86,6 +87,7 @@ const CreateJobSection = () => {
         setTitle(editingJob.title ?? "");
         setSelectedLocation(editingJob.location ?? "");
         setDescription(editingJob.description_md ?? "");
+        setTokenSymbol(editingJob.token_symbol ?? "BNB");
         setMaxBudget(editingJob.budget_max ?? "");
         setMinBudget(editingJob.budget_min ?? "");
         setDueDate(
@@ -188,7 +190,7 @@ const CreateJobSection = () => {
             description_md: description,
             budget_max: Number(maxBudget),
             budget_min: Number(minBudget),
-            token_symbol: "BNB",
+            token_symbol: tokenSymbol,
             deadline_at: new Date(dueDate).toISOString() ?? "",
             client_id: userInfo.id,
             status: JobStatus.OPEN,
@@ -336,7 +338,7 @@ const CreateJobSection = () => {
                             </div>
                             <div className="flex lg:flex-row flex-col gap-6">
                                 <div>
-                                    <p className='text-normal font-regular text-black text-left pb-2'>Max Budget (BNB)</p>
+                                    <p className='text-normal font-regular text-black text-left pb-2'>{`Max Budget (${tokenSymbol})`}</p>
                                     <input
                                         value={maxBudget}
                                         type="text"
@@ -355,7 +357,7 @@ const CreateJobSection = () => {
                                     />
                                 </div>
                                 <div>
-                                    <p className='text-normal font-regular text-black text-left pb-2'>Min Budget (BNB)</p>
+                                    <p className='text-normal font-regular text-black text-left pb-2'>{`Min Budget (${tokenSymbol})`}</p>
                                     <input
                                         value={minBudget}
                                         type="text"
@@ -372,6 +374,18 @@ const CreateJobSection = () => {
                                         className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
                                         placeholder='Min Budget'
                                     />
+                                </div>
+                                <div>
+                                    <p className='text-normal font-regular text-black text-left pb-2'>Currency</p>
+                                    <select
+                                        value={tokenSymbol}
+                                        onChange={(e) => setTokenSymbol(e.target.value)}
+                                        className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3'
+                                    >
+                                        <option value='BNB'>BNB</option>
+                                        <option value='USDT'>USDT</option>
+                                        <option value='USDC'>USDC</option>
+                                    </select>
                                 </div>
                                 <div className="flex-1" ref={dueDatePickerRef}>
                                     <p className='text-normal font-regular text-black text-left pb-2'>Due Date</p>

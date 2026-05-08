@@ -1,24 +1,18 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { Geist, Geist_Mono, Roboto, Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import ConditionalShell from "@/components/ConditionalShell";
 import "react-toastify/dist/ReactToastify.css";
+import "@rainbow-me/rainbowkit/styles.css";
 
-import { UserInfoProvider } from "@/context/userContext";
-import { UserLoadingProvider } from "@/context/userLoadingContext";
-import { ConversationLoadingProvider } from "@/context/conversationLoadingContext";
-import { ConversationsInfoProvider } from "@/context/conversationsContext";
-import { MessagesInfoProvider } from "@/context/messagesContext";
-import { MessageLoadingProvider } from "@/context/messageLoadingContext";
-import SocketContextProvider from "@/context/socketContext";
-import { WalletProvider } from "@/context/walletContext";
-import { ProjectInfoLoadingProvider } from "@/context/projectInfoLoadingContext";
-import { ProjectInfoProvider } from "@/context/projectInfoContext";
-import { NotificationProvider } from "@/context/notificationContext";
-import { NotificationLoadingProvider } from "@/context/notificationLoadingContext";
-import { DashboardLoadingProvider } from "@/context/dashboardLoadingContext";
-import { DashboardProvider } from "@/context/dashboardContext";
-import { MilestoneDeliveryProvider } from "@/context/milestoneDeliveryContext";
+/** Loaded async so wagmi/RainbowKit do not bloat the root layout chunk (avoids chunk load timeouts in dev). */
+const AppProviders = dynamic(() => import("@/context/AppProviders"), {
+  ssr: true,
+  loading: () => (
+    <div className="min-h-[100dvh] bg-white" aria-busy="true" aria-label="Loading application" />
+  ),
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -66,37 +60,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${roboto.variable} ${poppins.variable} ${inter.variable} antialiased bg-white`}
       >
-        <WalletProvider>
-          <SocketContextProvider>
-            <UserLoadingProvider>
-              <UserInfoProvider>
-                <DashboardLoadingProvider>
-                  <DashboardProvider>
-                    <MilestoneDeliveryProvider>
-                    {/* <ProjectInfoLoadingProvider>
-                      <ProjectInfoProvider>
-                        <ConversationLoadingProvider>
-                          <ConversationsInfoProvider>
-                            <MessageLoadingProvider>
-                              <MessagesInfoProvider>
-                                <NotificationLoadingProvider>
-                                  <NotificationProvider> */}
-                                    <ConditionalShell>{children}</ConditionalShell>
-                                  {/* </NotificationProvider>
-                                </NotificationLoadingProvider>
-                              </MessagesInfoProvider>
-                            </MessageLoadingProvider>
-                          </ConversationsInfoProvider>
-                        </ConversationLoadingProvider>                    
-                      </ProjectInfoProvider>
-                    </ProjectInfoLoadingProvider> */}
-                    </MilestoneDeliveryProvider>
-                  </DashboardProvider>
-                </DashboardLoadingProvider>
-              </UserInfoProvider>
-            </UserLoadingProvider>
-          </SocketContextProvider>
-        </WalletProvider>
+        <AppProviders>
+          <ConditionalShell>{children}</ConditionalShell>
+        </AppProviders>
       </body>
     </html>
   );

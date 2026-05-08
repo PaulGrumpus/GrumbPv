@@ -21,7 +21,54 @@ import { DashboardNotification } from "@/types/dashboard";
 
 const chatIcon = "/Grmps/chat.svg";
 const bellIcon = "/Grmps/bell.svg";
-const defaultProfileImage ="default.jpg";
+const defaultProfileImage = "/default-profile.svg";
+const resolveProfileImageSrc = (imageId?: string | null) => {
+    const normalized = (imageId ?? "").trim();
+    if (
+        !normalized ||
+        normalized === "default.jpg" ||
+        normalized === "null" ||
+        normalized === "undefined"
+    ) {
+        if (process.env.NODE_ENV === "development") {
+            console.warn("[NavbarImage] Falling back to default image", {
+                rawImageId: imageId,
+                normalized,
+            });
+        }
+        return defaultProfileImage;
+    }
+    if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
+        if (process.env.NODE_ENV === "development") {
+            console.log("[NavbarImage] Using absolute image URL", {
+                rawImageId: imageId,
+                resolvedSrc: normalized,
+            });
+        }
+        return normalized;
+    }
+    const resolvedSrc = `${EscrowBackendConfig.uploadedImagesURL}${normalized}`;
+    if (process.env.NODE_ENV === "development") {
+        console.log("[NavbarImage] Using backend uploaded image URL", {
+            rawImageId: imageId,
+            base: EscrowBackendConfig.uploadedImagesURL,
+            resolvedSrc,
+        });
+    }
+    return resolvedSrc;
+};
+
+const renderProfileAvatar = (
+    imageId: string | null | undefined,
+    size: number,
+    className: string
+) => {
+    const src = resolveProfileImageSrc(imageId);
+    if (src.startsWith("http://") || src.startsWith("https://")) {
+        return <img src={src} alt="User Photo" className={className} />;
+    }
+    return <Image src={src} alt="User Photo" width={size} height={size} className={className} />;
+};
 const logoImage = "/Grmps/grmps.jpg"; // Change this path to your custom logo
 
 const menuItems = [
@@ -324,17 +371,13 @@ const Navbar = () => {
                                                 className="flex items-center gap-2 cursor-pointer select-none"
                                                 onClick={handleDropdownMenuOpen}
                                             >
-                                                {
-                                                    userInfo.image_id && <div className="w-9 h-9 overflow-hidden rounded-full">
-                                                        <Image 
-                                                            src={EscrowBackendConfig.uploadedImagesURL + userInfo.image_id} 
-                                                            alt="User Photo" 
-                                                            width={36} 
-                                                            height={36} 
-                                                            className="h-full w-full rounded-full object-cover"
-                                                        />
-                                                    </div>
-                                                }
+                                                <div className="w-9 h-9 overflow-hidden rounded-full">
+                                                    {renderProfileAvatar(
+                                                        userInfo.image_id,
+                                                        36,
+                                                        "h-full w-full rounded-full object-cover"
+                                                    )}
+                                                </div>
                                                 <p className="text-normal font-regular text-black">{username}</p>
                                                 {dropdownMenuOpen ? (
                                                     <ChevronUpIcon className="w-5 h-5 text-black" />
@@ -387,17 +430,13 @@ const Navbar = () => {
                                     </div>
                                     {loggedIn ? (
                                         <div className="flex items-center gap-2">
-                                            {
-                                                userInfo.image_id && <div className="w-9 h-9 overflow-hidden rounded-full to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
-                                                    <Image 
-                                                        src={EscrowBackendConfig.uploadedImagesURL + userInfo.image_id} 
-                                                        alt="User Photo" 
-                                                        width={36} 
-                                                        height={36} 
-                                                        className="h-full w-full rounded-full object-cover"
-                                                    />
-                                                </div>
-                                            }
+                                            <div className="w-9 h-9 overflow-hidden rounded-full to-black shadow-xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-white">
+                                                {renderProfileAvatar(
+                                                    userInfo.image_id,
+                                                    36,
+                                                    "h-full w-full rounded-full object-cover"
+                                                )}
+                                            </div>
                                             <p className="h-11 rounded-2xl from-white via-slate-100 to-slate-200 animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-gray-400">{username}</p>
                                         </div>
                                     ) : (
@@ -423,13 +462,11 @@ const Navbar = () => {
                                     onClick={() => router.push("/profile")}
                                 >
                                     <div className="w-8 h-8 overflow-hidden rounded-full">
-                                        <Image
-                                            src={userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : EscrowBackendConfig.uploadedImagesURL + defaultProfileImage}
-                                            alt="User Photo"
-                                            width={32}
-                                            height={32}
-                                            className="h-full w-full object-cover"
-                                        />
+                                        {renderProfileAvatar(
+                                            userInfo.image_id,
+                                            32,
+                                            "h-full w-full object-cover"
+                                        )}
                                     </div>
                                     {userInfo.display_name ? (
                                         <p className="text-normal font-regular text-black">{userInfo.display_name}</p>

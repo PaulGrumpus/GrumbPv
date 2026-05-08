@@ -1,7 +1,11 @@
 import { emailService } from '../services/email/email.service.js';
 import { userService } from '../services/database/user.service.js';
 import { logger } from './logger.js';
-import { notification_type, notification_entity } from '@prisma/client';
+import type { notification_type, notification_entity } from '@prisma/client';
+import {
+  notification_type as notificationTypeValues,
+  notification_entity as notificationEntityValues,
+} from '../constants/prisma-enums.js';
 import { config } from 'dotenv';
 config();
 /**
@@ -52,25 +56,25 @@ export function generateNotificationActionUrl(
   const bscScanUrl = process.env.BSC_SCAN_URL || 'https://testnet.bscscan.com';
   
   switch (entityType) {
-    case notification_entity.job:
+    case notificationEntityValues.job:
       return `${baseUrl}/dashboard?view=my-jobs&jobId=${entityId}`;
-    case notification_entity.gig:
+    case notificationEntityValues.gig:
       return `${baseUrl}/dashboard?view=my-gigs&gigId=${entityId}`;
-    case notification_entity.job_application_doc:
+    case notificationEntityValues.job_application_doc:
       return `${baseUrl}/reference?jobApplicationId=${entityId}`;
-    case notification_entity.milestone:
-      if(notificationType === notification_type.MILESTONE_ESCROW_DEPLOYED) {
+    case notificationEntityValues.milestone:
+      if(notificationType === notificationTypeValues.MILESTONE_ESCROW_DEPLOYED) {
         return `${bscScanUrl}/address/${entityId}`;
       }
       return `${baseUrl}/dashboard?view=dashboard&milestoneId=${entityId}`;
-    case notification_entity.bid:
+    case notificationEntityValues.bid:
       if(userRole === "client") {
         return `${baseUrl}/dashboard?view=my-jobs&jobId=${entityId}`;
       }
       return `${baseUrl}/dashboard?view=my-bids&bidId=${entityId}`;
-    case notification_entity.conversation:
+    case notificationEntityValues.conversation:
       return `${baseUrl}/chat?conversation_id=${entityId}`;
-    case notification_entity.chain_tx:
+    case notificationEntityValues.chain_tx:
       return `${bscScanUrl}/tx/${entityId}`;
     default:
       return `${baseUrl}`;
@@ -84,32 +88,32 @@ export function generateNotificationActionText(
   notificationType: notification_type
 ): string {
   switch (notificationType) {
-    case notification_type.REQUIREMENT_DOCS_CREATED:
-    case notification_type.REQUIREMENT_DOCS_CONFIRMED:
+    case notificationTypeValues.REQUIREMENT_DOCS_CREATED:
+    case notificationTypeValues.REQUIREMENT_DOCS_CONFIRMED:
       return 'View Application Docs';
-    case notification_type.JOB_POSTED:
-    case notification_type.JOB_UPDATED:
+    case notificationTypeValues.JOB_POSTED:
+    case notificationTypeValues.JOB_UPDATED:
     case 'JOB_EXPIRING_SOON' as notification_type:
       return 'View Job Details';
-    case notification_type.GIG_POSTED:
-    case notification_type.GIG_UPDATED:
+    case notificationTypeValues.GIG_POSTED:
+    case notificationTypeValues.GIG_UPDATED:
       return 'View Gig Details';
-    case notification_type.MILESTONE_STARTED:
-    case notification_type.MILESTONE_FUNDED:
-    case notification_type.MILESTONE_DELIVERED:
-    case notification_type.MILESTONE_APPROVED:
-    case notification_type.MILESTONE_FUNDS_RELEASED:
-    case notification_type.MILESTONE_CANCELLED:
+    case notificationTypeValues.MILESTONE_STARTED:
+    case notificationTypeValues.MILESTONE_FUNDED:
+    case notificationTypeValues.MILESTONE_DELIVERED:
+    case notificationTypeValues.MILESTONE_APPROVED:
+    case notificationTypeValues.MILESTONE_FUNDS_RELEASED:
+    case notificationTypeValues.MILESTONE_CANCELLED:
       return 'View Milestone Details';
-    case notification_type.BID_SENT:
-    case notification_type.BID_RECEIVED:
-    case notification_type.BID_ACCEPTED:
-    case notification_type.BID_DECLIEND:
+    case notificationTypeValues.BID_SENT:
+    case notificationTypeValues.BID_RECEIVED:
+    case notificationTypeValues.BID_ACCEPTED:
+    case notificationTypeValues.BID_DECLIEND:
       return 'View Bid Details';
-    case notification_type.MESSAGE_RECEIVED:
+    case notificationTypeValues.MESSAGE_RECEIVED:
       return 'Open Chat';
-    case notification_type.DEPOSIT_FUNDS:
-    case notification_type.WITHDRAW_FUNDS:
+    case notificationTypeValues.DEPOSIT_FUNDS:
+    case notificationTypeValues.WITHDRAW_FUNDS:
       return 'View Transaction Details';
     default:
       return 'View Details';

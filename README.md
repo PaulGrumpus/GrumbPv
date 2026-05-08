@@ -86,6 +86,7 @@ curl http://localhost:5000/health
 - [Contract Documentation](contract/README.md)
 - [Project Structure](PROJECT_STRUCTURE.md)
 - [Deployment Guide](contract/DEPLOYMENT_GUIDE.md)
+- [Mainnet Go-Live Checklist](docs/MAINNET_GO_LIVE_CHECKLIST.md)
 
 ## 🔧 API Endpoints
 

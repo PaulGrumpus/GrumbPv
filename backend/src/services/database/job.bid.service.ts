@@ -1,10 +1,10 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, bid_status, job_bids } from '@prisma/client';
+import type { Prisma, job_bids } from '@prisma/client';
 import { userService } from './user.service.js';
 import { jobService } from './job.service.js';
 import { prisma } from '../../prisma.js';
-import { notification_entity, notification_type } from '@prisma/client';
+import { bid_status, notification_entity, notification_type } from '../../constants/prisma-enums.js';
 import { notificationService } from './notification.service.js';
 
 export class JobBidService {
@@ -58,7 +58,7 @@ export class JobBidService {
         entity_id: newJobBid.id,
         title: 'Job bid sent',
         body: 'You have sent a job bid',
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });
@@ -140,7 +140,7 @@ export class JobBidService {
             : updatedJobBid.status === bid_status.declined
               ? 'Your job bid has been declined by the client.'
               : 'Your job bid has been withdrawn.',
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });

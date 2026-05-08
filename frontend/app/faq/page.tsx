@@ -417,13 +417,13 @@ const faqSections: FAQSection[] = [
       {
         question: 'Which chain does Grumbuild use?',
         answer: (
-          <p>Grumbuild is built for BNB Smart Chain (BSC). The default dev config uses BSC Testnet (CHAIN_ID = 97). It&apos;s designed to move to mainnet by switching RPC + chainId configs.</p>
+          <p>Grumbuild is built for BNB Smart Chain (BSC) mainnet by default. Testnet can still be used by switching chainId/RPC env values when needed.</p>
         ),
       },
       {
         question: 'What currency is used?',
         answer: (
-          <p>Right now, Grumbuild uses BNB only - budgets, milestones, fees, and payouts are all in BNB. The system is designed so tokens like USDT/USDC (BEP-20) can be added later.</p>
+          <p>Grumbuild supports BNB, USDT, and USDC (BEP-20) for budgets, milestones, and escrow flows. Token selection is available in frontend posting/agreement flows.</p>
         ),
       },
     ],

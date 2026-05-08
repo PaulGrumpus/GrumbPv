@@ -1,4 +1,4 @@
-import { read_state } from '@prisma/client';
+import type { read_state } from '@prisma/client';
 
 export interface newMessageReceiptParam {
   message_id: string;

@@ -7,7 +7,7 @@ import multer from 'multer';
 import { mkdirSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
-import { job_status } from '@prisma/client';
+import { job_status } from '../../constants/prisma-enums.js';
 
 const router = Router();
 const IMAGE_UPLOAD_DIR = path.resolve(process.cwd(), 'uploads', 'images');

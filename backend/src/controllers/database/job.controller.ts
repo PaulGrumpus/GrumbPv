@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { jobService } from '../../services/database/job.service.js';
-import { job_status } from '@prisma/client';
+import type { job_status } from '@prisma/client';
 
 export class JobController {
   async createJob(req: Request, res: Response, next: NextFunction) {

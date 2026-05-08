@@ -164,13 +164,13 @@ router.get('/owner', factoryController.getOwner.bind(factoryController));
  *               rewardTokenAddress:
  *                 type: string
  *                 description: GRMPS token address
- *                 example: "0xB908a4d3534D3e63b30b856e33Bf1B5d1dEd0016"
+ *                 example: "0xe5189B697a8e679d5151d8740Ccf6A93B9e676B6"
  *               rewardRate:
  *                 type: string
  *                 description: GRMPS tokens per 1e18 wei of project amount (e.g., 30000 GRMPS per BNB = 30000 * 1e18)
  *                 example: "30000000000000000000000"
  *           example:
- *             rewardTokenAddress: "0xB908a4d3534D3e63b30b856e33Bf1B5d1dEd0016"
+ *             rewardTokenAddress: "0xe5189B697a8e679d5151d8740Ccf6A93B9e676B6"
  *             rewardRate: "30000000000000000000000"
  *     responses:
  *       200:

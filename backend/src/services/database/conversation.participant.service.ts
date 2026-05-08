@@ -1,6 +1,6 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { conversation_participants, conversations, gigs, jobs, users } from '@prisma/client';
+import type { conversation_participants, conversations, gigs, jobs, users } from '@prisma/client';
 import { newConversationParticipantParam } from '../../types/conversation.participant.js';
 import { prisma } from '../../prisma.js';
 

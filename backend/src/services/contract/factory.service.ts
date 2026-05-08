@@ -2,6 +2,8 @@ import { ethers } from 'ethers';
 import {
   CONTRACT_ABIS,
   CONTRACT_ADDRESSES,
+  BLOCKCHAIN_CONFIG,
+  resolvePaymentTokenConfig,
 } from '../../config/contracts.js';
 import { web3Provider } from '../../utils/web3Provider.js';
 import { logger } from '../../utils/logger.js';
@@ -140,6 +142,13 @@ export class FactoryService {
 
       // Convert amount from Decimal to string
       const amountString = exsitingJobMilestone.amount.toString();
+      const tokenConfig = resolvePaymentTokenConfig(exsitingJobMilestone.token_symbol || 'BNB');
+      const paymentTokenAddress =
+        tokenConfig.address === 'native' ? ethers.ZeroAddress : tokenConfig.address;
+      const amountWei =
+        tokenConfig.address === 'native'
+          ? ethers.parseEther(amountString)
+          : ethers.parseUnits(amountString, tokenConfig.decimals);
 
       logger.info(`Creating escrow for job milestone ${exsitingJobMilestone.id}`);
 
@@ -151,8 +160,8 @@ export class FactoryService {
         arbiter: settings.arbiter_address,
         feeRecipient: settings.fee_recipient_address,
         feeBps,
-        paymentToken: ethers.ZeroAddress,
-        amountWei: ethers.parseEther(amountString).toString(),
+        paymentToken: paymentTokenAddress,
+        amountWei: amountWei.toString(),
         deadline: deadlineTimestamp,
         buyerFeeBps: buyerFeeBps,
         vendorFeeBps: vendorFeeBps,
@@ -169,8 +178,8 @@ export class FactoryService {
         settings.arbiter_address,
         settings.fee_recipient_address,
         feeBps,
-        ethers.ZeroAddress, // Native BNB
-        ethers.parseEther(amountString),
+        paymentTokenAddress,
+        amountWei,
         deadlineTimestamp,
         buyerFeeBps,
         vendorFeeBps,
@@ -178,7 +187,10 @@ export class FactoryService {
         settings.reward_rate_bps,
         {
           gasLimit: 3000000,
-          gasPrice: ethers.parseUnits('10', 'gwei'), // BSC testnet gas price
+          gasPrice:
+            BLOCKCHAIN_CONFIG.chainId === 56
+              ? ethers.parseUnits('3', 'gwei')
+              : ethers.parseUnits('10', 'gwei'),
         }
       );
 
@@ -209,7 +221,7 @@ export class FactoryService {
 
       await chainTxsService.createChainTx(
         'create_escrow',
-        97,
+        BLOCKCHAIN_CONFIG.chainId,
         exsitingJobMilestone.id,
         wallet.address,
         escrowAddress,
@@ -301,6 +313,13 @@ export class FactoryService {
 
       // Convert amount from Decimal to string
       const amountString = exsitingJobMilestone.amount.toString();
+      const tokenConfig = resolvePaymentTokenConfig(exsitingJobMilestone.token_symbol || 'BNB');
+      const paymentTokenAddress =
+        tokenConfig.address === 'native' ? ethers.ZeroAddress : tokenConfig.address;
+      const amountWei =
+        tokenConfig.address === 'native'
+          ? ethers.parseEther(amountString)
+          : ethers.parseUnits(amountString, tokenConfig.decimals);
 
       logger.info(
         `Creating deterministic escrow for job milestone ${exsitingJobMilestone.id} with salt ${salt}`
@@ -313,8 +332,8 @@ export class FactoryService {
         settings.arbiter_address,
         settings.fee_recipient_address,
         feeBps,
-        ethers.ZeroAddress,
-        ethers.parseEther(amountString),
+        paymentTokenAddress,
+        amountWei,
         deadlineTimestamp,
         buyerFeeBps,
         vendorFeeBps,
@@ -323,7 +342,10 @@ export class FactoryService {
         saltBytes,
         {
           gasLimit: 3000000,
-          gasPrice: ethers.parseUnits('10', 'gwei'),
+          gasPrice:
+            BLOCKCHAIN_CONFIG.chainId === 56
+              ? ethers.parseUnits('3', 'gwei')
+              : ethers.parseUnits('10', 'gwei'),
         }
       );
 

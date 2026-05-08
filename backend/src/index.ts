@@ -58,6 +58,9 @@ const REQUEST_BODY_LIMIT = process.env.REQUEST_BODY_LIMIT || '10mb';
 app.use(
   helmet({
     contentSecurityPolicy: false, // Allow Swagger UI to load
+    // Frontend runs on a different origin (localhost:3001),
+    // so uploaded images from backend (localhost:5000) must be embeddable cross-origin.
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
 app.use(cors());

@@ -1,6 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import prismaClientPkg from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { config as loadEnv } from 'dotenv';
+
+const { PrismaClient } = prismaClientPkg;
+type PrismaClientInstance = InstanceType<typeof PrismaClient>;
 
 loadEnv();
 
@@ -13,7 +16,7 @@ if (!connectionString) {
 const adapter = new PrismaPg({ connectionString });
 
 const globalForPrisma = global as unknown as {
-  prisma: PrismaClient | undefined;
+  prisma: PrismaClientInstance | undefined;
 };
 
 export const prisma =

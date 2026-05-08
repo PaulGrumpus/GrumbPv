@@ -1,4 +1,4 @@
-import { Prisma, notifications } from '@prisma/client';
+import type { Prisma, notifications } from '@prisma/client';
 import { prisma } from '../../prisma.js';
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
@@ -26,7 +26,7 @@ export class NotificationService {
           entity_id: notification.entity_id,
           title: notification.title,
           body: notification.body,
-          payload: notification.payload ?? Prisma.JsonNull,
+          payload: notification.payload ?? null,
           read_at: null,
           created_at: new Date(),
         },

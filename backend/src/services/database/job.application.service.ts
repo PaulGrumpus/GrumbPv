@@ -1,14 +1,12 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import {
+import type {
   Prisma,
   job_applications_docs,
   jobs,
   users as User,
-  notification_entity,
-  notification_type,
-  job_status,
 } from '@prisma/client';
+import { notification_entity, notification_type, job_status } from '../../constants/prisma-enums.js';
 import { jobService } from './job.service.js';
 import { jobMilestoneService } from './job.milestone.service.js';
 import { userService } from './user.service.js';
@@ -34,7 +32,7 @@ export class JobApplicationService {
           client_id: jobApplication.client_id,
         },
       });
-      if (!existingJobApplications.every((application) => application.job_milestone_id !== null)) {
+      if (!existingJobApplications.every((application: job_applications_docs) => application.job_milestone_id !== null)) {
         throw new AppError(
           'Job application already Accepted',
           400,
@@ -52,7 +50,7 @@ export class JobApplicationService {
         entity_id: createResult.id,
         title: 'Job Requirement Docs created',
         body: 'Your job requirement docs have been created',
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });
@@ -64,7 +62,7 @@ export class JobApplicationService {
         entity_id: createResult.id,
         title: 'Job Requirement Docs created',
         body: 'Your job requirement docs have been created',
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });
@@ -200,9 +198,6 @@ export class JobApplicationService {
           where: { id },
           data: { job_milestone_id: milestone.id },
         });
-        if (milestone.token_symbol !== 'BNB') {
-          throw new AppError('Only BNB is supported for now', 400, 'ONLY_BNB_SUPPORTED');
-        }
         if (jobInfo.status === job_status.open) {
           await jobService.updateJobStatusById(updateResult.job_id, job_status.in_progress);
         }
@@ -224,7 +219,7 @@ export class JobApplicationService {
         entity_id: updateResult.id,
         title: `Job Requirement Docs ${actionLabel}`,
         body: `Your job requirement docs have been ${actionVerb} ${userId === updateResult.client_id ? 'by the client' : 'by the freelancer'}`,
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });
@@ -236,7 +231,7 @@ export class JobApplicationService {
         entity_id: updateResult.id,
         title: `Job Requirement Docs ${actionLabel}`,
         body: `Your job requirement docs have been ${actionVerb} ${userId === updateResult.client_id ? 'by the client' : 'by the freelancer'}`,
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });

@@ -60,9 +60,43 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 export const BLOCKCHAIN_CONFIG = {
-  rpcUrl: process.env.BSC_TESTNET_RPC_URL || 'https://bsc-testnet-rpc.publicnode.com/',
+  rpcUrl:
+    process.env.BSC_RPC_URL ||
+    (parseInt(process.env.CHAIN_ID || '97', 10) === 56
+      ? process.env.BSC_MAINNET_RPC_URL || 'https://bsc-dataseed.binance.org'
+      : process.env.BSC_TESTNET_RPC_URL || 'https://bsc-testnet-rpc.publicnode.com/'),
   chainId: parseInt(process.env.CHAIN_ID || '97'),
 };
+
+type SupportedPaymentToken = {
+  symbol: string;
+  address: string;
+  decimals: number;
+};
+
+const MAINNET_USDT = process.env.USDT_MAINNET_ADDRESS || '0x55d398326f99059fF775485246999027B3197955';
+const MAINNET_USDC = process.env.USDC_MAINNET_ADDRESS || '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
+const TESTNET_USDT = process.env.USDT_TESTNET_ADDRESS || '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd';
+const TESTNET_USDC = process.env.USDC_TESTNET_ADDRESS || '0x64544969ed7EBf5f083679233325356EbE738930';
+
+export const PAYMENT_TOKEN_CONFIG: Record<number, Record<string, SupportedPaymentToken>> = {
+  56: {
+    BNB: { symbol: 'BNB', address: 'native', decimals: 18 },
+    USDT: { symbol: 'USDT', address: MAINNET_USDT, decimals: 18 },
+    USDC: { symbol: 'USDC', address: MAINNET_USDC, decimals: 18 },
+  },
+  97: {
+    BNB: { symbol: 'BNB', address: 'native', decimals: 18 },
+    USDT: { symbol: 'USDT', address: TESTNET_USDT, decimals: 18 },
+    USDC: { symbol: 'USDC', address: TESTNET_USDC, decimals: 18 },
+  },
+};
+
+export function resolvePaymentTokenConfig(symbol?: string): SupportedPaymentToken {
+  const chainTokens = PAYMENT_TOKEN_CONFIG[BLOCKCHAIN_CONFIG.chainId] || PAYMENT_TOKEN_CONFIG[97];
+  const normalized = (symbol || 'BNB').toUpperCase();
+  return chainTokens[normalized] || chainTokens.BNB;
+}
 
 export const ESCROW_STATES = {
   0: 'Unfunded',

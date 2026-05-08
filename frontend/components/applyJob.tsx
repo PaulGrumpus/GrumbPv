@@ -202,7 +202,7 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
     const [title, setTitle] = useState("");
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
-    const currencies = ["BNB", "USDC", "USDT", "USD"];
+    const currencies = ["BNB", "USDT", "USDC"];
     const [selectedCurrency, setSelectedCurrency] = useState("");
     const [coverLetter, setCoverLetter] = useState("");
     const [budget, setBudget] = useState("");
@@ -441,15 +441,10 @@ const ApplyJob = ({ jobTitle, jobDescription, jobId, freelancerId, clickHandler 
                                                             Select one ...
                                                         </option>
                                                         {currencies.map((curr) => (
-                                                            <option 
-                                                                key={curr} 
-                                                                value={curr} 
-                                                                className={`text-normal cursor-pointer bg-white py-2 px-3 ${
-                                                                    curr === "BNB" 
-                                                                        ? 'font-bold text-black' 
-                                                                        : 'font-regular text-gray-400'
-                                                                }`}
-                                                                disabled={curr !== "BNB"}
+                                                            <option
+                                                                key={curr}
+                                                                value={curr}
+                                                                className='text-normal cursor-pointer bg-white py-2 px-3 text-black'
                                                             >
                                                                 {curr}
                                                             </option>

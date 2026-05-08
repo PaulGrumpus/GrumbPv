@@ -34,7 +34,7 @@ interface ReferenceDocProps {
     initialEndDate: Date;
 }
 
-const currencies = ["USD", "USDT", "USDC", "BNB"];
+const currencies = ["BNB", "USDT", "USDC"];
 const charCount = 300;
 
 const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clientId, freelancerId, projectName, clientFullName, freelancerFullName, description, freelancerConfirmed, clientConfirmed, confirmEditRounds, initialBudget, initialCurrency, initialDeliverables, initialOutOfScope, initialStartDate, initialEndDate }: ReferenceDocProps) => {
@@ -532,7 +532,7 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                             />
                         </div>
                         <div className="flex flex-col gap-2">
-                            <p className='text-normal font-medium text-[#8F99AF] text-left'>Currency (beta version only supports BNB)</p>
+                            <p className='text-normal font-medium text-[#8F99AF] text-left'>Currency</p>
                             <div ref={dropdownRef} className={`relative cursor-pointer ${dropdownMenuOpen ? 'border-blue-500' : ''}`}>
                                 <select
                                     value={currency}
@@ -553,15 +553,10 @@ const ReferenceDoc = ({ jobId, jobApplicationId, conversationId, userInfo, clien
                                         Select one ...
                                     </option>
                                     {currencies.map((curr) => (
-                                        <option 
-                                            key={curr} 
-                                            value={curr} 
-                                            className={`text-normal cursor-pointer bg-white py-2 px-3 ${
-                                                curr === "BNB" 
-                                                    ? 'font-bold text-black' 
-                                                    : 'font-regular text-gray-400'
-                                            }`}
-                                            disabled={curr !== "BNB"}
+                                        <option
+                                            key={curr}
+                                            value={curr}
+                                            className='text-normal cursor-pointer bg-white py-2 px-3 text-black'
                                         >
                                             {curr}
                                         </option>

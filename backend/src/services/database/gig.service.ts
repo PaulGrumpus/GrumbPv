@@ -1,6 +1,7 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, gigs, notification_entity, notification_type } from '@prisma/client';
+import type { Prisma, gigs } from '@prisma/client';
+import { notification_entity, notification_type } from '../../constants/prisma-enums.js';
 import { userService } from './user.service.js';
 import {
   persistUploadedImage,
@@ -92,7 +93,7 @@ export class GigService {
         entity_id: newGig.id,
         title: 'Gig posted',
         body: 'Your gig has been posted',
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });
@@ -174,7 +175,7 @@ export class GigService {
         entity_id: existingGig.id,
         title: 'Gig updated',
         body: 'Your gig has been updated',
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });

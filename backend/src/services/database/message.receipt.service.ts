@@ -1,6 +1,6 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { message_receipts, read_state } from '@prisma/client';
+import type { message_receipts, read_state } from '@prisma/client';
 import { newMessageReceiptParam } from '../../types/message.receipt.js';
 import { prisma } from '../../prisma.js';
 

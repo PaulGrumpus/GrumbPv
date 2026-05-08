@@ -218,7 +218,7 @@ router.get(
  *                     rewardToken:
  *                       type: string
  *                       description: GRMPS token address
- *                       example: "0xB908a4d3534D3e63b30b856e33Bf1B5d1dEd0016"
+ *                       example: "0xe5189B697a8e679d5151d8740Ccf6A93B9e676B6"
  *                     rewardSource:
  *                       type: string
  *                       description: Address holding the GRMPS tokens

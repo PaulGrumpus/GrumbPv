@@ -1,6 +1,7 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, jobs, job_status, notification_entity, notification_type } from '@prisma/client';
+import type { Prisma, jobs } from '@prisma/client';
+import { job_status, notification_entity, notification_type } from '../../constants/prisma-enums.js';
 import { userService } from './user.service.js';
 import {
   persistUploadedImage,
@@ -127,7 +128,7 @@ export class JobService {
         entity_id: newJob.id,
         title: 'Job posted',
         body: 'Your job has been posted',
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });
@@ -243,7 +244,7 @@ export class JobService {
         entity_id: existingJob.id,
         title: 'Job updated',
         body: 'Your job has been updated',
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });

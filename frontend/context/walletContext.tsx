@@ -4,19 +4,15 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
-import {
-  connectWallet,
-  disconnectMetaMaskSdk,
-  getEthereumProvider,
-  getMetaMaskSdkProvider,
-  isMobileWalletAvailable,
-  type MetaMaskProvider,
-} from "@/utils/walletConnnect";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useAccount, useChainId, useDisconnect, usePublicClient, useSendTransaction } from "wagmi";
+import { switchChain, getAccount } from "@wagmi/core";
+import type { Hash, Hex } from "viem";
+import { appChain, wagmiConfig } from "@/config/wagmi";
 
 type WalletTransaction = {
   to: string;
@@ -35,7 +31,7 @@ type WalletTransactionResult = {
 type WalletContextValue = {
   address: string | null;
   chainId: string | null;
-  provider: MetaMaskProvider | null;
+  provider: unknown | null;
   isConnecting: boolean;
   isConnected: boolean;
   error: string | null;
@@ -69,92 +65,48 @@ type Props = {
 };
 
 export const WalletProvider = ({ children }: Props) => {
-  const [provider, setProvider] = useState<MetaMaskProvider | null>(null);
-  const [address, setAddress] = useState<string | null>(null);
-  const [chainId, setChainId] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { openConnectModal } = useConnectModal();
+  const { disconnect: disconnectWallet } = useDisconnect();
+  const { isConnected, address } = useAccount();
+  const chainIdDecimal = useChainId();
+  const chainId = chainIdDecimal ? `0x${chainIdDecimal.toString(16)}` : null;
+  const connectedAddress = address ?? null;
+  const publicClient = usePublicClient();
+  const { sendTransactionAsync } = useSendTransaction();
 
-  const isConnected = useMemo(() => Boolean(address), [address]);
+  const provider = null;
+  const isMobileWalletAvailable = true;
 
   const disconnect = useCallback(() => {
-    disconnectMetaMaskSdk();
-    setProvider(null);
-    setAddress(null);
-    setChainId(null);
+    disconnectWallet();
     setError(null);
-  }, []);
-
-  // Restore injected (MetaMask) session on mount
-  useEffect(() => {
-    const eth = getEthereumProvider();
-    if (!eth) {
-      return;
-    }
-    setProvider(eth);
-
-    eth.request({ method: "eth_accounts" })
-      .then((accounts) => {
-        const accountList = accounts as string[];
-        if (accountList && accountList.length > 0) {
-          setAddress(accountList[0]);
-        }
-      })
-      .catch((err) => {
-        console.warn("Failed to fetch eth_accounts", err);
-      });
-
-    eth.request({ method: "eth_chainId" })
-      .then((chain) => setChainId(chain as string))
-      .catch((err) => console.warn("Failed to fetch chainId", err));
-
-    const handleAccountsChanged = (accounts: unknown) => {
-      const accountList = accounts as string[] | undefined;
-      if (!accountList || accountList.length === 0) {
-        disconnect();
-        return;
-      }
-      setAddress(accountList[0]);
-    };
-
-    const handleChainChanged = (nextChainId: unknown) => {
-      if (typeof nextChainId === "string") {
-        setChainId(nextChainId);
-      }
-    };
-
-    eth.on?.("accountsChanged", handleAccountsChanged);
-    eth.on?.("chainChanged", handleChainChanged);
-
-    return () => {
-      eth.removeListener?.("accountsChanged", handleAccountsChanged);
-      eth.removeListener?.("chainChanged", handleChainChanged);
-    };
-  }, [disconnect]);
+  }, [disconnectWallet]);
 
   const connect = useCallback(async (email?: string) => {
-    const eth = getEthereumProvider();
-    const useInjected = eth?.isMetaMask;
-    if (!useInjected && !isMobileWalletAvailable()) {
-      setError("No wallet available. Install MetaMask to continue.");
-      return null;
-    }
-
+    void email;
     setIsConnecting(true);
     setError(null);
 
     try {
-      const result = await connectWallet(email);
-      if (!result) return null;
-
-      if (result.via === "injected") {
-        setProvider(getEthereumProvider() ?? null);
-      } else {
-        setProvider(getMetaMaskSdkProvider());
+      if (!isConnected) {
+        await openConnectModal?.();
       }
-      setAddress(result.address);
-      setChainId(result.chainId);
-      return { address: result.address, chainId: result.chainId };
+
+      const account = getAccount(wagmiConfig);
+      if (!account.address) {
+        return null;
+      }
+
+      if (account.chainId !== appChain.id) {
+        await switchChain(wagmiConfig, { chainId: appChain.id });
+      }
+
+      return {
+        address: account.address,
+        chainId: `0x${appChain.id.toString(16)}`,
+      };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to connect wallet.";
       setError(message);
@@ -166,50 +118,41 @@ export const WalletProvider = ({ children }: Props) => {
 
   const sendTransaction = useCallback(
     async (tx: WalletTransaction): Promise<WalletTransactionResult> => {
-      const normalizeHex = (raw?: string) => {
+      const toHex = (raw?: string): Hex | undefined => {
         if (!raw) return undefined;
-        if (raw.startsWith("0x") || raw.startsWith("0X")) return raw;
+        if (raw.startsWith("0x") || raw.startsWith("0X")) return raw as Hex;
         try {
-          return `0x${BigInt(raw).toString(16)}`;
+          return `0x${BigInt(raw).toString(16)}` as Hex;
         } catch {
-          return raw;
+          return undefined;
         }
       };
 
-      const eth = provider ?? getEthereumProvider();
-      if (!eth) {
-        throw new Error("Wallet provider not available. Connect MetaMask first.");
-      }
-      if (!address) {
+      if (!connectedAddress) {
         throw new Error("No connected account. Connect MetaMask first.");
       }
+      if (!publicClient) {
+        throw new Error("Public client is not available.");
+      }
 
-      const value = normalizeHex(tx.value);
-      const gas = normalizeHex(tx.gas);
-      const gasPrice = normalizeHex(tx.gasPrice);
-      const txChainId = tx.chainId ?? chainId;
-      const normalizedChainId =
-        typeof txChainId === "number"
-          ? `0x${txChainId.toString(16)}`
-          : txChainId;
-
-      const txParams = {
-        from: address,
-        ...tx,
-        value,
-        gas,
-        gasPrice,
-        chainId: normalizedChainId,
-      };
+      const txValue = tx.value ? BigInt(tx.value) : undefined;
+      const txGas = tx.gas ? BigInt(tx.gas) : undefined;
+      const txGasPrice = tx.gasPrice ? BigInt(tx.gasPrice) : undefined;
+      const txData = toHex(tx.data);
 
       let hash: string | undefined;
       try {
-        hash = (await eth.request({
-          method: "eth_sendTransaction",
-          params: [txParams],
-        })) as string | undefined;
+        hash = await sendTransactionAsync({
+          account: address as Hex,
+          // wagmi requires a checksummed hex address
+          // and we only enter this path when connectedAddress exists.
+          to: tx.to as Hex,
+          value: txValue,
+          gas: txGas,
+          gasPrice: txGasPrice,
+          data: txData,
+        });
       } catch (err) {
-        // User rejected the transaction or there was an RPC error.
         console.warn("Failed to send transaction", err);
         const message =
           (err as any)?.code === 4001
@@ -224,30 +167,18 @@ export const WalletProvider = ({ children }: Props) => {
         return { hash: null, error: "Failed to obtain transaction hash." };
       }
 
-      // Wait for the transaction receipt and ensure it was successful.
-      const maxAttempts = 30;
-      const delayMs = 2000;
-      const sleep = (ms: number) =>
-        new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-      let receipt: any = null;
-      for (let i = 0; i < maxAttempts; i++) {
-        try {
-          receipt = await eth.request({
-            method: "eth_getTransactionReceipt",
-            params: [hash],
-          });
-        } catch (err) {
-          console.warn("Failed to fetch transaction receipt", err);
-          const message =
-            err instanceof Error
-              ? err.message
-              : "Failed to fetch transaction receipt.";
-          return { hash: null, error: message };
-        }
-
-        if (receipt) break;
-        await sleep(delayMs);
+      let receipt;
+      try {
+        receipt = await publicClient.waitForTransactionReceipt({
+          hash: hash as Hash,
+          confirmations: 1,
+          pollingInterval: 2000,
+          timeout: 120_000,
+        });
+      } catch (err) {
+        console.warn("Failed to fetch transaction receipt", err);
+        const message = err instanceof Error ? err.message : "Failed to fetch transaction receipt.";
+        return { hash: null, error: message };
       }
 
       if (!receipt) {
@@ -258,9 +189,7 @@ export const WalletProvider = ({ children }: Props) => {
         };
       }
 
-      const status = (receipt as any).status;
-      const isSuccess =
-        status === "0x1" || status === 1 || status === true;
+      const isSuccess = receipt.status === "success";
 
       if (!isSuccess) {
         console.warn("Transaction failed on-chain", { hash, receipt });
@@ -272,13 +201,13 @@ export const WalletProvider = ({ children }: Props) => {
 
       return { hash, error: null };
     },
-    [address, chainId, provider]
+    [connectedAddress, chainId, provider, publicClient, sendTransactionAsync]
   );
 
   return (
     <WalletCtx.Provider
       value={{
-        address,
+        address: connectedAddress,
         chainId,
         provider,
         isConnecting,
@@ -287,7 +216,7 @@ export const WalletProvider = ({ children }: Props) => {
         connect,
         disconnect,
         sendTransaction,
-        isMobileWalletAvailable: isMobileWalletAvailable(),
+        isMobileWalletAvailable,
       }}
     >
       {children}

@@ -1,14 +1,13 @@
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import {
+import type {
   conversations,
-  notification_entity,
-  notification_type,
   Prisma,
 } from '@prisma/client';
 import { newConversationParam, convo_type } from '../../types/conversation.js';
 import { prisma } from '../../prisma.js';
 import { notificationService } from './notification.service.js';
+import { notification_entity, notification_type } from '../../constants/prisma-enums.js';
 
 export class ConversationService {
   private prisma = prisma;
@@ -121,7 +120,7 @@ export class ConversationService {
         entity_id: newConversation.id,
         title: 'New conversation started',
         body: 'You have a new conversation started',
-        payload: Prisma.JsonNull,
+        payload: null,
         read_at: null,
         created_at: new Date(),
       });

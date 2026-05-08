@@ -1,5 +1,5 @@
 import { Socket, Server } from 'socket.io';
-import { notifications } from '@prisma/client';
+import type { notifications } from '@prisma/client';
 
 let ioInstance: Server | null = null;
 

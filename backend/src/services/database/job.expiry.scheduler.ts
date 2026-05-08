@@ -1,7 +1,8 @@
 import { prisma } from '../../prisma.js';
 import { logger } from '../../utils/logger.js';
 import { notificationService } from './notification.service.js';
-import { job_status, notification_entity, notification_type } from '@prisma/client';
+import type { notification_type } from '@prisma/client';
+import { job_status, notification_entity } from '../../constants/prisma-enums.js';
 
 const EXPIRY_WINDOW_HOURS = 24;
 const CHECK_INTERVAL_MS = 3 * 60 * 60 * 1000; // 3 hours

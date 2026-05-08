@@ -8,6 +8,7 @@ import { chainTxsService } from '../database/chainTxs.service.js';
 import { jobService } from '../database/job.service.js';
 import { EscrowTxData } from '../../types/escrow.js';
 import { userService } from '../database/user.service.js';
+import { BLOCKCHAIN_CONFIG } from '../../config/contracts.js';
 
 export interface EscrowInfo {
   buyer: string;
@@ -141,7 +142,7 @@ export class EscrowService {
 
       await chainTxsService.createChainTx(
         'fund_escrow',
-        97,
+        BLOCKCHAIN_CONFIG.chainId,
         job_milestone_id,
         wallet.address,
         escrowAddress,
@@ -167,8 +168,6 @@ export class EscrowService {
       throw new AppError('Job milestone not found', 404);
     }
 
-    const amount = exsitingJobMilestone.amount.toString();
-
     const escrowAddress = exsitingJobMilestone.escrow;
     if (!escrowAddress) {
       throw new AppError('Escrow not found', 404);
@@ -187,11 +186,15 @@ export class EscrowService {
     const iface = new ethers.Interface(CONTRACT_ABIS.Escrow);
 
     const data = iface.encodeFunctionData('fund', []);
+    const requiresNativeFunding = (exsitingJobMilestone.token_symbol || 'BNB').toUpperCase() === 'BNB';
+    const fundingValue = requiresNativeFunding
+      ? ethers.parseEther(exsitingJobMilestone.amount.toString()).toString()
+      : '0';
 
     return {
       to: escrowAddress,
       data,
-      value: ethers.parseEther(amount).toString(),
+      value: fundingValue,
       chainId: chainId,
     };
   }
@@ -263,7 +266,7 @@ export class EscrowService {
 
       await chainTxsService.createChainTx(
         'deliver_work',
-        97,
+        BLOCKCHAIN_CONFIG.chainId,
         job_milestone_id,
         wallet.address,
         escrowAddress,
@@ -380,7 +383,7 @@ export class EscrowService {
 
       await chainTxsService.createChainTx(
         'approve_work',
-        97,
+        BLOCKCHAIN_CONFIG.chainId,
         job_milestone_id,
         wallet.address,
         escrowAddress,
@@ -462,7 +465,7 @@ export class EscrowService {
 
       await chainTxsService.createChainTx(
         'withdraw_funds',
-        97,
+        BLOCKCHAIN_CONFIG.chainId,
         job_milestone_id,
         wallet.address,
         escrowAddress,
@@ -554,7 +557,7 @@ export class EscrowService {
 
       await chainTxsService.createChainTx(
         'initiate_dispute',
-        97,
+        BLOCKCHAIN_CONFIG.chainId,
         job_milestone_id,
         wallet.address,
         escrowAddress,
@@ -641,7 +644,7 @@ export class EscrowService {
 
       await chainTxsService.createChainTx(
         'pay_dispute_fee',
-        97,
+        BLOCKCHAIN_CONFIG.chainId,
         job_milestone_id,
         wallet.address,
         escrowAddress,
@@ -724,7 +727,7 @@ export class EscrowService {
 
       await chainTxsService.createChainTx(
         'buyer_join_dispute',
-        97,
+        BLOCKCHAIN_CONFIG.chainId,
         job_milestone_id,
         wallet.address,
         escrowAddress,

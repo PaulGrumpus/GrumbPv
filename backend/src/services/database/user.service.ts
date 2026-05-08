@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { Prisma, user_role, users } from '@prisma/client';
+import type { Prisma, users } from '@prisma/client';
 import { generateToken } from '../../utils/jwt.js';
 import {
   removeStoredImage,
@@ -21,7 +21,7 @@ export class UserService {
       if (!user.address || !user.role) {
         throw new AppError('Address and role are required', 500, 'ADDRESS_ROLE_REQUIRED');
       }
-      if (user.role !== user_role.client && user.role !== user_role.freelancer) {
+      if (user.role !== 'client' && user.role !== 'freelancer') {
         throw new AppError('Invalid role', 500, 'INVALID_USER_ROLE');
       }
       const existingUser = await this.prisma.users.findUnique({
@@ -59,7 +59,7 @@ export class UserService {
           'EMAIL_ROLE_PASSWORD_REQUIRED'
         );
       }
-      if (user.role !== user_role.client && user.role !== user_role.freelancer && user.role !== user_role.admin) {
+      if (user.role !== 'client' && user.role !== 'freelancer' && user.role !== 'admin') {
         throw new AppError('Invalid role', 400, 'INVALID_ROLE');
       }
       const existingUser = await this.prisma.users.findFirst({

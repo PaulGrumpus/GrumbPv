@@ -24,6 +24,7 @@ const CreateGigSection = () => {
     const [selectedCategory, setSelectedCategory] = useState("");
     const categories = ["Software Development", "Design", "Marketing", "Writing", "Translation", "Video Editing", "Audio Editing", "Data Entry", "Customer Support", "Other"];
     const [description, setDescription] = useState("");
+    const [tokenSymbol, setTokenSymbol] = useState("BNB");
     const [link, setLink] = useState("");
     const [budgetMax, setBudgetMax] = useState<string>("");
     const [budgetMin, setBudgetMin] = useState<string>("");
@@ -100,7 +101,7 @@ const CreateGigSection = () => {
         const gigPayload = {
             title,
             description_md: description,
-            token_symbol: "BNB",
+            token_symbol: tokenSymbol,
             budget_max: Number(budgetMax),
             budget_min: Number(budgetMin),
             tags: [selectedCategory ?? ""],
@@ -202,6 +203,7 @@ const CreateGigSection = () => {
         setDescription(editingGig.description_md ?? "");
         setBudgetMax(editingGig.budget_max ?? "");
         setBudgetMin(editingGig.budget_min ?? "");
+        setTokenSymbol(editingGig.token_symbol ?? "BNB");
         setLink(editingGig.link ?? "");
         setSelectedCategory(editingGig.tags?.[0] ?? "");
     }, [editingGig]);
@@ -288,7 +290,7 @@ const CreateGigSection = () => {
                             </div>
                             <div className="flex lg:flex-row flex-col gap-6">
                                 <div>
-                                    <p className='text-normal font-regular text-black text-left pb-2'>Max Budget (BNB)</p>
+                                    <p className='text-normal font-regular text-black text-left pb-2'>{`Max Budget (${tokenSymbol})`}</p>
                                     <input
                                         value={budgetMax}
                                         type="text"
@@ -307,7 +309,7 @@ const CreateGigSection = () => {
                                     />
                                 </div>
                                 <div>
-                                    <p className='text-normal font-regular text-black text-left pb-2'>Min Budget (BNB)</p>
+                                    <p className='text-normal font-regular text-black text-left pb-2'>{`Min Budget (${tokenSymbol})`}</p>
                                     <input
                                         value={budgetMin}
                                         type="text"
@@ -326,6 +328,16 @@ const CreateGigSection = () => {
                                     />
                                 </div>
                                 <div className="flex-1">
+                                    <p className='text-normal font-regular text-black text-left pb-2'>Currency</p>
+                                    <select
+                                        value={tokenSymbol}
+                                        onChange={(e) => setTokenSymbol(e.target.value)}
+                                        className='w-full bg-transparent text-normal font-regular text-black text-left focus:outline-none border border-[#8F99AF] rounded-lg p-3 mb-2'
+                                    >
+                                        <option value='BNB'>BNB</option>
+                                        <option value='USDT'>USDT</option>
+                                        <option value='USDC'>USDC</option>
+                                    </select>
                                     <p className='text-normal font-regular text-black text-left pb-2'>Reference Link</p>
                                     <input
                                         value={link}

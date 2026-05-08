@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { logger } from '../../utils/logger.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { job_status, milestone_status, user_role } from '@prisma/client';
+import type { job_status } from '@prisma/client';
 import { generateToken } from '../../utils/jwt.js';
 import { prisma } from '../../prisma.js';
 
@@ -35,7 +35,7 @@ export class AdminService {
         throw new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
       }
 
-      if (user.role !== user_role.admin) {
+      if (user.role !== 'admin') {
         throw new AppError('Access denied. Admin role required.', 403, 'FORBIDDEN');
       }
 
@@ -287,9 +287,9 @@ export class AdminService {
 
       // Disputed status is determined by milestone status, not job status
       const disputeStatuses = [
-        milestone_status.disputedByClient,
-        milestone_status.disputedByFreelancer,
-        milestone_status.disputedWithCounterSide,
+        'disputedByClient',
+        'disputedByFreelancer',
+        'disputedWithCounterSide',
       ];
 
       let where: any = {};
@@ -312,8 +312,8 @@ export class AdminService {
         // Job is cancelled if job.status is cancelled OR any milestone has status cancelled
         const cancelledCondition = {
           OR: [
-            { status: job_status.cancelled },
-            { milestones: { some: { status: milestone_status.cancelled } } },
+            { status: 'cancelled' },
+            { milestones: { some: { status: 'cancelled' } } },
           ],
         };
         if (search && where.OR) {
@@ -322,11 +322,11 @@ export class AdminService {
           where = cancelledCondition;
         }
       } else if (status === 'expired') {
-        where.status = job_status.open;
+        where.status = 'open';
         where.deadline_at = { lt: now };
       } else if (status) {
         where.status = status;
-        if (status === job_status.open) {
+        if (status === 'open') {
           where.OR = [
             { deadline_at: null },
             { deadline_at: { gte: now } },
@@ -371,7 +371,7 @@ export class AdminService {
         hasDispute: job.milestones.some((m) =>
           (disputeStatuses as milestone_status[]).includes(m.status)
         ),
-        hasCancelledMilestone: job.milestones.some((m) => m.status === milestone_status.cancelled),
+        hasCancelledMilestone: job.milestones.some((m) => m.status === 'cancelled'),
       }));
 
       return {
@@ -398,9 +398,9 @@ export class AdminService {
   public async getJobDetails(jobId: string) {
     try {
       const disputeStatuses = [
-        milestone_status.disputedByClient,
-        milestone_status.disputedByFreelancer,
-        milestone_status.disputedWithCounterSide,
+        'disputedByClient',
+        'disputedByFreelancer',
+        'disputedWithCounterSide',
       ];
 
       const job = await this.prisma.jobs.findUnique({
@@ -491,7 +491,7 @@ export class AdminService {
         (disputeStatuses as milestone_status[]).includes(m.status)
       );
       const hasDispute = disputedMilestones.length > 0;
-      const hasCancelledMilestone = job.milestones.some((m) => m.status === milestone_status.cancelled);
+      const hasCancelledMilestone = job.milestones.some((m) => m.status === 'cancelled');
 
       // If there's a dispute, get the chat history for the related conversation
       let disputeChatHistory: any[] = [];
@@ -695,9 +695,9 @@ export class AdminService {
     try {
       const now = new Date();
       const disputeStatuses = [
-        milestone_status.disputedByClient,
-        milestone_status.disputedByFreelancer,
-        milestone_status.disputedWithCounterSide,
+        'disputedByClient',
+        'disputedByFreelancer',
+        'disputedWithCounterSide',
       ];
 
       const [
@@ -735,20 +735,20 @@ export class AdminService {
         this.prisma.jobs.count({
           where: {
             OR: [
-              { status: job_status.cancelled },
-              { milestones: { some: { status: milestone_status.cancelled } } },
+              { status: 'cancelled' },
+              { milestones: { some: { status: 'cancelled' } } },
             ],
           },
         }),
         this.prisma.jobs.count({
           where: {
-            status: job_status.open,
+            status: 'open',
             OR: [{ deadline_at: null }, { deadline_at: { gte: now } }],
           },
         }),
         this.prisma.jobs.count({
           where: {
-            status: job_status.open,
+            status: 'open',
             deadline_at: { lt: now },
           },
         }),
@@ -809,7 +809,7 @@ export class AdminService {
 
       const recentJobsWithCancelled = recentJobs.map(({ milestones, ...job }) => ({
         ...job,
-        isCancelledByMilestone: milestones.some((m) => m.status === milestone_status.cancelled),
+        isCancelledByMilestone: milestones.some((m) => m.status === 'cancelled'),
       }));
 
       return {

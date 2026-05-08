@@ -26,6 +26,43 @@ type FormState = {
 };
 
 const ProfilePage = () => {
+    const DEFAULT_PROFILE_IMAGE = "/default-profile.svg";
+    const resolveProfileImageSrc = (imageId?: string | null) => {
+        const normalized = (imageId ?? "").trim();
+        if (
+            !normalized ||
+            normalized === "default.jpg" ||
+            normalized === "null" ||
+            normalized === "undefined"
+        ) {
+            if (process.env.NODE_ENV === "development") {
+                console.warn("[ProfileImage] Falling back to default image", {
+                    rawImageId: imageId,
+                    normalized,
+                });
+            }
+            return DEFAULT_PROFILE_IMAGE;
+        }
+        if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
+            if (process.env.NODE_ENV === "development") {
+                console.log("[ProfileImage] Using absolute image URL", {
+                    rawImageId: imageId,
+                    resolvedSrc: normalized,
+                });
+            }
+            return normalized;
+        }
+        const resolvedSrc = `${EscrowBackendConfig.uploadedImagesURL}${normalized}`;
+        if (process.env.NODE_ENV === "development") {
+            console.log("[ProfileImage] Using backend uploaded image URL", {
+                rawImageId: imageId,
+                base: EscrowBackendConfig.uploadedImagesURL,
+                resolvedSrc,
+            });
+        }
+        return resolvedSrc;
+    };
+
     const [userBio, setUserBio] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [userName, setUserName] = useState("Alisa Wilson");
@@ -125,11 +162,7 @@ const ProfilePage = () => {
             userPhoto,
         };
 
-        setNewPassword("");
-        setConfirmPassword("");
-        setUploadedFileName("");
-        setPreviewUrl(null);
-        setSelectedFile(null);
+        const fileToUpload = selectedFile;
 
         const user: User = {
             address: userInfo?.address || userWaletAddress || "",
@@ -150,7 +183,15 @@ const ProfilePage = () => {
             fund_num: userInfo?.fund_num || 0,
         };
 
-        const response = await updateUser(user, selectedFile);
+        const response = await updateUser(user, fileToUpload);
+        if (process.env.NODE_ENV === "development") {
+            console.log("[ProfileSave] updateUser response", {
+                success: response.success,
+                returnedImageId: response.data?.image_id,
+                previousImageId: userInfo?.image_id,
+                selectedFileName: fileToUpload?.name,
+            });
+        }
         if (response.success) {
             toast.success("Profile updated successfully", {
                 position: "top-right",
@@ -160,9 +201,16 @@ const ProfilePage = () => {
                 pauseOnHover: true,
             });
 
+            const latestImageId = response.data?.image_id ?? userInfo?.image_id ?? "";
+            if (process.env.NODE_ENV === "development") {
+                console.log("[ProfileSave] Applying latest image_id", {
+                    latestImageId,
+                });
+            }
+
             setUserInfo({
                 ...userInfo,
-                image_id: response.data?.image_id || "",
+                image_id: latestImageId,
                 updated_at: response.data?.updated_at || "",
                 created_at: response.data?.created_at || "",
                 address: response.data?.address || "",
@@ -173,6 +221,12 @@ const ProfilePage = () => {
                 display_name: response.data?.display_name || "",
                 bio: response.data?.bio || "",
             });
+            setUserPhoto(resolveProfileImageSrc(latestImageId));
+            setNewPassword("");
+            setConfirmPassword("");
+            setUploadedFileName("");
+            setPreviewUrl(null);
+            setSelectedFile(null);
         }
         else {
             toast.error(response.error, {
@@ -268,11 +322,11 @@ const ProfilePage = () => {
                         userName: userInfo.display_name || "",
                         userEmail: userInfo.email || "",
                         userBio: userInfo.bio || "",
-                        userPhoto: userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "",
+                        userPhoto: resolveProfileImageSrc(userInfo.image_id),
                     };
                     setUserBio(userInfo.bio || "")
                     setUserName(userInfo.display_name || "")
-                    setUserPhoto(userInfo.image_id ? EscrowBackendConfig.uploadedImagesURL + userInfo.image_id : "")
+                    setUserPhoto(resolveProfileImageSrc(userInfo.image_id))
                     setUserRole(userInfo.role || "")
                     setUserEmail(userInfo.email || "")
                     setUserWaletAddress(isConnected ? userInfo.address || null : null)
@@ -322,13 +376,21 @@ const ProfilePage = () => {
                                         <div
                                             className='w-25 h-25 rounded-full overflow-hidden'
                                         >
-                                            <Image 
-                                                src={userPhoto} 
-                                                alt='User Photo' 
-                                                width={100} 
-                                                height={100} 
-                                                className='h-full w-full rounded-full object-cover'
-                                            />
+                                            {userPhoto.startsWith("http://") || userPhoto.startsWith("https://") ? (
+                                                <img
+                                                    src={userPhoto}
+                                                    alt='User Photo'
+                                                    className='h-full w-full rounded-full object-cover'
+                                                />
+                                            ) : (
+                                                <Image 
+                                                    src={userPhoto} 
+                                                    alt='User Photo' 
+                                                    width={100} 
+                                                    height={100} 
+                                                    className='h-full w-full rounded-full object-cover'
+                                                />
+                                            )}
                                         </div>
                                         <Button variant='secondary' padding='px-5 py-2' onClick={handleUploadFile}
                                         >Change Photo</Button>

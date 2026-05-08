@@ -1,4 +1,4 @@
-import { chain_txs, notification_entity, notification_type, Prisma } from '@prisma/client';
+import type { chain_txs, Prisma } from '@prisma/client';
 import { AppError } from '../../middlewares/errorHandler.js';
 import { userService } from './user.service.js';
 import { logger } from '../../utils/logger.js';
@@ -6,6 +6,7 @@ import { prisma } from '../../prisma.js';
 import { notificationService } from './notification.service.js';
 import { jobMilestoneService } from './job.milestone.service.js';
 import { jobService } from './job.service.js';
+import { notification_entity, notification_type } from '../../constants/prisma-enums.js';
 
 export class ChainTxsService {
   private prisma = prisma;
@@ -67,7 +68,7 @@ export class ChainTxsService {
           entity_id: createChainTxData.tx_hash ?? "",
           title: "Funds withdrawn",
           body: "Funds have been withdrawn from the escrow",
-          payload: Prisma.JsonNull,
+          payload: null,
           read_at: null,
           created_at: new Date(),
         });
@@ -79,7 +80,7 @@ export class ChainTxsService {
           entity_id: createChainTxData.tx_hash ?? "",
           title: "Funds withdrawn",
           body: "Funds have been withdrawn from the escrow",
-          payload: Prisma.JsonNull,
+          payload: null,
           read_at: null,
           created_at: new Date(),
         });
