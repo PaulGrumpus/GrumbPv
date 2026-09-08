@@ -17,7 +17,7 @@ import Input from "./Input";
 interface LoginSignupModalProps {
     isOpen: boolean;
     setIsOpen: (isOpen: boolean) => void;
-    signedUp: boolean;
+    signedUp?: boolean;
 }
 
 type WalletAction = "login" | "register";
@@ -155,6 +155,16 @@ const LoginSignupModal = ({ isOpen, setIsOpen, signedUp = true }: LoginSignupMod
     const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
     const [forgotPasswordAlert, setForgotPasswordAlert] = useState("");
     const [forgotPasswordError, setForgotPasswordError] = useState("");
+
+    // Keep modal mode in sync when opened (Login vs Register callers)
+    useEffect(() => {
+        if (isOpen) {
+            setIsRegistered(signedUp ?? true);
+            setError("");
+            setIsForgotPassword(false);
+            setRegisterProcessing(false);
+        }
+    }, [isOpen, signedUp]);
 
     useEffect(() => {
         if (typeof window === "undefined") {

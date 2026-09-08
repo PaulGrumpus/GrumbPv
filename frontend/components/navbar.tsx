@@ -627,7 +627,9 @@ const Navbar = () => {
             <LoginSignupModal
                 isOpen={loginSignupModalOpen} 
                 setIsOpen={setLoginSignupModalOpen} 
-                signedUp={userInfo.id ? true : false}
+                // GB-002: Login CTA must open Login mode. signedUp=false shows Register.
+                // (Prop name means "already registered / show login", not "user is logged in".)
+                signedUp={true}
             />
         </div>
     )
